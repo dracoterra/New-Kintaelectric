@@ -61,6 +61,9 @@ function kintaelectric_enqueue_electro_assets() {
     // FontAwesome
     wp_enqueue_style( 'ec-fontawesome', kintaelectric_ASSETS_URL . 'vendor/fontawesome/css/all.min.css', array(), '3.6.2' );
     
+    // Dashicons for edit links
+    wp_enqueue_style( 'dashicons' );
+    
     // Custom Colors - Override CSS variables from customizer
     wp_enqueue_style( 'electro-custom-colors', kintaelectric_ASSETS_URL . 'css/custom-colors.css', array('electro-style'), '3.6.2' );
     
@@ -206,6 +209,19 @@ function kintaelectric_register_sidebars() {
         'before_title'  => '',
         'after_title'   => '',
     ) );
+
+    // Top Footer Widget Areas
+    for ( $i = 1; $i <= 4; $i++ ) {
+        register_sidebar( array(
+            'name'          => sprintf( esc_html__( 'Top Footer %d', 'kintaelectric' ), $i ),
+            'id'            => 'footer-' . $i,
+            'description'   => sprintf( esc_html__( 'Top Footer widget area %d', 'kintaelectric' ), $i ),
+            'before_widget' => '<div id="%1$s" class="widget %2$s">',
+            'after_widget'  => '</div>',
+            'before_title'  => '<h4 class="widget-title">',
+            'after_title'   => '</h4>',
+        ) );
+    }
 }
 add_action( 'widgets_init', 'kintaelectric_register_sidebars' );
 
@@ -608,3 +624,5 @@ function kintaelectric_add_to_cart() {
  * Include custom widgets
  */
 require_once kintaelectric_PATH . '/includes/widgets/class-newsletter-widget.php';
+require_once kintaelectric_PATH . '/includes/widgets/class-products-widget.php';
+require_once kintaelectric_PATH . '/includes/widgets/class-image-widget.php';

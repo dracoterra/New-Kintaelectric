@@ -14,214 +14,72 @@ if ( ! defined( 'ABSPATH' ) ) {
 <footer id="colophon" class="site-footer footer-v2">
 	<div class="desktop-footer d-none d-lg-block container">
 		<div class="footer-widgets row row-cols-lg-2 row-cols-xl-4">
+			<!-- Footer Widget 1 -->
 			<div class="widget-column col mb-lg-5 mb-xl-0">
-				<aside id="woocommerce_products-3" class="widget clearfix woocommerce widget_products">
-					<div class="body">
-						<h4 class="widget-title">Featured Products</h4>
-						<ul class="product_list_widget">
-							<li>
-
-								<a href="product/tablet-thin-elitebook-revolve-810-g6/index.htm">
-									<img loading="lazy" width="300" height="300"
-										src="../../uploads/2016/03/redPhone-300x300.png"
-										class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail"
-										alt="Tablet Thin EliteBook  Revolve 810 G6" decoding="async"
-										srcset="../../uploads/2016/03/redPhone-300x300.png 300w, ../../uploads/2016/03/redPhone-150x150.png 150w, ../../uploads/2016/03/redPhone-100x100.png 100w"
-										sizes="(max-width: 300px) 100vw, 300px"> <span
-										class="product-title">Tablet Thin EliteBook Revolve 810 G6</span>
-								</a>
-
-								<div class="star-rating" role="img" aria-label="Rated 4.33 out of 5"><span
-										style="width:86.6%">Rated <strong class="rating">4.33</strong> out
-										of 5</span></div>
-								<span class="electro-price"><span
-										class="woocommerce-Price-amount amount"><bdi><span
-												class="woocommerce-Price-currencySymbol">&#36;</span>1,300.00</bdi></span></span>
-							</li>
-							<li>
-
-								<a href="product/notebook-widescreen-z51-70-40k6013upb/index.htm">
-									<img loading="lazy" width="300" height="300"
-										src="../../uploads/2016/03/sam2-300x300.png"
-										class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail"
-										alt="Notebook Widescreen Z51-70  40K6013UPB" decoding="async"
-										srcset="../../uploads/2016/03/sam2-300x300.png 300w, ../../uploads/2016/03/sam2-150x150.png 150w, ../../uploads/2016/03/sam2-100x100.png 100w"
-										sizes="(max-width: 300px) 100vw, 300px"> <span
-										class="product-title">Notebook Widescreen Z51-70 40K6013UPB</span>
-								</a>
-
-								<div class="star-rating" role="img" aria-label="Rated 4.33 out of 5"><span
-										style="width:86.6%">Rated <strong class="rating">4.33</strong> out
-										of 5</span></div>
-								<span class="electro-price"><span
-										class="woocommerce-Price-amount amount"><bdi><span
-												class="woocommerce-Price-currencySymbol">&#36;</span>1,100.00</bdi></span></span>
-							</li>
-							<li>
-
-								<a href="product/smartphone-6s-128gb-lte/index.htm">
-									<img loading="lazy" width="300" height="300"
-										src="../../uploads/2016/03/lgphone-300x300.png"
-										class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail"
-										alt="Smartphone 6S 128GB LTE" decoding="async"
-										srcset="../../uploads/2016/03/lgphone-300x300.png 300w, ../../uploads/2016/03/lgphone-150x150.png 150w, ../../uploads/2016/03/lgphone-100x100.png 100w"
-										sizes="(max-width: 300px) 100vw, 300px"> <span
-										class="product-title">Smartphone 6S 128GB LTE</span>
-								</a>
-
-
-								<span class="electro-price"><ins><span
-											class="woocommerce-Price-amount amount"><bdi><span
-													class="woocommerce-Price-currencySymbol">&#36;</span>750.00</bdi></span></ins>
-									<del><span class="woocommerce-Price-amount amount"><bdi><span
-													class="woocommerce-Price-currencySymbol">&#36;</span>780.00</bdi></span></del></span>
-							</li>
-						</ul>
+				<?php if ( is_active_sidebar( 'footer-1' ) ) : ?>
+					<?php dynamic_sidebar( 'footer-1' ); ?>
+				<?php else : ?>
+					<!-- Empty widget area - configure in Appearance > Widgets -->
+					<div class="empty-widget-area">
+						<p class="text-muted"><?php esc_html_e( 'Configure a widget in Appearance > Widgets > Top Footer 1', 'kintaelectric' ); ?></p>
+						<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
+							<a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[panel]=widgets' ) ); ?>" class="widget-edit-link" title="<?php esc_attr_e( 'Configure Top Footer 1 Widget', 'kintaelectric' ); ?>">
+								<span class="dashicons dashicons-edit"></span>
+							</a>
+						<?php endif; ?>
 					</div>
-				</aside>
+				<?php endif; ?>
 			</div>
+
+			<!-- Footer Widget 2 -->
 			<div class="widget-column col mb-lg-5 mb-xl-0">
-				<aside id="woocommerce_products-4" class="widget clearfix woocommerce widget_products">
-					<div class="body">
-						<h4 class="widget-title">Top Selling Products</h4>
-						<ul class="product_list_widget">
-							<li>
-
-								<a href="product/game-console-controller-usb-3-0-cable/index.htm">
-									<img loading="lazy" width="300" height="300"
-										src="../../uploads/2016/03/consal-300x300.png"
-										class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail"
-										alt="Game Console Controller + USB 3.0 Cable" decoding="async"
-										srcset="../../uploads/2016/03/consal-300x300.png 300w, ../../uploads/2016/03/consal-150x150.png 150w, ../../uploads/2016/03/consal-100x100.png 100w"
-										sizes="(max-width: 300px) 100vw, 300px"> <span
-										class="product-title">Game Console Controller + USB 3.0 Cable</span>
-								</a>
-
-
-								<span class="electro-price"><ins><span
-											class="woocommerce-Price-amount amount"><bdi><span
-													class="woocommerce-Price-currencySymbol">&#36;</span>80.00</bdi></span></ins>
-									<del><span class="woocommerce-Price-amount amount"><bdi><span
-													class="woocommerce-Price-currencySymbol">&#36;</span>99.00</bdi></span></del></span>
-							</li>
-							<li>
-
-								<a href="product/universal-headphones-case-in-black/index.htm">
-									<img loading="lazy" width="300" height="300"
-										src="../../uploads/2016/03/headphonecase-300x300.png"
-										class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail"
-										alt="Universal Headphones Case in Black" decoding="async"
-										srcset="../../uploads/2016/03/headphonecase-300x300.png 300w, ../../uploads/2016/03/headphonecase-150x150.png 150w, ../../uploads/2016/03/headphonecase-100x100.png 100w"
-										sizes="(max-width: 300px) 100vw, 300px"> <span
-										class="product-title">Universal Headphones Case in Black</span>
-								</a>
-
-
-								<span class="electro-price"><span
-										class="woocommerce-Price-amount amount"><bdi><span
-												class="woocommerce-Price-currencySymbol">&#36;</span>159.00</bdi></span></span>
-							</li>
-							<li>
-
-								<a href="product/tablet-thin-elitebook-revolve-810-g6/index.htm">
-									<img loading="lazy" width="300" height="300"
-										src="../../uploads/2016/03/redPhone-300x300.png"
-										class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail"
-										alt="Tablet Thin EliteBook  Revolve 810 G6" decoding="async"
-										srcset="../../uploads/2016/03/redPhone-300x300.png 300w, ../../uploads/2016/03/redPhone-150x150.png 150w, ../../uploads/2016/03/redPhone-100x100.png 100w"
-										sizes="(max-width: 300px) 100vw, 300px"> <span
-										class="product-title">Tablet Thin EliteBook Revolve 810 G6</span>
-								</a>
-
-								<div class="star-rating" role="img" aria-label="Rated 4.33 out of 5"><span
-										style="width:86.6%">Rated <strong class="rating">4.33</strong> out
-										of 5</span></div>
-								<span class="electro-price"><span
-										class="woocommerce-Price-amount amount"><bdi><span
-												class="woocommerce-Price-currencySymbol">&#36;</span>1,300.00</bdi></span></span>
-							</li>
-						</ul>
+				<?php if ( is_active_sidebar( 'footer-2' ) ) : ?>
+					<?php dynamic_sidebar( 'footer-2' ); ?>
+				<?php else : ?>
+					<!-- Empty widget area - configure in Appearance > Widgets -->
+					<div class="empty-widget-area">
+						<p class="text-muted"><?php esc_html_e( 'Configure a widget in Appearance > Widgets > Top Footer 2', 'kintaelectric' ); ?></p>
+						<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
+							<a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[panel]=widgets' ) ); ?>" class="widget-edit-link" title="<?php esc_attr_e( 'Configure Top Footer 2 Widget', 'kintaelectric' ); ?>">
+								<span class="dashicons dashicons-edit"></span>
+							</a>
+						<?php endif; ?>
 					</div>
-				</aside>
+				<?php endif; ?>
 			</div>
+
+			<!-- Footer Widget 3 -->
 			<div class="widget-column col mb-lg-5 mb-xl-0">
-				<aside id="woocommerce_products-5" class="widget clearfix woocommerce widget_products">
-					<div class="body">
-						<h4 class="widget-title">On-sale Products</h4>
-						<ul class="product_list_widget">
-							<li>
-
-								<a href="product/game-console-controller-usb-3-0-cable/index.htm">
-									<img loading="lazy" width="300" height="300"
-										src="../../uploads/2016/03/consal-300x300.png"
-										class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail"
-										alt="Game Console Controller + USB 3.0 Cable" decoding="async"
-										srcset="../../uploads/2016/03/consal-300x300.png 300w, ../../uploads/2016/03/consal-150x150.png 150w, ../../uploads/2016/03/consal-100x100.png 100w"
-										sizes="(max-width: 300px) 100vw, 300px"> <span
-										class="product-title">Game Console Controller + USB 3.0 Cable</span>
-								</a>
-
-
-								<span class="electro-price"><ins><span
-											class="woocommerce-Price-amount amount"><bdi><span
-													class="woocommerce-Price-currencySymbol">&#36;</span>80.00</bdi></span></ins>
-									<del><span class="woocommerce-Price-amount amount"><bdi><span
-													class="woocommerce-Price-currencySymbol">&#36;</span>99.00</bdi></span></del></span>
-							</li>
-							<li>
-
-								<a href="product/tablet-red-elitebook-revolve-810-g2/index.htm">
-									<img loading="lazy" width="300" height="300"
-										src="../../uploads/2016/03/apptablet-300x300.png"
-										class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail"
-										alt="Tablet Red EliteBook  Revolve 810 G2" decoding="async"
-										srcset="../../uploads/2016/03/apptablet-300x300.png 300w, ../../uploads/2016/03/apptablet-150x150.png 150w, ../../uploads/2016/03/apptablet-100x100.png 100w"
-										sizes="(max-width: 300px) 100vw, 300px"> <span
-										class="product-title">Tablet Red EliteBook Revolve 810 G2</span>
-								</a>
-
-								<div class="star-rating" role="img" aria-label="Rated 3.33 out of 5"><span
-										style="width:66.6%">Rated <strong class="rating">3.33</strong> out
-										of 5</span></div>
-								<span class="electro-price"><ins><span
-											class="woocommerce-Price-amount amount"><bdi><span
-													class="woocommerce-Price-currencySymbol">&#36;</span>2,100.00</bdi></span></ins>
-									<del><span class="woocommerce-Price-amount amount"><bdi><span
-													class="woocommerce-Price-currencySymbol">&#36;</span>2,299.00</bdi></span></del></span>
-							</li>
-							<li>
-
-								<a href="product/smartphone-6s-32gb-lte-2/index.htm">
-									<img loading="lazy" width="300" height="300"
-										src="../../uploads/2016/03/GoldPhone-1-300x300.png"
-										class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail"
-										alt="Smartphone 6S 32GB LTE" decoding="async"
-										srcset="../../uploads/2016/03/GoldPhone-1-300x300.png 300w, ../../uploads/2016/03/GoldPhone-1-150x150.png 150w, ../../uploads/2016/03/GoldPhone-1-100x100.png 100w"
-										sizes="(max-width: 300px) 100vw, 300px"> <span
-										class="product-title">Smartphone 6S 32GB LTE</span>
-								</a>
-
-
-								<span class="electro-price"><ins><span
-											class="woocommerce-Price-amount amount"><bdi><span
-													class="woocommerce-Price-currencySymbol">&#36;</span>1,100.00</bdi></span></ins>
-									<del><span class="woocommerce-Price-amount amount"><bdi><span
-													class="woocommerce-Price-currencySymbol">&#36;</span>1,215.00</bdi></span></del></span>
-							</li>
-						</ul>
+				<?php if ( is_active_sidebar( 'footer-3' ) ) : ?>
+					<?php dynamic_sidebar( 'footer-3' ); ?>
+				<?php else : ?>
+					<!-- Empty widget area - configure in Appearance > Widgets -->
+					<div class="empty-widget-area">
+						<p class="text-muted"><?php esc_html_e( 'Configure a widget in Appearance > Widgets > Top Footer 3', 'kintaelectric' ); ?></p>
+						<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
+							<a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[panel]=widgets' ) ); ?>" class="widget-edit-link" title="<?php esc_attr_e( 'Configure Top Footer 3 Widget', 'kintaelectric' ); ?>">
+								<span class="dashicons dashicons-edit"></span>
+							</a>
+						<?php endif; ?>
 					</div>
-				</aside>
+				<?php endif; ?>
 			</div>
+
+			<!-- Footer Widget 4 -->
 			<div class="widget-column col mb-lg-5 mb-xl-0">
-				<aside id="media_image-3" class="widget clearfix widget_media_image">
-					<div class="body"><a href="https://demo2.madrasthemes.com/electro-wide/shop"><img
-								loading="lazy" width="329" height="359"
-								src="../../uploads/2019/04/footer-widget-img-01.jpg"
-								class="image wp-image-5045  attachment-full size-full" alt=""
-								style="max-width: 100%; height: auto;" decoding="async"
-								srcset="../../uploads/2019/04/footer-widget-img-01.jpg 329w, ../../uploads/2019/04/footer-widget-img-01-275x300.jpg 275w"
-								sizes="(max-width: 329px) 100vw, 329px"></a></div>
-				</aside>
+				<?php if ( is_active_sidebar( 'footer-4' ) ) : ?>
+					<?php dynamic_sidebar( 'footer-4' ); ?>
+				<?php else : ?>
+					<!-- Empty widget area - configure in Appearance > Widgets -->
+					<div class="empty-widget-area">
+						<p class="text-muted"><?php esc_html_e( 'Configure a widget in Appearance > Widgets > Top Footer 4', 'kintaelectric' ); ?></p>
+						<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
+							<a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[panel]=widgets' ) ); ?>" class="widget-edit-link" title="<?php esc_attr_e( 'Configure Top Footer 4 Widget', 'kintaelectric' ); ?>">
+								<span class="dashicons dashicons-edit"></span>
+							</a>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
 			</div>
 		</div>
 		<!-- Newsletter Section - Widget -->
