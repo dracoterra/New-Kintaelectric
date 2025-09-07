@@ -150,31 +150,9 @@ add_action( 'after_setup_theme', 'kintaelectric_add_electro_support' );
  */
 function kintaelectric_register_menus() {
     register_nav_menus( array(
-        // Top Bar Menus (Identificados del análisis real)
-        'top-bar-left' => esc_html__( 'Top Bar Left - Welcome Message', 'kintaelectric' ),
-        'top-bar-right' => esc_html__( 'Top Bar Right - Store Locator', 'kintaelectric' ),
-        
-        // Main Navigation Menus (Identificados del análisis real)
-        'all-departments' => esc_html__( 'All Departments Menu - Value of the Day', 'kintaelectric' ),
-        'all-departments-menu' => esc_html__( 'All Departments Menu - Value of the Day', 'kintaelectric' ),
-        'secondary-nav' => esc_html__( 'Secondary Nav - All Pages', 'kintaelectric' ),
-        
-        // Footer Desktop Menus (Identificados del análisis real)
-        'footer-menu-1' => esc_html__( 'Footer Menu 1 - Find It Fast', 'kintaelectric' ),
-        'footer-menu-2' => esc_html__( 'Footer Menu 2 - About', 'kintaelectric' ),
-        'footer-menu-3' => esc_html__( 'Footer Menu 3 - Customer Care', 'kintaelectric' ),
-        'footer-menu-4' => esc_html__( 'Footer Menu 4 - We Recommend', 'kintaelectric' ),
-        
-        // Mobile Footer Menus (Identificados del análisis real)
-        'mobile-footer-menu-1' => esc_html__( 'Mobile Footer Menu 1 - We Recommend', 'kintaelectric' ),
-        'mobile-footer-menu-2' => esc_html__( 'Mobile Footer Menu 2 - My Account', 'kintaelectric' ),
-        'mobile-footer-menu-3' => esc_html__( 'Mobile Footer Menu 3 - Customer Care', 'kintaelectric' ),
-        'mobile-footer-menu-4' => esc_html__( 'Mobile Footer Menu 4 - About Us', 'kintaelectric' ),
-        
-        // Additional Menus (Para compatibilidad)
+        // Solo menús esenciales
         'primary' => esc_html__( 'Primary Menu', 'kintaelectric' ),
-        'vertical' => esc_html__( 'Vertical Menu', 'kintaelectric' ),
-        'handheld' => esc_html__( 'Handheld Menu', 'kintaelectric' ),
+        'all-departments' => esc_html__( 'All Departments Menu', 'kintaelectric' ),
     ) );
 }
 add_action( 'after_setup_theme', 'kintaelectric_register_menus' );
@@ -217,6 +195,17 @@ function kintaelectric_register_sidebars() {
             'after_title'   => '</h3>',
         ) );
     }
+
+    // Footer Newsletter Sidebar
+    register_sidebar( array(
+        'name'          => esc_html__( 'Footer Newsletter', 'kintaelectric' ),
+        'id'            => 'footer-newsletter',
+        'description'   => esc_html__( 'Newsletter widget area for footer', 'kintaelectric' ),
+        'before_widget' => '<div id="%1$s" class="widget %2$s">',
+        'after_widget'  => '</div>',
+        'before_title'  => '',
+        'after_title'   => '',
+    ) );
 }
 add_action( 'widgets_init', 'kintaelectric_register_sidebars' );
 
@@ -614,3 +603,8 @@ function kintaelectric_add_to_cart() {
         ) );
     }
 }
+
+/**
+ * Include custom widgets
+ */
+require_once kintaelectric_PATH . '/includes/widgets/class-newsletter-widget.php';
