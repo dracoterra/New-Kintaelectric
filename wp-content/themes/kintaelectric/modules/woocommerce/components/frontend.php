@@ -11,8 +11,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Frontend {
 
 	public function enqueue_kit_style_style( $styles ) {
-		if ( Utils::is_elementor_active() ) {
-			Utils::elementor()->kits_manager->frontend_before_enqueue_styles();
+		if ( Utils::is_elementor_active() && class_exists( '\Elementor\Plugin' ) ) {
+			$elementor = Utils::elementor();
+			if ( $elementor && isset( $elementor->kits_manager ) ) {
+				$elementor->kits_manager->frontend_before_enqueue_styles();
+			}
 		}
 
 		return $styles;

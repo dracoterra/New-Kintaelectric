@@ -43,7 +43,7 @@ class Module extends Module_Base {
 			'kintaelectric-woocommerce',
 			kintaelectric_STYLE_URL . 'hello-commerce-woocommerce.css',
 			[],
-			kintaelectric_ELEMENTOR_VERSION
+			'2.0.0'
 		);
 	}
 

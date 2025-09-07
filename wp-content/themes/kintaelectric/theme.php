@@ -16,9 +16,9 @@ use kintaelectric\Includes\Module_Base;
 final class Theme {
 
 	/**
-	 * @var ?Theme
+	 * @var ?self
 	 */
-	private static ?Theme $instance = null;
+	private static ?self $instance = null;
 
 	/**
 	 * @var Module_Base[]
@@ -104,9 +104,9 @@ final class Theme {
 	/**
 	 * Singleton
 	 *
-	 * @return Theme
+	 * @return self
 	 */
-	public static function instance(): Theme {
+	public static function instance(): self {
 		if ( is_null( self::$instance ) ) {
 			self::$instance = new self();
 		}

@@ -734,16 +734,7 @@
 		href="https://fonts.googleapis.chttps://fonts.googleapis.com/css2?family=Roboto:300,800,700,400,600&display=swap"
 		rel="stylesheet" property="stylesheet" media="all" type="text/css">
 
-	<script type='text/javascript'>
-		(function () {
-			var c = document.body.className;
-			c = c.replace(/woocommerce-no-js/, 'woocommerce-js');
-			document.body.className = c;
-		})();
-	</script>
-	<script>
-		if (typeof revslider_showDoubleJqueryError === "undefined") { function revslider_showDoubleJqueryError(sliderID) { console.log("You have some jquery.js library include that comes after the Slider Revolution files js inclusion."); console.log("To fix this, you can:"); console.log("1. Set 'Module General Options' -> 'Advanced' -> 'jQuery & OutPut Filters' -> 'Put JS to Body' to on"); console.log("2. Find the double jQuery.js inclusion and remove it"); return "Double Included jQuery Library"; } }
-	</script>
+	<!-- Footer scripts are now loaded via wp_enqueue_script in functions.php -->
 
 	
 	<link rel='stylesheet' id='wc-stripe-blocks-checkout-style-css'

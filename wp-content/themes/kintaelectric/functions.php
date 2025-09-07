@@ -5,7 +5,7 @@
  * @package kintaelectric
  */
 
-use kintaelectric\Theme;
+// Theme class is in the same namespace, no need to import
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -73,6 +73,9 @@ function kintaelectric_enqueue_electro_assets() {
     wp_enqueue_script( 'typeahead-bundle', kintaelectric_ASSETS_URL . 'js/vendor/typeahead.bundle.min.js', array( 'jquery' ), '0.11.1', true );
     
     wp_enqueue_script( 'electro-main', kintaelectric_ASSETS_URL . 'js/electro.min.js', array( 'jquery', 'bootstrap-bundle', 'owl-carousel', 'typeahead-bundle' ), '3.6.2', true );
+    
+    // Footer scripts
+    wp_enqueue_script( 'kintaelectric-footer-scripts', kintaelectric_ASSETS_URL . 'js/footer-scripts.js', array( 'jquery' ), '1.0.0', true );
     
     // Localize script for AJAX
     wp_localize_script( 'electro-main', 'electro_options', array(

@@ -263,7 +263,7 @@ class Customizer {
 			'ehp_customizer',
 			[
 				'nonce' => wp_create_nonce( 'updates' ),
-				'redirectTo' => Utils::is_hello_plus_active() ? self_admin_url( 'admin.php?page=hello-plus-setup-wizard' ) : '',
+				'redirectTo' => Utils::is_hello_plus_active() ? self_admin_url( 'admin.php?page=hello-plus-setup-wizard' ) : admin_url( 'customize.php' ),
 			]
 		);
 
@@ -271,7 +271,7 @@ class Customizer {
 			'kintaelectric-customizer',
 			kintaelectric_STYLE_URL . 'customizer.css',
 			[],
-			kintaelectric_ELEMENTOR_VERSION
+			'2.0.0'
 		);
 	}
 
