@@ -1,0 +1,52 @@
+# Ignore everything by default
+*
+
+# But include these directories
+!wp-content/
+!wp-content/themes/
+!wp-content/plugins/
+!README.md
+!.gitignore
+
+# Ignore common WordPress files
+wp-config.php
+wp-config-sample.php
+.htaccess
+wp-admin/
+wp-includes/
+wp-*.php
+xmlrpc.php
+index.php
+
+# Ignore uploads and other content
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/backup-db/
+wp-content/backups/
+wp-content/blogs.dir/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/uploads/
+
+# Ignore logs
+wp-content/debug.log
+wp-content/error_log
+wp-content/error.log
+
+# Ignore database files
+*.sql
+*.sqlite
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore temporary files
+*.tmp
+*.temp
