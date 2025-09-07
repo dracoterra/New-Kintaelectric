@@ -1,12 +1,12 @@
 # Ignore everything by default
-*
+/*
 
 # But include these directories
-!wp-content/
-!wp-content/themes/
-!wp-content/plugins/
-!README.md
-!.gitignore
+!/wp-content/
+!/wp-content/themes/
+!/wp-content/plugins/
+!/README.md
+!/.gitignore
 
 # Ignore common WordPress files
 wp-config.php
