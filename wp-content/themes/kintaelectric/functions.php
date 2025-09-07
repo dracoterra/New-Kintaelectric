@@ -5,7 +5,7 @@
  * @package kintaelectric
  */
 
-// Theme class is in the same namespace, no need to import
+use kintaelectric\Theme;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
