@@ -1,0 +1,83 @@
+/* Custom Colors for Kinta Electric Theme - Generated from WordPress Customizer */
+
+:root {
+    /* Primary Colors - Override Bootstrap variables with customizer values */
+    --bs-primary: var(--kintaelectric-primary-color, #fed700);
+    --bs-ec-primary: var(--kintaelectric-primary-color, #fed700);
+    --bs-ec-primary-d: var(--kintaelectric-primary-hover, #e0a800);
+    
+    /* Secondary Colors */
+    --bs-secondary: var(--kintaelectric-secondary-color, #6c757d);
+    
+    /* Accent Colors */
+    --bs-success: var(--kintaelectric-success-color, #198754);
+    --bs-warning: var(--kintaelectric-primary-color, #fed700);
+    --bs-danger: var(--kintaelectric-danger-color, #dc3545);
+    
+    /* Background Colors */
+    --bs-light: var(--kintaelectric-light-color, #f8f9fa);
+    --bs-dark: var(--kintaelectric-dark-color, #333e48);
+    
+    /* Additional Brand Colors - Keep original values */
+    --bs-blue: #0d6efd;
+    --bs-indigo: #6610f2;
+    --bs-purple: #6f42c1;
+    --bs-pink: #d63384;
+    --bs-red: #dc3545;
+    --bs-orange: #fd7e14;
+    --bs-yellow: var(--kintaelectric-primary-color, #fed700);
+    --bs-green: var(--kintaelectric-success-color, #198754);
+    --bs-teal: #20c997;
+    --bs-cyan: #0dcaf0;
+    --bs-info: #0dcaf0;
+    --bs-white: #fff;
+    --bs-gray: #6c757d;
+    --bs-ec-dark: #181818;
+    --bs-ec-dark-body: rgb(217, 217, 217);
+}
+
+/* Override specific Electro theme colors */
+.electro-theme {
+    --primary-color: var(--kintaelectric-primary-color, #fed700);
+    --primary-hover: var(--kintaelectric-primary-hover, #e0a800);
+    --secondary-color: var(--kintaelectric-secondary-color, #6c757d);
+    --accent-color: var(--kintaelectric-accent-color, #fd7e14);
+    --success-color: var(--kintaelectric-success-color, #198754);
+    --warning-color: var(--kintaelectric-warning-color, #fed700);
+    --danger-color: var(--kintaelectric-danger-color, #dc3545);
+    --info-color: var(--kintaelectric-info-color, #0dcaf0);
+    --light-color: var(--kintaelectric-light-color, #f8f9fa);
+    --dark-color: var(--kintaelectric-dark-color, #333e48);
+}
+
+/* Header specific color overrides */
+.header-v1, .header-v2, .header-v3, .header-v4 {
+    --header-bg: var(--kintaelectric-header-bg, #ffffff);
+    --header-text: var(--kintaelectric-header-text, #495057);
+    --header-link: var(--kintaelectric-header-link, var(--kintaelectric-primary-color, #fed700));
+    --header-link-hover: var(--kintaelectric-header-link-hover, var(--kintaelectric-primary-hover, #e0a800));
+}
+
+/* Footer specific color overrides */
+.electro-footer {
+    --footer-bg: var(--kintaelectric-footer-bg, #333e48);
+    --footer-text: var(--kintaelectric-footer-text, #ffffff);
+    --footer-link: var(--kintaelectric-footer-link, #ffffff);
+    --footer-link-hover: var(--kintaelectric-footer-link-hover, var(--kintaelectric-primary-color, #fed700));
+}
+
+/* Top bar specific color overrides */
+.top-bar {
+    --topbar-bg: var(--kintaelectric-topbar-bg, var(--kintaelectric-primary-color, #fed700));
+    --topbar-text: var(--kintaelectric-topbar-text, #000000);
+    --topbar-link: var(--kintaelectric-topbar-link, #000000);
+    --topbar-link-hover: var(--kintaelectric-topbar-link-hover, rgba(0, 0, 0, 0.7));
+}
+
+/* Navigation specific color overrides */
+.navbar {
+    --nav-bg: var(--kintaelectric-nav-bg, var(--kintaelectric-primary-color, #fed700));
+    --nav-text: var(--kintaelectric-nav-text, #000000);
+    --nav-link: var(--kintaelectric-nav-link, #000000);
+    --nav-link-hover: var(--kintaelectric-nav-link-hover, rgba(0, 0, 0, 0.7));
+}
