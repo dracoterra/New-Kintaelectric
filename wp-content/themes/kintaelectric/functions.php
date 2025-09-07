@@ -214,7 +214,7 @@ function kintaelectric_register_sidebars() {
     for ( $i = 1; $i <= 4; $i++ ) {
         register_sidebar( array(
             'name'          => sprintf( esc_html__( 'Top Footer %d', 'kintaelectric' ), $i ),
-            'id'            => 'footer-' . $i,
+            'id'            => 'top-footer-' . $i,
             'description'   => sprintf( esc_html__( 'Top Footer widget area %d', 'kintaelectric' ), $i ),
             'before_widget' => '<div id="%1$s" class="widget %2$s">',
             'after_widget'  => '</div>',
@@ -224,6 +224,7 @@ function kintaelectric_register_sidebars() {
     }
 }
 add_action( 'widgets_init', 'kintaelectric_register_sidebars' );
+
 
 /**
  * Electro theme customizer options
@@ -626,3 +627,39 @@ function kintaelectric_add_to_cart() {
 require_once kintaelectric_PATH . '/includes/widgets/class-newsletter-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-products-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-image-widget.php';
+
+/**
+ * Enqueue admin scripts for widget functionality
+ */
+function kintaelectric_admin_widget_scripts( $hook ) {
+    if ( $hook === 'widgets.php' ) {
+        ?>
+        <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            // Function to toggle category field
+            function toggleCategoryField() {
+                $('.kintaelectric-product-type').each(function() {
+                    var $this = $(this);
+                    var $categoryField = $this.closest('.widget-content').find('.kintaelectric-category-field');
+                    
+                    if ($this.val() === 'category') {
+                        $categoryField.show();
+                    } else {
+                        $categoryField.hide();
+                    }
+                });
+            }
+            
+            // Run on page load
+            toggleCategoryField();
+            
+            // Run when product type changes
+            $(document).on('change', '.kintaelectric-product-type', function() {
+                toggleCategoryField();
+            });
+        });
+        </script>
+        <?php
+    }
+}
+add_action( 'admin_enqueue_scripts', 'kintaelectric_admin_widget_scripts' );

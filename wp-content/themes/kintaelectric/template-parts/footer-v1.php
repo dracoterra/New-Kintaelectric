@@ -16,8 +16,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<div class="footer-widgets row row-cols-lg-2 row-cols-xl-4">
 			<!-- Footer Widget 1 -->
 			<div class="widget-column col mb-lg-5 mb-xl-0">
-				<?php if ( is_active_sidebar( 'footer-1' ) ) : ?>
-					<?php dynamic_sidebar( 'footer-1' ); ?>
+				<?php if ( is_active_sidebar( 'top-footer-1' ) ) : ?>
+					<?php dynamic_sidebar( 'top-footer-1' ); ?>
 				<?php else : ?>
 					<!-- Empty widget area - configure in Appearance > Widgets -->
 					<div class="empty-widget-area">
@@ -33,8 +33,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 			<!-- Footer Widget 2 -->
 			<div class="widget-column col mb-lg-5 mb-xl-0">
-				<?php if ( is_active_sidebar( 'footer-2' ) ) : ?>
-					<?php dynamic_sidebar( 'footer-2' ); ?>
+				<?php if ( is_active_sidebar( 'top-footer-2' ) ) : ?>
+					<?php dynamic_sidebar( 'top-footer-2' ); ?>
 				<?php else : ?>
 					<!-- Empty widget area - configure in Appearance > Widgets -->
 					<div class="empty-widget-area">
@@ -50,8 +50,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 			<!-- Footer Widget 3 -->
 			<div class="widget-column col mb-lg-5 mb-xl-0">
-				<?php if ( is_active_sidebar( 'footer-3' ) ) : ?>
-					<?php dynamic_sidebar( 'footer-3' ); ?>
+				<?php if ( is_active_sidebar( 'top-footer-3' ) ) : ?>
+					<?php dynamic_sidebar( 'top-footer-3' ); ?>
 				<?php else : ?>
 					<!-- Empty widget area - configure in Appearance > Widgets -->
 					<div class="empty-widget-area">
@@ -67,8 +67,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 			<!-- Footer Widget 4 -->
 			<div class="widget-column col mb-lg-5 mb-xl-0">
-				<?php if ( is_active_sidebar( 'footer-4' ) ) : ?>
-					<?php dynamic_sidebar( 'footer-4' ); ?>
+				<?php if ( is_active_sidebar( 'top-footer-4' ) ) : ?>
+					<?php dynamic_sidebar( 'top-footer-4' ); ?>
 				<?php else : ?>
 					<!-- Empty widget area - configure in Appearance > Widgets -->
 					<div class="empty-widget-area">
