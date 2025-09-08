@@ -186,18 +186,46 @@ function kintaelectric_register_sidebars() {
         'after_title'   => '</h3>',
     ) );
 
-    // Footer Sidebars
-    for ( $i = 1; $i <= 4; $i++ ) {
-        register_sidebar( array(
-            'name'          => sprintf( esc_html__( 'Footer %d', 'kintaelectric' ), $i ),
-            'id'            => 'footer-' . $i,
-            'description'   => sprintf( esc_html__( 'Footer sidebar %d', 'kintaelectric' ), $i ),
-            'before_widget' => '<div id="%1$s" class="widget %2$s">',
-            'after_widget'  => '</div>',
-            'before_title'  => '<h3 class="widget-title">',
-            'after_title'   => '</h3>',
-        ) );
-    }
+    // Footer Bottom Widgets
+    register_sidebar( array(
+        'name'          => esc_html__( 'Footer Contact', 'kintaelectric' ),
+        'id'            => 'footer-1',
+        'description'   => esc_html__( 'Footer contact section (logo, call us, address, social icons)', 'kintaelectric' ),
+        'before_widget' => '<div id="%1$s" class="widget %2$s">',
+        'after_widget'  => '</div>',
+        'before_title'  => '<h3 class="widget-title">',
+        'after_title'   => '</h3>',
+    ) );
+
+    register_sidebar( array(
+        'name'          => esc_html__( 'Footer Menu 1', 'kintaelectric' ),
+        'id'            => 'footer-2',
+        'description'   => esc_html__( 'First footer menu column', 'kintaelectric' ),
+        'before_widget' => '<aside id="%1$s" class="widget clearfix %2$s"><div class="body">',
+        'after_widget'  => '</div></aside>',
+        'before_title'  => '<h4 class="widget-title">',
+        'after_title'   => '</h4>',
+    ) );
+
+    register_sidebar( array(
+        'name'          => esc_html__( 'Footer Menu 2', 'kintaelectric' ),
+        'id'            => 'footer-3',
+        'description'   => esc_html__( 'Second footer menu column', 'kintaelectric' ),
+        'before_widget' => '<aside id="%1$s" class="widget clearfix %2$s"><div class="body">',
+        'after_widget'  => '</div></aside>',
+        'before_title'  => '<h4 class="widget-title">',
+        'after_title'   => '</h4>',
+    ) );
+
+    register_sidebar( array(
+        'name'          => esc_html__( 'Footer Menu 3', 'kintaelectric' ),
+        'id'            => 'footer-4',
+        'description'   => esc_html__( 'Third footer menu column', 'kintaelectric' ),
+        'before_widget' => '<aside id="%1$s" class="widget clearfix %2$s"><div class="body">',
+        'after_widget'  => '</div></aside>',
+        'before_title'  => '<h4 class="widget-title">',
+        'after_title'   => '</h4>',
+    ) );
 
     // Footer Newsletter Sidebar
     register_sidebar( array(
@@ -627,6 +655,25 @@ function kintaelectric_add_to_cart() {
 require_once kintaelectric_PATH . '/includes/widgets/class-newsletter-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-products-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-image-widget.php';
+require_once kintaelectric_PATH . '/includes/widgets/class-footer-call-us-widget.php';
+require_once kintaelectric_PATH . '/includes/widgets/class-footer-address-widget.php';
+require_once kintaelectric_PATH . '/includes/widgets/class-footer-social-icons-widget.php';
+require_once kintaelectric_PATH . '/includes/widgets/class-footer-menu-widget.php';
+
+
+/**
+ * Register custom widgets
+ */
+function kintaelectric_register_widgets() {
+    register_widget( 'KintaElectric_Newsletter_Widget' );
+    register_widget( 'KintaElectric_Products_Widget' );
+    register_widget( 'KintaElectric_Image_Widget' );
+    register_widget( 'Footer_Call_Us_Widget' );
+    register_widget( 'Footer_Address_Widget' );
+    register_widget( 'Footer_Social_Icons_Widget' );
+    register_widget( 'Footer_Menu_Widget' );
+}
+add_action( 'widgets_init', 'kintaelectric_register_widgets' );
 
 /**
  * Enqueue admin scripts for widget functionality
