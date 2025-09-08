@@ -84,6 +84,11 @@ function kintaelectric_enqueue_electro_assets() {
     // Footer scripts
     wp_enqueue_script( 'kintaelectric-footer-scripts', kintaelectric_ASSETS_URL . 'js/footer-scripts.js', array( 'jquery' ), '1.0.0', true );
     
+    // Search suggestions styling
+    wp_enqueue_style( 'kintaelectric-search-suggestions', kintaelectric_ASSETS_URL . 'css/search-suggestions.css', array(), '1.0.0' );
+    
+    
+    
     // Localize script for AJAX
     wp_localize_script( 'electro-main', 'electro_options', array(
         'ajax_url' => admin_url( 'admin-ajax.php' ),
@@ -92,9 +97,9 @@ function kintaelectric_enqueue_electro_assets() {
         'enable_sticky_header' => '1',
         'enable_hh_sticky_header' => '1',
         'enable_live_search' => '1',
-        'live_search_limit' => '5',
+        'live_search_limit' => '10',
         'live_search_empty_msg' => __( 'No products found', 'kintaelectric' ),
-        'live_search_template' => '<div class="search-suggestion"><a href="{{url}}"><img src="{{image}}" alt="{{title}}"><span>{{title}}</span><span class="price">{{price}}</span></a></div>',
+        'live_search_template' => '<div class="search-suggestion-item"><a href="{{url}}" class="search-suggestion-link"><div class="search-suggestion-image"><img src="{{image}}" alt="{{title}}"></div><div class="search-suggestion-content"><div class="search-suggestion-title">{{title}}</div><div class="search-suggestion-price">{{{price}}}</div></div></a></div>',
         'typeahead_options' => array(
             'hint' => false,
             'highlight' => true,
@@ -735,7 +740,7 @@ function kintaelectric_live_search() {
     
     $args = array(
         'post_type'      => 'product',
-        'posts_per_page' => 5,
+        'posts_per_page' => 10,
         's'              => $search_term,
         'post_status'    => 'publish',
     );
@@ -763,33 +768,16 @@ function kintaelectric_live_search() {
 
 /**
  * Products live search function (for Electro theme compatibility)
+ * Simplified version that works like the simple search
  */
 function kintaelectric_products_live_search() {
-    // Enable error logging
-    if ( WP_DEBUG && WP_DEBUG_LOG ) {
-        error_log( 'AJAX products_live_search called' );
-        error_log( 'GET parameters: ' . print_r( $_GET, true ) );
-        error_log( 'POST parameters: ' . print_r( $_POST, true ) );
-    }
-
     if ( ! class_exists( 'WooCommerce' ) ) {
-        if ( WP_DEBUG && WP_DEBUG_LOG ) {
-            error_log( 'WooCommerce not active in products_live_search' );
-        }
         wp_die( 'WooCommerce not active', 400 );
     }
-
-    // Check if fn parameter is get_ajax_search (make it optional for now)
-    if ( isset( $_GET['fn'] ) && $_GET['fn'] !== 'get_ajax_search' ) {
-        if ( WP_DEBUG && WP_DEBUG_LOG ) {
-            error_log( 'Invalid fn parameter: ' . $_GET['fn'] );
-        }
-        wp_die( 'Invalid function parameter', 400 );
-    }
-
+    
     // Get search term from POST or GET - try multiple parameter names
     $search_term = '';
-    $search_params = array( 'search_term', 'q', 's', 'query', 'term' );
+    $search_params = array( 'search_term', 'q', 's', 'query', 'term', 'terms' );
     
     foreach ( $search_params as $param ) {
         if ( isset( $_POST[ $param ] ) && ! empty( $_POST[ $param ] ) ) {
@@ -801,41 +789,23 @@ function kintaelectric_products_live_search() {
         }
     }
 
-    // If no search term, return empty results instead of error
+    // If no search term, return empty results
     if ( empty( $search_term ) ) {
-        if ( WP_DEBUG && WP_DEBUG_LOG ) {
-            error_log( 'Empty search term in products_live_search, returning empty results' );
-        }
         wp_send_json( array() );
         return;
     }
-
-    if ( WP_DEBUG && WP_DEBUG_LOG ) {
-        error_log( 'Search term: ' . $search_term );
-    }
     
+    // Simple search without complex queries
     $args = array(
-        'post_type'      => 'product',
-        'posts_per_page' => 5,
-        's'              => $search_term,
-        'post_status'    => 'publish',
-        'tax_query'      => array(
-            array(
-                'taxonomy' => 'product_visibility',
-                'field'    => 'slug',
-                'terms'    => array( 'exclude-from-search' ),
-                'operator' => 'NOT IN',
-            ),
-        ),
+        'post_type' => 'product',
+        'posts_per_page' => 10,
+        's' => $search_term,
+        'post_status' => 'publish',
     );
-
+    
     $products = new WP_Query( $args );
     $results = array();
-
-    if ( WP_DEBUG && WP_DEBUG_LOG ) {
-        error_log( 'Found ' . $products->found_posts . ' products for search: ' . $search_term );
-    }
-
+    
     if ( $products->have_posts() ) {
         while ( $products->have_posts() ) {
             $products->the_post();
@@ -848,19 +818,14 @@ function kintaelectric_products_live_search() {
             
             $results[] = array(
                 'title' => get_the_title(),
-                'url'   => get_permalink(),
+                'url' => get_permalink(),
                 'image' => $image_url,
                 'price' => $product->get_price_html(),
             );
         }
     }
-
+    
     wp_reset_postdata();
-    
-    if ( WP_DEBUG && WP_DEBUG_LOG ) {
-        error_log( 'Returning ' . count( $results ) . ' results' );
-    }
-    
     wp_send_json( $results );
 }
 
@@ -906,7 +871,7 @@ function kintaelectric_get_ajax_search() {
     
     $args = array(
         'post_type'      => 'product',
-        'posts_per_page' => 5,
+        'posts_per_page' => 10,
         's'              => $search_term,
         'post_status'    => 'publish',
         'tax_query'      => array(
@@ -1128,3 +1093,37 @@ function kintaelectric_disable_problematic_scripts() {
     } );
 }
 add_action( 'init', 'kintaelectric_disable_problematic_scripts' );
+
+/**
+ * Get product categories dynamically for search dropdown
+ * Replaces hardcoded categories with dynamic WooCommerce categories
+ */
+function kintaelectric_get_product_categories() {
+    if ( ! class_exists( 'WooCommerce' ) ) {
+        return '<option value="0" selected="selected">All Categories</option>';
+    }
+    
+    $categories = get_terms( array(
+        'taxonomy' => 'product_cat',
+        'hide_empty' => true,
+        'parent' => 0,
+        'orderby' => 'name',
+        'order' => 'ASC'
+    ) );
+    
+    if ( is_wp_error( $categories ) || empty( $categories ) ) {
+        return '<option value="0" selected="selected">All Categories</option>';
+    }
+    
+    $options = '<option value="0" selected="selected">All Categories</option>';
+    
+    foreach ( $categories as $category ) {
+        $options .= sprintf(
+            '<option class="level-0" value="%s">%s</option>',
+            esc_attr( $category->slug ),
+            esc_html( $category->name )
+        );
+    }
+    
+    return $options;
+}

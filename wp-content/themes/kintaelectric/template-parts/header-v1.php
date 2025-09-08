@@ -70,7 +70,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 							</div>
 						</div>
 
-						<form class="navbar-search col" method="get" action="https://electro.madrasthemes.com/"
+						<form class="navbar-search col" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>"
 							autocomplete="off">
 							<label class="sr-only screen-reader-text visually-hidden" for="search">Search for:</label>
 							<div class="input-group">
@@ -82,27 +82,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 								<div class="input-group-addon search-categories d-flex">
 									<select name='product_cat' id='electro_header_search_categories_dropdown'
 										class='postform resizeselect'>
-										<option value='0' selected='selected'>All Categories</option>
-										<option class="level-0" value="uncategorized">Uncategorized</option>
-										<option class="level-0" value="accessories">Accessories</option>
-										<option class="level-0" value="cameras-photography">Cameras &amp; Photography
-										</option>
-										<option class="level-0" value="computer-components">Computer Components</option>
-										<option class="level-0" value="gadgets">Gadgets</option>
-										<option class="level-0" value="home-entertainment">Home Entertainment</option>
-										<option class="level-0" value="laptops-computers">Laptops &amp; Computers
-										</option>
-										<option class="level-0" value="printers-ink">Printers &amp; Ink</option>
-										<option class="level-0" value="smart-phones-tablets">Smart Phones &amp; Tablets
-										</option>
-										<option class="level-0" value="tv-audio">TV &amp; Audio</option>
-										<option class="level-0" value="video-games-consoles">Video Games &amp; Consoles
-										</option>
-										<option class="level-0" value="a-stereo">Stereo</option>
-										<option class="level-0" value="b-home-theatre">Home Theatre</option>
-										<option class="level-0" value="c-bluetooth-speakers">Bluetooth Speakers</option>
-										<option class="level-0" value="headphones-2">Headphones</option>
-										<option class="level-0" value="speakers-2">Speakers</option>
+										<?php echo kintaelectric_get_product_categories(); ?>
 									</select>
 								</div>
 								<div class="input-group-btn">
