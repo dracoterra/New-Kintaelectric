@@ -185,7 +185,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<!-- Copyright Bar -->
 	<div class="copyright-bar">
 		<div class="container">
-			<div class="float-start copyright">&copy; <a href="https://demo2.madrasthemes.com/electro/">Electro</a> - All Rights Reserved</div>
+			<div class="float-start copyright">&copy; <a href="/">Kintaelectric</a> - All Rights Reserved</div>
 			<div class="float-end payment">
 				<div class="footer-payment-logo">
 					<ul class="nav cash-card card-inline">
