@@ -43,9 +43,6 @@ function kintaelectric_enqueue_electro_assets() {
     // Google Fonts
     wp_enqueue_style( 'electro-fonts', 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap', array(), '1.0.0' );
     
-    // Electro Font Icons
-    wp_enqueue_style( 'font-electro', kintaelectric_ASSETS_URL . 'css/font-electro.css', array(), '3.6.2' );
-    
     // Animate CSS
     wp_enqueue_style( 'animate-css', kintaelectric_ASSETS_URL . 'vendor/animate.css/animate.min.css', array(), '3.6.2' );
     
@@ -87,6 +84,12 @@ function kintaelectric_enqueue_electro_assets() {
     // Search suggestions styling
     wp_enqueue_style( 'kintaelectric-search-suggestions', kintaelectric_ASSETS_URL . 'css/search-suggestions.css', array(), '1.0.0' );
     
+    // Compare integration (simple version)
+    if ( class_exists( 'YITH_Woocompare' ) ) {
+        wp_enqueue_script( 'kintaelectric-compare-integration', kintaelectric_ASSETS_URL . 'js/compare-integration.js', array( 'jquery' ), '1.0.0', true );
+    }
+    
+    
     
     
     // Localize script for AJAX
@@ -114,6 +117,7 @@ function kintaelectric_enqueue_electro_assets() {
     ) );
 }
 add_action( 'wp_enqueue_scripts', 'kintaelectric_enqueue_electro_assets' );
+
 
 /**
  * Add theme support for Electro features

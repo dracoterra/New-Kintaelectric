@@ -93,15 +93,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 							</div>
 						</form>
 						<div class="header-icons col-auto d-flex justify-content-end align-items-center">
+							<?php if ( class_exists( 'YITH_Woocompare' ) ) : ?>
 							<div style="position: relative;" class="header-icon" data-bs-toggle="tooltip"
-								data-bs-placement="bottom" data-bs-title="Compare">
-								<a href="index-1.htm?action=yith-woocompare-view-table&amp;iframe=yes"
+								data-bs-placement="bottom" data-bs-title="<?php esc_attr_e( 'Compare', 'kintaelectric' ); ?>">
+								<a href="<?php echo esc_url( add_query_arg( array( 'action' => 'yith-woocompare-view-table', 'iframe' => 'yes' ), site_url() ) ); ?>"
 									class="yith-woocompare-open">
 									<i class="ec ec-compare"></i>
 									<span id="navbar-compare-count"
-										class="navbar-compare-count count header-icon-counter" class="value">34</span>
+										class="navbar-compare-count count header-icon-counter">0</span>
 								</a>
 							</div>
+							<?php endif; ?>
 							<div class="header-icon" data-bs-toggle="tooltip" data-bs-placement="bottom"
 								data-bs-title="Wishlist">
 								<a href="wishlist/index.htm">
