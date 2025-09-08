@@ -88,7 +88,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 								<div class="input-group-btn">
 									<input type="hidden" id="search-param" name="post_type" value="product">
 									<button type="submit" class="btn btn-secondary"><i
-											class="ec ec-search"></i></button>
+											class="fas fa-search"></i></button>
 								</div>
 							</div>
 						</form>
