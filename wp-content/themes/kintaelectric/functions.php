@@ -250,6 +250,17 @@ function kintaelectric_register_sidebars() {
             'after_title'   => '</h4>',
         ) );
     }
+
+    // Canvas Menu Widget Area
+    register_sidebar( array(
+        'name'          => esc_html__( 'Canvas Menu', 'kintaelectric' ),
+        'id'            => 'canvas-menu',
+        'description'   => esc_html__( 'Off-canvas navigation menu widget area', 'kintaelectric' ),
+        'before_widget' => '<div id="%1$s" class="widget %2$s">',
+        'after_widget'  => '</div>',
+        'before_title'  => '<h4 class="widget-title">',
+        'after_title'   => '</h4>',
+    ) );
 }
 add_action( 'widgets_init', 'kintaelectric_register_sidebars' );
 
@@ -772,6 +783,7 @@ require_once kintaelectric_PATH . '/includes/widgets/class-footer-call-us-widget
 require_once kintaelectric_PATH . '/includes/widgets/class-footer-address-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-footer-social-icons-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-footer-menu-widget.php';
+require_once kintaelectric_PATH . '/includes/widgets/class-canvas-menu-widget.php';
 
 
 /**
@@ -785,6 +797,7 @@ function kintaelectric_register_widgets() {
     register_widget( 'Footer_Address_Widget' );
     register_widget( 'Footer_Social_Icons_Widget' );
     register_widget( 'Footer_Menu_Widget' );
+    register_widget( 'KintaElectric_Canvas_Menu_Widget' );
 }
 add_action( 'widgets_init', 'kintaelectric_register_widgets' );
 
