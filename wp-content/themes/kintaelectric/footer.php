@@ -33,6 +33,8 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
 	}
 }
 ?>
+	</div><!-- #page .hfeed .site -->
+</div><!-- .off-canvas-wrapper -->
 
 <?php wp_footer(); ?>
 <div class="back-to-top-wrapper position-absolute bottom-0 pe-none">

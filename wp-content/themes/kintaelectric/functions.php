@@ -284,6 +284,20 @@ function kintaelectric_customize_register( $wp_customize ) {
         ),
     ) );
 
+    // Mode Switcher Setting
+    $wp_customize->add_setting( 'kintaelectric_enable_mode_switcher', array(
+        'default'           => true,
+        'sanitize_callback' => 'wp_validate_boolean',
+    ) );
+
+    $wp_customize->add_control( 'kintaelectric_enable_mode_switcher', array(
+        'label'       => esc_html__( 'Enable Dark/Light Mode Switcher', 'kintaelectric' ),
+        'description' => esc_html__( 'Show the dark/light mode toggle button', 'kintaelectric' ),
+        'section'     => 'kintaelectric_header',
+        'type'        => 'checkbox',
+    ) );
+
+
     // Footer Section
     $wp_customize->add_section( 'kintaelectric_footer', array(
         'title'    => esc_html__( 'Footer Settings', 'kintaelectric' ),

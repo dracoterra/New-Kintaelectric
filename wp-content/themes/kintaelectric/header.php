@@ -27,9 +27,27 @@ $skip_link_url = apply_filters( 'kintaelectric-theme/skip_link_url', '#content' 
 
 <?php wp_body_open(); ?>
 
-<?php if ( $enable_skip_link ) { ?>
-<a class="skip-link screen-reader-text" href="<?php echo esc_url( $skip_link_url ); ?>"><?php echo esc_html__( 'Skip to content', 'kintaelectric' ); ?></a>
-<?php } ?>
+<?php
+// Electro Mode Switcher (Dark/Light Mode)
+$enable_mode_switcher = get_theme_mod( 'kintaelectric_enable_mode_switcher', true );
+if ( $enable_mode_switcher ) :
+?>
+<div class="electro-mode-switcher">
+	<a class="data-block electro-mode-switcher-item dark" href="#dark" data-mode="dark">
+		<span class="d-block electro-mode-switcher-item-state"><?php esc_html_e( 'Dark', 'kintaelectric' ); ?></span>
+	</a>
+	<a class="d-block electro-mode-switcher-item light" href="#light" data-mode="light">
+		<span class="d-block electro-mode-switcher-item-state"><?php esc_html_e( 'Light', 'kintaelectric' ); ?></span>
+	</a>
+</div>
+<?php endif; ?>
+
+<div class="off-canvas-wrapper w-100 position-relative">
+	<div id="page" class="hfeed site">
+		<?php if ( $enable_skip_link ) : ?>
+		<a class="skip-link screen-reader-text visually-hidden" href="#site-navigation"><?php esc_html_e( 'Skip to navigation', 'kintaelectric' ); ?></a>
+		<a class="skip-link screen-reader-text visually-hidden" href="#content"><?php esc_html_e( 'Skip to content', 'kintaelectric' ); ?></a>
+		<?php endif; ?>
 
 <?php
 if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_location( 'header' ) ) {
