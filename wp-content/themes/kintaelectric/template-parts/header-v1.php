@@ -143,7 +143,62 @@ if ( ! defined( 'ABSPATH' ) ) {
 							</div>
 						</div><!-- /.header-icons -->
 					</div>
-					<?php get_template_part( 'template-parts/dynamic-categories-menu' ); ?>
+					<div class="electro-navigation row yes-home">
+						<div class="departments-menu-v2">
+							<div class="dropdown show-dropdown">
+								<a href="#" class="departments-menu-v2-title">
+									<span><i class="departments-menu-v2-icon fa fa-list-ul"></i>Departamentos</span>
+								</a>
+								<?php get_template_part( 'template-parts/dynamic-categories-menu' ); ?>
+							</div>
+						</div>
+						<div class="secondary-nav-menu col electro-animate-dropdown position-relative">
+							<ul id="menu-secondary-nav" class="secondary-nav yamm">
+								<li id="menu-item-5343" class="highlight yamm-fw menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-5343 dropdown">
+									<a title="All Pages" href="<?php echo esc_url( home_url( '/' ) ); ?>" class="dropdown-toggle" aria-haspopup="true" data-hover="dropdown">All Pages</a>
+									<ul role="menu" class=" dropdown-menu">
+										<li id="menu-item-5444" class="menu-item menu-item-type-post_type menu-item-object-mas_static_content menu-item-5444">
+											<div class="yamm-content">
+												<div class="vc_row wpb_row vc_row-fluid">
+													<div class="wpb_column vc_column_container vc_col-sm-3">
+														<div class="vc_column-inner">
+															<div class="wpb_wrapper">
+																<div class="vc_wp_custommenu wpb_content_element">
+																	<div class="widget widget_nav_menu">
+																		<div class="menu-pages-menu-1-container">
+																			<ul id="menu-pages-menu-1" class="menu">
+																				<li id="menu-item-5172" class="nav-title menu-item menu-item-type-custom menu-item-object-custom menu-item-5172">
+																					<a href="#">Home Pages</a></li>
+																				<li id="menu-item-5320" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home current-menu-item page_item page-item-2139 current_page_item menu-item-5320">
+																					<a href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-current="page">Home v1</a>
+																				</li>
+																			</ul>
+																		</div>
+																	</div>
+																</div>
+															</div>
+														</div>
+													</div>
+												</div>
+											</div>
+										</li>
+									</ul>
+								</li>
+								<li id="menu-item-5344" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5344">
+									<a title="Featured Brands" href="<?php echo esc_url( home_url( '/' ) ); ?>">Featured Brands</a>
+								</li>
+								<li id="menu-item-5345" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5345">
+									<a title="Trending Styles" href="<?php echo esc_url( home_url( '/' ) ); ?>">Trending Styles</a>
+								</li>
+								<li id="menu-item-5341" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5341">
+									<a title="Gift Cards" href="<?php echo esc_url( home_url( '/' ) ); ?>">Gift Cards</a>
+								</li>
+								<li id="menu-item-5342" class="pull-end menu-item menu-item-type-post_type menu-item-object-page menu-item-5342">
+									<a title="Free Shipping on Orders $50+" href="<?php echo esc_url( home_url( '/' ) ); ?>">Free Shipping on Orders $50+</a>
+								</li>
+							</ul>
+						</div>
+					</div>
 				</div>
 
 				<div class="handheld-header-wrap container hidden-xl-up d-xl-none">
