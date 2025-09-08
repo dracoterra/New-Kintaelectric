@@ -70,12 +70,16 @@ function kintaelectric_enqueue_electro_assets() {
     // JavaScript Files - Solo archivos del tema Electro original
     wp_enqueue_script( 'bootstrap-bundle', kintaelectric_ASSETS_URL . 'js/bootstrap.bundle.min.js', array( 'jquery' ), '3.6.2', true );
     wp_enqueue_script( 'jquery-waypoints', kintaelectric_ASSETS_URL . 'js/jquery.waypoints.min.js', array( 'jquery' ), '3.6.2', true );
+    wp_enqueue_script( 'waypoints-sticky', kintaelectric_ASSETS_URL . 'js/waypoints-sticky.min.js', array( 'jquery', 'jquery-waypoints' ), '4.0.1', true );
     wp_enqueue_script( 'owl-carousel', kintaelectric_ASSETS_URL . 'js/owl.carousel.min.js', array( 'jquery' ), '3.6.2', true );
     
     // Typeahead.js (Bloodhound) - REQUERIDO por electro.min.js
     wp_enqueue_script( 'typeahead-bundle', kintaelectric_ASSETS_URL . 'js/vendor/typeahead.bundle.min.js', array( 'jquery' ), '0.11.1', true );
     
-    wp_enqueue_script( 'electro-main', kintaelectric_ASSETS_URL . 'js/electro.min.js', array( 'jquery', 'bootstrap-bundle', 'owl-carousel', 'typeahead-bundle' ), '3.6.2', true );
+    // Handlebars - REQUERIDO por electro.min.js
+    wp_enqueue_script( 'handlebars', kintaelectric_ASSETS_URL . 'js/handlebars.min.js', array(), '4.7.8', true );
+    
+    wp_enqueue_script( 'electro-main', kintaelectric_ASSETS_URL . 'js/electro.min.js', array( 'jquery', 'bootstrap-bundle', 'owl-carousel', 'typeahead-bundle', 'waypoints-sticky', 'handlebars' ), '3.6.2', true );
     
     // Footer scripts
     wp_enqueue_script( 'kintaelectric-footer-scripts', kintaelectric_ASSETS_URL . 'js/footer-scripts.js', array( 'jquery' ), '1.0.0', true );
