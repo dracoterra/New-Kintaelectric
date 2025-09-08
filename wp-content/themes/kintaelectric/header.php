@@ -32,11 +32,11 @@ $skip_link_url = apply_filters( 'kintaelectric-theme/skip_link_url', '#content' 
 $enable_mode_switcher = get_theme_mod( 'kintaelectric_enable_mode_switcher', true );
 if ( $enable_mode_switcher ) :
 ?>
-<div class="electro-mode-switcher">
-	<a class="data-block electro-mode-switcher-item dark" href="#dark" data-mode="dark">
+<div class="electro-mode-switcher" role="switch" aria-label="<?php esc_attr_e( 'Toggle dark/light mode', 'kintaelectric' ); ?>">
+	<a class="data-block electro-mode-switcher-item dark" href="#dark" data-mode="dark" title="<?php esc_attr_e( 'Switch to dark mode', 'kintaelectric' ); ?>" aria-label="<?php esc_attr_e( 'Switch to dark mode', 'kintaelectric' ); ?>">
 		<span class="d-block electro-mode-switcher-item-state"><?php esc_html_e( 'Dark', 'kintaelectric' ); ?></span>
 	</a>
-	<a class="d-block electro-mode-switcher-item light" href="#light" data-mode="light">
+	<a class="d-block electro-mode-switcher-item light" href="#light" data-mode="light" title="<?php esc_attr_e( 'Switch to light mode', 'kintaelectric' ); ?>" aria-label="<?php esc_attr_e( 'Switch to light mode', 'kintaelectric' ); ?>">
 		<span class="d-block electro-mode-switcher-item-state"><?php esc_html_e( 'Light', 'kintaelectric' ); ?></span>
 	</a>
 </div>

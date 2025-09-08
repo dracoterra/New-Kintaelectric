@@ -100,6 +100,9 @@ function kintaelectric_enqueue_electro_assets() {
         ));
     }
     
+    // Electro Mode Switcher
+    wp_enqueue_script( 'kintaelectric-mode-switcher', kintaelectric_ASSETS_URL . 'js/electro-mode-switcher.js', array( 'jquery' ), '1.0.0', true );
+    
     
     
     
