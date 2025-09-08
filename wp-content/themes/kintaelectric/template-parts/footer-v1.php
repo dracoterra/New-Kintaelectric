@@ -83,12 +83,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 				<?php endif; ?>
 			</div>
 		</div>
-	</div>
+	
 
-	<!-- Newsletter Section - Widget -->
-	<?php if ( is_active_sidebar( 'footer-newsletter' ) ) : ?>
-		<?php dynamic_sidebar( 'footer-newsletter' ); ?>
-	<?php else : ?>
+		<!-- Newsletter Section - Widget -->
+		<?php if ( is_active_sidebar( 'footer-newsletter' ) ) : ?>
+			<?php dynamic_sidebar( 'footer-newsletter' ); ?>
+		<?php else : ?>
 		<!-- Fallback Newsletter Section -->
 		<div class="footer-newsletter">
 			<div class="container">
@@ -112,87 +112,122 @@ if ( ! defined( 'ABSPATH' ) ) {
 				</div>
 			</div>
 		</div>
-	<?php endif; ?>
+		<?php endif; ?>
 
-	<!-- Footer Bottom Widgets -->
-	<div class="footer-bottom-widgets">
-		<div class="container">
-			<div class="footer-bottom-widgets-inner row">
-				<div class="footer-contact col-md-5">
-					<?php if ( is_active_sidebar( 'footer-1' ) ) : ?>
-						<?php dynamic_sidebar( 'footer-1' ); ?>
-					<?php else : ?>
-						<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
-							<div class="empty-widget-area">
-								<p>Configure un widget en <a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-1' ) ); ?>">Footer Contact</a></p>
-								<a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-1' ) ); ?>" class="widget-edit-link" title="Configurar Footer Contact">
-									<span class="dashicons dashicons-edit"></span>
-								</a>
-							</div>
+		<!-- Footer Bottom Widgets -->
+		<div class="footer-bottom-widgets">
+			<div class="container">
+				<div class="footer-bottom-widgets-inner row">
+					<div class="footer-contact col-md-5">
+						<?php if ( is_active_sidebar( 'footer-1' ) ) : ?>
+							<?php dynamic_sidebar( 'footer-1' ); ?>
+						<?php else : ?>
+							<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
+								<div class="empty-widget-area">
+									<p>Configure un widget en <a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-1' ) ); ?>">Footer Contact</a></p>
+									<a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-1' ) ); ?>" class="widget-edit-link" title="Configurar Footer Contact">
+										<span class="dashicons dashicons-edit"></span>
+									</a>
+								</div>
+							<?php endif; ?>
 						<?php endif; ?>
-					<?php endif; ?>
-				</div>
-				<div class="col-lg-7">
-					<div class="row">
-						<div class="col-12 col-md-4 mb-4 mb-md-0">
-							<?php if ( is_active_sidebar( 'footer-2' ) ) : ?>
-								<?php dynamic_sidebar( 'footer-2' ); ?>
-							<?php else : ?>
-								<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
-									<div class="empty-widget-area">
-										<p>Configure un widget en <a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-2' ) ); ?>">Footer Menu 1</a></p>
-										<a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-2' ) ); ?>" class="widget-edit-link" title="Configurar Footer Menu 1">
-											<span class="dashicons dashicons-edit"></span>
-										</a>
-									</div>
+					</div>
+					<div class="col-lg-7">
+						<div class="row">
+							<div class="col-12 col-md-4 mb-4 mb-md-0">
+								<?php if ( is_active_sidebar( 'footer-2' ) ) : ?>
+									<?php dynamic_sidebar( 'footer-2' ); ?>
+								<?php else : ?>
+									<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
+										<div class="empty-widget-area">
+											<p>Configure un widget en <a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-2' ) ); ?>">Footer Menu 1</a></p>
+											<a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-2' ) ); ?>" class="widget-edit-link" title="Configurar Footer Menu 1">
+												<span class="dashicons dashicons-edit"></span>
+											</a>
+										</div>
+									<?php endif; ?>
 								<?php endif; ?>
-							<?php endif; ?>
-						</div>
-						<div class="col-12 col-md-4 mb-4 mb-md-0">
-							<?php if ( is_active_sidebar( 'footer-3' ) ) : ?>
-								<?php dynamic_sidebar( 'footer-3' ); ?>
-							<?php else : ?>
-								<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
-									<div class="empty-widget-area">
-										<p>Configure un widget en <a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-3' ) ); ?>">Footer Menu 2</a></p>
-										<a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-3' ) ); ?>" class="widget-edit-link" title="Configurar Footer Menu 2">
-											<span class="dashicons dashicons-edit"></span>
-										</a>
-									</div>
+							</div>
+							<div class="col-12 col-md-4 mb-4 mb-md-0">
+								<?php if ( is_active_sidebar( 'footer-3' ) ) : ?>
+									<?php dynamic_sidebar( 'footer-3' ); ?>
+								<?php else : ?>
+									<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
+										<div class="empty-widget-area">
+											<p>Configure un widget en <a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-3' ) ); ?>">Footer Menu 2</a></p>
+											<a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-3' ) ); ?>" class="widget-edit-link" title="Configurar Footer Menu 2">
+												<span class="dashicons dashicons-edit"></span>
+											</a>
+										</div>
+									<?php endif; ?>
 								<?php endif; ?>
-							<?php endif; ?>
-						</div>
-						<div class="col-12 col-md-4 mb-4 mb-md-0">
-							<?php if ( is_active_sidebar( 'footer-4' ) ) : ?>
-								<?php dynamic_sidebar( 'footer-4' ); ?>
-							<?php else : ?>
-								<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
-									<div class="empty-widget-area">
-										<p>Configure un widget en <a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-4' ) ); ?>">Footer Menu 3</a></p>
-										<a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-4' ) ); ?>" class="widget-edit-link" title="Configurar Footer Menu 3">
-											<span class="dashicons dashicons-edit"></span>
-										</a>
-									</div>
+							</div>
+							<div class="col-12 col-md-4 mb-4 mb-md-0">
+								<?php if ( is_active_sidebar( 'footer-4' ) ) : ?>
+									<?php dynamic_sidebar( 'footer-4' ); ?>
+								<?php else : ?>
+									<?php if ( current_user_can( 'edit_theme_options' ) ) : ?>
+										<div class="empty-widget-area">
+											<p>Configure un widget en <a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-4' ) ); ?>">Footer Menu 3</a></p>
+											<a href="<?php echo esc_url( admin_url( 'customize.php?autofocus[section]=sidebar-widgets-footer-4' ) ); ?>" class="widget-edit-link" title="Configurar Footer Menu 3">
+												<span class="dashicons dashicons-edit"></span>
+											</a>
+										</div>
+									<?php endif; ?>
 								<?php endif; ?>
-							<?php endif; ?>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-	</div>
 
-	<!-- Copyright Bar -->
-	<div class="copyright-bar">
-		<div class="container">
-			<div class="float-start copyright">&copy; <a href="/">Kintaelectric</a> - All Rights Reserved</div>
-			<div class="float-end payment">
-				<div class="footer-payment-logo">
-					<ul class="nav cash-card card-inline">
-						<li class="card-item"><img loading="lazy" class="h-auto" src="../../uploads/2021/03/patment-icon1.png" alt="" width="324" height="38"></li>
-					</ul>
-				</div><!-- /.payment-methods -->
+		<!-- Copyright Bar -->
+		<?php 
+		$show_copyright = get_theme_mod( 'kintaelectric_show_copyright', true );
+		$show_payment = get_theme_mod( 'kintaelectric_show_payment', false );
+		
+		// Solo mostrar si hay algo configurado
+		if ( $show_copyright || $show_payment ) :
+		?>
+		<div class="copyright-bar">
+			<div class="container">
+				<?php if ( $show_copyright ) : ?>
+					<div class="float-start copyright">
+						<?php 
+						$copyright_text = get_theme_mod( 'kintaelectric_copyright_text', '' );
+						if ( ! empty( $copyright_text ) ) :
+							echo wp_kses_post( $copyright_text );
+						else :
+						?>
+							&copy; <a href="<?php echo esc_url( home_url( '/' ) ); ?>"><?php bloginfo( 'name' ); ?></a> - <?php esc_html_e( 'All Rights Reserved', 'kintaelectric' ); ?>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
+				
+				<?php if ( $show_payment ) : 
+					$payment_logo_url = get_theme_mod( 'kintaelectric_payment_logo_url', '' );
+					if ( ! empty( $payment_logo_url ) ) :
+				?>
+					<div class="float-end payment">
+						<div class="footer-payment-logo">
+							<ul class="nav cash-card card-inline">
+								<li class="card-item">
+									<img loading="lazy" class="h-auto" 
+										src="<?php echo esc_url( $payment_logo_url ); ?>" 
+										alt="<?php echo esc_attr( get_theme_mod( 'kintaelectric_payment_logo_alt', esc_html__( 'Payment Methods', 'kintaelectric' ) ) ); ?>" 
+										width="<?php echo esc_attr( get_theme_mod( 'kintaelectric_payment_logo_width', 324 ) ); ?>" 
+										height="<?php echo esc_attr( get_theme_mod( 'kintaelectric_payment_logo_height', 38 ) ); ?>">
+								</li>
+							</ul>
+						</div>
+					</div>
+				<?php 
+					endif;
+				endif; 
+				?>
 			</div>
 		</div>
+		<?php endif; ?>
 	</div>
 </footer><!-- #colophon -->

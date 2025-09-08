@@ -50,7 +50,7 @@ function kintaelectric_enqueue_electro_assets() {
     wp_enqueue_style( 'animate-css', kintaelectric_ASSETS_URL . 'vendor/animate.css/animate.min.css', array(), '3.6.2' );
     
     // Main Electro Styles - CRITICAL: This must load first
-    wp_enqueue_style( 'electro-style', kintaelectric_URL . '/style.min.css', array(), '3.6.2' );
+    wp_enqueue_style( 'electro-style', kintaelectric_URL . '/style.css', array(), '3.6.3' );
     
     // Font Electro
     wp_enqueue_style( 'electro-font', kintaelectric_ASSETS_URL . 'css/font-electro.css', array('electro-style'), '3.6.2' );
@@ -305,6 +305,105 @@ function kintaelectric_customize_register( $wp_customize ) {
             'v1' => esc_html__( 'Footer v1 - Classic with Newsletter', 'kintaelectric' ),
             'v2' => esc_html__( 'Footer v2 - Modern with Brand', 'kintaelectric' ),
             'v3' => esc_html__( 'Footer v3 - Minimalist', 'kintaelectric' ),
+        ),
+    ) );
+
+    // Show Copyright
+    $wp_customize->add_setting( 'kintaelectric_show_copyright', array(
+        'default'           => true,
+        'sanitize_callback' => 'wp_validate_boolean',
+    ) );
+
+    $wp_customize->add_control( 'kintaelectric_show_copyright', array(
+        'label'       => esc_html__( 'Show Copyright Text', 'kintaelectric' ),
+        'description' => esc_html__( 'Display copyright information in the footer', 'kintaelectric' ),
+        'section'     => 'kintaelectric_footer',
+        'type'        => 'checkbox',
+    ) );
+
+    // Copyright Text
+    $wp_customize->add_setting( 'kintaelectric_copyright_text', array(
+        'default'           => '',
+        'sanitize_callback' => 'wp_kses_post',
+    ) );
+
+    $wp_customize->add_control( 'kintaelectric_copyright_text', array(
+        'label'       => esc_html__( 'Copyright Text', 'kintaelectric' ),
+        'description' => esc_html__( 'Custom copyright text. Leave empty to use default. You can use HTML tags.', 'kintaelectric' ),
+        'section'     => 'kintaelectric_footer',
+        'type'        => 'textarea',
+    ) );
+
+    // Show Payment Logo
+    $wp_customize->add_setting( 'kintaelectric_show_payment', array(
+        'default'           => false,
+        'sanitize_callback' => 'wp_validate_boolean',
+    ) );
+
+    $wp_customize->add_control( 'kintaelectric_show_payment', array(
+        'label'       => esc_html__( 'Show Payment Logo', 'kintaelectric' ),
+        'description' => esc_html__( 'Display payment methods logo in the footer', 'kintaelectric' ),
+        'section'     => 'kintaelectric_footer',
+        'type'        => 'checkbox',
+    ) );
+
+    // Payment Logo URL
+    $wp_customize->add_setting( 'kintaelectric_payment_logo_url', array(
+        'default'           => '',
+        'sanitize_callback' => 'esc_url_raw',
+    ) );
+
+    $wp_customize->add_control( 'kintaelectric_payment_logo_url', array(
+        'label'       => esc_html__( 'Payment Logo URL', 'kintaelectric' ),
+        'description' => esc_html__( 'URL of the payment methods logo image', 'kintaelectric' ),
+        'section'     => 'kintaelectric_footer',
+        'type'        => 'url',
+    ) );
+
+    // Payment Logo Alt Text
+    $wp_customize->add_setting( 'kintaelectric_payment_logo_alt', array(
+        'default'           => esc_html__( 'Payment Methods', 'kintaelectric' ),
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+
+    $wp_customize->add_control( 'kintaelectric_payment_logo_alt', array(
+        'label'       => esc_html__( 'Payment Logo Alt Text', 'kintaelectric' ),
+        'description' => esc_html__( 'Alternative text for the payment logo', 'kintaelectric' ),
+        'section'     => 'kintaelectric_footer',
+        'type'        => 'text',
+    ) );
+
+    // Payment Logo Width
+    $wp_customize->add_setting( 'kintaelectric_payment_logo_width', array(
+        'default'           => 324,
+        'sanitize_callback' => 'absint',
+    ) );
+
+    $wp_customize->add_control( 'kintaelectric_payment_logo_width', array(
+        'label'       => esc_html__( 'Payment Logo Width', 'kintaelectric' ),
+        'description' => esc_html__( 'Width of the payment logo in pixels', 'kintaelectric' ),
+        'section'     => 'kintaelectric_footer',
+        'type'        => 'number',
+        'input_attrs' => array(
+            'min' => 1,
+            'max' => 1000,
+        ),
+    ) );
+
+    // Payment Logo Height
+    $wp_customize->add_setting( 'kintaelectric_payment_logo_height', array(
+        'default'           => 38,
+        'sanitize_callback' => 'absint',
+    ) );
+
+    $wp_customize->add_control( 'kintaelectric_payment_logo_height', array(
+        'label'       => esc_html__( 'Payment Logo Height', 'kintaelectric' ),
+        'description' => esc_html__( 'Height of the payment logo in pixels', 'kintaelectric' ),
+        'section'     => 'kintaelectric_footer',
+        'type'        => 'number',
+        'input_attrs' => array(
+            'min' => 1,
+            'max' => 200,
         ),
     ) );
 
