@@ -708,6 +708,14 @@ function kintaelectric_ajax_functions() {
     // Live search
     add_action( 'wp_ajax_kintaelectric_live_search', 'kintaelectric_live_search' );
     add_action( 'wp_ajax_nopriv_kintaelectric_live_search', 'kintaelectric_live_search' );
+    
+    // Products live search (for Electro theme compatibility)
+    add_action( 'wp_ajax_products_live_search', 'kintaelectric_products_live_search' );
+    add_action( 'wp_ajax_nopriv_products_live_search', 'kintaelectric_products_live_search' );
+    
+    // Fallback for simple AJAX search
+    add_action( 'wp_ajax_get_ajax_search', 'kintaelectric_get_ajax_search' );
+    add_action( 'wp_ajax_nopriv_get_ajax_search', 'kintaelectric_get_ajax_search' );
 
     // Add to cart
     add_action( 'wp_ajax_kintaelectric_add_to_cart', 'kintaelectric_add_to_cart' );
@@ -750,6 +758,199 @@ function kintaelectric_live_search() {
     }
 
     wp_reset_postdata();
+    wp_send_json( $results );
+}
+
+/**
+ * Products live search function (for Electro theme compatibility)
+ */
+function kintaelectric_products_live_search() {
+    // Enable error logging
+    if ( WP_DEBUG && WP_DEBUG_LOG ) {
+        error_log( 'AJAX products_live_search called' );
+        error_log( 'GET parameters: ' . print_r( $_GET, true ) );
+        error_log( 'POST parameters: ' . print_r( $_POST, true ) );
+    }
+
+    if ( ! class_exists( 'WooCommerce' ) ) {
+        if ( WP_DEBUG && WP_DEBUG_LOG ) {
+            error_log( 'WooCommerce not active in products_live_search' );
+        }
+        wp_die( 'WooCommerce not active', 400 );
+    }
+
+    // Check if fn parameter is get_ajax_search (make it optional for now)
+    if ( isset( $_GET['fn'] ) && $_GET['fn'] !== 'get_ajax_search' ) {
+        if ( WP_DEBUG && WP_DEBUG_LOG ) {
+            error_log( 'Invalid fn parameter: ' . $_GET['fn'] );
+        }
+        wp_die( 'Invalid function parameter', 400 );
+    }
+
+    // Get search term from POST or GET - try multiple parameter names
+    $search_term = '';
+    $search_params = array( 'search_term', 'q', 's', 'query', 'term' );
+    
+    foreach ( $search_params as $param ) {
+        if ( isset( $_POST[ $param ] ) && ! empty( $_POST[ $param ] ) ) {
+            $search_term = sanitize_text_field( $_POST[ $param ] );
+            break;
+        } elseif ( isset( $_GET[ $param ] ) && ! empty( $_GET[ $param ] ) ) {
+            $search_term = sanitize_text_field( $_GET[ $param ] );
+            break;
+        }
+    }
+
+    // If no search term, return empty results instead of error
+    if ( empty( $search_term ) ) {
+        if ( WP_DEBUG && WP_DEBUG_LOG ) {
+            error_log( 'Empty search term in products_live_search, returning empty results' );
+        }
+        wp_send_json( array() );
+        return;
+    }
+
+    if ( WP_DEBUG && WP_DEBUG_LOG ) {
+        error_log( 'Search term: ' . $search_term );
+    }
+    
+    $args = array(
+        'post_type'      => 'product',
+        'posts_per_page' => 5,
+        's'              => $search_term,
+        'post_status'    => 'publish',
+        'tax_query'      => array(
+            array(
+                'taxonomy' => 'product_visibility',
+                'field'    => 'slug',
+                'terms'    => array( 'exclude-from-search' ),
+                'operator' => 'NOT IN',
+            ),
+        ),
+    );
+
+    $products = new WP_Query( $args );
+    $results = array();
+
+    if ( WP_DEBUG && WP_DEBUG_LOG ) {
+        error_log( 'Found ' . $products->found_posts . ' products for search: ' . $search_term );
+    }
+
+    if ( $products->have_posts() ) {
+        while ( $products->have_posts() ) {
+            $products->the_post();
+            global $product;
+            
+            $image_url = get_the_post_thumbnail_url( get_the_ID(), 'thumbnail' );
+            if ( ! $image_url ) {
+                $image_url = wc_placeholder_img_src( 'thumbnail' );
+            }
+            
+            $results[] = array(
+                'title' => get_the_title(),
+                'url'   => get_permalink(),
+                'image' => $image_url,
+                'price' => $product->get_price_html(),
+            );
+        }
+    }
+
+    wp_reset_postdata();
+    
+    if ( WP_DEBUG && WP_DEBUG_LOG ) {
+        error_log( 'Returning ' . count( $results ) . ' results' );
+    }
+    
+    wp_send_json( $results );
+}
+
+/**
+ * Simple AJAX search function (fallback)
+ */
+function kintaelectric_get_ajax_search() {
+    if ( ! class_exists( 'WooCommerce' ) ) {
+        wp_die( 'WooCommerce not active', 400 );
+    }
+
+    if ( WP_DEBUG && WP_DEBUG_LOG ) {
+        error_log( 'AJAX get_ajax_search called' );
+        error_log( 'GET parameters: ' . print_r( $_GET, true ) );
+        error_log( 'POST parameters: ' . print_r( $_POST, true ) );
+    }
+
+    // Get search term from various sources
+    $search_term = '';
+    $search_params = array( 'search_term', 'q', 's', 'query', 'term' );
+    
+    foreach ( $search_params as $param ) {
+        if ( isset( $_POST[ $param ] ) && ! empty( $_POST[ $param ] ) ) {
+            $search_term = sanitize_text_field( $_POST[ $param ] );
+            break;
+        } elseif ( isset( $_GET[ $param ] ) && ! empty( $_GET[ $param ] ) ) {
+            $search_term = sanitize_text_field( $_GET[ $param ] );
+            break;
+        }
+    }
+
+    if ( empty( $search_term ) ) {
+        if ( WP_DEBUG && WP_DEBUG_LOG ) {
+            error_log( 'Empty search term in get_ajax_search, returning empty results' );
+        }
+        wp_send_json( array() );
+        return;
+    }
+
+    if ( WP_DEBUG && WP_DEBUG_LOG ) {
+        error_log( 'Search term: ' . $search_term );
+    }
+    
+    $args = array(
+        'post_type'      => 'product',
+        'posts_per_page' => 5,
+        's'              => $search_term,
+        'post_status'    => 'publish',
+        'tax_query'      => array(
+            array(
+                'taxonomy' => 'product_visibility',
+                'field'    => 'slug',
+                'terms'    => array( 'exclude-from-search' ),
+                'operator' => 'NOT IN',
+            ),
+        ),
+    );
+
+    $products = new WP_Query( $args );
+    $results = array();
+
+    if ( WP_DEBUG && WP_DEBUG_LOG ) {
+        error_log( 'Found ' . $products->found_posts . ' products for search: ' . $search_term );
+    }
+
+    if ( $products->have_posts() ) {
+        while ( $products->have_posts() ) {
+            $products->the_post();
+            global $product;
+            
+            $image_url = get_the_post_thumbnail_url( get_the_ID(), 'thumbnail' );
+            if ( ! $image_url ) {
+                $image_url = wc_placeholder_img_src( 'thumbnail' );
+            }
+            
+            $results[] = array(
+                'title' => get_the_title(),
+                'url'   => get_permalink(),
+                'image' => $image_url,
+                'price' => $product->get_price_html(),
+            );
+        }
+    }
+
+    wp_reset_postdata();
+    
+    if ( WP_DEBUG && WP_DEBUG_LOG ) {
+        error_log( 'Returning ' . count( $results ) . ' results' );
+    }
+    
     wp_send_json( $results );
 }
 
