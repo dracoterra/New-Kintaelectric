@@ -89,6 +89,17 @@ function kintaelectric_enqueue_electro_assets() {
         wp_enqueue_script( 'kintaelectric-compare-integration', kintaelectric_ASSETS_URL . 'js/compare-integration.js', array( 'jquery' ), '1.0.0', true );
     }
     
+    // Native cart updates
+    if ( class_exists( 'WooCommerce' ) ) {
+        wp_enqueue_script( 'kintaelectric-native-cart', kintaelectric_ASSETS_URL . 'js/native-cart-update.js', array( 'jquery', 'wc-add-to-cart' ), '1.0.0', true );
+        
+        // Localizar script con ajaxurl y datos de WooCommerce
+        wp_localize_script( 'kintaelectric-native-cart', 'cart_ajax', array(
+            'ajax_url' => admin_url( 'admin-ajax.php' ),
+            'nonce' => wp_create_nonce( 'cart_nonce' )
+        ));
+    }
+    
     
     
     
@@ -1131,4 +1142,34 @@ function kintaelectric_get_product_categories() {
     
     return $options;
 }
+
+
+/**
+ * AJAX handler simple para obtener contador y total del carrito
+ */
+function kintaelectric_get_cart_count() {
+    // Verificar nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'cart_nonce')) {
+        wp_send_json_error('Security check failed');
+    }
+    
+    if (!class_exists('WooCommerce')) {
+        wp_send_json_error('WooCommerce not active');
+    }
+    
+    // Asegurar que el carrito esté inicializado
+    if (!WC()->cart) {
+        wp_send_json_error('Cart not initialized');
+    }
+    
+    $cart_count = WC()->cart->get_cart_contents_count();
+    $cart_total = WC()->cart->get_cart_total();
+    
+    wp_send_json_success(array(
+        'count' => $cart_count,
+        'total' => $cart_total
+    ));
+}
+add_action('wp_ajax_kintaelectric_get_cart_count', 'kintaelectric_get_cart_count');
+add_action('wp_ajax_nopriv_kintaelectric_get_cart_count', 'kintaelectric_get_cart_count');
 

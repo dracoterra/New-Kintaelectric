@@ -151,12 +151,26 @@ if ( ! defined( 'ABSPATH' ) ) {
 								</ul>
 							</div>
 							<div class="header-icon header-icon__cart animate-dropdown dropdown"
-								data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Cart">
-								<a class="dropdown-toggle" href="cart/index.htm" data-bs-toggle="dropdown">
+								data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="<?php esc_attr_e('Cart', 'kintaelectric'); ?>">
+								<a class="dropdown-toggle" href="<?php echo esc_url(wc_get_cart_url()); ?>" data-bs-toggle="dropdown">
 									<i class="ec ec-shopping-bag"></i>
-									<span class="cart-items-count count header-icon-counter">60</span>
-									<span class="cart-items-total-price total-price"><span class="woocommerce-Price-amount amount"><bdi><span class="woocommerce-Price-currencySymbol">&#36;</span>61,127.98</bdi></span></span>
+									<span class="cart-items-count count header-icon-counter"><?php echo class_exists('WooCommerce') ? WC()->cart->get_cart_contents_count() : '0'; ?></span>
+									<span class="cart-items-total-price total-price"><?php echo class_exists('WooCommerce') ? WC()->cart->get_cart_total() : '$0.00'; ?></span>
 								</a>
+								<ul class="dropdown-menu dropdown-menu-mini-cart border-bottom-0-last-child">
+									<li>
+										<div class="widget_shopping_cart_content border-bottom-0-last-child">
+											<?php
+											// Mostrar el contenido del carrito usando la función nativa de WooCommerce
+											if (class_exists('WooCommerce')) {
+												woocommerce_mini_cart();
+											} else {
+												echo '<p class="woocommerce-mini-cart__empty-message">No products in the cart.</p>';
+											}
+											?>
+										</div>
+									</li>
+								</ul>
 							</div>
 						</div><!-- /.header-icons -->
 					</div>
