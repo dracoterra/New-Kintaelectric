@@ -14800,7 +14800,7 @@ textarea.input-text {
     border: 0
 }
 
-.footer-contact>div:last-child {
+.footer-contact>section>div:last-child {
     margin-bottom: 0;
 }
 
