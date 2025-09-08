@@ -35,6 +35,11 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
 ?>
 
 <?php wp_footer(); ?>
-
+<div class="back-to-top-wrapper position-absolute bottom-0 pe-none">
+	<a href="#page"
+		class="btn btn-secondary shadows rounded-cricle d-flex align-items-center justify-content-center p-0 pe-auto position-sticky position-fixed back-to-top-link "
+		aria-label="Scroll to Top"><i class="fa fa-angle-up"></i></a>
+</div>
+<div class="electro-overlay"></div>
 </body>
 </html>
