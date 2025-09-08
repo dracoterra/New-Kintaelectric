@@ -105,10 +105,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 							</div>
 							<?php endif; ?>
 							<div class="header-icon" data-bs-toggle="tooltip" data-bs-placement="bottom"
-								data-bs-title="Wishlist">
-								<a href="wishlist/index.htm">
-									<i class="ec ec-favorites"></i>
-								</a>
+								data-bs-title="<?php esc_attr_e('Wishlist', 'kintaelectric'); ?>">
+								<?php
+								// Verificar si YITH Wishlist está activo
+								if (defined('YITH_WCWL')) {
+									$wishlist_url = YITH_WCWL()->get_wishlist_url();
+									$wishlist_count = yith_wcwl_count_all_products();
+									?>
+									<a href="<?php echo esc_url($wishlist_url); ?>">
+										<i class="ec ec-favorites"></i>
+										<?php if ($wishlist_count > 0): ?>
+											<span class="header-icon-counter"><?php echo esc_html($wishlist_count); ?></span>
+										<?php endif; ?>
+									</a>
+									<?php
+								} else {
+									// Fallback si el plugin no está activo
+									?>
+									<a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>">
+										<i class="ec ec-favorites"></i>
+									</a>
+									<?php
+								}
+								?>
 							</div>
 							<div class="header-icon header-icon__user-account dropdown animate-dropdown"
 								data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="My Account">
@@ -136,9 +155,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 								<a class="dropdown-toggle" href="cart/index.htm" data-bs-toggle="dropdown">
 									<i class="ec ec-shopping-bag"></i>
 									<span class="cart-items-count count header-icon-counter">60</span>
-									<span class="cart-items-total-price total-price"><span
-											class="woocommerce-Price-amount amount"><bdi><span
-													class="woocommerce-Price-currencySymbol">&#36;</span>61,127.98</bdi></span></span>
+									<span class="cart-items-total-price total-price"><span class="woocommerce-Price-amount amount"><bdi><span class="woocommerce-Price-currencySymbol">&#36;</span>61,127.98</bdi></span></span>
 								</a>
 							</div>
 						</div><!-- /.header-icons -->
@@ -153,50 +170,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 							</div>
 						</div>
 						<div class="secondary-nav-menu col electro-animate-dropdown position-relative">
-							<ul id="menu-secondary-nav" class="secondary-nav yamm">
-								<li id="menu-item-5343" class="highlight yamm-fw menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-5343 dropdown">
-									<a title="All Pages" href="<?php echo esc_url( home_url( '/' ) ); ?>" class="dropdown-toggle" aria-haspopup="true" data-hover="dropdown">All Pages</a>
-									<ul role="menu" class=" dropdown-menu">
-										<li id="menu-item-5444" class="menu-item menu-item-type-post_type menu-item-object-mas_static_content menu-item-5444">
-											<div class="yamm-content">
-												<div class="vc_row wpb_row vc_row-fluid">
-													<div class="wpb_column vc_column_container vc_col-sm-3">
-														<div class="vc_column-inner">
-															<div class="wpb_wrapper">
-																<div class="vc_wp_custommenu wpb_content_element">
-																	<div class="widget widget_nav_menu">
-																		<div class="menu-pages-menu-1-container">
-																			<ul id="menu-pages-menu-1" class="menu">
-																				<li id="menu-item-5172" class="nav-title menu-item menu-item-type-custom menu-item-object-custom menu-item-5172">
-																					<a href="#">Home Pages</a></li>
-																				<li id="menu-item-5320" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home current-menu-item page_item page-item-2139 current_page_item menu-item-5320">
-																					<a href="<?php echo esc_url( home_url( '/' ) ); ?>" aria-current="page">Home v1</a>
-																				</li>
-																			</ul>
-																		</div>
-																	</div>
-																</div>
-															</div>
-														</div>
-													</div>
-												</div>
-											</div>
-										</li>
-									</ul>
-								</li>
-								<li id="menu-item-5344" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5344">
-									<a title="Featured Brands" href="<?php echo esc_url( home_url( '/' ) ); ?>">Featured Brands</a>
-								</li>
-								<li id="menu-item-5345" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5345">
-									<a title="Trending Styles" href="<?php echo esc_url( home_url( '/' ) ); ?>">Trending Styles</a>
-								</li>
-								<li id="menu-item-5341" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5341">
-									<a title="Gift Cards" href="<?php echo esc_url( home_url( '/' ) ); ?>">Gift Cards</a>
-								</li>
-								<li id="menu-item-5342" class="pull-end menu-item menu-item-type-post_type menu-item-object-page menu-item-5342">
-									<a title="Free Shipping on Orders $50+" href="<?php echo esc_url( home_url( '/' ) ); ?>">Free Shipping on Orders $50+</a>
-								</li>
-							</ul>
+							<?php
+							wp_nav_menu( array(
+								'theme_location' => 'primary',
+								'menu_class'     => 'secondary-nav yamm',
+								'container'      => false,
+								'fallback_cb'    => false,
+								'walker'         => new Walker_Nav_Menu(),
+							) );
+							?>
 						</div>
 					</div>
 				</div>

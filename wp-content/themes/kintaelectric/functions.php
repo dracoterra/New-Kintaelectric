@@ -1131,3 +1131,4 @@ function kintaelectric_get_product_categories() {
     
     return $options;
 }
+
