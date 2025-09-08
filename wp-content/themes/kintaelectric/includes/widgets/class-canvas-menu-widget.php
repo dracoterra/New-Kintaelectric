@@ -1,6 +1,7 @@
 <?php
 /**
  * KintaElectric Canvas Menu Widget
+ * Optimized and refactored version
  *
  * @package kintaelectric
  */
@@ -12,13 +13,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 class KintaElectric_Canvas_Menu_Widget extends WP_Widget {
 
     /**
+     * Widget cache key prefix
+     */
+    const CACHE_PREFIX = 'kintaelectric_canvas_menu_';
+
+    /**
      * Constructor.
      */
     public function __construct() {
         parent::__construct(
-            'kintaelectric_canvas_menu_widget', // Base ID
-            esc_html__( 'KintaElectric Canvas Menu', 'kintaelectric' ), // Name
-            array( 'description' => esc_html__( 'Displays the off-canvas navigation menu with WooCommerce categories.', 'kintaelectric' ) ) // Args
+            'kintaelectric_canvas_menu_widget',
+            esc_html__( 'KintaElectric Canvas Menu', 'kintaelectric' ),
+            array( 
+                'description' => esc_html__( 'Displays the off-canvas navigation menu with WooCommerce categories.', 'kintaelectric' ),
+                'classname'   => 'kintaelectric-canvas-menu-widget'
+            )
         );
     }
 
@@ -31,123 +40,155 @@ class KintaElectric_Canvas_Menu_Widget extends WP_Widget {
      * @param array $instance Saved values from database.
      */
     public function widget( $args, $instance ) {
-        // Verificar que WooCommerce esté activo
-        if ( ! class_exists( 'WooCommerce' ) ) {
-            echo '<p>' . esc_html__( 'WooCommerce is not active.', 'kintaelectric' ) . '</p>';
-            return;
-        }
-
-        // Verificar que la taxonomía de productos exista
-        if ( ! taxonomy_exists( 'product_cat' ) ) {
-            echo '<p>' . esc_html__( 'Product categories taxonomy not found.', 'kintaelectric' ) . '</p>';
+        // Early validation
+        if ( ! $this->is_valid_environment() ) {
             return;
         }
 
         $instance = wp_parse_args( (array) $instance, $this->get_default_instance() );
         
-        echo $args['before_widget'];
+        // Check cache first
+        $cache_key = $this->get_cache_key( $instance );
+        $cached_output = get_transient( $cache_key );
         
-        // Obtener categorías de WooCommerce
-        $categories = $this->get_woocommerce_categories( $instance );
-        
-        if ( empty( $categories ) ) {
-            echo '<p>' . esc_html__( 'No categories found.', 'kintaelectric' ) . '</p>';
+        if ( false !== $cached_output ) {
+            echo $args['before_widget'];
+            echo $cached_output;
             echo $args['after_widget'];
             return;
         }
 
-        // Generar el menú dinámico
-        $this->render_dynamic_menu( $categories, $instance );
+        // Start output buffering for caching
+        ob_start();
+        
+        echo $args['before_widget'];
+        
+        try {
+            $categories = $this->get_categories( $instance );
+            
+            if ( empty( $categories ) ) {
+                $this->render_no_categories_message();
+            } else {
+                $this->render_menu( $categories, $instance );
+            }
+        } catch ( Exception $e ) {
+            error_log( 'Canvas Menu Widget Error: ' . $e->getMessage() );
+            $this->render_error_message();
+        }
         
         echo $args['after_widget'];
+        
+        // Cache the output
+        $output = ob_get_clean();
+        set_transient( $cache_key, $output, HOUR_IN_SECONDS );
+        echo $output;
     }
 
     /**
-     * Obtener categorías de WooCommerce
+     * Validate environment requirements
+     *
+     * @return bool
+     */
+    private function is_valid_environment() {
+        if ( ! class_exists( 'WooCommerce' ) ) {
+            if ( current_user_can( 'manage_options' ) ) {
+                echo '<p class="widget-error">' . esc_html__( 'WooCommerce is not active.', 'kintaelectric' ) . '</p>';
+            }
+            return false;
+        }
+
+        if ( ! taxonomy_exists( 'product_cat' ) ) {
+            if ( current_user_can( 'manage_options' ) ) {
+                echo '<p class="widget-error">' . esc_html__( 'Product categories taxonomy not found.', 'kintaelectric' ) . '</p>';
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get cache key for widget instance
+     *
+     * @param array $instance Widget instance.
+     * @return string
+     */
+    private function get_cache_key( $instance ) {
+        return self::CACHE_PREFIX . md5( serialize( $instance ) );
+    }
+
+    /**
+     * Get WooCommerce categories with optimized query
      *
      * @param array $instance Widget instance.
      * @return array
      */
-    private function get_woocommerce_categories( $instance ) {
-        // Método 1: Usar get_terms con parámetros específicos
+    private function get_categories( $instance ) {
         $args = array(
             'taxonomy'     => 'product_cat',
             'orderby'      => $instance['orderby'],
             'order'        => $instance['order'],
             'hide_empty'   => $instance['hide_empty'],
             'number'       => $instance['number'],
-            'parent'       => 0, // Solo categorías principales
-            'hierarchical' => false, // No incluir subcategorías en esta consulta
+            'parent'       => 0,
+            'hierarchical' => false,
+            'meta_query'   => array(
+                'relation' => 'OR',
+                array(
+                    'key'     => 'thumbnail_id',
+                    'compare' => 'EXISTS'
+                ),
+                array(
+                    'key'     => 'thumbnail_id',
+                    'compare' => 'NOT EXISTS'
+                )
+            )
         );
 
         $categories = get_terms( $args );
         
         if ( is_wp_error( $categories ) ) {
-            return $this->get_categories_fallback( $instance );
-        }
-
-        // Si no hay categorías, intentar método alternativo
-        if ( empty( $categories ) ) {
-            return $this->get_categories_fallback( $instance );
+            error_log( 'Canvas Menu Widget - get_terms error: ' . $categories->get_error_message() );
+            return array();
         }
 
         return $categories;
     }
 
     /**
-     * Método alternativo para obtener categorías si get_terms falla
-     *
-     * @param array $instance Widget instance.
-     * @return array
+     * Render no categories message
      */
-    private function get_categories_fallback( $instance ) {
-        // Usar wp_list_categories como método alternativo
-        $args = array(
-            'taxonomy'     => 'product_cat',
-            'hide_empty'   => $instance['hide_empty'],
-            'parent'       => 0,
-            'number'       => $instance['number'],
-            'orderby'      => $instance['orderby'],
-            'order'        => $instance['order'],
-            'echo'         => false,
-        );
-
-        // Obtener IDs de categorías usando wp_list_categories
-        $category_list = wp_list_categories( $args );
-        
-        if ( empty( $category_list ) ) {
-            // Último recurso: obtener todas las categorías sin filtros
-            $all_categories = get_terms( array(
-                'taxonomy' => 'product_cat',
-                'hide_empty' => false,
-                'parent' => 0,
-            ) );
-            
-            if ( ! is_wp_error( $all_categories ) ) {
-                // Aplicar límite manualmente
-                return array_slice( $all_categories, 0, $instance['number'] );
-            }
+    private function render_no_categories_message() {
+        if ( current_user_can( 'manage_options' ) ) {
+            echo '<p class="widget-info">' . esc_html__( 'No categories found. Add some product categories to see them here.', 'kintaelectric' ) . '</p>';
         }
-
-        return array();
     }
 
     /**
-     * Renderizar el menú dinámico
+     * Render error message
+     */
+    private function render_error_message() {
+        if ( current_user_can( 'manage_options' ) ) {
+            echo '<p class="widget-error">' . esc_html__( 'An error occurred while loading the menu.', 'kintaelectric' ) . '</p>';
+        }
+    }
+
+    /**
+     * Render the main menu
      *
-     * @param array $categories Categorías de WooCommerce.
+     * @param array $categories WooCommerce categories.
      * @param array $instance Widget instance.
      */
-    private function render_dynamic_menu( $categories, $instance ) {
+    private function render_menu( $categories, $instance ) {
         ?>
         <ul id="menu-all-departments-menu" class="nav nav-inline yamm">
             <?php
-            // Añadir elementos destacados si están configurados
+            // Render highlighted items if configured
             $this->render_highlighted_items( $instance );
             
-            // Renderizar categorías principales
-            foreach ( $categories as $index => $category ) {
-                $this->render_category_item( $category, $index, $instance );
+            // Render main categories
+            foreach ( $categories as $category ) {
+                $this->render_category_item( $category, $instance );
             }
             ?>
         </ul>
@@ -155,49 +196,55 @@ class KintaElectric_Canvas_Menu_Widget extends WP_Widget {
     }
 
     /**
-     * Renderizar elementos destacados
+     * Render highlighted items
      *
      * @param array $instance Widget instance.
      */
     private function render_highlighted_items( $instance ) {
-        if ( ! empty( $instance['highlighted_items'] ) ) {
-            $items = explode( "\n", $instance['highlighted_items'] );
-            foreach ( $items as $item ) {
-                $item = trim( $item );
-                if ( empty( $item ) ) continue;
-                
-                $parts = explode( '|', $item );
-                $title = isset( $parts[0] ) ? trim( $parts[0] ) : '';
-                $url = isset( $parts[1] ) ? trim( $parts[1] ) : '#';
-                
-                if ( ! empty( $title ) ) {
-                    ?>
-                    <li class="highlight menu-item">
-                        <a title="<?php echo esc_attr( $title ); ?>" href="<?php echo esc_url( $url ); ?>">
-                            <?php echo esc_html( $title ); ?>
-                        </a>
-                    </li>
-                    <?php
-                }
+        if ( empty( $instance['highlighted_items'] ) ) {
+            return;
+        }
+
+        $items = array_filter( array_map( 'trim', explode( "\n", $instance['highlighted_items'] ) ) );
+        
+        foreach ( $items as $item ) {
+            $parts = explode( '|', $item, 2 );
+            $title = trim( $parts[0] ?? '' );
+            $url = trim( $parts[1] ?? '#' );
+            
+            if ( empty( $title ) ) {
+                continue;
             }
+            
+            ?>
+            <li class="highlight menu-item">
+                <a title="<?php echo esc_attr( $title ); ?>" href="<?php echo esc_url( $url ); ?>">
+                    <?php echo esc_html( $title ); ?>
+                </a>
+            </li>
+            <?php
         }
     }
 
     /**
-     * Renderizar elemento de categoría
+     * Render category item
      *
-     * @param WP_Term $category Categoría de WooCommerce.
-     * @param int $index Índice de la categoría.
+     * @param WP_Term $category WooCommerce category.
      * @param array $instance Widget instance.
      */
-    private function render_category_item( $category, $index, $instance ) {
+    private function render_category_item( $category, $instance ) {
         $has_children = $this->has_category_children( $category->term_id );
         $menu_class = $has_children ? 'yamm-tfw menu-item menu-item-has-children dropdown' : 'menu-item';
+        $term_link = get_term_link( $category );
+        
+        if ( is_wp_error( $term_link ) ) {
+            $term_link = '#';
+        }
         
         ?>
         <li class="<?php echo esc_attr( $menu_class ); ?>">
             <a title="<?php echo esc_attr( $category->name ); ?>" 
-               href="<?php echo esc_url( get_term_link( $category ) ); ?>"
+               href="<?php echo esc_url( $term_link ); ?>"
                <?php if ( $has_children ) : ?>
                data-bs-toggle="dropdown" class="dropdown-toggle" aria-haspopup="true"
                <?php endif; ?>>
@@ -218,51 +265,53 @@ class KintaElectric_Canvas_Menu_Widget extends WP_Widget {
     }
 
     /**
-     * Verificar si la categoría tiene hijos
+     * Check if category has children
      *
-     * @param int $category_id ID de la categoría.
+     * @param int $category_id Category ID.
      * @return bool
      */
     private function has_category_children( $category_id ) {
+        static $children_cache = array();
+        
+        if ( isset( $children_cache[ $category_id ] ) ) {
+            return $children_cache[ $category_id ];
+        }
+        
         $children = get_terms( array(
-            'taxonomy'   => 'product_cat',
-            'parent'     => $category_id,
-            'hide_empty' => false,
-            'number'     => 1,
+            'taxonomy'     => 'product_cat',
+            'parent'       => $category_id,
+            'hide_empty'   => false,
+            'number'       => 1,
             'hierarchical' => false,
+            'fields'       => 'ids'
         ) );
         
-        return ! empty( $children ) && ! is_wp_error( $children );
+        $has_children = ! empty( $children ) && ! is_wp_error( $children );
+        $children_cache[ $category_id ] = $has_children;
+        
+        return $has_children;
     }
 
 
     /**
-     * Renderizar contenido del megamenú
+     * Render megamenu content
      *
-     * @param WP_Term $category Categoría principal.
+     * @param WP_Term $category Main category.
      * @param array $instance Widget instance.
      */
     private function render_megamenu_content( $category, $instance ) {
-        // Obtener subcategorías
-        $subcategories = get_terms( array(
-            'taxonomy'   => 'product_cat',
-            'parent'     => $category->term_id,
-            'hide_empty' => $instance['hide_empty'],
-            'orderby'    => $instance['orderby'],
-            'order'      => $instance['order'],
-            'number'     => $instance['subcategories_limit'],
-        ) );
-
-        if ( is_wp_error( $subcategories ) ) {
-            $subcategories = array();
+        $subcategories = $this->get_subcategories( $category->term_id, $instance );
+        $category_link = get_term_link( $category );
+        
+        if ( is_wp_error( $category_link ) ) {
+            $category_link = '#';
         }
 
-        // Imagen de la categoría si está habilitada
+        // Category image if enabled
         if ( $instance['show_images'] ) {
             $this->render_category_image( $category );
         }
 
-        // Contenido del megamenú
         ?>
         <div class="vc_row wpb_row vc_row-fluid">
             <div class="wpb_column vc_column_container vc_col-sm-6">
@@ -271,25 +320,17 @@ class KintaElectric_Canvas_Menu_Widget extends WP_Widget {
                         <div class="wpb_wrapper">
                             <ul>
                                 <li class="nav-title">
-                                    <a href="<?php echo esc_url( get_term_link( $category ) ); ?>">
+                                    <a href="<?php echo esc_url( $category_link ); ?>">
                                         <?php echo esc_html( $category->name ); ?>
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="<?php echo esc_url( get_term_link( $category ) ); ?>">
+                                    <a href="<?php echo esc_url( $category_link ); ?>">
                                         <?php echo esc_html__( 'All', 'kintaelectric' ); ?> <?php echo esc_html( $category->name ); ?>
                                     </a>
                                 </li>
                                 
-                                <?php if ( ! empty( $subcategories ) ) : ?>
-                                    <?php foreach ( $subcategories as $subcategory ) : ?>
-                                        <li>
-                                            <a href="<?php echo esc_url( get_term_link( $subcategory ) ); ?>">
-                                                <?php echo esc_html( $subcategory->name ); ?>
-                                            </a>
-                                        </li>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
+                                <?php $this->render_subcategories( $subcategories ); ?>
                                 
                                 <li class="nav-divider"></li>
                                 <li>
@@ -304,20 +345,14 @@ class KintaElectric_Canvas_Menu_Widget extends WP_Widget {
                 </div>
             </div>
             
-            <?php if ( ! empty( $subcategories ) && count( $subcategories ) > 5 ) : ?>
+            <?php if ( count( $subcategories ) > 5 ) : ?>
                 <div class="wpb_column vc_column_container vc_col-sm-6">
                     <div class="vc_column-inner">
                         <div class="wpb_text_column wpb_content_element">
                             <div class="wpb_wrapper">
                                 <ul>
                                     <li class="nav-title"><?php echo esc_html__( 'More Categories', 'kintaelectric' ); ?></li>
-                                    <?php foreach ( array_slice( $subcategories, 5 ) as $subcategory ) : ?>
-                                        <li>
-                                            <a href="<?php echo esc_url( get_term_link( $subcategory ) ); ?>">
-                                                <?php echo esc_html( $subcategory->name ); ?>
-                                            </a>
-                                        </li>
-                                    <?php endforeach; ?>
+                                    <?php $this->render_subcategories( array_slice( $subcategories, 5 ) ); ?>
                                 </ul>
                             </div>
                         </div>
@@ -329,38 +364,87 @@ class KintaElectric_Canvas_Menu_Widget extends WP_Widget {
     }
 
     /**
-     * Renderizar imagen de la categoría
+     * Get subcategories for a category
      *
-     * @param WP_Term $category Categoría de WooCommerce.
+     * @param int $category_id Category ID.
+     * @param array $instance Widget instance.
+     * @return array
+     */
+    private function get_subcategories( $category_id, $instance ) {
+        $subcategories = get_terms( array(
+            'taxonomy'   => 'product_cat',
+            'parent'     => $category_id,
+            'hide_empty' => $instance['hide_empty'],
+            'orderby'    => $instance['orderby'],
+            'order'      => $instance['order'],
+            'number'     => $instance['subcategories_limit'],
+        ) );
+
+        return is_wp_error( $subcategories ) ? array() : $subcategories;
+    }
+
+    /**
+     * Render subcategories list
+     *
+     * @param array $subcategories Subcategories array.
+     */
+    private function render_subcategories( $subcategories ) {
+        foreach ( $subcategories as $subcategory ) {
+            $subcategory_link = get_term_link( $subcategory );
+            
+            if ( is_wp_error( $subcategory_link ) ) {
+                $subcategory_link = '#';
+            }
+            
+            ?>
+            <li>
+                <a href="<?php echo esc_url( $subcategory_link ); ?>">
+                    <?php echo esc_html( $subcategory->name ); ?>
+                </a>
+            </li>
+            <?php
+        }
+    }
+
+    /**
+     * Render category image
+     *
+     * @param WP_Term $category WooCommerce category.
      */
     private function render_category_image( $category ) {
         $thumbnail_id = get_term_meta( $category->term_id, 'thumbnail_id', true );
         
-        if ( $thumbnail_id ) {
-            $image = wp_get_attachment_image_src( $thumbnail_id, 'full' );
-            if ( $image ) {
-                ?>
-                <div class="vc_row wpb_row vc_row-fluid bg-yamm-content">
-                    <div class="wpb_column vc_column_container vc_col-sm-12">
-                        <div class="vc_column-inner">
-                            <div class="wpb_single_image wpb_content_element vc_align_left">
-                                <figure class="wpb_wrapper vc_figure">
-                                    <div class="vc_single_image-wrapper vc_box_border_grey">
-                                        <img width="540" height="460"
-                                             src="<?php echo esc_url( $image[0] ); ?>"
-                                             class="vc_single_image-img attachment-full"
-                                             alt="<?php echo esc_attr( $category->name ); ?>"
-                                             title="<?php echo esc_attr( $category->name ); ?>"
-                                             decoding="async">
-                                    </div>
-                                </figure>
+        if ( ! $thumbnail_id ) {
+            return;
+        }
+        
+        $image = wp_get_attachment_image_src( $thumbnail_id, 'medium' );
+        
+        if ( ! $image ) {
+            return;
+        }
+        
+        ?>
+        <div class="vc_row wpb_row vc_row-fluid bg-yamm-content">
+            <div class="wpb_column vc_column_container vc_col-sm-12">
+                <div class="vc_column-inner">
+                    <div class="wpb_single_image wpb_content_element vc_align_left">
+                        <figure class="wpb_wrapper vc_figure">
+                            <div class="vc_single_image-wrapper vc_box_border_grey">
+                                <img width="540" height="460"
+                                     src="<?php echo esc_url( $image[0] ); ?>"
+                                     class="vc_single_image-img attachment-medium"
+                                     alt="<?php echo esc_attr( $category->name ); ?>"
+                                     title="<?php echo esc_attr( $category->name ); ?>"
+                                     loading="lazy"
+                                     decoding="async">
                             </div>
-                        </div>
+                        </figure>
                     </div>
                 </div>
-                <?php
-            }
-        }
+            </div>
+        </div>
+        <?php
     }
 
     /**
@@ -498,13 +582,32 @@ class KintaElectric_Canvas_Menu_Widget extends WP_Widget {
     private function get_default_instance() {
         return array(
             'title'                => '',
-            'number'               => 20, // Aumentado de 8 a 20
-            'subcategories_limit'  => 15, // Aumentado de 10 a 15
+            'number'               => 20,
+            'subcategories_limit'  => 15,
             'orderby'              => 'name',
             'order'                => 'ASC',
-            'hide_empty'           => false, // Cambiado a false para mostrar todas las categorías
+            'hide_empty'           => false,
             'show_images'          => true,
             'highlighted_items'    => '',
         );
     }
+
+    /**
+     * Clear widget cache
+     */
+    public static function clear_cache() {
+        global $wpdb;
+        
+        $wpdb->query( 
+            $wpdb->prepare( 
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+                '_transient_' . self::CACHE_PREFIX . '%'
+            )
+        );
+    }
 }
+
+// Hook to clear cache when categories are updated
+add_action( 'created_product_cat', array( 'KintaElectric_Canvas_Menu_Widget', 'clear_cache' ) );
+add_action( 'edited_product_cat', array( 'KintaElectric_Canvas_Menu_Widget', 'clear_cache' ) );
+add_action( 'delete_product_cat', array( 'KintaElectric_Canvas_Menu_Widget', 'clear_cache' ) );
