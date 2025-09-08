@@ -632,34 +632,19 @@ require_once kintaelectric_PATH . '/includes/widgets/class-image-widget.php';
  * Enqueue admin scripts for widget functionality
  */
 function kintaelectric_admin_widget_scripts( $hook ) {
-    if ( $hook === 'widgets.php' ) {
-        ?>
-        <script type="text/javascript">
-        jQuery(document).ready(function($) {
-            // Function to toggle category field
-            function toggleCategoryField() {
-                $('.kintaelectric-product-type').each(function() {
-                    var $this = $(this);
-                    var $categoryField = $this.closest('.widget-content').find('.kintaelectric-category-field');
-                    
-                    if ($this.val() === 'category') {
-                        $categoryField.show();
-                    } else {
-                        $categoryField.hide();
-                    }
-                });
-            }
-            
-            // Run on page load
-            toggleCategoryField();
-            
-            // Run when product type changes
-            $(document).on('change', '.kintaelectric-product-type', function() {
-                toggleCategoryField();
-            });
-        });
-        </script>
-        <?php
+    if ( $hook === 'widgets.php' || $hook === 'customize.php' ) {
+        // Enqueue media uploader and jQuery
+        wp_enqueue_media();
+        wp_enqueue_script( 'jquery' );
+        
+        // Enqueue our custom admin widgets script
+        wp_enqueue_script( 
+            'kintaelectric-admin-widgets', 
+            kintaelectric_ASSETS_URL . 'js/admin-widgets.js', 
+            array( 'jquery', 'media-upload', 'media-views' ), 
+            '1.0.0', 
+            true 
+        );
     }
 }
 add_action( 'admin_enqueue_scripts', 'kintaelectric_admin_widget_scripts' );
