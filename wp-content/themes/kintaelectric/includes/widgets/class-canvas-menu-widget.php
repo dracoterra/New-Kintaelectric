@@ -18,7 +18,7 @@ class KintaElectric_Canvas_Menu_Widget extends WP_Widget {
         parent::__construct(
             'kintaelectric_canvas_menu_widget', // Base ID
             esc_html__( 'KintaElectric Canvas Menu', 'kintaelectric' ), // Name
-            array( 'description' => esc_html__( 'Displays the off-canvas navigation menu.', 'kintaelectric' ) ) // Args
+            array( 'description' => esc_html__( 'Displays the off-canvas navigation menu with WooCommerce categories.', 'kintaelectric' ) ) // Args
         );
     }
 
@@ -31,624 +31,336 @@ class KintaElectric_Canvas_Menu_Widget extends WP_Widget {
      * @param array $instance Saved values from database.
      */
     public function widget( $args, $instance ) {
+        // Verificar que WooCommerce esté activo
+        if ( ! class_exists( 'WooCommerce' ) ) {
+            echo '<p>' . esc_html__( 'WooCommerce is not active.', 'kintaelectric' ) . '</p>';
+            return;
+        }
+
+        // Verificar que la taxonomía de productos exista
+        if ( ! taxonomy_exists( 'product_cat' ) ) {
+            echo '<p>' . esc_html__( 'Product categories taxonomy not found.', 'kintaelectric' ) . '</p>';
+            return;
+        }
+
+        $instance = wp_parse_args( (array) $instance, $this->get_default_instance() );
+        
         echo $args['before_widget'];
+        
+        // Obtener categorías de WooCommerce
+        $categories = $this->get_woocommerce_categories( $instance );
+        
+        if ( empty( $categories ) ) {
+            echo '<p>' . esc_html__( 'No categories found.', 'kintaelectric' ) . '</p>';
+            echo $args['after_widget'];
+            return;
+        }
+
+        // Generar el menú dinámico
+        $this->render_dynamic_menu( $categories, $instance );
+        
+        echo $args['after_widget'];
+    }
+
+    /**
+     * Obtener categorías de WooCommerce
+     *
+     * @param array $instance Widget instance.
+     * @return array
+     */
+    private function get_woocommerce_categories( $instance ) {
+        // Método 1: Usar get_terms con parámetros específicos
+        $args = array(
+            'taxonomy'     => 'product_cat',
+            'orderby'      => $instance['orderby'],
+            'order'        => $instance['order'],
+            'hide_empty'   => $instance['hide_empty'],
+            'number'       => $instance['number'],
+            'parent'       => 0, // Solo categorías principales
+            'hierarchical' => false, // No incluir subcategorías en esta consulta
+        );
+
+        $categories = get_terms( $args );
+        
+        if ( is_wp_error( $categories ) ) {
+            return $this->get_categories_fallback( $instance );
+        }
+
+        // Si no hay categorías, intentar método alternativo
+        if ( empty( $categories ) ) {
+            return $this->get_categories_fallback( $instance );
+        }
+
+        return $categories;
+    }
+
+    /**
+     * Método alternativo para obtener categorías si get_terms falla
+     *
+     * @param array $instance Widget instance.
+     * @return array
+     */
+    private function get_categories_fallback( $instance ) {
+        // Usar wp_list_categories como método alternativo
+        $args = array(
+            'taxonomy'     => 'product_cat',
+            'hide_empty'   => $instance['hide_empty'],
+            'parent'       => 0,
+            'number'       => $instance['number'],
+            'orderby'      => $instance['orderby'],
+            'order'        => $instance['order'],
+            'echo'         => false,
+        );
+
+        // Obtener IDs de categorías usando wp_list_categories
+        $category_list = wp_list_categories( $args );
+        
+        if ( empty( $category_list ) ) {
+            // Último recurso: obtener todas las categorías sin filtros
+            $all_categories = get_terms( array(
+                'taxonomy' => 'product_cat',
+                'hide_empty' => false,
+                'parent' => 0,
+            ) );
+            
+            if ( ! is_wp_error( $all_categories ) ) {
+                // Aplicar límite manualmente
+                return array_slice( $all_categories, 0, $instance['number'] );
+            }
+        }
+
+        return array();
+    }
+
+    /**
+     * Renderizar el menú dinámico
+     *
+     * @param array $categories Categorías de WooCommerce.
+     * @param array $instance Widget instance.
+     */
+    private function render_dynamic_menu( $categories, $instance ) {
         ?>
         <ul id="menu-all-departments-menu" class="nav nav-inline yamm">
-            <li id="menu-item-5349"
-                class="highlight menu-item menu-item-type-post_type menu-item-object-page menu-item-5349">
-                <a title="Value of the Day" href="home-v2/index.htm">Value of the Day</a>
-            </li>
-            <li id="menu-item-5350"
-                class="highlight menu-item menu-item-type-post_type menu-item-object-page menu-item-5350">
-                <a title="Top 100 Offers" href="home-v3/index.htm">Top 100 Offers</a></li>
-            <li id="menu-item-5351"
-                class="highlight menu-item menu-item-type-post_type menu-item-object-page menu-item-5351">
-                <a title="New Arrivals" href="home-v3-full-color-background/index.htm">New
-                    Arrivals</a></li>
-            <li id="menu-item-5220"
-                class="yamm-tfw menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-5220 dropdown">
-                <a title="Computers &amp; Accessories" href="#" data-bs-toggle="dropdown"
-                    class="dropdown-toggle" aria-haspopup="true">Computers &#038;
-                    Accessories</a>
-                <ul role="menu" class=" dropdown-menu">
-                    <li id="menu-item-5310"
-                        class="menu-item menu-item-type-post_type menu-item-object-mas_static_content menu-item-5310">
-                        <div class="yamm-content">
-                            <div
-                                class="vc_row wpb_row vc_row-fluid bg-yamm-content bg-yamm-content-bottom bg-yamm-content-right">
-                                <div class="wpb_column vc_column_container vc_col-sm-12">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_single_image wpb_content_element vc_align_left wpb_content_element">
-
-                                            <figure class="wpb_wrapper vc_figure">
-                                                <div
-                                                    class="vc_single_image-wrapper   vc_box_border_grey">
-                                                    <img fetchpriority="high"
-                                                        width="540" height="460"
-                                                        src="../../uploads/2016/03/megamenu-2-300x256.png"
-                                                        class="vc_single_image-img attachment-full"
-                                                        alt="" title="megamenu-2"
-                                                        decoding="async"
-                                                        srcset="../../uploads/2016/03/megamenu-2-300x256.png 540w, ../../uploads/2016/03/megamenu-2-300x256.png 300w"
-                                                        sizes="(max-width: 540px) 100vw, 540px">
-                                                </div>
-                                            </figure>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="vc_row wpb_row vc_row-fluid">
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title">Computers
-                                                        &amp; Accessories</li>
-                                                    <li><a href="#">All Computers &amp;
-                                                            Accessories</a></li>
-                                                    <li><a href="#">Laptops, Desktops
-                                                            &amp; Monitors</a></li>
-                                                    <li><a href="#">Printers &amp;
-                                                            Ink</a></li>
-                                                    <li><a href="#">Networking &amp;
-                                                            Internet Devices</a></li>
-                                                    <li><a href="#">Computer
-                                                            Accessories</a></li>
-                                                    <li><a href="#">Software</a></li>
-                                                    <li class="nav-divider"></li>
-                                                    <li><a href="#"><span
-                                                                class="nav-text">All
-                                                                Electronics</span><span
-                                                                class="nav-subtext">Discover
-                                                                more products</span></a>
-                                                    </li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title">Office &amp;
-                                                        Stationery</li>
-                                                    <li><a href="#">All Office &amp;
-                                                            Stationery</a></li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </li>
-            <li id="menu-item-5221"
-                class="yamm-tfw menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-5221 dropdown">
-                <a title="Cameras, Audio &amp; Video" href="#" data-bs-toggle="dropdown"
-                    class="dropdown-toggle" aria-haspopup="true">Cameras, Audio &#038;
-                    Video</a>
-                <ul role="menu" class=" dropdown-menu">
-                    <li id="menu-item-5309"
-                        class="menu-item menu-item-type-post_type menu-item-object-mas_static_content menu-item-5309">
-                        <div class="yamm-content">
-                            <div class="vc_row wpb_row vc_row-fluid bg-yamm-content">
-                                <div class="wpb_column vc_column_container vc_col-sm-12">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_single_image wpb_content_element vc_align_left wpb_content_element">
-
-                                            <figure class="wpb_wrapper vc_figure">
-                                                <div
-                                                    class="vc_single_image-wrapper   vc_box_border_grey">
-                                                    <img width="540" height="460"
-                                                        src="../../uploads/2016/03/megamenu-3-300x256.png"
-                                                        class="vc_single_image-img attachment-full"
-                                                        alt="" title="megamenu-3"
-                                                        decoding="async"
-                                                        srcset="../../uploads/2016/03/megamenu-3-300x256.png 540w, ../../uploads/2016/03/megamenu-3-300x256.png 300w"
-                                                        sizes="(max-width: 540px) 100vw, 540px">
-                                                </div>
-                                            </figure>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="vc_row wpb_row vc_row-fluid">
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title"><a
-                                                            href="#">Cameras &amp;
-                                                            Photography</a></li>
-                                                    <li><a href="#">Lenses</a></li>
-                                                    <li><a href="#">Camera
-                                                            Accessories</a></li>
-                                                    <li><a href="#">Security &amp;
-                                                            Surveillance</a></li>
-                                                    <li><a href="#">Binoculars &amp;
-                                                            Telescopes</a></li>
-                                                    <li><a href="#">Camcorders</a></li>
-                                                    <li class="nav-divider"></li>
-                                                    <li><a href="#"><span
-                                                                class="nav-text">All
-                                                                Electronics</span><span
-                                                                class="nav-subtext">Discover
-                                                                more products</span></a>
-                                                    </li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title">Audio &amp;
-                                                        Video</li>
-                                                    <li><a href="#">All Audio &amp;
-                                                            Video</a></li>
-                                                    <li><a href="#">Headphones &amp;
-                                                            Speakers</a></li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </li>
-            <li id="menu-item-5222"
-                class="yamm-tfw menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-5222 dropdown">
-                <a title="Mobiles &amp; Tablets" href="#" data-bs-toggle="dropdown"
-                    class="dropdown-toggle" aria-haspopup="true">Mobiles &#038; Tablets</a>
-                <ul role="menu" class=" dropdown-menu">
-                    <li id="menu-item-5311"
-                        class="menu-item menu-item-type-post_type menu-item-object-mas_static_content menu-item-5311">
-                        <div class="yamm-content">
-                            <div class="vc_row wpb_row vc_row-fluid bg-yamm-content">
-                                <div class="wpb_column vc_column_container vc_col-sm-12">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_single_image wpb_content_element vc_align_left wpb_content_element  bg-yamm-extend-outside">
-
-                                            <figure class="wpb_wrapper vc_figure">
-                                                <div
-                                                    class="vc_single_image-wrapper   vc_box_border_grey">
-                                                    <img width="540" height="495"
-                                                        src="../../uploads/2016/03/megamenu--300x275.png"
-                                                        class="vc_single_image-img attachment-full"
-                                                        alt="" title="megamenu-"
-                                                        decoding="async"
-                                                        srcset="../../uploads/2016/03/megamenu--300x275.png 540w, ../../uploads/2016/03/megamenu--300x275.png 300w"
-                                                        sizes="(max-width: 540px) 100vw, 540px">
-                                                </div>
-                                            </figure>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="vc_row wpb_row vc_row-fluid">
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title">Mobiles &amp;
-                                                        Tablets</li>
-                                                    <li><a href="#">All Mobile
-                                                            Phones</a></li>
-                                                    <li><a href="#">Smartphones</a></li>
-                                                    <li><a href="#">Refurbished
-                                                            Mobiles</a></li>
-                                                    <li class="nav-divider"></li>
-                                                    <li><a href="#">All Mobile
-                                                            Accessories</a></li>
-                                                    <li><a href="#">Cases &amp;
-                                                            Covers</a></li>
-                                                    <li class="nav-divider"></li>
-                                                    <li><a href="#"><span
-                                                                class="nav-text">All
-                                                                Electronics</span><span
-                                                                class="nav-subtext">Discover
-                                                                more products</span></a>
-                                                    </li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title"></li>
-                                                    <li><a href="#">All Tablets</a></li>
-                                                    <li><a href="#">Tablet
-                                                            Accessories</a></li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </li>
-            <li id="menu-item-5223"
-                class="yamm-tfw menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-5223 dropdown">
-                <a title="Movies, Music &amp; Video Games" href="#"
-                    data-bs-toggle="dropdown" class="dropdown-toggle"
-                    aria-haspopup="true">Movies, Music &#038; Video Games</a>
-                <ul role="menu" class=" dropdown-menu">
-                    <li id="menu-item-5312"
-                        class="menu-item menu-item-type-post_type menu-item-object-mas_static_content menu-item-5312">
-                        <div class="yamm-content">
-                            <div class="vc_row wpb_row vc_row-fluid bg-yamm-content">
-                                <div class="wpb_column vc_column_container vc_col-sm-12">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_single_image wpb_content_element vc_align_left wpb_content_element">
-
-                                            <figure class="wpb_wrapper vc_figure">
-                                                <div
-                                                    class="vc_single_image-wrapper   vc_box_border_grey">
-                                                    <img loading="lazy" width="540"
-                                                        height="485"
-                                                        src="../../uploads/2016/03/megamenu-8.png"
-                                                        class="vc_single_image-img attachment-full"
-                                                        alt="" title="megamenu-8"
-                                                        decoding="async"
-                                                        srcset="../../uploads/2016/03/megamenu-8.png 540w, ../../uploads/2016/03/megamenu-8-300x269.png 300w"
-                                                        sizes="(max-width: 540px) 100vw, 540px">
-                                                </div>
-                                            </figure>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="vc_row wpb_row vc_row-fluid">
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title">Movies &amp;
-                                                        TV Shows</li>
-                                                    <li><a href="#">All Movies &amp; TV
-                                                            Shows</a></li>
-                                                    <li><a href="#">All English</a></li>
-                                                    <li><a href="#">All Hindi</a></li>
-                                                    <li class="nav-divider"></li>
-                                                    <li class="nav-title">Video Games
-                                                    </li>
-                                                    <li><a href="#">PC Games</a></li>
-                                                    <li><a href="#">Consoles</a></li>
-                                                    <li><a href="#">Accessories</a></li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title">Music</li>
-                                                    <li><a href="#">All Music</a></li>
-                                                    <li><a href="#">Indian Classical</a>
-                                                    </li>
-                                                    <li><a href="#">Musical
-                                                            Instruments</a></li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </li>
-            <li id="menu-item-5226"
-                class="yamm-tfw menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-5226 dropdown">
-                <a title="TV &amp; Audio" href="#" data-bs-toggle="dropdown"
-                    class="dropdown-toggle" aria-haspopup="true">TV &#038; Audio</a>
-                <ul role="menu" class=" dropdown-menu">
-                    <li id="menu-item-5314"
-                        class="menu-item menu-item-type-post_type menu-item-object-mas_static_content menu-item-5314">
-                        <div class="yamm-content">
-                            <div class="vc_row wpb_row vc_row-fluid bg-yamm-content">
-                                <div class="wpb_column vc_column_container vc_col-sm-12">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_single_image wpb_content_element vc_align_left wpb_content_element">
-
-                                            <figure class="wpb_wrapper vc_figure">
-                                                <div
-                                                    class="vc_single_image-wrapper   vc_box_border_grey">
-                                                    <img loading="lazy" width="540"
-                                                        height="460"
-                                                        src="../../uploads/2016/03/megamenu-4.png"
-                                                        class="vc_single_image-img attachment-full"
-                                                        alt="" title="megamenu-4"
-                                                        decoding="async"
-                                                        srcset="../../uploads/2016/03/megamenu-4.png 540w, ../../uploads/2016/03/megamenu-4-300x256.png 300w"
-                                                        sizes="(max-width: 540px) 100vw, 540px">
-                                                </div>
-                                            </figure>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="vc_row wpb_row vc_row-fluid">
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title">Audio &amp;
-                                                        Video</li>
-                                                    <li><a href="#">All Audio &amp;
-                                                            Video</a></li>
-                                                    <li><a href="#">Televisions</a></li>
-                                                    <li><a href="#">Headphones</a></li>
-                                                    <li><a href="#">Speakers</a></li>
-                                                    <li><a href="#">Audio &amp; Video
-                                                            Accessories</a></li>
-                                                    <li class="nav-divider"></li>
-                                                    <li><a href="#"><span
-                                                                class="nav-text">Electro
-                                                                Home
-                                                                Appliances</span><span
-                                                                class="nav-subtext">Available
-                                                                in select
-                                                                cities</span></a></li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title">Music</li>
-                                                    <li><a href="#">Televisions</a></li>
-                                                    <li><a href="#">Headphones</a></li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </li>
-            <li id="menu-item-5224"
-                class="yamm-tfw menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-5224 dropdown">
-                <a title="Watches &amp; Eyewear" href="#" data-bs-toggle="dropdown"
-                    class="dropdown-toggle" aria-haspopup="true">Watches &#038; Eyewear</a>
-                <ul role="menu" class=" dropdown-menu">
-                    <li id="menu-item-5313"
-                        class="menu-item menu-item-type-post_type menu-item-object-mas_static_content menu-item-5313">
-                        <div class="yamm-content">
-                            <div class="vc_row wpb_row vc_row-fluid bg-yamm-content">
-                                <div class="wpb_column vc_column_container vc_col-sm-12">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_single_image wpb_content_element vc_align_left wpb_content_element">
-
-                                            <figure class="wpb_wrapper vc_figure">
-                                                <div
-                                                    class="vc_single_image-wrapper   vc_box_border_grey">
-                                                    <img loading="lazy" width="540"
-                                                        height="486"
-                                                        src="../../uploads/2016/03/megamenu-7.png"
-                                                        class="vc_single_image-img attachment-full"
-                                                        alt="" title="megamenu-7"
-                                                        decoding="async"
-                                                        srcset="../../uploads/2016/03/megamenu-7.png 540w, ../../uploads/2016/03/megamenu-7-300x270.png 300w"
-                                                        sizes="(max-width: 540px) 100vw, 540px">
-                                                </div>
-                                            </figure>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="vc_row wpb_row vc_row-fluid">
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title">Watches</li>
-                                                    <li><a href="#">All Watches</a></li>
-                                                    <li><a href="#">Men's Watches</a>
-                                                    </li>
-                                                    <li><a href="#">Women's Watches</a>
-                                                    </li>
-                                                    <li><a href="#">Premium Watches</a>
-                                                    </li>
-                                                    <li><a href="#">Deals on Watches</a>
-                                                    </li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title">Eyewear</li>
-                                                    <li><a href="#">Men's Sunglasses</a>
-                                                    </li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </li>
-            <li id="menu-item-5225"
-                class="yamm-tfw menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-5225 dropdown">
-                <a title="Car, Motorbike &amp; Industrial" href="#"
-                    data-bs-toggle="dropdown" class="dropdown-toggle"
-                    aria-haspopup="true">Car, Motorbike &#038; Industrial</a>
-                <ul role="menu" class=" dropdown-menu">
-                    <li id="menu-item-5315"
-                        class="menu-item menu-item-type-post_type menu-item-object-mas_static_content menu-item-5315">
-                        <div class="yamm-content">
-                            <div class="vc_row wpb_row vc_row-fluid bg-yamm-content">
-                                <div class="wpb_column vc_column_container vc_col-sm-12">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_single_image wpb_content_element vc_align_left wpb_content_element">
-
-                                            <figure class="wpb_wrapper vc_figure">
-                                                <div
-                                                    class="vc_single_image-wrapper   vc_box_border_grey">
-                                                    <img loading="lazy" width="540"
-                                                        height="523"
-                                                        src="../../uploads/2016/03/megamenu-9.png"
-                                                        class="vc_single_image-img attachment-full"
-                                                        alt="" title="megamenu-9"
-                                                        decoding="async"
-                                                        srcset="../../uploads/2016/03/megamenu-9.png 540w, ../../uploads/2016/03/megamenu-9-300x291.png 300w"
-                                                        sizes="(max-width: 540px) 100vw, 540px">
-                                                </div>
-                                            </figure>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="vc_row wpb_row vc_row-fluid">
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title">Car &amp;
-                                                        Motorbike</li>
-                                                    <li><a href="#">All Cars &amp;
-                                                            Bikes</a></li>
-                                                    <li><a href="#">Car &amp; Bike
-                                                            Care</a></li>
-                                                    <li><a href="#">Lubricants</a></li>
-                                                    <li class="nav-divider"></li>
-                                                    <li><a href="#">Shop for Bike
-                                                    </li>
-                                                    <li><a href="#">Helmets &amp;
-                                                            Gloves</a></li>
-                                                    <li><a href="#">Bike Parts</a></li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="wpb_column vc_column_container vc_col-sm-6">
-                                    <div class="vc_column-inner">
-                                        <div
-                                            class="wpb_text_column wpb_content_element">
-                                            <div class="wpb_wrapper">
-                                                <ul>
-                                                    <li class="nav-title">Industrial
-                                                        Supplies</li>
-                                                    <li><a href="#">All Industrial
-                                                            Supplies</a></li>
-                                                    <li><a href="#">Lab &amp;
-                                                            Scientific</a></li>
-                                                </ul>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </li>
-            <li id="menu-item-5227"
-                class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-5227 dropdown">
-                <a title="Accessories" href="#" data-bs-toggle="dropdown"
-                    class="dropdown-toggle" aria-haspopup="true">Accessories</a>
-                <ul role="menu" class=" dropdown-menu">
-                    <li id="menu-item-5228"
-                        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5228">
-                        <a title="Cases" href="#">Cases</a></li>
-                    <li id="menu-item-5229"
-                        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5229">
-                        <a title="Chargers" href="#">Chargers</a></li>
-                    <li id="menu-item-5230"
-                        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5230">
-                        <a title="Headphone Accessories" href="#">Headphone Accessories</a>
-                    </li>
-                    <li id="menu-item-5231"
-                        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5231">
-                        <a title="Headphone Cases" href="#">Headphone Cases</a></li>
-                    <li id="menu-item-5232"
-                        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5232">
-                        <a title="Headphones" href="#">Headphones</a></li>
-                    <li id="menu-item-5233"
-                        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5233">
-                        <a title="Computer Accessories" href="#">Computer Accessories</a>
-                    </li>
-                    <li id="menu-item-5234"
-                        class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5234">
-                        <a title="Laptop Accessories" href="#">Laptop Accessories</a></li>
-                </ul>
-            </li>
+            <?php
+            // Añadir elementos destacados si están configurados
+            $this->render_highlighted_items( $instance );
+            
+            // Renderizar categorías principales
+            foreach ( $categories as $index => $category ) {
+                $this->render_category_item( $category, $index, $instance );
+            }
+            ?>
         </ul>
         <?php
-        echo $args['after_widget'];
+    }
+
+    /**
+     * Renderizar elementos destacados
+     *
+     * @param array $instance Widget instance.
+     */
+    private function render_highlighted_items( $instance ) {
+        if ( ! empty( $instance['highlighted_items'] ) ) {
+            $items = explode( "\n", $instance['highlighted_items'] );
+            foreach ( $items as $item ) {
+                $item = trim( $item );
+                if ( empty( $item ) ) continue;
+                
+                $parts = explode( '|', $item );
+                $title = isset( $parts[0] ) ? trim( $parts[0] ) : '';
+                $url = isset( $parts[1] ) ? trim( $parts[1] ) : '#';
+                
+                if ( ! empty( $title ) ) {
+                    ?>
+                    <li class="highlight menu-item">
+                        <a title="<?php echo esc_attr( $title ); ?>" href="<?php echo esc_url( $url ); ?>">
+                            <?php echo esc_html( $title ); ?>
+                        </a>
+                    </li>
+                    <?php
+                }
+            }
+        }
+    }
+
+    /**
+     * Renderizar elemento de categoría
+     *
+     * @param WP_Term $category Categoría de WooCommerce.
+     * @param int $index Índice de la categoría.
+     * @param array $instance Widget instance.
+     */
+    private function render_category_item( $category, $index, $instance ) {
+        $has_children = $this->has_category_children( $category->term_id );
+        $menu_class = $has_children ? 'yamm-tfw menu-item menu-item-has-children dropdown' : 'menu-item';
+        
+        ?>
+        <li class="<?php echo esc_attr( $menu_class ); ?>">
+            <a title="<?php echo esc_attr( $category->name ); ?>" 
+               href="<?php echo esc_url( get_term_link( $category ) ); ?>"
+               <?php if ( $has_children ) : ?>
+               data-bs-toggle="dropdown" class="dropdown-toggle" aria-haspopup="true"
+               <?php endif; ?>>
+                <?php echo esc_html( $category->name ); ?>
+            </a>
+            
+            <?php if ( $has_children ) : ?>
+                <ul role="menu" class="dropdown-menu">
+                    <li class="menu-item">
+                        <div class="yamm-content">
+                            <?php $this->render_megamenu_content( $category, $instance ); ?>
+                        </div>
+                    </li>
+                </ul>
+            <?php endif; ?>
+        </li>
+        <?php
+    }
+
+    /**
+     * Verificar si la categoría tiene hijos
+     *
+     * @param int $category_id ID de la categoría.
+     * @return bool
+     */
+    private function has_category_children( $category_id ) {
+        $children = get_terms( array(
+            'taxonomy'   => 'product_cat',
+            'parent'     => $category_id,
+            'hide_empty' => false,
+            'number'     => 1,
+            'hierarchical' => false,
+        ) );
+        
+        return ! empty( $children ) && ! is_wp_error( $children );
+    }
+
+
+    /**
+     * Renderizar contenido del megamenú
+     *
+     * @param WP_Term $category Categoría principal.
+     * @param array $instance Widget instance.
+     */
+    private function render_megamenu_content( $category, $instance ) {
+        // Obtener subcategorías
+        $subcategories = get_terms( array(
+            'taxonomy'   => 'product_cat',
+            'parent'     => $category->term_id,
+            'hide_empty' => $instance['hide_empty'],
+            'orderby'    => $instance['orderby'],
+            'order'      => $instance['order'],
+            'number'     => $instance['subcategories_limit'],
+        ) );
+
+        if ( is_wp_error( $subcategories ) ) {
+            $subcategories = array();
+        }
+
+        // Imagen de la categoría si está habilitada
+        if ( $instance['show_images'] ) {
+            $this->render_category_image( $category );
+        }
+
+        // Contenido del megamenú
+        ?>
+        <div class="vc_row wpb_row vc_row-fluid">
+            <div class="wpb_column vc_column_container vc_col-sm-6">
+                <div class="vc_column-inner">
+                    <div class="wpb_text_column wpb_content_element">
+                        <div class="wpb_wrapper">
+                            <ul>
+                                <li class="nav-title">
+                                    <a href="<?php echo esc_url( get_term_link( $category ) ); ?>">
+                                        <?php echo esc_html( $category->name ); ?>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="<?php echo esc_url( get_term_link( $category ) ); ?>">
+                                        <?php echo esc_html__( 'All', 'kintaelectric' ); ?> <?php echo esc_html( $category->name ); ?>
+                                    </a>
+                                </li>
+                                
+                                <?php if ( ! empty( $subcategories ) ) : ?>
+                                    <?php foreach ( $subcategories as $subcategory ) : ?>
+                                        <li>
+                                            <a href="<?php echo esc_url( get_term_link( $subcategory ) ); ?>">
+                                                <?php echo esc_html( $subcategory->name ); ?>
+                                            </a>
+                                        </li>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                                
+                                <li class="nav-divider"></li>
+                                <li>
+                                    <a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>">
+                                        <span class="nav-text"><?php echo esc_html__( 'All Products', 'kintaelectric' ); ?></span>
+                                        <span class="nav-subtext"><?php echo esc_html__( 'Discover more products', 'kintaelectric' ); ?></span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <?php if ( ! empty( $subcategories ) && count( $subcategories ) > 5 ) : ?>
+                <div class="wpb_column vc_column_container vc_col-sm-6">
+                    <div class="vc_column-inner">
+                        <div class="wpb_text_column wpb_content_element">
+                            <div class="wpb_wrapper">
+                                <ul>
+                                    <li class="nav-title"><?php echo esc_html__( 'More Categories', 'kintaelectric' ); ?></li>
+                                    <?php foreach ( array_slice( $subcategories, 5 ) as $subcategory ) : ?>
+                                        <li>
+                                            <a href="<?php echo esc_url( get_term_link( $subcategory ) ); ?>">
+                                                <?php echo esc_html( $subcategory->name ); ?>
+                                            </a>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Renderizar imagen de la categoría
+     *
+     * @param WP_Term $category Categoría de WooCommerce.
+     */
+    private function render_category_image( $category ) {
+        $thumbnail_id = get_term_meta( $category->term_id, 'thumbnail_id', true );
+        
+        if ( $thumbnail_id ) {
+            $image = wp_get_attachment_image_src( $thumbnail_id, 'full' );
+            if ( $image ) {
+                ?>
+                <div class="vc_row wpb_row vc_row-fluid bg-yamm-content">
+                    <div class="wpb_column vc_column_container vc_col-sm-12">
+                        <div class="vc_column-inner">
+                            <div class="wpb_single_image wpb_content_element vc_align_left">
+                                <figure class="wpb_wrapper vc_figure">
+                                    <div class="vc_single_image-wrapper vc_box_border_grey">
+                                        <img width="540" height="460"
+                                             src="<?php echo esc_url( $image[0] ); ?>"
+                                             class="vc_single_image-img attachment-full"
+                                             alt="<?php echo esc_attr( $category->name ); ?>"
+                                             title="<?php echo esc_attr( $category->name ); ?>"
+                                             decoding="async">
+                                    </div>
+                                </figure>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php
+            }
+        }
     }
 
     /**
@@ -659,8 +371,98 @@ class KintaElectric_Canvas_Menu_Widget extends WP_Widget {
      * @param array $instance Previously saved values from database.
      */
     public function form( $instance ) {
-        // No options for this widget, as it displays static content.
-        echo '<p>' . esc_html__( 'This widget displays the static off-canvas navigation menu.', 'kintaelectric' ) . '</p>';
+        $instance = wp_parse_args( (array) $instance, $this->get_default_instance() );
+        ?>
+        <p>
+            <label for="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>">
+                <?php esc_html_e( 'Title:', 'kintaelectric' ); ?>
+            </label>
+            <input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'title' ) ); ?>" 
+                   name="<?php echo esc_attr( $this->get_field_name( 'title' ) ); ?>" 
+                   type="text" value="<?php echo esc_attr( $instance['title'] ); ?>" />
+        </p>
+
+        <p>
+            <label for="<?php echo esc_attr( $this->get_field_id( 'number' ) ); ?>">
+                <?php esc_html_e( 'Number of categories to show:', 'kintaelectric' ); ?>
+            </label>
+            <input class="tiny-text" id="<?php echo esc_attr( $this->get_field_id( 'number' ) ); ?>" 
+                   name="<?php echo esc_attr( $this->get_field_name( 'number' ) ); ?>" 
+                   type="number" step="1" min="1" value="<?php echo esc_attr( $instance['number'] ); ?>" size="3" />
+        </p>
+
+        <p>
+            <label for="<?php echo esc_attr( $this->get_field_id( 'subcategories_limit' ) ); ?>">
+                <?php esc_html_e( 'Number of subcategories to show:', 'kintaelectric' ); ?>
+            </label>
+            <input class="tiny-text" id="<?php echo esc_attr( $this->get_field_id( 'subcategories_limit' ) ); ?>" 
+                   name="<?php echo esc_attr( $this->get_field_name( 'subcategories_limit' ) ); ?>" 
+                   type="number" step="1" min="1" value="<?php echo esc_attr( $instance['subcategories_limit'] ); ?>" size="3" />
+        </p>
+
+        <p>
+            <label for="<?php echo esc_attr( $this->get_field_id( 'orderby' ) ); ?>">
+                <?php esc_html_e( 'Order by:', 'kintaelectric' ); ?>
+            </label>
+            <select class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'orderby' ) ); ?>" 
+                    name="<?php echo esc_attr( $this->get_field_name( 'orderby' ) ); ?>">
+                <option value="name" <?php selected( $instance['orderby'], 'name' ); ?>>
+                    <?php esc_html_e( 'Name', 'kintaelectric' ); ?>
+                </option>
+                <option value="count" <?php selected( $instance['orderby'], 'count' ); ?>>
+                    <?php esc_html_e( 'Product Count', 'kintaelectric' ); ?>
+                </option>
+                <option value="slug" <?php selected( $instance['orderby'], 'slug' ); ?>>
+                    <?php esc_html_e( 'Slug', 'kintaelectric' ); ?>
+                </option>
+                <option value="term_id" <?php selected( $instance['orderby'], 'term_id' ); ?>>
+                    <?php esc_html_e( 'ID', 'kintaelectric' ); ?>
+                </option>
+            </select>
+        </p>
+
+        <p>
+            <label for="<?php echo esc_attr( $this->get_field_id( 'order' ) ); ?>">
+                <?php esc_html_e( 'Order:', 'kintaelectric' ); ?>
+            </label>
+            <select class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'order' ) ); ?>" 
+                    name="<?php echo esc_attr( $this->get_field_name( 'order' ) ); ?>">
+                <option value="ASC" <?php selected( $instance['order'], 'ASC' ); ?>>
+                    <?php esc_html_e( 'Ascending', 'kintaelectric' ); ?>
+                </option>
+                <option value="DESC" <?php selected( $instance['order'], 'DESC' ); ?>>
+                    <?php esc_html_e( 'Descending', 'kintaelectric' ); ?>
+                </option>
+            </select>
+        </p>
+
+        <p>
+            <input class="checkbox" type="checkbox" <?php checked( $instance['hide_empty'] ); ?> 
+                   id="<?php echo esc_attr( $this->get_field_id( 'hide_empty' ) ); ?>" 
+                   name="<?php echo esc_attr( $this->get_field_name( 'hide_empty' ) ); ?>" />
+            <label for="<?php echo esc_attr( $this->get_field_id( 'hide_empty' ) ); ?>">
+                <?php esc_html_e( 'Hide empty categories', 'kintaelectric' ); ?>
+            </label>
+        </p>
+
+        <p>
+            <input class="checkbox" type="checkbox" <?php checked( $instance['show_images'] ); ?> 
+                   id="<?php echo esc_attr( $this->get_field_id( 'show_images' ) ); ?>" 
+                   name="<?php echo esc_attr( $this->get_field_name( 'show_images' ) ); ?>" />
+            <label for="<?php echo esc_attr( $this->get_field_id( 'show_images' ) ); ?>">
+                <?php esc_html_e( 'Show category images', 'kintaelectric' ); ?>
+            </label>
+        </p>
+
+        <p>
+            <label for="<?php echo esc_attr( $this->get_field_id( 'highlighted_items' ) ); ?>">
+                <?php esc_html_e( 'Highlighted items (one per line, format: Title|URL):', 'kintaelectric' ); ?>
+            </label>
+            <textarea class="widefat" rows="4" id="<?php echo esc_attr( $this->get_field_id( 'highlighted_items' ) ); ?>" 
+                      name="<?php echo esc_attr( $this->get_field_name( 'highlighted_items' ) ); ?>"><?php echo esc_textarea( $instance['highlighted_items'] ); ?></textarea>
+            <small><?php esc_html_e( 'Example: Value of the Day|/offers/ | Top 100 Offers|/top-offers/', 'kintaelectric' ); ?></small>
+        </p>
+        <?php
     }
 
     /**
@@ -675,6 +477,34 @@ class KintaElectric_Canvas_Menu_Widget extends WP_Widget {
      */
     public function update( $new_instance, $old_instance ) {
         $instance = array();
+        
+        $instance['title'] = sanitize_text_field( $new_instance['title'] );
+        $instance['number'] = absint( $new_instance['number'] );
+        $instance['subcategories_limit'] = absint( $new_instance['subcategories_limit'] );
+        $instance['orderby'] = sanitize_text_field( $new_instance['orderby'] );
+        $instance['order'] = sanitize_text_field( $new_instance['order'] );
+        $instance['hide_empty'] = isset( $new_instance['hide_empty'] ) ? (bool) $new_instance['hide_empty'] : false;
+        $instance['show_images'] = isset( $new_instance['show_images'] ) ? (bool) $new_instance['show_images'] : false;
+        $instance['highlighted_items'] = sanitize_textarea_field( $new_instance['highlighted_items'] );
+        
         return $instance;
+    }
+
+    /**
+     * Get default instance values
+     *
+     * @return array
+     */
+    private function get_default_instance() {
+        return array(
+            'title'                => '',
+            'number'               => 20, // Aumentado de 8 a 20
+            'subcategories_limit'  => 15, // Aumentado de 10 a 15
+            'orderby'              => 'name',
+            'order'                => 'ASC',
+            'hide_empty'           => false, // Cambiado a false para mostrar todas las categorías
+            'show_images'          => true,
+            'highlighted_items'    => '',
+        );
     }
 }
