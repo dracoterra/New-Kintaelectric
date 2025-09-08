@@ -67,14 +67,6 @@ class Module extends Module_Base {
 			'2.0.0'
 		);
 
-		if ( self::display_header_footer() ) {
-			wp_enqueue_style(
-				'kintaelectric-header-footer',
-				kintaelectric_STYLE_URL . 'header-footer.css',
-				[],
-				'2.0.0'
-			);
-		}
 	}
 
 	/**
