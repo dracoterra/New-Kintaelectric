@@ -1,31 +1,27 @@
 # Widget de Filtros de Productos - Configuración
 
 ## Descripción
-El widget "Electro Products Filter" replica exactamente la funcionalidad del HTML original, incluyendo:
-- Filtro de marcas (Brands)
-- Filtro de colores (Colors) 
-- Filtro de precios con slider
-- Funcionalidad "Show more/Show less" para listas largas
+El widget "Filtros de Productos Electro" permite filtrar productos por atributos personalizados de WooCommerce:
+- **Filtros con checkboxes** - Selección múltiple de opciones por atributo
+- **Auto-envío de formularios** - Los filtros se aplican automáticamente al seleccionar
+- **Solo atributos con productos** - Muestra únicamente atributos que tienen productos asignados
+- **Conteos dinámicos** - Los números se actualizan según filtros activos
+- **Funcionalidad "Ver más/Ver menos"** - Para listas largas (máximo configurable)
+- **Filtros cruzados** - Al filtrar por un atributo, los otros se actualizan
 
 ## Configuración Requerida
 
 ### 1. Atributos de Producto
-Para que el widget funcione correctamente, necesitas crear los siguientes atributos de producto en WooCommerce:
+Para que el widget funcione correctamente, necesitas crear atributos de producto en WooCommerce:
 
-#### Marcas (Brands)
+#### Crear Atributos
 1. Ve a **WooCommerce > Productos > Atributos**
-2. Crea un nuevo atributo:
-   - **Nombre**: `Brands` o `Marcas`
-   - **Slug**: `pa_brands`
-   - **Tipo**: `select` (lista desplegable)
-3. Configura los términos (marcas) como: Apple, Samsung, LG, etc.
-
-#### Colores (Colors)
-1. Crea otro atributo:
-   - **Nombre**: `Color` o `Colores`
-   - **Slug**: `pa_color`
-   - **Tipo**: `select` (lista desplegable)
-2. Configura los términos (colores) como: Black, White, Gold, etc.
+2. Crea los atributos que necesites, por ejemplo:
+   - **Marcas**: `pa_brands` (Apple, Samsung, LG, etc.)
+   - **Colores**: `pa_color` (Black, White, Gold, etc.)
+   - **Tamaños**: `pa_size` (S, M, L, XL, etc.)
+   - **Materiales**: `pa_material` (Cotton, Polyester, etc.)
+3. **Tipo**: `select` (lista desplegable) para todos
 
 ### 2. Asignar Atributos a Productos
 1. Ve a **Productos > Todos los productos**
@@ -35,69 +31,96 @@ Para que el widget funcione correctamente, necesitas crear los siguientes atribu
 
 ### 3. Configurar el Widget
 1. Ve a **Apariencia > Widgets**
-2. Busca **"Electro Products Filter"**
+2. Busca **"Filtros de Productos Electro"**
 3. Arrastra al **"Shop Sidebar"**
 4. Configura las opciones:
-   - **Título**: "Filters" (por defecto)
-   - **Mostrar filtro de marcas**: ✓
-   - **Mostrar filtro de colores**: ✓
-   - **Mostrar filtro de precios**: ✓
-   - **Máximo de elementos**: 5 (por defecto)
+   - **Título**: "Filtros" (por defecto)
+   - **Seleccionar atributos a mostrar**: Checkboxes con todos los atributos disponibles
+   - **Máximo de elementos por filtro**: 5 (por defecto)
+
+### 4. Configuración de Atributos
+- **Solo atributos con productos**: El widget muestra únicamente atributos que tienen productos asignados
+- **Selección múltiple**: Marca los checkboxes de los atributos que quieres mostrar
+- **Conteos dinámicos**: Los números se actualizan según los filtros activos
 
 ## Funcionalidades
 
-### Filtros Dinámicos
-- Los filtros se actualizan automáticamente según los productos disponibles
-- Los enlaces generan URLs con parámetros de filtro
-- Compatible con la paginación de WooCommerce
+### Filtros Dinámicos e Inteligentes
+- **Checkboxes interactivos**: Selecciona múltiples opciones por atributo
+- **Auto-envío**: Los filtros se aplican automáticamente al marcar/desmarcar
+- **Atributos configurables**: Selecciona qué atributos mostrar en el widget
+- **Solo atributos con productos**: Muestra únicamente atributos que tienen productos asignados
+- **Conteos dinámicos**: Los números se actualizan según los filtros activos
+- **Filtros cruzados**: Al filtrar por un atributo, los otros se actualizan
+- **URLs inteligentes**: Los formularios generan URLs con parámetros de filtro
+- **Compatible con paginación**: Funciona correctamente con la paginación de WooCommerce
 
-### Slider de Precios
-- Utiliza el slider nativo de WooCommerce
-- Se calcula automáticamente el rango de precios
-- Incluye botón "Filter" para aplicar filtros
-
-### Show More/Less
-- Listas largas se limitan a 5 elementos por defecto
-- Botón "+ Show more" para expandir
-- Botón "- Show less" para contraer
+### Ver Más/Ver Menos
+- Listas largas se limitan al número configurado (por defecto: 5)
+- Botón "+ Ver más" para expandir
+- Botón "- Ver menos" para contraer
 - Animación suave de 500ms
 
 ## Estructura HTML Generada
 ```html
 <aside id="electro_products_filter-1" class="widget widget_electro_products_filter">
-    <h3 class="widget-title">Filters</h3>
+    <h3 class="widget-title">Filtros</h3>
     
     <!-- Brands Filter -->
     <aside class="widget woocommerce widget_layered_nav">
         <h3 class="widget-title">Brands</h3>
-        <ul class="woocommerce-widget-layered-nav-list">
-            <li><a href="?filter_brands=apple">Apple</a> <span class="count">(5)</span></li>
-            <!-- Más marcas... -->
-        </ul>
+        <form method="get" class="woocommerce-widget-layered-nav-list">
+            <ul class="woocommerce-widget-layered-nav-list">
+                <li>
+                    <label>
+                        <input type="checkbox" name="filter_brands[]" value="apple" checked>
+                        <span>Apple</span> <span class="count">(5)</span>
+                    </label>
+                </li>
+                <li>
+                    <label>
+                        <input type="checkbox" name="filter_brands[]" value="samsung">
+                        <span>Samsung</span> <span class="count">(3)</span>
+                    </label>
+                </li>
+                <li>
+                    <label>
+                        <input type="checkbox" name="filter_brands[]" value="lg">
+                        <span>LG</span> <span class="count">(2)</span>
+                    </label>
+                </li>
+                <li class="maxlist-more">
+                    <a href="#" class="show-more-link">+ Ver más</a>
+                </li>
+            </ul>
+            <button type="submit">Filtrar</button>
+        </form>
     </aside>
     
     <!-- Colors Filter -->
     <aside class="widget woocommerce widget_layered_nav">
         <h3 class="widget-title">Color</h3>
         <ul class="woocommerce-widget-layered-nav-list">
-            <li><a href="?filter_color=black">Black</a> <span class="count">(3)</span></li>
-            <!-- Más colores... -->
+            <li><a href="?filter_color=black">Black</a> <span class="count">(8)</span></li>
+            <li><a href="?filter_color=white">White</a> <span class="count">(6)</span></li>
+            <li><a href="?filter_color=gold">Gold</a> <span class="count">(4)</span></li>
+            <li class="maxlist-more" style="display: none;">
+                <a href="#" class="show-more-link">+ Ver más</a>
+            </li>
         </ul>
     </aside>
     
-    <!-- Price Filter -->
-    <aside class="widget woocommerce widget_price_filter">
-        <h3 class="widget-title">Price</h3>
-        <form method="get" action="/shop/">
-            <div class="price_slider_wrapper">
-                <div class="price_slider"></div>
-                <div class="price_slider_amount">
-                    <input type="text" name="min_price" value="50">
-                    <input type="text" name="max_price" value="3490">
-                    <button type="submit" class="button">Filter</button>
-                </div>
-            </div>
-        </form>
+    <!-- Size Filter -->
+    <aside class="widget woocommerce widget_layered_nav">
+        <h3 class="widget-title">Size</h3>
+        <ul class="woocommerce-widget-layered-nav-list">
+            <li><a href="?filter_size=s">S</a> <span class="count">(12)</span></li>
+            <li><a href="?filter_size=m">M</a> <span class="count">(15)</span></li>
+            <li><a href="?filter_size=l">L</a> <span class="count">(10)</span></li>
+            <li class="maxlist-more" style="display: none;">
+                <a href="#" class="show-more-link">+ Ver más</a>
+            </li>
+        </ul>
     </aside>
 </aside>
 ```

@@ -1360,12 +1360,114 @@ add_action( 'widgets_init', 'kintaelectric_register_shop_sidebar' );
 require_once get_template_directory() . '/inc/widgets/class-electro-product-categories-widget.php';
 require_once get_template_directory() . '/inc/widgets/class-electro-latest-products-widget.php';
 require_once get_template_directory() . '/inc/widgets/class-electro-products-filter-widget.php';
+require_once get_template_directory() . '/inc/widgets/class-simple-test-widget.php';
 
 function kintaelectric_register_custom_widgets() {
     register_widget('Electro_Product_Categories_Widget');
     register_widget('Electro_Latest_Products_Widget');
     register_widget('Electro_Products_Filter_Widget');
+    register_widget('Simple_Test_Widget');
 }
+
+// Desregistrar widget anterior si existe para evitar conflictos
+function kintaelectric_unregister_old_widgets() {
+    unregister_widget('Electro_Products_Filter_Widget');
+}
+add_action('widgets_init', 'kintaelectric_unregister_old_widgets', 1);
 add_action('widgets_init', 'kintaelectric_register_custom_widgets');
+
+// Integrar filtros con WooCommerce
+add_action('woocommerce_product_query', 'kintaelectric_apply_product_filters');
+
+function kintaelectric_apply_product_filters($query) {
+    try {
+        // Solo aplicar en páginas de productos
+        if (!is_shop() && !is_product_taxonomy() && !is_product_tag()) {
+            return;
+        }
+
+        // Verificar que es una consulta principal
+        if (!$query->is_main_query()) {
+            return;
+        }
+
+        // Verificar que WooCommerce esté activo
+        if (!class_exists('WooCommerce')) {
+            return;
+        }
+
+    $meta_query = $query->get('meta_query');
+    $tax_query = $query->get('tax_query');
+
+    if (!is_array($meta_query)) {
+        $meta_query = array();
+    }
+    if (!is_array($tax_query)) {
+        $tax_query = array();
+    }
+
+    // Procesar filtros de atributos
+    if (isset($_GET) && is_array($_GET)) {
+        foreach ($_GET as $key => $value) {
+            if (strpos($key, 'filter_') === 0) {
+                $attribute_name = str_replace('filter_', '', $key);
+                $taxonomy = 'pa_' . $attribute_name;
+                
+                if (taxonomy_exists($taxonomy) && !empty($value)) {
+                    $terms = is_array($value) ? $value : array($value);
+                    $terms = array_map('sanitize_text_field', $terms);
+                    
+                    // Verificar que los términos existen
+                    $valid_terms = array();
+                    foreach ($terms as $term_slug) {
+                        if (term_exists($term_slug, $taxonomy)) {
+                            $valid_terms[] = $term_slug;
+                        }
+                    }
+                    
+                    if (!empty($valid_terms)) {
+                        $tax_query[] = array(
+                            'taxonomy' => $taxonomy,
+                            'field' => 'slug',
+                            'terms' => $valid_terms,
+                            'operator' => 'IN'
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    // Aplicar filtros de precio
+    if (isset($_GET['min_price']) || isset($_GET['max_price'])) {
+        $min_price = isset($_GET['min_price']) ? floatval($_GET['min_price']) : 0;
+        $max_price = isset($_GET['max_price']) ? floatval($_GET['max_price']) : 999999;
+        
+        // Validar que los precios sean válidos
+        if ($min_price >= 0 && $max_price > $min_price) {
+            $meta_query[] = array(
+                'key' => '_price',
+                'value' => array($min_price, $max_price),
+                'type' => 'NUMERIC',
+                'compare' => 'BETWEEN',
+            );
+        }
+    }
+
+        // Aplicar las consultas modificadas
+        if (!empty($tax_query)) {
+            $tax_query['relation'] = 'AND';
+            $query->set('tax_query', $tax_query);
+        }
+        
+        if (!empty($meta_query)) {
+            $meta_query['relation'] = 'AND';
+            $query->set('meta_query', $meta_query);
+        }
+    } catch (Exception $e) {
+        // Log del error pero no interrumpir la ejecución
+        error_log('Error en kintaelectric_apply_product_filters: ' . $e->getMessage());
+    }
+}
 
 

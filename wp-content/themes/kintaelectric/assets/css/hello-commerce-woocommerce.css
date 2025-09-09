@@ -1075,6 +1075,106 @@ select {
     letter-spacing: 0.5px;
 }
 
+/* Formularios de filtros */
+.widget_electro_products_filter form {
+    margin: 0;
+}
+
+.widget_electro_products_filter .woocommerce-widget-layered-nav-list__submit {
+    background-color: #333;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.widget_electro_products_filter .woocommerce-widget-layered-nav-list__submit:hover {
+    background-color: #555;
+}
+
+/* Botones de acción de filtros */
+.filter-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.clear-filter-link {
+    color: #666;
+    text-decoration: none;
+    font-size: 12px;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.clear-filter-link:hover {
+    color: #333;
+    background-color: #f5f5f5;
+    border-color: #999;
+}
+
+/* Filtros activos */
+.active-filters {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.active-filters h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.active-filters-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px 0;
+}
+
+.active-filters-list li {
+    display: inline-block;
+    background-color: #007cba;
+    color: white;
+    padding: 4px 8px;
+    margin: 2px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.active-filters-list li a {
+    color: white;
+    text-decoration: none;
+    margin-left: 5px;
+    font-weight: bold;
+}
+
+.active-filters-list li a:hover {
+    color: #ffcccb;
+}
+
+.clear-all-filters {
+    color: #666;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.clear-all-filters:hover {
+    color: #333;
+    text-decoration: underline;
+}
+
 /* Layered Navigation Lists */
 .woocommerce-widget-layered-nav-list {
     list-style: none;
@@ -1102,6 +1202,38 @@ select {
     color: #999;
     font-size: 12px;
     margin-left: 5px;
+}
+
+/* Checkbox Styles */
+.woocommerce-widget-layered-nav-list__item label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 5px 0;
+    margin: 0;
+}
+
+.woocommerce-widget-layered-nav-list__item-checkbox {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.woocommerce-widget-layered-nav-list__item-text {
+    flex: 1;
+    color: #666;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.woocommerce-widget-layered-nav-list__item:hover .woocommerce-widget-layered-nav-list__item-text {
+    color: #333;
+}
+
+.woocommerce-widget-layered-nav-list__item-checkbox:checked + .woocommerce-widget-layered-nav-list__item-text {
+    color: #333;
+    font-weight: 500;
 }
 
 /* Price Filter */
@@ -1153,9 +1285,15 @@ select {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     transition: color 0.3s ease;
+    cursor: pointer;
 }
 
 .maxlist-more a:hover {
     color: #333;
+}
+
+/* Elementos ocultos */
+.maxlist-hidden {
+    display: none !important;
 }
 
