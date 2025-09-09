@@ -23,6 +23,13 @@ do_action( 'woocommerce_before_main_content' );
 
 <div class="site-content-inner row">
 
+	<?php
+	/**
+	 * Shop Sidebar - Lado izquierdo
+	 */
+	get_sidebar( 'shop' );
+	?>
+
 	<div id="primary" class="content-area">
 		<main id="main" class="site-main">
 			<div class="vc_row wpb_row vc_row-fluid">
@@ -38,6 +45,39 @@ do_action( 'woocommerce_before_main_content' );
 							 */
 							do_action( 'woocommerce_archive_description' );
 							?>
+							
+							<!-- Sección de Productos Recomendados -->
+							<section class="section-products-carousel">
+								<header>
+									<h2 class="h1">Recommended Products</h2>
+									<div class="owl-nav">
+										<a href="#products-carousel-prev" data-target="#products-carousel-recommended" class="slider-prev"><i class="fa fa-angle-left"></i></a>
+										<a href="#products-carousel-next" data-target="#products-carousel-recommended" class="slider-next"><i class="fa fa-angle-right"></i></a>
+									</div>
+								</header>
+								
+								<div id="products-carousel-recommended" data-ride="owl-carousel" data-replace-active-class="true" data-carousel-selector=".products-carousel" data-carousel-options='{"items":"5","nav":false,"slideSpeed":300,"dots":"true","rtl":false,"paginationSpeed":400,"navText":["",""],"margin":0,"touchDrag":false,"responsive":{"0":{"items":"2"},"480":{"items":"3"},"768":{"items":"3"},"992":{"items":"4"},"1200":{"items":5},"1430":{"items":"5"},"1480":{"items":"5"}},"autoplay":false}'>
+									<div class="woocommerce columns-5">
+										<div data-view="grid" data-bs-toggle="shop-products" class="products owl-carousel products-carousel products list-unstyled row g-0 row-cols-2 row-cols-md-3 row-cols-lg-5 row-cols-xl-5 row-cols-xxl-5">
+											<?php
+											// Obtener productos recomendados (featured products)
+											$recommended_products = wc_get_products(array(
+												'featured' => true,
+												'limit' => 10,
+												'status' => 'publish'
+											));
+											
+											if (!empty($recommended_products)) {
+												foreach ($recommended_products as $product) {
+													// Usar el template de producto existente
+													wc_get_template_part('content', 'product');
+												}
+											}
+											?>
+										</div>
+									</div>
+								</div>
+							</section>
 							
 							<?php if ( woocommerce_product_loop() ) : ?>
 								
