@@ -104,6 +104,28 @@ jQuery(document).ready(function($) {
             e.stopPropagation();
             switchMode(LIGHT_MODE);
         });
+        
+        // Event listeners directos como respaldo
+        setTimeout(function() {
+            const $darkBtn = $('.electro-mode-switcher-item[data-mode="dark"]');
+            const $lightBtn = $('.electro-mode-switcher-item[data-mode="light"]');
+            
+            if ($darkBtn.length > 0) {
+                $darkBtn.off('click').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    switchMode(DARK_MODE);
+                });
+            }
+            
+            if ($lightBtn.length > 0) {
+                $lightBtn.off('click').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    switchMode(LIGHT_MODE);
+                });
+            }
+        }, 1000);
 
         // Escuchar cambios en localStorage desde otras pestañas
         $(window).on('storage', function(e) {
@@ -129,23 +151,15 @@ jQuery(document).ready(function($) {
         initializeMode();
         initEventListeners();
 
-        // Aplicar preferencia del sistema si no hay modo guardado
+        // Solo usar modo claro por defecto si NO hay modo guardado por el usuario
         if (!localStorage.getItem(STORAGE_KEY)) {
-            const systemPreference = detectSystemPreference();
-            if (systemPreference === DARK_MODE) {
-                switchMode(DARK_MODE);
-            }
+            // Usar modo claro por defecto solo en la primera visita
+            switchMode(LIGHT_MODE);
         }
+        // Si hay un modo guardado, ya se aplicó en initializeMode()
 
-        // Escuchar cambios en la preferencia del sistema
-        if (window.matchMedia) {
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-                if (!localStorage.getItem(STORAGE_KEY)) {
-                    const newMode = e.matches ? DARK_MODE : LIGHT_MODE;
-                    switchMode(newMode);
-                }
-            });
-        }
+        // NO escuchar cambios en la preferencia del sistema
+        // El usuario debe elegir manualmente el modo
     }
 
     // Inicializar
