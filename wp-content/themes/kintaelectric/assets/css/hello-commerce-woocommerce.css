@@ -1297,3 +1297,8 @@ select {
     display: none !important;
 }
 
+/* Elementos mostrados cuando se hace click en Ver más */
+.maxlist-hidden.show {
+    display: block !important;
+}
+
