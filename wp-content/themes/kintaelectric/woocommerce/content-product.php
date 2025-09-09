@@ -64,12 +64,15 @@ if ( empty( $product ) || ! $product->is_visible() ) {
 				<div class="hover-area">
 					<div class="action-buttons">
 						<?php
-						/**
-						 * Hook: woocommerce_after_shop_loop_item.
-						 *
-						 * @hooked woocommerce_template_loop_add_to_cart - 10
-						 */
-						do_action( 'woocommerce_after_shop_loop_item' );
+						// YITH Wishlist - Función nativa del plugin
+						if ( class_exists( 'YITH_WCWL_Frontend' ) ) {
+							YITH_WCWL_Frontend::get_instance()->print_button();
+						}
+						
+						// YITH Compare - Función nativa del plugin
+						if ( class_exists( 'YITH_WooCompare_Frontend' ) ) {
+							YITH_WooCompare_Frontend::instance()->output_button();
+						}
 						?>
 					</div>
 				</div>
