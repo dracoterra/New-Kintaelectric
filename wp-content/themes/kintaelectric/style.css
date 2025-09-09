@@ -50995,3 +50995,7 @@ body.electro-dark .header-logo-placeholder {
     border-color: #495057;
     color: #adb5bd;
 }
+
+.header-icon{
+    position: relative;
+}

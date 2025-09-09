@@ -1004,3 +1004,38 @@ select {
 .woocommerce-account .woocommerce-EditAccountForm legend {
     padding-inline: 18px
 }
+
+/* YITH Wishlist & Compare - Estilos unificados */
+.action-buttons .yith-wcwl-add-to-wishlist-button__label,
+.action-buttons .compare .label {
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Asegurar que los iconos tengan el mismo tamaño */
+.action-buttons .yith-wcwl-icon-svg,
+.action-buttons .compare svg {
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* Estilos específicos para el botón de Compare */
+.action-buttons .compare {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
+.action-buttons .compare .label {
+    margin: 0 !important;
+}
+
+
+/* Asegurar que solo se muestre nuestro SVG personalizado */
+.action-buttons .compare .yith-woocompare-icon-svg {
+    display: none !important;
+}
+    

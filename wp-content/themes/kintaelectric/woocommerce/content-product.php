@@ -38,15 +38,6 @@ if ( empty( $product ) || ! $product->is_visible() ) {
 				</span>
 				<a href="<?php echo esc_url( get_the_permalink() ); ?>" class="woocommerce-LoopProduct-link woocommerce-loop-product__link">
 					<h2 class="woocommerce-loop-product__title"><?php the_title(); ?></h2>
-					<?php
-					/**
-					 * Hook: woocommerce_after_shop_loop_item_title.
-					 *
-					 * @hooked woocommerce_template_loop_rating - 5
-					 * @hooked woocommerce_template_loop_price - 10
-					 */
-					do_action( 'woocommerce_after_shop_loop_item_title' );
-					?>
 					<div class="product-short-description">
 						<?php echo wp_kses_post( $product->get_short_description() ); ?>
 					</div>
@@ -69,9 +60,21 @@ if ( empty( $product ) || ! $product->is_visible() ) {
 							YITH_WCWL_Frontend::get_instance()->print_button();
 						}
 						
-						// YITH Compare - Función nativa del plugin
+						// YITH Compare - Con icono manual
 						if ( class_exists( 'YITH_WooCompare_Frontend' ) ) {
-							YITH_WooCompare_Frontend::instance()->output_button();
+							$compare_url = add_query_arg( array( 'action' => 'yith-woocompare-add-product', 'id' => $product->get_id() ), home_url( '/' ) );
+							?>
+							<a href="<?php echo esc_url( $compare_url ); ?>" 
+							   class="compare link add-to-compare-link" 
+							   data-product_id="<?php echo esc_attr( $product->get_id() ); ?>" 
+							   target="_self" 
+							   rel="nofollow">
+								<svg class="yith-woocompare-icon-svg" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+								</svg>
+								<span class="label">Compare</span>
+							</a>
+							<?php
 						}
 						?>
 					</div>
