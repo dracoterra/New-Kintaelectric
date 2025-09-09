@@ -75,11 +75,7 @@ class Electro_Latest_Products_Widget extends WP_Widget {
     }
 
     private function render_products($number, $show_rating, $show_price) {
-        // Debug básico
-        echo '<p>Debug: Iniciando render_products</p>';
-        
         if (!class_exists('WooCommerce')) {
-            echo '<p>WooCommerce no está activo</p>';
             return;
         }
 
@@ -92,10 +88,7 @@ class Electro_Latest_Products_Widget extends WP_Widget {
             'order' => 'DESC'
         ));
 
-        echo '<p>Debug: Encontrados ' . count($products) . ' productos</p>';
-
         if (empty($products)) {
-            echo '<p>No se encontraron productos</p>';
             return;
         }
 
@@ -104,7 +97,6 @@ class Electro_Latest_Products_Widget extends WP_Widget {
         foreach ($products as $product_post) {
             $product = wc_get_product($product_post->ID);
             if (!$product) {
-                echo '<li>Error: No se pudo cargar el producto ID ' . $product_post->ID . '</li>';
                 continue;
             }
 
@@ -124,12 +116,20 @@ class Electro_Latest_Products_Widget extends WP_Widget {
             echo '<span class="product-title">' . esc_html($product_title) . '</span>';
             echo '</a>';
 
-            if ($show_rating && $product->get_average_rating()) {
+            if ($show_rating) {
                 $rating = $product->get_average_rating();
-                $rating_percentage = ($rating / 5) * 100;
-                echo '<div class="star-rating" role="img" aria-label="Rated ' . esc_attr($rating) . ' out of 5">';
-                echo '<span style="width:' . esc_attr($rating_percentage) . '%">Rated <strong class="rating">' . esc_html($rating) . '</strong> out of 5</span>';
-                echo '</div>';
+                
+                if ($rating > 0) {
+                    $rating_percentage = ($rating / 5) * 100;
+                    echo '<div class="star-rating" role="img" aria-label="Rated ' . esc_attr($rating) . ' out of 5">';
+                    echo '<span style="width:' . esc_attr($rating_percentage) . '%">Rated <strong class="rating">' . esc_html($rating) . '</strong> out of 5</span>';
+                    echo '</div>';
+                } else {
+                    // Mostrar estrellas vacías si no hay rating
+                    echo '<div class="star-rating" role="img" aria-label="No rating yet">';
+                    echo '<span style="width:0%">No rating yet</span>';
+                    echo '</div>';
+                }
             }
 
             if ($show_price) {
