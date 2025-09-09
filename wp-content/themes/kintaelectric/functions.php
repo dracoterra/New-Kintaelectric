@@ -1351,11 +1351,13 @@ function kintaelectric_register_shop_sidebar() {
 }
 add_action( 'widgets_init', 'kintaelectric_register_shop_sidebar' );
 
-// Incluir y registrar el widget personalizado de categorías
+// Incluir y registrar los widgets personalizados
 require_once get_template_directory() . '/inc/widgets/class-electro-product-categories-widget.php';
+require_once get_template_directory() . '/inc/widgets/class-electro-latest-products-widget.php';
 
 function kintaelectric_register_custom_widgets() {
     register_widget('Electro_Product_Categories_Widget');
+    register_widget('Electro_Latest_Products_Widget');
 }
 add_action('widgets_init', 'kintaelectric_register_custom_widgets');
 

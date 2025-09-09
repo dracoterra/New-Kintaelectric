@@ -60,21 +60,9 @@ if ( empty( $product ) || ! $product->is_visible() ) {
 							YITH_WCWL_Frontend::get_instance()->print_button();
 						}
 						
-						// YITH Compare - Con icono manual
+						// YITH Compare - Usar función nativa del plugin
 						if ( class_exists( 'YITH_WooCompare_Frontend' ) ) {
-							$compare_url = add_query_arg( array( 'action' => 'yith-woocompare-add-product', 'id' => $product->get_id() ), home_url( '/' ) );
-							?>
-							<a href="<?php echo esc_url( $compare_url ); ?>" 
-							   class="compare link add-to-compare-link" 
-							   data-product_id="<?php echo esc_attr( $product->get_id() ); ?>" 
-							   target="_self" 
-							   rel="nofollow">
-								<svg class="yith-woocompare-icon-svg" fill="none" stroke-width="1.5" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-									<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
-								</svg>
-								<span class="label">Compare</span>
-							</a>
-							<?php
+							YITH_WooCompare_Frontend::instance()->output_button();
 						}
 						?>
 					</div>
