@@ -1322,6 +1322,7 @@ function kintaelectric_get_product_categories() {
 }
 
 
+
 /**
  * AJAX handler simple para obtener contador y total del carrito
  */
