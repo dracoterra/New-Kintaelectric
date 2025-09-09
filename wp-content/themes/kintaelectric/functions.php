@@ -103,6 +103,11 @@ function kintaelectric_enqueue_electro_assets() {
     // Electro Mode Switcher
     wp_enqueue_script( 'kintaelectric-mode-switcher', kintaelectric_ASSETS_URL . 'js/electro-mode-switcher.js', array( 'jquery' ), '1.0.0', true );
     
+    // Shop View Switcher
+    if ( is_shop() || is_product_category() || is_product_tag() ) {
+        wp_enqueue_script( 'kintaelectric-shop-view-switcher', kintaelectric_ASSETS_URL . 'js/shop-view-switcher.js', array( 'jquery' ), '1.0.0', true );
+    }
+    
     // Logo theme switching CSS
     wp_add_inline_style( 'kintaelectric-style', '
         /* Logo Theme Switching */
@@ -790,33 +795,6 @@ function kintaelectric_woocommerce_wrapper_end() {
     echo '</div></div></div>';
 }
 
-/**
- * Custom WooCommerce product loop
- */
-function kintaelectric_woocommerce_product_loop() {
-    if ( ! class_exists( 'WooCommerce' ) ) {
-        return;
-    }
-
-    // Custom product loop template
-    add_action( 'woocommerce_before_shop_loop_item', 'kintaelectric_product_loop_start', 5 );
-    add_action( 'woocommerce_after_shop_loop_item', 'kintaelectric_product_loop_end', 25 );
-}
-add_action( 'init', 'kintaelectric_woocommerce_product_loop' );
-
-/**
- * Product loop start
- */
-function kintaelectric_product_loop_start() {
-    echo '<div class="product-item">';
-}
-
-/**
- * Product loop end
- */
-function kintaelectric_product_loop_end() {
-    echo '</div>';
-}
 
 /**
  * Electro theme AJAX functions
@@ -1351,4 +1329,21 @@ function kintaelectric_get_cart_count() {
 }
 add_action('wp_ajax_kintaelectric_get_cart_count', 'kintaelectric_get_cart_count');
 add_action('wp_ajax_nopriv_kintaelectric_get_cart_count', 'kintaelectric_get_cart_count');
+
+/**
+ * Register Shop Sidebar
+ */
+function kintaelectric_register_shop_sidebar() {
+    register_sidebar( array(
+        'name'          => esc_html__( 'Shop Sidebar', 'kintaelectric' ),
+        'id'            => 'shop-sidebar',
+        'description'   => esc_html__( 'Widgets added here will appear on the shop page.', 'kintaelectric' ),
+        'before_widget' => '<aside id="%1$s" class="widget %2$s">',
+        'after_widget'  => '</aside>',
+        'before_title'  => '<h3 class="widget-title">',
+        'after_title'   => '</h3>',
+    ) );
+}
+add_action( 'widgets_init', 'kintaelectric_register_shop_sidebar' );
+
 
