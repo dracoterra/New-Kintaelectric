@@ -1057,3 +1057,105 @@ select {
     flex-shrink: 0;
 }
 
+/* Widget de Filtros de Productos */
+.widget_electro_products_filter {
+    margin-bottom: 30px;
+}
+
+.widget_electro_products_filter .widget {
+    margin-bottom: 25px;
+}
+
+.widget_electro_products_filter .widget-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Layered Navigation Lists */
+.woocommerce-widget-layered-nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.woocommerce-widget-layered-nav-list li {
+    margin-bottom: 8px;
+    padding: 0;
+}
+
+.woocommerce-widget-layered-nav-list li a {
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.woocommerce-widget-layered-nav-list li a:hover {
+    color: #333;
+}
+
+.woocommerce-widget-layered-nav-list .count {
+    color: #999;
+    font-size: 12px;
+    margin-left: 5px;
+}
+
+/* Price Filter */
+.widget_price_filter .price_slider_wrapper {
+    margin: 20px 0;
+}
+
+.widget_price_filter .price_slider_amount {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.widget_price_filter .price_slider_amount input {
+    width: 80px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.widget_price_filter .price_slider_amount .button {
+    padding: 8px 16px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.widget_price_filter .price_slider_amount .button:hover {
+    background-color: #555;
+}
+
+/* HideMaxListItems Styles */
+.maxlist-more {
+    margin-top: 10px;
+    text-align: center;
+}
+
+.maxlist-more a {
+    color: #666;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: color 0.3s ease;
+}
+
+.maxlist-more a:hover {
+    color: #333;
+}
+
