@@ -361,12 +361,10 @@ class Electro_Products_Filter_Widget extends WP_Widget {
         ?>
         <script type="text/javascript">
         jQuery(document).ready(function($) {
-            console.log('Script de filtros cargado');
             
             // Función para manejar show more/less
             $(document).on('click', '.widget_electro_products_filter .show-more-link', function(e) {
                 e.preventDefault();
-                console.log('Click en Ver más/Ver menos');
                 
                 var $this = $(this);
                 var $list = $this.closest('ul');
@@ -374,20 +372,16 @@ class Electro_Products_Filter_Widget extends WP_Widget {
                 // Buscar elementos que pueden estar ocultos (tanto con clase maxlist-hidden como show)
                 var $hiddenItems = $list.find('.maxlist-hidden, .show');
                 
-                console.log('Elementos ocultos encontrados:', $hiddenItems.length);
-                console.log('Elementos ocultos:', $hiddenItems);
                 
                 // Verificar si los elementos están visibles o no
                 var isExpanded = $this.text().includes('Ver menos');
                 
                 if (!isExpanded) {
                     // Mostrar elementos ocultos
-                    console.log('Mostrando elementos ocultos');
                     $hiddenItems.removeClass('maxlist-hidden').addClass('show').slideDown(500);
                     $this.text('- Ver menos');
                 } else {
                     // Ocultar elementos adicionales
-                    console.log('Ocultando elementos adicionales');
                     $hiddenItems.slideUp(500, function() {
                         $(this).removeClass('show').addClass('maxlist-hidden');
                     });

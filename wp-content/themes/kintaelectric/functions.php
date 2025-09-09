@@ -938,9 +938,6 @@ function kintaelectric_get_ajax_search() {
     }
 
     if ( WP_DEBUG && WP_DEBUG_LOG ) {
-        error_log( 'AJAX get_ajax_search called' );
-        error_log( 'GET parameters: ' . print_r( $_GET, true ) );
-        error_log( 'POST parameters: ' . print_r( $_POST, true ) );
     }
 
     // Get search term from various sources
@@ -959,14 +956,12 @@ function kintaelectric_get_ajax_search() {
 
     if ( empty( $search_term ) ) {
         if ( WP_DEBUG && WP_DEBUG_LOG ) {
-            error_log( 'Empty search term in get_ajax_search, returning empty results' );
         }
         wp_send_json( array() );
         return;
     }
 
     if ( WP_DEBUG && WP_DEBUG_LOG ) {
-        error_log( 'Search term: ' . $search_term );
     }
     
     $args = array(
@@ -988,7 +983,6 @@ function kintaelectric_get_ajax_search() {
     $results = array();
 
     if ( WP_DEBUG && WP_DEBUG_LOG ) {
-        error_log( 'Found ' . $products->found_posts . ' products for search: ' . $search_term );
     }
 
     if ( $products->have_posts() ) {
@@ -1013,7 +1007,6 @@ function kintaelectric_get_ajax_search() {
     wp_reset_postdata();
     
     if ( WP_DEBUG && WP_DEBUG_LOG ) {
-        error_log( 'Returning ' . count( $results ) . ' results' );
     }
     
     wp_send_json( $results );
@@ -1360,13 +1353,11 @@ add_action( 'widgets_init', 'kintaelectric_register_shop_sidebar' );
 require_once get_template_directory() . '/inc/widgets/class-electro-product-categories-widget.php';
 require_once get_template_directory() . '/inc/widgets/class-electro-latest-products-widget.php';
 require_once get_template_directory() . '/inc/widgets/class-electro-products-filter-widget.php';
-require_once get_template_directory() . '/inc/widgets/class-simple-test-widget.php';
 
 function kintaelectric_register_custom_widgets() {
     register_widget('Electro_Product_Categories_Widget');
     register_widget('Electro_Latest_Products_Widget');
     register_widget('Electro_Products_Filter_Widget');
-    register_widget('Simple_Test_Widget');
 }
 
 // Desregistrar widget anterior si existe para evitar conflictos
@@ -1466,7 +1457,6 @@ function kintaelectric_apply_product_filters($query) {
         }
     } catch (Exception $e) {
         // Log del error pero no interrumpir la ejecución
-        error_log('Error en kintaelectric_apply_product_filters: ' . $e->getMessage());
     }
 }
 
