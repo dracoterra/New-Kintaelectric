@@ -103,6 +103,52 @@ function kintaelectric_enqueue_electro_assets() {
     // Electro Mode Switcher
     wp_enqueue_script( 'kintaelectric-mode-switcher', kintaelectric_ASSETS_URL . 'js/electro-mode-switcher.js', array( 'jquery' ), '1.0.0', true );
     
+    // Logo theme switching CSS
+    wp_add_inline_style( 'kintaelectric-style', '
+        /* Logo Theme Switching */
+        .header-logo-light {
+            display: block;
+        }
+        .header-logo-dark {
+            display: none;
+        }
+        
+        /* Dark mode logo switching */
+        body.electro-dark .header-logo-light {
+            display: none;
+        }
+        body.electro-dark .header-logo-dark {
+            display: block;
+        }
+        
+        /* Mobile logo always visible */
+        .header-logo-mobile {
+            display: block;
+        }
+        
+        /* Logo placeholder styles */
+        .header-logo-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 4px;
+            color: #6c757d;
+            font-size: 12px;
+            text-align: center;
+            line-height: 1.4;
+        }
+        
+        body.electro-dark .header-logo-placeholder {
+            background-color: #343a40;
+            border-color: #495057;
+            color: #adb5bd;
+        }
+    ' );
+    
     
     
     
@@ -301,6 +347,54 @@ function kintaelectric_customize_register( $wp_customize ) {
         'title'    => esc_html__( 'Header Settings', 'kintaelectric' ),
         'priority' => 30,
     ) );
+
+    // Logo Light (Desktop Light Mode)
+    $wp_customize->add_setting( 'kintaelectric_logo_light', array(
+        'default'           => '',
+        'sanitize_callback' => 'absint',
+    ) );
+
+    $wp_customize->add_control( new WP_Customize_Media_Control( $wp_customize, 'kintaelectric_logo_light', array(
+        'label'       => esc_html__( 'Logo Light (Desktop Light Mode)', 'kintaelectric' ),
+        'description' => esc_html__( 'Logo para el modo claro en desktop', 'kintaelectric' ),
+        'section'     => 'title_tagline',
+        'settings'    => 'kintaelectric_logo_light',
+        'mime_type'   => 'image',
+        'priority'    => 8,
+    ) ) );
+
+    // Logo Dark (Desktop Dark Mode)
+    $wp_customize->add_setting( 'kintaelectric_logo_dark', array(
+        'default'           => '',
+        'sanitize_callback' => 'absint',
+    ) );
+
+    $wp_customize->add_control( new WP_Customize_Media_Control( $wp_customize, 'kintaelectric_logo_dark', array(
+        'label'       => esc_html__( 'Logo Dark (Desktop Dark Mode)', 'kintaelectric' ),
+        'description' => esc_html__( 'Logo para el modo oscuro en desktop', 'kintaelectric' ),
+        'section'     => 'title_tagline',
+        'settings'    => 'kintaelectric_logo_dark',
+        'mime_type'   => 'image',
+        'priority'    => 9,
+    ) ) );
+
+    // Logo Mobile
+    $wp_customize->add_setting( 'kintaelectric_logo_mobile', array(
+        'default'           => '',
+        'sanitize_callback' => 'absint',
+    ) );
+
+    $wp_customize->add_control( new WP_Customize_Media_Control( $wp_customize, 'kintaelectric_logo_mobile', array(
+        'label'       => esc_html__( 'Logo Mobile', 'kintaelectric' ),
+        'description' => esc_html__( 'Logo para dispositivos móviles', 'kintaelectric' ),
+        'section'     => 'title_tagline',
+        'settings'    => 'kintaelectric_logo_mobile',
+        'mime_type'   => 'image',
+        'priority'    => 10,
+    ) ) );
+
+    // Remove default logo control
+    $wp_customize->remove_control( 'custom_logo' );
 
     // Header Style
     $wp_customize->add_setting( 'kintaelectric_header_style', array(
@@ -989,6 +1083,86 @@ function kintaelectric_register_widgets() {
     register_widget( 'KintaElectric_Canvas_Menu_Widget' );
 }
 add_action( 'widgets_init', 'kintaelectric_register_widgets' );
+
+/**
+ * Get logo based on context (light, dark, mobile)
+ */
+function kintaelectric_get_logo( $context = 'light' ) {
+    $alt_text = get_bloginfo( 'name' );
+    
+    // Get custom logos from Customizer
+    $light_logo_id = get_theme_mod( 'kintaelectric_logo_light' );
+    $dark_logo_id = get_theme_mod( 'kintaelectric_logo_dark' );
+    $mobile_logo_id = get_theme_mod( 'kintaelectric_logo_mobile' );
+    
+    // Fallback to default logo if no custom logos are set
+    if ( ! $light_logo_id && ! $dark_logo_id && ! $mobile_logo_id && has_custom_logo() ) {
+        $custom_logo_id = get_theme_mod( 'custom_logo' );
+        $logo_url = wp_get_attachment_image_url( $custom_logo_id, 'full' );
+        
+        if ( $logo_url ) {
+            return sprintf(
+                '<img src="%s" alt="%s" class="header-logo-img header-logo-%s">',
+                esc_url( $logo_url ),
+                esc_attr( $alt_text ),
+                esc_attr( $context )
+            );
+        }
+    }
+    
+    // Get logo URLs
+    $light_logo_url = $light_logo_id ? wp_get_attachment_image_url( $light_logo_id, 'full' ) : '';
+    $dark_logo_url = $dark_logo_id ? wp_get_attachment_image_url( $dark_logo_id, 'full' ) : '';
+    $mobile_logo_url = $mobile_logo_id ? wp_get_attachment_image_url( $mobile_logo_id, 'full' ) : '';
+    
+    if ( $context === 'mobile' ) {
+        if ( $mobile_logo_url ) {
+            return sprintf(
+                '<img src="%s" alt="%s" class="header-logo-img header-logo-mobile">',
+                esc_url( $mobile_logo_url ),
+                esc_attr( $alt_text )
+            );
+        } else {
+            return sprintf(
+                '<div class="header-logo-placeholder">%s</div>',
+                esc_html__( 'Configura el logo móvil en Personalizar > Identidad del sitio', 'kintaelectric' )
+            );
+        }
+    }
+    
+    // For desktop, check if we have both logos
+    if ( $light_logo_url && $dark_logo_url ) {
+        return sprintf(
+            '<img src="%s" alt="%s" class="header-logo-img header-logo-light">
+             <img src="%s" alt="%s" class="header-logo-img header-logo-dark">',
+            esc_url( $light_logo_url ),
+            esc_attr( $alt_text ),
+            esc_url( $dark_logo_url ),
+            esc_attr( $alt_text )
+        );
+    } elseif ( $light_logo_url ) {
+        return sprintf(
+            '<img src="%s" alt="%s" class="header-logo-img header-logo-light">
+             <div class="header-logo-placeholder">%s</div>',
+            esc_url( $light_logo_url ),
+            esc_attr( $alt_text ),
+            esc_html__( 'Configura el logo dark en Personalizar', 'kintaelectric' )
+        );
+    } elseif ( $dark_logo_url ) {
+        return sprintf(
+            '<div class="header-logo-placeholder">%s</div>
+             <img src="%s" alt="%s" class="header-logo-img header-logo-dark">',
+            esc_html__( 'Configura el logo light en Personalizar', 'kintaelectric' ),
+            esc_url( $dark_logo_url ),
+            esc_attr( $alt_text )
+        );
+    } else {
+        return sprintf(
+            '<div class="header-logo-placeholder">%s</div>',
+            esc_html__( 'Configura los logos en Personalizar > Identidad del sitio', 'kintaelectric' )
+        );
+    }
+}
 
 /**
  * Enqueue admin scripts for widget functionality

@@ -50948,3 +50948,50 @@ tr.shipping>th {
     padding-left: .9375rem;
     padding-right: .9375rem
 }
+
+/* ==========================================================================
+   LOGO THEME SWITCHING
+   ========================================================================== */
+
+/* Logo Theme Switching */
+.header-logo-light {
+    display: block !important;
+}
+.header-logo-dark {
+    display: none !important;
+}
+
+/* Dark mode logo switching */
+body.electro-dark .header-logo-light {
+    display: none !important;
+}
+body.electro-dark .header-logo-dark {
+    display: block !important;
+}
+
+/* Mobile logo always visible */
+.header-logo-mobile {
+    display: block !important;
+}
+
+/* Logo placeholder styles */
+.header-logo-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 4px;
+    color: #6c757d;
+    font-size: 12px;
+    text-align: center;
+    line-height: 1.4;
+}
+
+body.electro-dark .header-logo-placeholder {
+    background-color: #343a40;
+    border-color: #495057;
+    color: #adb5bd;
+}

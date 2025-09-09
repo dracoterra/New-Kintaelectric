@@ -32,15 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<div class="header-logo-area d-flex justify-content-between align-items-center">
 							<div class="header-site-branding" style="max-width: 170px">
 								<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="header-logo-link">
-									<?php
-									if ( has_custom_logo() ) {
-										the_custom_logo();
-									} else {
-										?>
-										<img src="<?php echo esc_url( get_template_directory_uri() . '/assets/images/logo.svg' ); ?>" alt="<?php bloginfo( 'name' ); ?>" class="header-logo-img">
-										<?php
-									}
-									?>
+									<?php echo kintaelectric_get_logo( 'light' ); ?>
 								</a>
 							</div>
 							<div class="off-canvas-navigation-wrapper ">
@@ -150,8 +142,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									</li>
 								</ul>
 							</div>
-							<div class="header-icon header-icon__cart animate-dropdown dropdown"
-								data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="<?php esc_attr_e('Cart', 'kintaelectric'); ?>">
+							<div class="header-icon header-icon__cart animate-dropdown dropdown" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="<?php esc_attr_e('Cart', 'kintaelectric'); ?>">
 								<a class="dropdown-toggle" href="<?php echo esc_url(wc_get_cart_url()); ?>" data-bs-toggle="dropdown">
 									<i class="ec ec-shopping-bag"></i>
 									<span class="cart-items-count count header-icon-counter"><?php echo class_exists('WooCommerce') ? WC()->cart->get_cart_contents_count() : '0'; ?></span>
@@ -223,16 +214,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 						</div>
 						<div class="header-logo">
 							<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="header-logo-link">
-									<?php
-									if ( has_custom_logo() ) {
-										the_custom_logo();
-									} else {
-										?>
-										<img src="<?php echo esc_url( get_template_directory_uri() . '/assets/images/logo.svg' ); ?>" alt="<?php bloginfo( 'name' ); ?>" class="header-logo-img">
-										<?php
-									}
-									?>
-								</a>
+								<?php echo kintaelectric_get_logo( 'mobile' ); ?>
+							</a>
 						</div>
 						<div class="handheld-header-links">
 							<ul class="columns-3">
@@ -257,10 +240,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 									<a href="my-account/index.htm"><i class="ec ec-user"></i></a>
 								</li>
 								<li class="cart">
-									<a class="footer-cart-contents" href="cart/index.htm"
-										title="View your shopping cart">
+									<a class="footer-cart-contents" href="<?php echo esc_url(wc_get_cart_url()); ?>"
+										title="<?php esc_attr_e('View your shopping cart', 'kintaelectric'); ?>">
 										<i class="ec ec-shopping-bag"></i>
-										<span class="cart-items-count count">60</span>
+										<span class="cart-items-count count"><?php echo class_exists('WooCommerce') ? WC()->cart->get_cart_contents_count() : '0'; ?></span>
 									</a>
 								</li>
 							</ul>
