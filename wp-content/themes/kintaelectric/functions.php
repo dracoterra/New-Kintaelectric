@@ -108,6 +108,11 @@ function kintaelectric_enqueue_electro_assets() {
         wp_enqueue_script( 'kintaelectric-shop-view-switcher', kintaelectric_ASSETS_URL . 'js/shop-view-switcher.js', array( 'jquery' ), '1.0.0', true );
     }
     
+    // WooCommerce Custom Styles
+    if ( class_exists( 'WooCommerce' ) ) {
+        wp_enqueue_style( 'kintaelectric-woocommerce-custom', kintaelectric_ASSETS_URL . 'css/hello-commerce-woocommerce.css', array( 'electro-style' ), '1.0.0' );
+    }
+    
     // Logo theme switching CSS
     wp_add_inline_style( 'kintaelectric-style', '
         /* Logo Theme Switching */
@@ -1345,5 +1350,13 @@ function kintaelectric_register_shop_sidebar() {
     ) );
 }
 add_action( 'widgets_init', 'kintaelectric_register_shop_sidebar' );
+
+// Incluir y registrar el widget personalizado de categorías
+require_once get_template_directory() . '/inc/widgets/class-electro-product-categories-widget.php';
+
+function kintaelectric_register_custom_widgets() {
+    register_widget('Electro_Product_Categories_Widget');
+}
+add_action('widgets_init', 'kintaelectric_register_custom_widgets');
 
 

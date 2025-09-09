@@ -1038,4 +1038,11 @@ select {
 .action-buttons .compare .yith-woocompare-icon-svg {
     display: none !important;
 }
-    
+
+/* Widget de Categorías de Productos */
+.widget_product_categories .product-categories, 
+.widget_product_categories .widget-title+ul {
+    padding: 0 !important;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+}

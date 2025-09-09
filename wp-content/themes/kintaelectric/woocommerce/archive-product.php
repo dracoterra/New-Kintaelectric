@@ -169,13 +169,6 @@ do_action( 'woocommerce_before_main_content' );
 		</main><!-- #main -->
 	</div><!-- #primary -->
 
-	<?php
-	/**
-	 * Shop Sidebar
-	 */
-	get_sidebar( 'shop' );
-	?>
-
 </div>
 
 <?php
