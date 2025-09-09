@@ -972,6 +972,7 @@ require_once kintaelectric_PATH . '/includes/widgets/class-footer-address-widget
 require_once kintaelectric_PATH . '/includes/widgets/class-footer-social-icons-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-footer-menu-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-canvas-menu-widget.php';
+require_once kintaelectric_PATH . '/includes/class-yamm-walker.php';
 
 
 /**
