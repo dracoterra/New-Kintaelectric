@@ -5,7 +5,7 @@
  * This template can be overridden by copying it to yourtheme/woocommerce/archive-product.php.
  *
  * @package WooCommerce\Templates
- * @version 3.4.0
+ * @version 8.6.0
  */
 
 defined( 'ABSPATH' ) || exit;

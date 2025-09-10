@@ -5,7 +5,7 @@
  * This template can be overridden by copying it to yourtheme/woocommerce/single-product.php.
  *
  * @package WooCommerce\Templates
- * @version 1.6.4
+ * @version 8.6.0
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -33,4 +33,3 @@ endwhile;
 do_action( 'woocommerce_after_main_content' );
 
 get_footer( 'shop' );
-

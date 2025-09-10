@@ -5,7 +5,7 @@
  * This template can be overridden by copying it to yourtheme/woocommerce/content-single-product.php.
  *
  * @package WooCommerce\Templates
- * @version 3.6.0
+ * @version 9.4.0
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -66,4 +66,3 @@ if ( post_password_required() ) {
 </div>
 
 <?php do_action( 'woocommerce_after_single_product' ); ?>
-

@@ -1564,4 +1564,11 @@ function kintaelectric_apply_product_filters($query) {
     }
 }
 
+// Incluir verificador de plantillas de WooCommerce
+require_once kintaelectric_PATH . '/woocommerce/template-version-check.php';
+
+// Incluir script de prueba de compatibilidad (solo en admin)
+if (is_admin()) {
+    require_once kintaelectric_PATH . '/test-template-compatibility.php';
+}
 
