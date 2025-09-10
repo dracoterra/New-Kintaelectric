@@ -411,15 +411,35 @@ function kintaelectric_customize_register( $wp_customize ) {
     // Remove default logo control
     $wp_customize->remove_control( 'custom_logo' );
 
-    // Header Style
-    $wp_customize->add_setting( 'kintaelectric_header_style', array(
+    // Header Style for Homepage
+    $wp_customize->add_setting( 'kintaelectric_header_style_homepage', array(
+        'default'           => 'v2',
+        'sanitize_callback' => 'sanitize_text_field',
+    ) );
+
+    $wp_customize->add_control( 'kintaelectric_header_style_homepage', array(
+        'label'       => esc_html__( 'Header Style for Homepage', 'kintaelectric' ),
+        'description' => esc_html__( 'Choose your preferred header layout for the homepage', 'kintaelectric' ),
+        'section'     => 'kintaelectric_header',
+        'type'        => 'select',
+        'choices'     => array(
+            'v1' => esc_html__( 'Header v1 - Classic with Top Bar', 'kintaelectric' ),
+            'v2' => esc_html__( 'Header v2 - Modern Layout', 'kintaelectric' ),
+            'v3' => esc_html__( 'Header v3 - Minimalist', 'kintaelectric' ),
+            'v4' => esc_html__( 'Header v4 - Top Bar + Header', 'kintaelectric' ),
+            'v5' => esc_html__( 'Header v5 - Modern Off-Canvas', 'kintaelectric' ),
+        ),
+    ) );
+
+    // Header Style for Other Pages
+    $wp_customize->add_setting( 'kintaelectric_header_style_other', array(
         'default'           => 'v1',
         'sanitize_callback' => 'sanitize_text_field',
     ) );
 
-    $wp_customize->add_control( 'kintaelectric_header_style', array(
-        'label'       => esc_html__( 'Header Style', 'kintaelectric' ),
-        'description' => esc_html__( 'Choose your preferred header layout', 'kintaelectric' ),
+    $wp_customize->add_control( 'kintaelectric_header_style_other', array(
+        'label'       => esc_html__( 'Header Style for Other Pages', 'kintaelectric' ),
+        'description' => esc_html__( 'Choose your preferred header layout for all other pages', 'kintaelectric' ),
         'section'     => 'kintaelectric_header',
         'type'        => 'select',
         'choices'     => array(
@@ -1064,6 +1084,18 @@ function kintaelectric_register_widgets() {
     register_widget( 'KintaElectric_Canvas_Menu_Widget' );
 }
 add_action( 'widgets_init', 'kintaelectric_register_widgets' );
+
+/**
+ * Get header style based on current page
+ */
+function kintaelectric_get_header_style() {
+    // Check if we're on the homepage
+    if ( is_front_page() || is_home() ) {
+        return get_theme_mod( 'kintaelectric_header_style_homepage', 'v2' );
+    } else {
+        return get_theme_mod( 'kintaelectric_header_style_other', 'v1' );
+    }
+}
 
 /**
  * Get logo based on context (light, dark, mobile)

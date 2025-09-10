@@ -57,8 +57,8 @@ if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_
 	 * @param bool $display Display default header.
 	 */
 	if ( apply_filters( 'kintaelectric-theme/display-default-header', true ) ) {
-		// Get header style from customizer
-		$header_style = get_theme_mod( 'kintaelectric_header_style', 'v1' );
+		// Get header style based on current page (homepage vs other pages)
+		$header_style = kintaelectric_get_header_style();
 		
 		// Load the appropriate header template
 		$header_template = 'template-parts/header-' . $header_style;
