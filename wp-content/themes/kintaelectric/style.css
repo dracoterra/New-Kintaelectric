@@ -50999,3 +50999,6 @@ body.electro-dark .header-logo-placeholder {
 .header-icon{
     position: relative;
 }
+.header-site-branding{
+    max-width: 170px;
+}
