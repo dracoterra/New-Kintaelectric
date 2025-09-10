@@ -154,6 +154,11 @@ class WooCommerce_Venezuela_Pro {
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-hpos-compatibility.php';
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-hpos-migration.php';
         
+        // Cargar herramientas de desarrollo en modo debug
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            require_once WVP_PLUGIN_PATH . 'dev-tools.php';
+        }
+        
         // Archivos de frontend
         require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-price-display.php';
         require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-checkout.php';

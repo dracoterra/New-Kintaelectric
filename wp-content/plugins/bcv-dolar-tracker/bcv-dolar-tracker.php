@@ -149,6 +149,7 @@ class BCV_Dolar_Tracker {
         if (defined('WP_DEBUG') && WP_DEBUG) {
             require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/test-database.php';
             require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/test-cron.php';
+            require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'dev-tools.php';
         }
         
         // Inicializar instancias de las clases principales
