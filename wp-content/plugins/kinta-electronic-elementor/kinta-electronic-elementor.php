@@ -88,9 +88,6 @@ class KintaElectronicElementor {
 
         // Cargar traducciones
         load_plugin_textdomain('kinta-electric-elementor', false, dirname(plugin_basename(__FILE__)) . '/languages');
-        
-        // Incluir archivo de prueba temporal
-        require_once KEE_PLUGIN_DIR . 'test-category.php';
     }
 
     /**
