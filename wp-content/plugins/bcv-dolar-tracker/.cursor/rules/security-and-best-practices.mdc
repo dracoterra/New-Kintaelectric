@@ -1,0 +1,50 @@
+# Seguridad y Mejores Prácticas - BCV Dólar Tracker
+
+## Seguridad de WordPress
+- **Nonces**: Usar `wp_create_nonce()` y `wp_verify_nonce()` para todas las acciones AJAX
+- **Capacidades**: Verificar `current_user_can('manage_options')` para funciones administrativas
+- **Sanitización**: Usar `sanitize_text_field()`, `sanitize_email()`, etc. para datos de entrada
+- **Validación**: Validar tipos de datos antes de procesar
+- **Escape**: Usar `esc_html()`, `esc_attr()` para datos de salida
+
+## Prevención de Ataques
+- **CSRF**: Implementar nonces en todos los formularios
+- **SQL Injection**: Usar `$wpdb->prepare()` para consultas con variables
+- **XSS**: Sanitizar y escapar toda la salida de datos
+- **Acceso Directo**: Verificar `ABSPATH` en todos los archivos
+
+## Gestión de Datos
+- **Base de Datos**: Usar `dbDelta()` para crear/modificar tablas
+- **Opciones**: Usar `get_option()`, `update_option()`, `delete_option()`
+- **Transients**: Usar `set_transient()`, `get_transient()` para caché temporal
+- **Meta**: Usar `add_post_meta()`, `get_post_meta()` para metadatos
+
+## Funciones de Scraping
+- **Rate Limiting**: Implementar límites de frecuencia para evitar bloqueos
+- **User Agent**: Usar user-agent realista para evitar detección
+- **Timeout**: Configurar timeouts apropiados para `wp_remote_get()`
+- **Error Handling**: Manejar errores de red y respuestas inválidas
+- **Caché**: Implementar sistema de caché para reducir requests
+
+## Cron Jobs
+- **Intervalos**: Usar `wp_schedule_event()` con intervalos estándar o personalizados
+- **Hooks**: Crear hooks personalizados para tareas específicas
+- **Limpieza**: Limpiar cron jobs en desactivación del plugin
+- **Logging**: Registrar ejecución y errores de tareas cron
+
+## Interfaz de Administración
+- **Menús**: Usar `add_menu_page()` y `add_submenu_page()`
+- **Capacidades**: Asignar capacidades apropiadas a cada página
+- **Assets**: Cargar CSS/JS solo en páginas específicas
+- **Feedback**: Proporcionar mensajes de éxito/error claros
+- **Validación**: Validar formularios tanto en cliente como servidor
+
+## Debugging y Logging
+- **Error Log**: Usar `error_log()` para debugging durante desarrollo
+- **WP_DEBUG**: Habilitar `WP_DEBUG` para desarrollo local
+- **Logs**: Mantener logs de operaciones críticas
+- **Testing**: Probar funcionalidades en entorno de desarrollo antes de producción
+description:
+globs:
+alwaysApply: true
+---

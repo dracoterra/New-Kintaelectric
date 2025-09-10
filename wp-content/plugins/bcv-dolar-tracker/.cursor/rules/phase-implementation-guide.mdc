@@ -1,0 +1,69 @@
+# Plan de Implementación - BCV Dólar Tracker
+
+## Fase 1: Estructura Base ✅ COMPLETADA
+- [x] Estructura de directorios organizada
+- [x] Archivo principal con metadatos
+- [x] Clases base con estructura preparada
+- [x] Hooks de activación/desactivación
+- [x] Prevención de acceso directo
+- [x] Constantes del plugin definidas
+
+**Archivos implementados:**
+- [bcv-dolar-tracker.php](mdc:wp-content/plugins/bcv-dolar-tracker/bcv-dolar-tracker.php)
+- [class-bcv-database.php](mdc:wp-content/plugins/bcv-dolar-tracker/includes/class-bcv-database.php)
+- [class-bcv-cron.php](mdc:wp-content/plugins/bcv-dolar-tracker/includes/class-bcv-cron.php)
+- [class-bcv-scraper.php](mdc:wp-content/plugins/bcv-dolar-tracker/includes/class-bcv-scraper.php)
+- [class-bcv-admin.php](mdc:wp-content/plugins/bcv-dolar-tracker/admin/class-bcv-admin.php)
+
+## Fase 2: Sistema de Base de Datos 🔄 PENDIENTE
+**Objetivo:** Crear tabla `precio_dolar` con sistema de migración
+
+**Tareas:**
+- [ ] Implementar `create_price_table()` en [class-bcv-database.php](mdc:wp-content/plugins/bcv-dolar-tracker/includes/class-bcv-database.php)
+- [ ] Crear tabla con campos: `datatime`, `precio` (DECIMAL(10,4))
+- [ ] Implementar sistema de versionado para migraciones
+- [ ] Conectar con función de activación del plugin
+
+**Debugging:**
+- Verificar creación de tabla en activación
+- Revisar estructura en base de datos
+- Probar sistema de migración
+
+## Fase 3: Sistema Cron 🔄 PENDIENTE
+**Objetivo:** Implementar cron configurable con función de scraping
+
+**Tareas:**
+- [ ] Implementar `setup_cron()` en [class-bcv-cron.php](mdc:wp-content/plugins/bcv-dolar-tracker/includes/class-bcv-cron.php)
+- [ ] Implementar `scrape_bcv_rate()` en [class-bcv-scraper.php](mdc:wp-content/plugins/bcv-dolar-tracker/includes/class-bcv-scraper.php)
+- [ ] Conectar cron con inserción en base de datos
+- [ ] Configurar intervalos personalizables (horas, minutos, segundos)
+
+**Debugging:**
+- Verificar registro de tareas cron
+- Probar ejecución manual
+- Validar inserción de datos
+
+## Fase 4: Panel de Administración 🔄 PENDIENTE
+**Objetivo:** Interfaz administrativa con WP_List_Table
+
+**Tareas:**
+- [ ] Implementar `add_admin_menu()` en [class-bcv-admin.php](mdc:wp-content/plugins/bcv-dolar-tracker/admin/class-bcv-admin.php)
+- [ ] Crear página de configuración del cron
+- [ ] Implementar tabla de datos con filtros y ordenamiento
+- [ ] Añadir nonces y validación de seguridad
+
+**Debugging:**
+- Verificar menú de administración
+- Probar funcionalidades de la interfaz
+- Validar protección CSRF
+
+## Orden de Implementación
+1. **Fase 2**: Base de datos (requerida para almacenar precios)
+2. **Fase 3**: Sistema cron (requerido para obtener datos)
+3. **Fase 4**: Administración (requerida para gestión y visualización)
+
+**Nota:** Cada fase debe completarse y probarse antes de continuar con la siguiente.
+description:
+globs:
+alwaysApply: true
+---

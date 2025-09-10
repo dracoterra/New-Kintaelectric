@@ -1,0 +1,327 @@
+# Copyright (C) 2025 Kinta Electric
+# This file is distributed under the same license as the WooCommerce Venezuela Pro package.
+msgid ""
+msgstr ""
+"Project-Id-Version: WooCommerce Venezuela Pro 1.0.0\n"
+"Report-Msgid-Bugs-To: https://kinta-electric.com\n"
+"POT-Creation-Date: 2025-01-03 00:00+0000\n"
+"PO-Revision-Date: 2025-01-03 00:00+0000\n"
+"Last-Translator: Kinta Electric <info@kinta-electric.com>\n"
+"Language-Team: Spanish (Spain)\n"
+"Language: es_ES\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: woocommerce-venezuela-pro.php:5
+msgid "WooCommerce Venezuela Pro"
+msgstr "WooCommerce Venezuela Pro"
+
+#: woocommerce-venezuela-pro.php:6
+msgid "Kit de localización para WooCommerce en Venezuela. Se integra con \"BCV Dólar\" para la tasa de cambio."
+msgstr "Kit de localización para WooCommerce en Venezuela. Se integra con \"BCV Dólar\" para la tasa de cambio."
+
+#: includes/class-wvp-dependencies.php:28
+msgid "BCV Dólar Tracker"
+msgstr "BCV Dólar Tracker"
+
+#: includes/class-wvp-dependencies.php:45
+msgid "WooCommerce Venezuela Pro"
+msgstr "WooCommerce Venezuela Pro"
+
+#: includes/class-wvp-dependencies.php:46
+msgid "requiere los siguientes plugins para funcionar:"
+msgstr "requiere los siguientes plugins para funcionar:"
+
+#: includes/class-wvp-dependencies.php:50
+msgid "Activar"
+msgstr "Activar"
+
+#: includes/class-wvp-dependencies.php:52
+msgid "Instalar"
+msgstr "Instalar"
+
+#: frontend/class-wvp-checkout.php:25
+msgid "Cédula o RIF"
+msgstr "Cédula o RIF"
+
+#: frontend/class-wvp-checkout.php:26
+msgid "V-12345678 o J-12345678-9"
+msgstr "V-12345678 o J-12345678-9"
+
+#: frontend/class-wvp-checkout.php:40
+msgid "El campo Cédula o RIF es obligatorio."
+msgstr "El campo Cédula o RIF es obligatorio."
+
+#: frontend/class-wvp-checkout.php:46
+msgid "El formato de Cédula o RIF no es válido. Use V-12345678 o J-12345678-9"
+msgstr "El formato de Cédula o RIF no es válido. Use V-12345678 o J-12345678-9"
+
+#: frontend/class-wvp-checkout.php:60
+msgid "Cédula o RIF:"
+msgstr "Cédula o RIF:"
+
+#: frontend/class-wvp-checkout.php:85
+msgid "IGTF (%s%%)"
+msgstr "IGTF (%s%%)"
+
+#: frontend/class-wvp-checkout.php:120
+msgid "Información sobre IGTF"
+msgstr "Información sobre IGTF"
+
+#: frontend/class-wvp-checkout.php:125
+msgid "Se aplicará un %s%% de IGTF sobre el total de su compra: %s"
+msgstr "Se aplicará un %s%% de IGTF sobre el total de su compra: %s"
+
+#: frontend/class-wvp-checkout.php:130
+msgid "El IGTF se aplica según la normativa venezolana para pagos en moneda extranjera."
+msgstr "El IGTF se aplica según la normativa venezolana para pagos en moneda extranjera."
+
+#: frontend/class-wvp-checkout.php:145
+msgid "Información de Pago Móvil"
+msgstr "Información de Pago Móvil"
+
+#: frontend/class-wvp-checkout.php:150
+msgid "Total a pagar: %s Bs."
+msgstr "Total a pagar: %s Bs."
+
+#: frontend/class-wvp-checkout.php:155
+msgid "Datos bancarios:"
+msgstr "Datos bancarios:"
+
+#: frontend/class-wvp-checkout.php:157
+msgid "Banco: Banco de Venezuela"
+msgstr "Banco: Banco de Venezuela"
+
+#: frontend/class-wvp-checkout.php:158
+msgid "CI: 12345678"
+msgstr "CI: 12345678"
+
+#: frontend/class-wvp-checkout.php:159
+msgid "Teléfono: 0412-1234567"
+msgstr "Teléfono: 0412-1234567"
+
+#: frontend/class-wvp-checkout.php:163
+msgid "Realice el pago móvil y proporcione el número de confirmación."
+msgstr "Realice el pago móvil y proporcione el número de confirmación."
+
+#: admin/class-wvp-order-meta.php:25
+msgid "Detalles de la Transacción (Venezuela)"
+msgstr "Detalles de la Transacción (Venezuela)"
+
+#: admin/class-wvp-order-meta.php:45
+msgid "Cédula o RIF:"
+msgstr "Cédula o RIF:"
+
+#: admin/class-wvp-order-meta.php:50
+msgid "Tasa BCV al momento de la compra:"
+msgstr "Tasa BCV al momento de la compra:"
+
+#: admin/class-wvp-order-meta.php:55
+msgid "Referencia de pago:"
+msgstr "Referencia de pago:"
+
+#: admin/class-wvp-order-meta.php:60
+msgid "IGTF aplicado:"
+msgstr "IGTF aplicado:"
+
+#: admin/class-wvp-order-meta.php:62
+msgid "Sí"
+msgstr "Sí"
+
+#: admin/class-wvp-order-meta.php:66
+msgid "No"
+msgstr "No"
+
+#: admin/class-wvp-order-meta.php:72
+msgid "No hay datos venezolanos para este pedido."
+msgstr "No hay datos venezolanos para este pedido."
+
+#: admin/class-wvp-order-meta.php:78
+msgid "Información adicional:"
+msgstr "Información adicional:"
+
+#: admin/class-wvp-order-meta.php:82
+msgid "Pedido procesado con WooCommerce Venezuela Pro v%s"
+msgstr "Pedido procesado con WooCommerce Venezuela Pro v%s"
+
+#: admin/class-wvp-order-meta.php:95
+msgid "Cédula/RIF"
+msgstr "Cédula/RIF"
+
+#: admin/class-wvp-order-meta.php:96
+msgid "Tasa BCV"
+msgstr "Tasa BCV"
+
+#: admin/class-wvp-order-meta.php:97
+msgid "IGTF"
+msgstr "IGTF"
+
+#: gateways/class-wvp-gateway-zelle.php:15
+msgid "Zelle"
+msgstr "Zelle"
+
+#: gateways/class-wvp-gateway-zelle.php:16
+msgid "Acepta pagos mediante Zelle. Los clientes recibirán instrucciones para realizar el pago."
+msgstr "Acepta pagos mediante Zelle. Los clientes recibirán instrucciones para realizar el pago."
+
+#: gateways/class-wvp-gateway-zelle.php:30
+msgid "Activar/Desactivar"
+msgstr "Activar/Desactivar"
+
+#: gateways/class-wvp-gateway-zelle.php:31
+msgid "Activar Zelle"
+msgstr "Activar Zelle"
+
+#: gateways/class-wvp-gateway-zelle.php:35
+msgid "Título"
+msgstr "Título"
+
+#: gateways/class-wvp-gateway-zelle.php:36
+msgid "Título que verá el cliente durante el checkout."
+msgstr "Título que verá el cliente durante el checkout."
+
+#: gateways/class-wvp-gateway-zelle.php:40
+msgid "Descripción"
+msgstr "Descripción"
+
+#: gateways/class-wvp-gateway-zelle.php:41
+msgid "Descripción que verá el cliente durante el checkout."
+msgstr "Descripción que verá el cliente durante el checkout."
+
+#: gateways/class-wvp-gateway-zelle.php:42
+msgid "Pague de forma segura usando Zelle. Recibirá instrucciones por correo electrónico."
+msgstr "Pague de forma segura usando Zelle. Recibirá instrucciones por correo electrónico."
+
+#: gateways/class-wvp-gateway-zelle.php:46
+msgid "Correo Zelle"
+msgstr "Correo Zelle"
+
+#: gateways/class-wvp-gateway-zelle.php:47
+msgid "Correo electrónico asociado a la cuenta Zelle."
+msgstr "Correo electrónico asociado a la cuenta Zelle."
+
+#: gateways/class-wvp-gateway-zelle.php:51
+msgid "Aplicar IGTF"
+msgstr "Aplicar IGTF"
+
+#: gateways/class-wvp-gateway-zelle.php:52
+msgid "Aplicar IGTF a esta pasarela"
+msgstr "Aplicar IGTF a esta pasarela"
+
+#: gateways/class-wvp-gateway-zelle.php:53
+msgid "Si está marcado, se aplicará el IGTF del 3% sobre el total del pedido."
+msgstr "Si está marcado, se aplicará el IGTF del 3% sobre el total del pedido."
+
+#: gateways/class-wvp-gateway-zelle.php:58
+msgid "Instrucciones de pago"
+msgstr "Instrucciones de pago"
+
+#: gateways/class-wvp-gateway-zelle.php:59
+msgid "Instrucciones que se mostrarán en la página de agradecimiento y en los correos."
+msgstr "Instrucciones que se mostrarán en la página de agradecimiento y en los correos."
+
+#: gateways/class-wvp-gateway-zelle.php:60
+msgid "Realice el pago mediante Zelle usando el correo electrónico proporcionado. Incluya el número de pedido en la descripción del pago."
+msgstr "Realice el pago mediante Zelle usando el correo electrónico proporcionado. Incluya el número de pedido en la descripción del pago."
+
+#: gateways/class-wvp-gateway-zelle.php:70
+msgid "Número de Confirmación"
+msgstr "Número de Confirmación"
+
+#: gateways/class-wvp-gateway-zelle.php:71
+msgid "Ingrese el número de confirmación de Zelle"
+msgstr "Ingrese el número de confirmación de Zelle"
+
+#: gateways/class-wvp-gateway-zelle.php:80
+msgid "Información sobre IGTF:"
+msgstr "Información sobre IGTF:"
+
+#: gateways/class-wvp-gateway-zelle.php:83
+msgid "Se aplicará un %s%% de IGTF: %s"
+msgstr "Se aplicará un %s%% de IGTF: %s"
+
+#: gateways/class-wvp-gateway-zelle.php:90
+msgid "Información de Pago Zelle"
+msgstr "Información de Pago Zelle"
+
+#: gateways/class-wvp-gateway-zelle.php:92
+msgid "Correo Zelle:"
+msgstr "Correo Zelle:"
+
+#: gateways/class-wvp-gateway-zelle.php:95
+msgid "Realice el pago a la dirección de correo mostrada arriba e incluya el número de pedido en la descripción."
+msgstr "Realice el pago a la dirección de correo mostrada arriba e incluya el número de pedido en la descripción."
+
+#: gateways/class-wvp-gateway-zelle.php:110
+msgid "El número de confirmación es obligatorio."
+msgstr "El número de confirmación es obligatorio."
+
+#: gateways/class-wvp-gateway-zelle.php:115
+msgid "Error al procesar el pedido."
+msgstr "Error al procesar el pedido."
+
+#: gateways/class-wvp-gateway-zelle.php:130
+msgid "Pago pendiente de verificación mediante Zelle."
+msgstr "Pago pendiente de verificación mediante Zelle."
+
+#: gateways/class-wvp-gateway-zelle.php:140
+msgid "Pago Zelle iniciado. Número de confirmación: %s"
+msgstr "Pago Zelle iniciado. Número de confirmación: %s"
+
+#: gateways/class-wvp-gateway-zelle.php:150
+msgid "Instrucciones de Pago Zelle"
+msgstr "Instrucciones de Pago Zelle"
+
+#: gateways/class-wvp-gateway-zelle.php:155
+msgid "Número de pedido:"
+msgstr "Número de pedido:"
+
+#: gateways/class-wvp-gateway-zelle.php:157
+msgid "Total a pagar:"
+msgstr "Total a pagar:"
+
+#: gateways/class-wvp-gateway-zelle.php:164
+msgid "Instrucciones:"
+msgstr "Instrucciones:"
+
+#: gateways/class-wvp-gateway-zelle.php:170
+msgid "Importante:"
+msgstr "Importante:"
+
+#: gateways/class-wvp-gateway-zelle.php:171
+msgid "Su pedido será procesado una vez que verifiquemos el pago. Recibirá una confirmación por correo electrónico."
+msgstr "Su pedido será procesado una vez que verifiquemos el pago. Recibirá una confirmación por correo electrónico."
+
+#: gateways/class-wvp-gateway-zelle.php:185
+msgid "INSTRUCCIONES DE PAGO ZELLE"
+msgstr "INSTRUCCIONES DE PAGO ZELLE"
+
+#: gateways/class-wvp-gateway-zelle.php:189
+msgid "Correo Zelle:"
+msgstr "Correo Zelle:"
+
+#: gateways/class-wvp-gateway-zelle.php:190
+msgid "Número de pedido:"
+msgstr "Número de pedido:"
+
+#: gateways/class-wvp-gateway-zelle.php:191
+msgid "Total a pagar:"
+msgstr "Total a pagar:"
+
+#: gateways/class-wvp-gateway-zelle.php:200
+msgid "Instrucciones de Pago Zelle"
+msgstr "Instrucciones de Pago Zelle"
+
+#: gateways/class-wvp-gateway-zelle.php:205
+msgid "Número de pedido:"
+msgstr "Número de pedido:"
+
+#: gateways/class-wvp-gateway-zelle.php:207
+msgid "Total a pagar:"
+msgstr "Total a pagar:"
+
+#: gateways/class-wvp-gateway-zelle.php:214
+msgid "Instrucciones:"
+msgstr "Instrucciones:"

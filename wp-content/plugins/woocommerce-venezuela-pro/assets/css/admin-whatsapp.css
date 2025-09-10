@@ -1,0 +1,119 @@
+/* Estilos para notificaciones WhatsApp */
+
+.wvp-whatsapp-meta-box {
+    font-size: 13px;
+}
+
+.wvp-whatsapp-section {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border-left: 4px solid #25D366;
+}
+
+.wvp-whatsapp-section h4 {
+    margin: 0 0 10px 0;
+    color: #0073aa;
+    font-size: 14px;
+}
+
+.wvp-whatsapp-button {
+    display: inline-block;
+    padding: 8px 12px;
+    background: #25D366;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.wvp-whatsapp-button:hover {
+    background: #128C7E;
+    color: white;
+    text-decoration: none;
+}
+
+.wvp-whatsapp-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.wvp-shipping-guide {
+    width: 100%;
+    padding: 5px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.wvp-phone-display {
+    font-family: monospace;
+    background: #f1f1f1;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    color: #333;
+}
+
+.wvp-phone-info {
+    margin-bottom: 15px;
+    padding: 8px;
+    background: #e8f4fd;
+    border-radius: 4px;
+    border-left: 4px solid #0073aa;
+}
+
+/* Botones en lista de pedidos */
+.wp-list-table .row-actions .whatsapp-payment a,
+.wp-list-table .row-actions .whatsapp-shipping a {
+    color: #25D366;
+    font-weight: 600;
+}
+
+.wp-list-table .row-actions .whatsapp-payment a:hover,
+.wp-list-table .row-actions .whatsapp-shipping a:hover {
+    color: #128C7E;
+}
+
+/* Placeholders info */
+.wvp-placeholders-info {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 11px;
+}
+
+.wvp-placeholders-info code {
+    background: #f8f9fa;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-family: monospace;
+    font-size: 10px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wvp-whatsapp-button {
+        display: block;
+        width: 100%;
+        text-align: center;
+        margin-right: 0;
+        margin-bottom: 8px;
+    }
+    
+    .wvp-whatsapp-section {
+        padding: 8px;
+    }
+    
+    .wvp-shipping-guide {
+        font-size: 14px;
+        padding: 8px;
+    }
+}

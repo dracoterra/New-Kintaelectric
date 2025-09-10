@@ -1,0 +1,169 @@
+/* Estilos para el checkout de WooCommerce Venezuela Pro */
+
+/* Estilos para el campo de Cédula/RIF */
+.wc-block-components-text-input input[name*="cedula_rif"] {
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
+.wc-block-components-text-input input[name*="cedula_rif"]::placeholder {
+    color: #666;
+    font-style: italic;
+}
+
+/* Asegurar que el placeholder se muestre */
+.wc-block-components-text-input input[name*="cedula_rif"] {
+    position: relative;
+}
+
+/* Estilos para el texto de ayuda del campo Cédula/RIF */
+.wc-block-components-text-input input[name*="cedula_rif"] + .wc-block-components-text-input__description,
+.wc-block-components-text-input input[name*="cedula_rif"] ~ .wc-block-components-text-input__description {
+    font-size: 12px;
+    color: #0073aa;
+    font-weight: 500;
+    margin-top: 5px;
+    padding: 8px 12px;
+    background: #f0f8ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+    border-left: 3px solid #0073aa;
+}
+
+/* Estilos para el texto de ayuda en el contenedor del campo */
+.wc-block-components-text-input:has(input[name*="cedula_rif"]) .wc-block-components-text-input__description {
+    font-size: 12px;
+    color: #0073aa;
+    font-weight: 500;
+    margin-top: 5px;
+    padding: 8px 12px;
+    background: #f0f8ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+    border-left: 3px solid #0073aa;
+}
+
+/* Mensaje de ayuda para Cédula/RIF */
+.wc-block-components-text-input input[name*="cedula_rif"]:focus + .wvp-cedula-help,
+.wc-block-components-text-input input[name*="cedula_rif"]:invalid + .wvp-cedula-help {
+    display: block;
+}
+
+.wvp-cedula-help {
+    display: none;
+    font-size: 12px;
+    color: #666;
+    margin-top: 5px;
+    padding: 8px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border-left: 3px solid #0073aa;
+}
+
+.wvp-cedula-help strong {
+    color: #0073aa;
+}
+
+.wvp-igtf-info {
+    background: #f0f8ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.wvp-igtf-info p {
+    margin: 0;
+    font-weight: bold;
+    color: #0066cc;
+}
+
+.wvp-pago-movil-info {
+    background: #f0fff0;
+    border: 1px solid #90ee90;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.wvp-pago-movil-info h3 {
+    margin: 0 0 10px 0;
+    color: #006400;
+}
+
+.wvp-pago-movil-info p {
+    margin: 5px 0;
+    font-weight: bold;
+}
+
+.wvp-pago-movil-total {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.wvp-pago-movil-total p {
+    margin: 5px 0;
+    font-weight: bold;
+    color: #856404;
+}
+
+.wvp-pago-movil-details {
+    background: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.wvp-pago-movil-details h4 {
+    margin: 0 0 10px 0;
+    color: #0066cc;
+}
+
+.wvp-pago-movil-details p {
+    margin: 5px 0;
+    font-weight: bold;
+}
+
+/* Estilos para el campo de cédula/RIF */
+#billing_cedula_rif_field {
+    margin-bottom: 20px;
+}
+
+#billing_cedula_rif_field label {
+    font-weight: bold;
+    color: #333;
+}
+
+#billing_cedula_rif_field input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+#billing_cedula_rif_field input:focus {
+    border-color: #007cba;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wvp-igtf-info,
+    .wvp-pago-movil-info,
+    .wvp-pago-movil-total,
+    .wvp-pago-movil-details {
+        padding: 10px;
+        margin: 5px 0;
+    }
+    
+    .wvp-pago-movil-info h3,
+    .wvp-pago-movil-details h4 {
+        font-size: 16px;
+    }
+}

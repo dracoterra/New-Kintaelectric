@@ -1,0 +1,147 @@
+/* Estilos específicos para checkout blocks de WooCommerce v10+ */
+
+/* Campo de Cédula/RIF en checkout blocks - Usar estilos nativos de WooCommerce */
+.billing_cedula_rif_field {
+    margin-bottom: 1.5em;
+    position: relative;
+}
+
+.billing_cedula_rif_field .wc-block-components-form-field__label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5em;
+    color: #1e1e1e;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.billing_cedula_rif_field .wc-block-components-form-field__label .required {
+    color: #e2401c;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.billing_cedula_rif_field .wc-block-components-form-field__input-wrapper {
+    position: relative;
+}
+
+.billing_cedula_rif_field .wc-block-components-form-field__input {
+    width: 100%;
+    padding: 0.75em 1em;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1.4;
+    color: #1e1e1e;
+    background-color: #fff;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.billing_cedula_rif_field .wc-block-components-form-field__input:focus {
+    border-color: #2271b1;
+    outline: none;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+.billing_cedula_rif_field .wc-block-components-form-field__input::placeholder {
+    color: #8c8f94;
+    opacity: 1;
+}
+
+/* Estados de validación */
+.billing_cedula_rif_field.woocommerce-validated .wc-block-components-form-field__input {
+    border-color: #00a32a;
+}
+
+.billing_cedula_rif_field.woocommerce-invalid .wc-block-components-form-field__input {
+    border-color: #d63638;
+}
+
+.billing_cedula_rif_field .woocommerce-error {
+    color: #d63638;
+    font-size: 13px;
+    margin-top: 0.5em;
+    display: block;
+}
+
+/* Estilos para el campo añadido dinámicamente - ID específico */
+#billing_cedula_rif_field {
+    margin-bottom: 1.5em;
+    position: relative;
+}
+
+#billing_cedula_rif_field .wc-block-components-form-field__label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5em;
+    color: #1e1e1e;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+#billing_cedula_rif_field .wc-block-components-form-field__label .required {
+    color: #e2401c;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+#billing_cedula_rif_field .wc-block-components-form-field__input-wrapper {
+    position: relative;
+}
+
+#billing_cedula_rif_field .wc-block-components-form-field__input {
+    width: 100%;
+    padding: 0.75em 1em;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1.4;
+    color: #1e1e1e;
+    background-color: #fff;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+#billing_cedula_rif_field .wc-block-components-form-field__input:focus {
+    border-color: #2271b1;
+    outline: none;
+    box-shadow: 0 0 0 1px #2271b1;
+}
+
+#billing_cedula_rif_field .wc-block-components-form-field__input::placeholder {
+    color: #8c8f94;
+    opacity: 1;
+}
+
+/* Estados de validación para ID específico */
+#billing_cedula_rif_field.woocommerce-validated .wc-block-components-form-field__input {
+    border-color: #00a32a;
+}
+
+#billing_cedula_rif_field.woocommerce-invalid .wc-block-components-form-field__input {
+    border-color: #d63638;
+}
+
+#billing_cedula_rif_field .woocommerce-error {
+    color: #d63638;
+    font-size: 13px;
+    margin-top: 0.5em;
+    display: block;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wc-block-checkout__billing-address .billing_cedula_rif_field,
+    #billing_cedula_rif_field,
+    .wp-block-woocommerce-checkout-billing-address-block .billing_cedula_rif_field {
+        margin-bottom: 15px;
+    }
+    
+    .wc-block-checkout__billing-address .billing_cedula_rif_field input,
+    #billing_cedula_rif_field input,
+    .wp-block-woocommerce-checkout-billing-address-block .billing_cedula_rif_field input {
+        padding: 8px;
+        font-size: 13px;
+    }
+}

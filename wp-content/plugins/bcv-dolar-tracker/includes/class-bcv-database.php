@@ -1,0 +1,616 @@
+<?php
+/**
+ * Clase para gestión de base de datos del plugin BCV Dólar Tracker
+ * 
+ * @package BCV_Dolar_Tracker
+ * @since 1.0.0
+ */
+
+// Prevenir acceso directo
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class BCV_Database {
+    
+    /**
+     * Nombre de la tabla de precios del dólar
+     * 
+     * @var string
+     */
+    private $table_name;
+    
+    /**
+     * Versión actual de la base de datos
+     * 
+     * @var string
+     */
+    private $db_version = '1.0.0';
+    
+    /**
+     * Constructor de la clase
+     */
+    public function __construct() {
+        global $wpdb;
+        $this->table_name = $wpdb->prefix . 'bcv_precio_dolar';
+        
+        // Hook para ejecutar migraciones si es necesario
+        add_action('plugins_loaded', array($this, 'check_db_version'));
+    }
+    
+    /**
+     * Crear tabla de precios del dólar
+     * 
+     * @return bool True si se creó correctamente, False en caso contrario
+     */
+    public function create_price_table() {
+        global $wpdb;
+        
+        $charset_collate = $wpdb->get_charset_collate();
+        
+        // SQL para crear la tabla
+        $sql = "CREATE TABLE {$this->table_name} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            datatime datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            precio decimal(10,4) NOT NULL,
+            created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_datatime (datatime),
+            KEY idx_precio (precio),
+            KEY idx_created_at (created_at)
+        ) {$charset_collate};";
+        
+        // Usar dbDelta para crear la tabla
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        $result = dbDelta($sql);
+        
+        // Verificar si se creó correctamente
+        if (empty($wpdb->last_error)) {
+            // Actualizar versión de la base de datos
+            update_option('bcv_db_version', $this->db_version);
+            
+            // Log de éxito
+            error_log('BCV Dólar Tracker: Tabla de precios creada correctamente');
+            return true;
+        } else {
+            // Log de error
+            error_log('BCV Dólar Tracker: Error al crear tabla: ' . $wpdb->last_error);
+            return false;
+        }
+    }
+    
+    /**
+     * Obtener versión actual de la base de datos
+     * 
+     * @return string Versión de la base de datos
+     */
+    public function get_db_version() {
+        return get_option('bcv_db_version', '0.0.0');
+    }
+    
+    /**
+     * Verificar si la tabla existe
+     * 
+     * @return bool True si la tabla existe, False en caso contrario
+     */
+    public function table_exists() {
+        global $wpdb;
+        
+        $table_name = $this->table_name;
+        $result = $wpdb->get_var(
+            $wpdb->prepare(
+                "SHOW TABLES LIKE %s",
+                $table_name
+            )
+        );
+        
+        return $result === $table_name;
+    }
+    
+    /**
+     * Verificar versión de la base de datos y ejecutar migraciones si es necesario
+     */
+    public function check_db_version() {
+        $current_version = $this->get_db_version();
+        
+        if (version_compare($current_version, $this->db_version, '<')) {
+            $this->run_migrations($current_version);
+        }
+    }
+    
+    /**
+     * Ejecutar migraciones si es necesario
+     * 
+     * @param string $from_version Versión desde la cual migrar
+     * @return bool True si se ejecutaron correctamente, False en caso contrario
+     */
+    public function run_migrations($from_version) {
+        global $wpdb;
+        
+        // Log del inicio de migración
+        error_log("BCV Dólar Tracker: Iniciando migración desde versión {$from_version} a {$this->db_version}");
+        
+        // Si la tabla no existe, crearla
+        if (!$this->table_exists()) {
+            $result = $this->create_price_table();
+            if (!$result) {
+                error_log('BCV Dólar Tracker: Error en migración - No se pudo crear la tabla');
+                return false;
+            }
+        }
+        
+        // Ejecutar migraciones específicas por versión
+        $migrations = $this->get_migrations();
+        
+        foreach ($migrations as $version => $migration) {
+            if (version_compare($from_version, $version, '<')) {
+                $result = $this->execute_migration($version, $migration);
+                if (!$result) {
+                    error_log("BCV Dólar Tracker: Error en migración versión {$version}");
+                    return false;
+                }
+            }
+        }
+        
+        // Actualizar versión de la base de datos
+        update_option('bcv_db_version', $this->db_version);
+        
+        error_log("BCV Dólar Tracker: Migración completada exitosamente a versión {$this->db_version}");
+        return true;
+    }
+    
+    /**
+     * Obtener lista de migraciones disponibles
+     * 
+     * @return array Array de migraciones con versión como clave
+     */
+    private function get_migrations() {
+        return array(
+            '1.0.0' => array(
+                'description' => 'Crear tabla inicial de precios del dólar',
+                'method' => 'create_initial_table'
+            )
+            // Futuras migraciones se añadirán aquí
+            // '1.1.0' => array(
+            //     'description' => 'Añadir campo adicional',
+            //     'method' => 'add_new_field'
+            // )
+        );
+    }
+    
+    /**
+     * Ejecutar una migración específica
+     * 
+     * @param string $version Versión de la migración
+     * @param array $migration Datos de la migración
+     * @return bool True si se ejecutó correctamente, False en caso contrario
+     */
+    private function execute_migration($version, $migration) {
+        $method = $migration['method'];
+        
+        if (method_exists($this, $method)) {
+            $result = $this->$method();
+            if ($result) {
+                error_log("BCV Dólar Tracker: Migración {$version} ejecutada correctamente");
+                return true;
+            } else {
+                error_log("BCV Dólar Tracker: Error al ejecutar migración {$version}");
+                return false;
+            }
+        } else {
+            error_log("BCV Dólar Tracker: Método de migración {$method} no encontrado");
+            return false;
+        }
+    }
+    
+    /**
+     * Migración inicial - Crear tabla
+     * 
+     * @return bool True si se creó correctamente, False en caso contrario
+     */
+    private function create_initial_table() {
+        return $this->create_price_table();
+    }
+    
+    /**
+     * Insertar precio del dólar en la base de datos
+     * 
+     * @param float $precio Precio del dólar
+     * @param string $datatime Fecha y hora del precio (opcional, por defecto ahora)
+     * @return int|false ID del registro insertado o false si falla
+     */
+    public function insert_price($precio, $datatime = null) {
+        global $wpdb;
+        
+        // Validar precio
+        if (!is_numeric($precio) || $precio <= 0) {
+            error_log('BCV Dólar Tracker: Precio inválido para insertar: ' . $precio);
+            return false;
+        }
+        
+        // Usar fecha actual si no se proporciona
+        if ($datatime === null) {
+            $datatime = current_time('mysql');
+        }
+        
+        // Preparar datos para inserción
+        $data = array(
+            'datatime' => $datatime,
+            'precio' => floatval($precio)
+        );
+        
+        // Formato de datos para wpdb
+        $format = array('%s', '%f');
+        
+        // Log de inserción
+        error_log("BCV Dólar Tracker: Insertando precio: {$precio} en fecha: {$datatime}");
+        
+        // Insertar en la base de datos
+        $result = $wpdb->insert($this->table_name, $data, $format);
+        
+        if ($result === false) {
+            error_log('BCV Dólar Tracker: Error al insertar precio: ' . $wpdb->last_error);
+            error_log('BCV Dólar Tracker: Datos que se intentaron insertar: ' . print_r($data, true));
+            return false;
+        }
+        
+        $insert_id = $wpdb->insert_id;
+        error_log("BCV Dólar Tracker: Precio insertado exitosamente con ID: {$insert_id}");
+        
+        // Verificar que realmente se insertó
+        $verification = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE id = %d",
+            $insert_id
+        ));
+        
+        if ($verification) {
+            error_log("BCV Dólar Tracker: Verificación exitosa - Registro encontrado en BD");
+            error_log("BCV Dólar Tracker: Datos guardados - ID: {$verification->id}, Precio: {$verification->precio}, Fecha: {$verification->datatime}");
+        } else {
+            error_log("BCV Dólar Tracker: ADVERTENCIA - Registro no encontrado después de inserción");
+        }
+        
+        return $insert_id;
+    }
+    
+    /**
+     * Obtener precios del dólar con paginación y filtros
+     * 
+     * @param array $args Argumentos de consulta
+     * @return array Array con datos y paginación
+     */
+    public function get_prices($args = array()) {
+        global $wpdb;
+        
+        // Argumentos por defecto
+        $defaults = array(
+            'per_page' => 20,
+            'page' => 1,
+            'orderby' => 'datatime',
+            'order' => 'DESC',
+            'search' => '',
+            'date_from' => '',
+            'date_to' => ''
+        );
+        
+        $args = wp_parse_args($args, $defaults);
+        
+        // Construir consulta WHERE
+        $where_clauses = array();
+        $where_values = array();
+        
+        if (!empty($args['search'])) {
+            $where_clauses[] = 'precio LIKE %s';
+            $where_values[] = '%' . $wpdb->esc_like($args['search']) . '%';
+        }
+        
+        if (!empty($args['date_from'])) {
+            $where_clauses[] = 'datatime >= %s';
+            $where_values[] = $args['date_from'];
+        }
+        
+        if (!empty($args['date_to'])) {
+            $where_clauses[] = 'datatime <= %s';
+            $where_values[] = $args['date_to'];
+        }
+        
+        $where_sql = '';
+        if (!empty($where_clauses)) {
+            $where_sql = 'WHERE ' . implode(' AND ', $where_clauses);
+        }
+        
+        // Consulta para contar total de registros
+        $count_sql = "SELECT COUNT(*) FROM {$this->table_name} {$where_sql}";
+        if (!empty($where_values)) {
+            $count_sql = $wpdb->prepare($count_sql, $where_values);
+        }
+        
+        $total_items = $wpdb->get_var($count_sql);
+        
+        // Calcular offset para paginación
+        $offset = ($args['page'] - 1) * $args['per_page'];
+        
+        // Consulta principal
+        $sql = "SELECT * FROM {$this->table_name} {$where_sql} ORDER BY {$args['orderby']} {$args['order']} LIMIT %d OFFSET %d";
+        
+        $query_values = array_merge($where_values, array($args['per_page'], $offset));
+        $sql = $wpdb->prepare($sql, $query_values);
+        
+        $items = $wpdb->get_results($sql);
+        
+        return array(
+            'items' => $items,
+            'total_items' => $total_items,
+            'total_pages' => ceil($total_items / $args['per_page']),
+            'current_page' => $args['page'],
+            'per_page' => $args['per_page']
+        );
+    }
+    
+    /**
+     * Obtener el precio más reciente del dólar
+     * 
+     * @return object|false Objeto con datos del precio o false si no hay datos
+     */
+    public function get_latest_price() {
+        global $wpdb;
+        
+        $sql = "SELECT * FROM {$this->table_name} ORDER BY datatime DESC LIMIT 1";
+        return $wpdb->get_row($sql);
+    }
+    
+    /**
+     * Obtener estadísticas básicas de precios
+     * 
+     * @return array Array con estadísticas
+     */
+    public function get_price_stats() {
+        global $wpdb;
+        
+        // Verificar si la tabla existe
+        if (!$this->table_exists()) {
+            return array(
+                'total_records' => 0,
+                'min_price' => 0,
+                'max_price' => 0,
+                'avg_price' => 0,
+                'first_date' => null,
+                'last_date' => null,
+                'last_price' => 0
+            );
+        }
+        
+        $sql = "SELECT 
+                    COUNT(*) as total_records,
+                    MIN(precio) as min_price,
+                    MAX(precio) as max_price,
+                    AVG(precio) as avg_price,
+                    MIN(datatime) as first_date,
+                    MAX(datatime) as last_date
+                FROM {$this->table_name}";
+        
+        $stats = $wpdb->get_row($sql, ARRAY_A);
+        
+        if ($stats && $stats['total_records'] > 0) {
+            // Obtener el último precio
+            $last_price_sql = "SELECT precio FROM {$this->table_name} ORDER BY datatime DESC LIMIT 1";
+            $last_price_result = $wpdb->get_var($last_price_sql);
+            
+            $stats['last_price'] = $last_price_result ? floatval($last_price_result) : 0;
+            $stats['min_price'] = floatval($stats['min_price']);
+            $stats['max_price'] = floatval($stats['max_price']);
+            $stats['avg_price'] = floatval($stats['avg_price']);
+        } else {
+            // Si no hay registros, establecer valores por defecto
+            $stats = array(
+                'total_records' => 0,
+                'min_price' => 0,
+                'max_price' => 0,
+                'avg_price' => 0,
+                'first_date' => null,
+                'last_date' => null,
+                'last_price' => 0
+            );
+        }
+        
+        return $stats;
+    }
+    
+    /**
+     * Limpiar registros antiguos (mantener solo los últimos X días)
+     * 
+     * @param int $days Número de días a mantener
+     * @return int|false Número de registros eliminados o false si falla
+     */
+    public function cleanup_old_records($days = 30) {
+        global $wpdb;
+        
+        $cutoff_date = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+        
+        $result = $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$this->table_name} WHERE datatime < %s",
+                $cutoff_date
+            )
+        );
+        
+        if ($result === false) {
+            error_log('BCV Dólar Tracker: Error al limpiar registros antiguos: ' . $wpdb->last_error);
+            return false;
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Obtener nombre de la tabla
+     * 
+     * @return string Nombre de la tabla
+     */
+    public function get_table_name() {
+        return $this->table_name;
+    }
+    
+    /**
+     * Eliminar precio por ID
+     * 
+     * @param int $id ID del registro a eliminar
+     * @return bool True si se eliminó correctamente, False en caso contrario
+     */
+    public function delete_price($id) {
+        global $wpdb;
+        
+        $result = $wpdb->delete(
+            $this->table_name,
+            array('id' => $id),
+            array('%d')
+        );
+        
+        if ($result === false) {
+            error_log('BCV Dólar Tracker: Error al eliminar precio con ID ' . $id . ': ' . $wpdb->last_error);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Obtener precio por ID
+     * 
+     * @param int $id ID del registro
+     * @return object|false Objeto con datos del precio o false si no existe
+     */
+    public function get_price_by_id($id) {
+        global $wpdb;
+        
+        $sql = $wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE id = %d",
+            $id
+        );
+        
+        return $wpdb->get_row($sql);
+    }
+    
+    /**
+     * Obtener precio anterior al especificado
+     * 
+     * @param int $id ID del registro actual
+     * @return object|false Objeto con datos del precio anterior o false si no existe
+     */
+    public function get_previous_price($id) {
+        global $wpdb;
+        
+        $sql = $wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE id < %d ORDER BY id DESC LIMIT 1",
+            $id
+        );
+        
+        return $wpdb->get_row($sql);
+    }
+    
+    /**
+     * Obtener precio siguiente al especificado
+     * 
+     * @param int $id ID del registro actual
+     * @return object|false Objeto con datos del precio siguiente o false si no existe
+     */
+    public function get_next_price($id) {
+        global $wpdb;
+        
+        $sql = $wpdb->prepare(
+            "SELECT * FROM {$this->table_name} WHERE id > %d ORDER BY id ASC LIMIT 1",
+            $id
+        );
+        
+        return $wpdb->get_row($sql);
+    }
+    
+    /**
+     * Actualizar precio existente
+     * 
+     * @param int $id ID del registro a actualizar
+     * @param float $precio Nuevo precio
+     * @param string $datatime Nueva fecha y hora (opcional)
+     * @return bool True si se actualizó correctamente, False en caso contrario
+     */
+    public function update_price($id, $precio, $datatime = null) {
+        global $wpdb;
+        
+        $data = array('precio' => $precio);
+        
+        if ($datatime !== null) {
+            $data['datatime'] = $datatime;
+        }
+        
+        $result = $wpdb->update(
+            $this->table_name,
+            $data,
+            array('id' => $id),
+            array('%f'),
+            array('%d')
+        );
+        
+        if ($result === false) {
+            error_log('BCV Dólar Tracker: Error al actualizar precio con ID ' . $id . ': ' . $wpdb->last_error);
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Obtener precios por rango de fechas
+     * 
+     * @param string $start_date Fecha de inicio (YYYY-MM-DD)
+     * @param string $end_date Fecha de fin (YYYY-MM-DD)
+     * @param int $limit Límite de registros (opcional)
+     * @return array Array de precios
+     */
+    public function get_prices_by_date_range($start_date, $end_date, $limit = null) {
+        global $wpdb;
+        
+        $sql = "SELECT * FROM {$this->table_name} WHERE DATE(datatime) BETWEEN %s AND %s ORDER BY datatime DESC";
+        
+        if ($limit !== null) {
+            $sql .= " LIMIT %d";
+            $sql = $wpdb->prepare($sql, $start_date, $end_date, $limit);
+        } else {
+            $sql = $wpdb->prepare($sql, $start_date, $end_date);
+        }
+        
+        return $wpdb->get_results($sql);
+    }
+    
+    /**
+     * Obtener precios del día actual
+     * 
+     * @return array Array de precios del día
+     */
+    public function get_today_prices() {
+        $today = date('Y-m-d');
+        return $this->get_prices_by_date_range($today, $today);
+    }
+    
+    /**
+     * Obtener precios de la semana actual
+     * 
+     * @return array Array de precios de la semana
+     */
+    public function get_this_week_prices() {
+        $start_of_week = date('Y-m-d', strtotime('monday this week'));
+        $end_of_week = date('Y-m-d', strtotime('sunday this week'));
+        return $this->get_prices_by_date_range($start_of_week, $end_of_week);
+    }
+    
+    /**
+     * Obtener precios del mes actual
+     * 
+     * @return array Array de precios del mes
+     */
+    public function get_this_month_prices() {
+        $start_of_month = date('Y-m-01');
+        $end_of_month = date('Y-m-t');
+        return $this->get_prices_by_date_range($start_of_month, $end_of_month);
+    }
+}

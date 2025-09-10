@@ -1,0 +1,273 @@
+/* Estilos para la página de verificación de pagos */
+
+.wvp-verification-container {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.wvp-verification-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.wvp-verification-header h2 {
+    margin: 0 0 10px 0;
+    color: #23282d;
+}
+
+.wvp-no-pending-orders {
+    text-align: center;
+    padding: 40px 20px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    color: #666;
+}
+
+.wvp-no-pending-orders p {
+    margin: 0;
+    font-size: 16px;
+}
+
+.wvp-pending-orders-table {
+    overflow-x: auto;
+    margin-top: 15px;
+}
+
+.wvp-pending-orders-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.wvp-pending-orders-table th,
+.wvp-pending-orders-table td {
+    padding: 12px 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    vertical-align: top;
+}
+
+.wvp-pending-orders-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #23282d;
+    position: sticky;
+    top: 0;
+}
+
+.wvp-pending-orders-table tbody tr:hover {
+    background: #f5f5f5;
+}
+
+.wvp-pending-orders-table tbody tr:nth-child(even) {
+    background: #fafafa;
+}
+
+.wvp-pending-orders-table tbody tr:nth-child(even):hover {
+    background: #f0f0f0;
+}
+
+/* Estilos para acciones de verificación */
+.wvp-verification-actions {
+    min-width: 200px;
+}
+
+.wvp-verify-payment-btn {
+    background: #0073aa;
+    border-color: #0073aa;
+    color: #fff;
+    font-size: 12px;
+    padding: 6px 12px;
+    height: auto;
+    line-height: 1.4;
+}
+
+.wvp-verify-payment-btn:hover {
+    background: #005a87;
+    border-color: #005a87;
+    color: #fff;
+}
+
+.wvp-verify-payment-btn:disabled {
+    background: #ccc;
+    border-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.wvp-upload-proof {
+    margin-top: 8px;
+}
+
+.wvp-upload-proof input[type="file"] {
+    margin-bottom: 5px;
+    font-size: 11px;
+}
+
+.wvp-upload-proof-btn {
+    background: #46b450;
+    border-color: #46b450;
+    color: #fff;
+    font-size: 11px;
+    padding: 4px 8px;
+    height: auto;
+    line-height: 1.4;
+}
+
+.wvp-upload-proof-btn:hover {
+    background: #3a9e42;
+    border-color: #3a9e42;
+    color: #fff;
+}
+
+.wvp-upload-proof-btn:disabled {
+    background: #ccc;
+    border-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.wvp-proof-link {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #0073aa;
+    color: white;
+    text-decoration: none;
+    border-radius: 3px;
+    font-size: 11px;
+    margin-top: 5px;
+}
+
+.wvp-proof-link:hover {
+    background: #005a87;
+    color: white;
+    text-decoration: none;
+}
+
+/* Estilos para información del pedido */
+.wvp-order-info {
+    font-size: 12px;
+}
+
+.wvp-order-info strong {
+    color: #23282d;
+}
+
+.wvp-order-info small {
+    color: #666;
+    display: block;
+    margin-top: 2px;
+}
+
+.wvp-order-amount {
+    font-weight: 600;
+    color: #0073aa;
+    font-size: 14px;
+}
+
+.wvp-payment-method {
+    font-size: 12px;
+    color: #666;
+}
+
+.wvp-payment-reference {
+    font-family: monospace;
+    background: #f1f1f1;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-size: 11px;
+}
+
+.wvp-payment-reference.empty {
+    color: #999;
+    font-style: italic;
+    background: transparent;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .wvp-verification-actions {
+        min-width: 180px;
+    }
+}
+
+@media (max-width: 768px) {
+    .wvp-verification-container {
+        padding: 15px;
+    }
+    
+    .wvp-pending-orders-table {
+        font-size: 12px;
+    }
+    
+    .wvp-pending-orders-table th,
+    .wvp-pending-orders-table td {
+        padding: 8px 6px;
+    }
+    
+    .wvp-verification-actions {
+        min-width: 150px;
+    }
+    
+    .wvp-verify-payment-btn,
+    .wvp-upload-proof-btn {
+        font-size: 10px;
+        padding: 4px 6px;
+    }
+    
+    .wvp-upload-proof input[type="file"] {
+        font-size: 10px;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .wvp-pending-orders-table {
+        font-size: 11px;
+    }
+    
+    .wvp-pending-orders-table th,
+    .wvp-pending-orders-table td {
+        padding: 6px 4px;
+    }
+    
+    .wvp-verification-actions {
+        min-width: 120px;
+    }
+}
+
+/* Estilos para notificaciones */
+.notice {
+    margin: 5px 0 15px 0;
+}
+
+.notice p {
+    margin: 0.5em 0;
+}
+
+/* Estilos para estados de verificación */
+.wvp-verified-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background: #46b450;
+    color: white;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.wvp-pending-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background: #ffb900;
+    color: white;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+}

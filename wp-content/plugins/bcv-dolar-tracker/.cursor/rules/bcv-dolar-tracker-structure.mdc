@@ -1,0 +1,27 @@
+# BCV Dólar Tracker - Estructura del Plugin
+
+## Estructura Principal
+El plugin BCV Dólar Tracker está organizado en la siguiente estructura:
+
+- **Archivo principal**: [bcv-dolar-tracker.php](mdc:wp-content/plugins/bcv-dolar-tracker/bcv-dolar-tracker.php) - Punto de entrada del plugin
+- **Documentación**: [README.md](mdc:wp-content/plugins/bcv-dolar-tracker/README.md) - Documentación completa del proyecto
+- **Clases principales**: [includes/](mdc:wp-content/plugins/bcv-dolar-tracker/includes/) - Funcionalidad core del plugin
+- **Administración**: [admin/](mdc:wp-content/plugins/bcv-dolar-tracker/admin/) - Interfaz de administración
+- **Recursos**: [assets/](mdc:wp-content/plugins/bcv-dolar-tracker/assets/) - CSS y JavaScript
+
+## Clases Principales
+- **BCV_Dolar_Tracker**: Clase principal en [bcv-dolar-tracker.php](mdc:wp-content/plugins/bcv-dolar-tracker/bcv-dolar-tracker.php)
+- **BCV_Database**: Gestión de BD en [class-bcv-database.php](mdc:wp-content/plugins/bcv-dolar-tracker/includes/class-bcv-database.php)
+- **BCV_Cron**: Gestión de cron en [class-bcv-cron.php](mdc:wp-content/plugins/bcv-dolar-tracker/includes/class-bcv-cron.php)
+- **BCV_Scraper**: Scraping en [class-bcv-scraper.php](mdc:wp-content/plugins/bcv-dolar-tracker/includes/class-bcv-scraper.php)
+- **BCV_Admin**: Administración en [class-bcv-admin.php](mdc:wp-content/plugins/bcv-dolar-tracker/admin/class-bcv-admin.php)
+
+## Estado de Desarrollo
+- **Fase 1**: ✅ Completada - Estructura base
+- **Fase 2**: 🔄 Pendiente - Sistema de base de datos
+- **Fase 3**: 🔄 Pendiente - Sistema cron
+- **Fase 4**: 🔄 Pendiente - Panel de administración
+description:
+globs:
+alwaysApply: true
+---

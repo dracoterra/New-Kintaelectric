@@ -1,0 +1,35 @@
+# WordPress Plugin Development - BCV Dólar Tracker
+
+## Estándares de Código
+- **Prefijos**: Todas las funciones y variables deben usar el prefijo `bcv_` para evitar conflictos
+- **Constantes**: Usar `BCV_DOLAR_TRACKER_` como prefijo para constantes
+- **Clases**: Usar `BCV_` como prefijo para nombres de clases
+- **Seguridad**: Siempre verificar `ABSPATH` para prevenir acceso directo
+
+## Estructura de Archivos
+- **Archivo principal**: Debe contener metadatos del plugin y clase principal
+- **Clases**: Una clase por archivo, nombre del archivo debe coincidir con la clase
+- **Hooks**: Usar hooks estándar de WordPress (activation, deactivation, plugins_loaded)
+
+## Mejores Prácticas
+- **Activación**: Crear tablas de BD y configurar opciones por defecto
+- **Desactivación**: Limpiar cron jobs y recursos temporales
+- **Dependencias**: Cargar archivos solo cuando sea necesario
+- **Logging**: Usar `error_log()` para debugging durante desarrollo
+
+## Hooks Principales
+- `register_activation_hook()`: Para setup inicial
+- `register_deactivation_hook()`: Para limpieza
+- `plugins_loaded`: Para inicialización
+- `admin_menu`: Para menús de administración
+- `wp_ajax_*`: Para endpoints AJAX
+
+## Base de Datos
+- Usar `$wpdb` para consultas personalizadas
+- Crear tablas con `dbDelta()` para compatibilidad
+- Implementar sistema de versionado para migraciones
+- Usar `get_option()` y `update_option()` para configuraciones
+description:
+globs:
+alwaysApply: true
+---
