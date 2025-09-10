@@ -1098,6 +1098,78 @@ function kintaelectric_get_header_style() {
 }
 
 /**
+ * Global breadcrumb function for the entire site
+ * Uses WooCommerce breadcrumb when available, falls back to custom implementation
+ */
+function kintaelectric_breadcrumb() {
+    // If WooCommerce is active, use its breadcrumb function
+    if ( class_exists( 'WooCommerce' ) && function_exists( 'woocommerce_breadcrumb' ) ) {
+        // Customize WooCommerce breadcrumb arguments
+        $args = array(
+            'delimiter'   => '<span class="delimiter"><i class="fa fa-angle-right"></i></span>',
+            'wrap_before' => '<nav class="woocommerce-breadcrumb" aria-label="' . esc_attr__( 'Breadcrumb', 'kintaelectric' ) . '">',
+            'wrap_after'  => '</nav>',
+            'before'      => '',
+            'after'       => '',
+            'home'        => _x( 'Hogar', 'breadcrumb', 'kintaelectric' ),
+        );
+        
+        woocommerce_breadcrumb( $args );
+    } else {
+        // Fallback breadcrumb for non-WooCommerce pages
+        kintaelectric_custom_breadcrumb();
+    }
+}
+
+/**
+ * Custom breadcrumb implementation for non-WooCommerce pages
+ */
+function kintaelectric_custom_breadcrumb() {
+    $home_title = _x( 'Hogar', 'breadcrumb', 'kintaelectric' );
+    $delimiter = '<span class="delimiter"><i class="fa fa-angle-right"></i></span>';
+    
+    echo '<nav class="woocommerce-breadcrumb" aria-label="' . esc_attr__( 'Breadcrumb', 'kintaelectric' ) . '">';
+    
+    // Home link
+    echo '<a href="' . esc_url( home_url( '/' ) ) . '">' . esc_html( $home_title ) . '</a>';
+    
+    if ( is_category() || is_single() ) {
+        echo $delimiter;
+        the_category( ' ' );
+        if ( is_single() ) {
+            echo $delimiter;
+            the_title();
+        }
+    } elseif ( is_page() ) {
+        echo $delimiter;
+        echo the_title();
+    } elseif ( is_search() ) {
+        echo $delimiter;
+        printf( esc_html__( 'Resultados de búsqueda para: %s', 'kintaelectric' ), get_search_query() );
+    } elseif ( is_404() ) {
+        echo $delimiter;
+        esc_html_e( 'Error 404', 'kintaelectric' );
+    } elseif ( is_archive() ) {
+        echo $delimiter;
+        if ( is_tag() ) {
+            echo single_tag_title( '', false );
+        } elseif ( is_author() ) {
+            echo get_the_author();
+        } elseif ( is_date() ) {
+            if ( is_year() ) {
+                echo get_the_date( 'Y' );
+            } elseif ( is_month() ) {
+                echo get_the_date( 'F Y' );
+            } elseif ( is_day() ) {
+                echo get_the_date();
+            }
+        }
+    }
+    
+    echo '</nav>';
+}
+
+/**
  * Get logo based on context (light, dark, mobile)
  */
 function kintaelectric_get_logo( $context = 'light' ) {
