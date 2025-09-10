@@ -344,7 +344,8 @@ class WVP_Checkout {
      * Obtener campo REST
      */
     public function get_cedula_rif_rest_field($object) {
-        return get_post_meta($object['id'], '_billing_cedula_rif', true);
+        $order = wc_get_order($object['id']);
+        return $order ? $order->get_meta('_billing_cedula_rif') : '';
     }
     
     /**
@@ -352,7 +353,11 @@ class WVP_Checkout {
      */
     public function update_cedula_rif_rest_field($value, $object) {
         error_log('WVP Debug: Actualizando campo REST - Valor: ' . $value);
-        update_post_meta($object->ID, '_billing_cedula_rif', sanitize_text_field($value));
+        $order = wc_get_order($object->ID);
+        if ($order) {
+            $order->update_meta_data('_billing_cedula_rif', sanitize_text_field($value));
+            $order->save();
+        }
         return true;
     }
     

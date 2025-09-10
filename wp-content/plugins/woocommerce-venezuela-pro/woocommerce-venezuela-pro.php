@@ -16,6 +16,10 @@
  * WC requires at least: 5.0
  * WC tested up to: 10.0
  * Network: false
+ * 
+ * HPOS compatibility: Yes
+ * WC requires at least: 5.0
+ * WC tested up to: 10.0
  */
 
 // Prevenir acceso directo
@@ -68,6 +72,9 @@ class WooCommerce_Venezuela_Pro {
         register_activation_hook(__FILE__, array($this, 'activate_plugin'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate_plugin'));
         
+        // Declarar compatibilidad con HPOS
+        add_action('before_woocommerce_init', array($this, 'declare_hpos_compatibility'));
+        
         // Inicializar el plugin cuando WordPress esté listo
         add_action('plugins_loaded', array($this, 'init'));
     }
@@ -82,6 +89,15 @@ class WooCommerce_Venezuela_Pro {
             self::$instance = new self();
         }
         return self::$instance;
+    }
+    
+    /**
+     * Declarar compatibilidad con HPOS
+     */
+    public function declare_hpos_compatibility() {
+        if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
+            \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', __FILE__, true);
+        }
     }
     
     /**
@@ -135,6 +151,8 @@ class WooCommerce_Venezuela_Pro {
         // Archivos principales
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-dependencies.php';
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-bcv-integrator.php';
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-hpos-compatibility.php';
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-hpos-migration.php';
         
         // Archivos de frontend
         require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-price-display.php';
@@ -188,6 +206,16 @@ class WooCommerce_Venezuela_Pro {
             
             // Inicializar integrador BCV
             $this->bcv_integrator = new WVP_BCV_Integrator();
+            
+            // Inicializar compatibilidad HPOS
+            if (class_exists('WVP_HPOS_Compatibility')) {
+                new WVP_HPOS_Compatibility();
+            }
+            
+            // Inicializar migración HPOS
+            if (class_exists('WVP_HPOS_Migration')) {
+                new WVP_HPOS_Migration();
+            }
             
             // Inicializar componentes de frontend
             $this->price_display = new WVP_Price_Display();
