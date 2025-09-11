@@ -224,29 +224,37 @@ class WVP_Product_Display_Manager {
      * Generar HTML estilo minimalista
      */
     private function generate_minimal_html($price_html, $formatted_usd, $formatted_ves, $price, $ves_price, $rate, $style_class) {
-        return sprintf(
-            '<div class="wvp-product-price-container %s">
-                <div class="wvp-price-display">
-                    <span class="wvp-price-usd" style="display: block;">%s</span>
-                    <span class="wvp-price-ves" style="display: none;">%s</span>
-                </div>
-                <div class="wvp-currency-switcher" data-price-usd="%s" data-price-ves="%s">
-                    <button class="wvp-currency-option active" data-currency="usd">USD</button>
-                    <button class="wvp-currency-option" data-currency="ves">VES</button>
-                </div>
-                <div class="wvp-price-conversion">
-                    <span class="wvp-ves-reference">Equivale a %s</span>
-                </div>
-                <div class="wvp-rate-info">Tasa BCV: %s</div>
-            </div>',
-            esc_attr($style_class),
-            $formatted_usd,
-            $formatted_ves,
-            esc_attr($price),
-            esc_attr($ves_price),
-            $formatted_ves,
-            number_format($rate, 2, ',', '.')
-        );
+        $context = $this->get_current_context();
+        
+        $html = '<div class="wvp-product-price-container ' . esc_attr($style_class) . '">';
+        $html .= '<div class="wvp-price-display">';
+        $html .= '<span class="wvp-price-usd" style="display: block;">' . $formatted_usd . '</span>';
+        $html .= '<span class="wvp-price-ves" style="display: none;">' . $formatted_ves . '</span>';
+        $html .= '</div>';
+        
+        // Solo mostrar selector si está habilitado para este contexto
+        if (apply_filters('wvp_show_currency_switcher', true, $context)) {
+            $html .= '<div class="wvp-currency-switcher wvp-scope-global" data-price-usd="' . esc_attr($price) . '" data-price-ves="' . esc_attr($ves_price) . '">';
+            $html .= '<button class="wvp-currency-option active" data-currency="usd">USD</button>';
+            $html .= '<button class="wvp-currency-option" data-currency="ves">VES</button>';
+            $html .= '</div>';
+        }
+        
+        // Solo mostrar conversión si está habilitada para este contexto
+        if (apply_filters('wvp_show_currency_conversion', true, $context)) {
+            $html .= '<div class="wvp-price-conversion">';
+            $html .= '<span class="wvp-ves-reference">Equivale a ' . $formatted_ves . '</span>';
+            $html .= '</div>';
+        }
+        
+        // Solo mostrar tasa BCV si está habilitada para este contexto
+        if (apply_filters('wvp_show_bcv_rate', false, $context)) {
+            $html .= '<div class="wvp-rate-info">Tasa BCV: ' . number_format($rate, 2, ',', '.') . '</div>';
+        }
+        
+        $html .= '</div>';
+        
+        return $html;
     }
     
     /**
@@ -513,5 +521,24 @@ class WVP_Product_Display_Manager {
             return true;
         }
         return false;
+    }
+    
+    /**
+     * Obtener contexto actual
+     */
+    private function get_current_context() {
+        if (is_product()) {
+            return 'single_product';
+        } elseif (is_shop() || is_product_category() || is_product_tag()) {
+            return 'shop_loop';
+        } elseif (is_cart()) {
+            return 'cart';
+        } elseif (is_checkout()) {
+            return 'checkout';
+        } elseif (is_active_sidebar('sidebar-1') || is_active_sidebar('shop-sidebar')) {
+            return 'widget';
+        }
+        
+        return 'default';
     }
 }

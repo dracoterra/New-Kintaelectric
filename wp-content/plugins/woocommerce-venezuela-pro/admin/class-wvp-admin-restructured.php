@@ -129,6 +129,16 @@ class WVP_Admin_Restructured {
             array($this, 'display_monitoring')
         );
         
+        // Página de control de visualización
+        add_submenu_page(
+            'wvp-dashboard',
+            __('Control Visualización', 'wvp'),
+            __('Control Visualización', 'wvp'),
+            'manage_woocommerce',
+            'wvp-display-control',
+            array($this, 'display_display_control')
+        );
+        
         add_submenu_page(
             'wvp-dashboard',
             __('Reportes', 'wvp'),
@@ -192,6 +202,9 @@ class WVP_Admin_Restructured {
         register_setting('wvp_appearance_settings', 'wvp_margin');
         register_setting('wvp_appearance_settings', 'wvp_border_radius');
         register_setting('wvp_appearance_settings', 'wvp_shadow');
+        
+        // Registrar configuraciones de control de visualización
+        register_setting('wvp_display_settings', 'wvp_display_settings', array($this, 'sanitize_display_settings'));
         
         // Añadir callback para procesar configuraciones
         add_action('update_option_wvp_general_settings', array($this, 'process_general_settings'), 10, 2);
@@ -310,6 +323,42 @@ class WVP_Admin_Restructured {
         update_option('wvp_igtf_enabled', $sanitized['igtf_enabled']);
         update_option('wvp_igtf_rate', $sanitized['igtf_rate']);
         update_option('wvp_price_reference_format', $sanitized['price_reference_format']);
+        
+        return $sanitized;
+    }
+    
+    /**
+     * Sanitizar configuraciones de control de visualización
+     */
+    public function sanitize_display_settings($input) {
+        $sanitized = array();
+        
+        // Conversión de monedas
+        $sanitized['currency_conversion'] = array(
+            'single_product' => isset($input['currency_conversion']['single_product']) ? true : false,
+            'shop_loop' => isset($input['currency_conversion']['shop_loop']) ? true : false,
+            'cart' => isset($input['currency_conversion']['cart']) ? true : false,
+            'checkout' => isset($input['currency_conversion']['checkout']) ? true : false,
+            'widget' => isset($input['currency_conversion']['widget']) ? true : false
+        );
+        
+        // Tasa BCV
+        $sanitized['bcv_rate'] = array(
+            'single_product' => isset($input['bcv_rate']['single_product']) ? true : false,
+            'shop_loop' => isset($input['bcv_rate']['shop_loop']) ? true : false,
+            'cart' => isset($input['bcv_rate']['cart']) ? true : false,
+            'checkout' => isset($input['bcv_rate']['checkout']) ? true : false,
+            'widget' => isset($input['bcv_rate']['widget']) ? true : false
+        );
+        
+        // Selector de moneda
+        $sanitized['currency_switcher'] = array(
+            'single_product' => isset($input['currency_switcher']['single_product']) ? true : false,
+            'shop_loop' => isset($input['currency_switcher']['shop_loop']) ? true : false,
+            'cart' => isset($input['currency_switcher']['cart']) ? true : false,
+            'checkout' => isset($input['currency_switcher']['checkout']) ? true : false,
+            'widget' => isset($input['currency_switcher']['widget']) ? true : false
+        );
         
         return $sanitized;
     }
@@ -450,6 +499,12 @@ class WVP_Admin_Restructured {
                             <?php _e('Monitoreo', 'wvp'); ?>
                         </a>
                     </li>
+                    <li class="wvp-nav-tab <?php echo $this->current_tab === 'display_control' ? 'active' : ''; ?>">
+                        <a href="<?php echo admin_url('admin.php?page=wvp-display-control'); ?>">
+                            <span class="dashicons dashicons-visibility"></span>
+                            <?php _e('Control Visualización', 'wvp'); ?>
+                        </a>
+                    </li>
                     <li class="wvp-nav-tab <?php echo $this->current_tab === 'appearance' ? 'active' : ''; ?>">
                         <a href="<?php echo admin_url('admin.php?page=wvp-appearance'); ?>">
                             <span class="dashicons dashicons-admin-appearance"></span>
@@ -498,6 +553,9 @@ class WVP_Admin_Restructured {
                 break;
                 case 'monitoring':
                     $this->display_monitoring_content();
+                    break;
+                case 'display_control':
+                    $this->display_display_control_content();
                     break;
                 case 'appearance':
                     $this->display_appearance_content();
@@ -847,6 +905,129 @@ class WVP_Admin_Restructured {
                 
                 <?php submit_button(); ?>
             </form>
+        </div>
+        <?php
+    }
+    
+    /**
+     * Mostrar control de visualización
+     */
+    public function display_display_control() {
+        $this->current_tab = 'display_control';
+        $this->display_admin_page();
+    }
+    
+    /**
+     * Mostrar contenido de control de visualización
+     */
+    private function display_display_control_content() {
+        $settings = get_option('wvp_display_settings', array(
+            'currency_conversion' => array(
+                'single_product' => true,
+                'shop_loop' => true,
+                'cart' => true,
+                'checkout' => true,
+                'widget' => true
+            ),
+            'bcv_rate' => array(
+                'single_product' => false,
+                'shop_loop' => false,
+                'cart' => false,
+                'checkout' => false,
+                'widget' => true
+            ),
+            'currency_switcher' => array(
+                'single_product' => true,
+                'shop_loop' => true,
+                'cart' => true,
+                'checkout' => true,
+                'widget' => true
+            )
+        ));
+        ?>
+        <div class="wvp-display-control">
+            <h2><?php _e('Control de Visualización de Precios', 'wvp'); ?></h2>
+            <p><?php _e('Controla dónde y cómo se muestran las conversiones de moneda, tasas BCV y selectores de moneda.', 'wvp'); ?></p>
+            
+            <form method="post" action="options.php">
+                <?php
+                settings_fields('wvp_display_settings');
+                do_settings_sections('wvp_display_settings');
+                ?>
+                
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php _e('Conversión de Monedas', 'wvp'); ?></th>
+                        <td>
+                            <fieldset>
+                                <legend class="screen-reader-text"><?php _e('Mostrar conversión de monedas en:', 'wvp'); ?></legend>
+                                <label><input type="checkbox" name="wvp_display_settings[currency_conversion][single_product]" value="1" <?php checked($settings['currency_conversion']['single_product'], true); ?> /> <?php _e('Página de producto individual', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[currency_conversion][shop_loop]" value="1" <?php checked($settings['currency_conversion']['shop_loop'], true); ?> /> <?php _e('Lista de productos (shop)', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[currency_conversion][cart]" value="1" <?php checked($settings['currency_conversion']['cart'], true); ?> /> <?php _e('Carrito de compras', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[currency_conversion][checkout]" value="1" <?php checked($settings['currency_conversion']['checkout'], true); ?> /> <?php _e('Página de checkout', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[currency_conversion][widget]" value="1" <?php checked($settings['currency_conversion']['widget'], true); ?> /> <?php _e('Widgets', 'wvp'); ?></label>
+                            </fieldset>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Tasa BCV', 'wvp'); ?></th>
+                        <td>
+                            <fieldset>
+                                <legend class="screen-reader-text"><?php _e('Mostrar tasa BCV en:', 'wvp'); ?></legend>
+                                <label><input type="checkbox" name="wvp_display_settings[bcv_rate][single_product]" value="1" <?php checked($settings['bcv_rate']['single_product'], true); ?> /> <?php _e('Página de producto individual', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[bcv_rate][shop_loop]" value="1" <?php checked($settings['bcv_rate']['shop_loop'], true); ?> /> <?php _e('Lista de productos (shop)', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[bcv_rate][cart]" value="1" <?php checked($settings['bcv_rate']['cart'], true); ?> /> <?php _e('Carrito de compras', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[bcv_rate][checkout]" value="1" <?php checked($settings['bcv_rate']['checkout'], true); ?> /> <?php _e('Página de checkout', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[bcv_rate][widget]" value="1" <?php checked($settings['bcv_rate']['widget'], true); ?> /> <?php _e('Widgets', 'wvp'); ?></label>
+                            </fieldset>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Selector de Moneda', 'wvp'); ?></th>
+                        <td>
+                            <fieldset>
+                                <legend class="screen-reader-text"><?php _e('Mostrar selector de moneda en:', 'wvp'); ?></legend>
+                                <label><input type="checkbox" name="wvp_display_settings[currency_switcher][single_product]" value="1" <?php checked($settings['currency_switcher']['single_product'], true); ?> /> <?php _e('Página de producto individual', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[currency_switcher][shop_loop]" value="1" <?php checked($settings['currency_switcher']['shop_loop'], true); ?> /> <?php _e('Lista de productos (shop)', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[currency_switcher][cart]" value="1" <?php checked($settings['currency_switcher']['cart'], true); ?> /> <?php _e('Carrito de compras', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[currency_switcher][checkout]" value="1" <?php checked($settings['currency_switcher']['checkout'], true); ?> /> <?php _e('Página de checkout', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[currency_switcher][widget]" value="1" <?php checked($settings['currency_switcher']['widget'], true); ?> /> <?php _e('Widgets', 'wvp'); ?></label>
+                            </fieldset>
+                        </td>
+                    </tr>
+                </table>
+                
+                <?php submit_button(__('Guardar Configuración', 'wvp')); ?>
+            </form>
+            
+            <hr style="margin: 30px 0;">
+            
+            <h3><?php _e('Shortcodes Disponibles', 'wvp'); ?></h3>
+            <p><?php _e('Usa estos shortcodes para mostrar información de monedas en cualquier lugar:', 'wvp'); ?></p>
+            
+            <table class="widefat">
+                <thead>
+                    <tr>
+                        <th><?php _e('Shortcode', 'wvp'); ?></th>
+                        <th><?php _e('Descripción', 'wvp'); ?></th>
+                        <th><?php _e('Ejemplo', 'wvp'); ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>[wvp_bcv_rate]</code></td>
+                        <td><?php _e('Muestra la tasa BCV actual', 'wvp'); ?></td>
+                        <td><code>[wvp_bcv_rate format="simple" show_label="true"]</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>[wvp_currency_switcher]</code></td>
+                        <td><?php _e('Muestra selector de moneda', 'wvp'); ?></td>
+                        <td><code>[wvp_currency_switcher style="buttons" scope="global"]</code></td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         <?php
     }

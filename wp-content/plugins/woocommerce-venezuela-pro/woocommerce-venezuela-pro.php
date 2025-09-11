@@ -215,6 +215,9 @@ class WooCommerce_Venezuela_Pro {
         // Gestor de visualización de productos
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-product-display-manager.php';
         
+        // Cargar control de visualización
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-display-control.php';
+        
         // Archivos de pruebas (solo en desarrollo)
         if (defined('WP_DEBUG') && WP_DEBUG) {
             require_once WVP_PLUGIN_PATH . 'tests/test-woocommerce-compatibility.php';
