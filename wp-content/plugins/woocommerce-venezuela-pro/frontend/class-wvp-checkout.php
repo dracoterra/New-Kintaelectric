@@ -752,12 +752,14 @@ class WVP_Checkout {
         // Verificar si el sistema de IGTF está habilitado
         $igtf_enabled = get_option('wvp_igtf_enabled', 'yes') === 'yes';
         if (!$igtf_enabled) {
+            error_log('WVP DEBUG: IGTF deshabilitado - wvp_igtf_enabled = ' . get_option('wvp_igtf_enabled', 'not_set'));
             return false;
         }
         
         // Verificar si se debe mostrar IGTF
         $show_igtf = get_option('wvp_show_igtf', '1') === '1';
         if (!$show_igtf) {
+            error_log('WVP DEBUG: IGTF no se debe mostrar - wvp_show_igtf = ' . get_option('wvp_show_igtf', 'not_set'));
             return false;
         }
         

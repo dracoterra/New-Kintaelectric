@@ -147,6 +147,26 @@ class WVP_Admin_Restructured {
             array($this, 'display_error_monitor')
         );
         
+        // Añadir página de prueba de checkboxes (temporal)
+        add_submenu_page(
+            'wvp-dashboard',
+            __('Prueba Checkboxes', 'wvp'),
+            __('Prueba Checkboxes', 'wvp'),
+            'manage_options',
+            'wvp-test-checkboxes',
+            array($this, 'display_test_checkboxes')
+        );
+        
+        // Añadir página de debug del formulario principal (temporal)
+        add_submenu_page(
+            'wvp-dashboard',
+            __('Debug Formulario', 'wvp'),
+            __('Debug Formulario', 'wvp'),
+            'manage_options',
+            'wvp-debug-main-form',
+            array($this, 'display_debug_main_form')
+        );
+        
         add_submenu_page(
             'wvp-dashboard',
             __('Apariencia', 'wvp'),
@@ -171,7 +191,9 @@ class WVP_Admin_Restructured {
      */
     public function register_settings() {
         // Configuraciones generales
-        register_setting('wvp_general_settings', 'wvp_general_settings');
+        register_setting('wvp_general_settings', 'wvp_general_settings', array(
+            'sanitize_callback' => array($this, 'sanitize_general_settings')
+        ));
         register_setting('wvp_payment_settings', 'wvp_payment_settings');
         register_setting('wvp_fiscal_settings', 'wvp_fiscal_settings');
         register_setting('wvp_shipping_settings', 'wvp_shipping_settings');
@@ -192,6 +214,13 @@ class WVP_Admin_Restructured {
         
         // Añadir callback para procesar configuraciones
         add_action('update_option_wvp_general_settings', array($this, 'process_general_settings'), 10, 2);
+        
+        // Hook para procesar formulario nativo de WordPress
+        add_action('admin_init', array($this, 'process_form_submission'));
+        
+        // Deshabilitar AJAX temporalmente para evitar errores 400
+        // add_action('wp_ajax_wvp_save_tab_settings', array($this, 'save_tab_settings'));
+        // add_action('wp_ajax_wvp_get_tab_content', array($this, 'get_tab_content'));
     }
     
     /**
@@ -199,14 +228,14 @@ class WVP_Admin_Restructured {
      */
     public function process_general_settings($old_value, $new_value) {
         // Procesar checkbox de mostrar IGTF
-        if (isset($new_value['show_igtf'])) {
+        if (isset($new_value['show_igtf']) && $new_value['show_igtf'] === '1') {
             update_option('wvp_show_igtf', '1');
         } else {
             update_option('wvp_show_igtf', '0');
         }
         
         // Procesar checkbox de habilitar IGTF
-        if (isset($new_value['igtf_enabled'])) {
+        if (isset($new_value['igtf_enabled']) && $new_value['igtf_enabled'] === 'yes') {
             update_option('wvp_igtf_enabled', 'yes');
         } else {
             update_option('wvp_igtf_enabled', 'no');
@@ -220,6 +249,88 @@ class WVP_Admin_Restructured {
         if (isset($new_value['igtf_rate'])) {
             update_option('wvp_igtf_rate', floatval($new_value['igtf_rate']));
         }
+        
+        // Forzar actualización de caché
+        wp_cache_delete('wvp_show_igtf', 'options');
+        wp_cache_delete('wvp_igtf_enabled', 'options');
+    }
+    
+    /**
+     * Procesar envío de formulario nativo de WordPress
+     */
+    public function process_form_submission() {
+        // Solo procesar si estamos en la página correcta
+        if (!isset($_POST['option_page']) || $_POST['option_page'] !== 'wvp_general_settings') {
+            return;
+        }
+        
+        // Verificar nonce
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'wvp_general_settings-options')) {
+            return;
+        }
+        
+        // Procesar checkboxes manualmente
+        $show_igtf = isset($_POST['wvp_general_settings']['show_igtf']) ? '1' : '0';
+        $igtf_enabled = isset($_POST['wvp_general_settings']['igtf_enabled']) ? 'yes' : 'no';
+        
+        // Procesar otros campos
+        $igtf_rate = isset($_POST['wvp_general_settings']['igtf_rate']) ? floatval($_POST['wvp_general_settings']['igtf_rate']) : 3.0;
+        $price_reference_format = isset($_POST['wvp_general_settings']['price_reference_format']) ? sanitize_text_field($_POST['wvp_general_settings']['price_reference_format']) : 'USD';
+        
+        // Guardar todas las opciones
+        update_option('wvp_show_igtf', $show_igtf);
+        update_option('wvp_igtf_enabled', $igtf_enabled);
+        update_option('wvp_igtf_rate', $igtf_rate);
+        update_option('wvp_price_reference_format', $price_reference_format);
+        
+        // Crear/actualizar configuraciones generales
+        $general_settings = array(
+            'show_igtf' => $show_igtf,
+            'igtf_enabled' => $igtf_enabled,
+            'igtf_rate' => $igtf_rate,
+            'price_reference_format' => $price_reference_format
+        );
+        update_option('wvp_general_settings', $general_settings);
+        
+        // Limpiar caché
+        wp_cache_delete('wvp_show_igtf', 'options');
+        wp_cache_delete('wvp_igtf_enabled', 'options');
+        wp_cache_delete('wvp_igtf_rate', 'options');
+        wp_cache_delete('wvp_price_reference_format', 'options');
+        wp_cache_delete('wvp_general_settings', 'options');
+        
+        // Mostrar mensaje de éxito
+        add_action('admin_notices', function() {
+            echo '<div class="notice notice-success is-dismissible"><p>' . __('Configuraciones guardadas correctamente.', 'wvp') . '</p></div>';
+        });
+    }
+    
+    /**
+     * Sanitizar configuraciones generales
+     */
+    public function sanitize_general_settings($input) {
+        // Procesar checkboxes - si no están marcados, establecer como "0" o "no"
+        $sanitized = array();
+        
+        // Mostrar IGTF
+        $sanitized['show_igtf'] = isset($input['show_igtf']) && $input['show_igtf'] === '1' ? '1' : '0';
+        
+        // Habilitar IGTF
+        $sanitized['igtf_enabled'] = isset($input['igtf_enabled']) && $input['igtf_enabled'] === 'yes' ? 'yes' : 'no';
+        
+        // Tasa IGTF
+        $sanitized['igtf_rate'] = isset($input['igtf_rate']) ? floatval($input['igtf_rate']) : 3.0;
+        
+        // Formato de referencia de precio
+        $sanitized['price_reference_format'] = isset($input['price_reference_format']) ? sanitize_text_field($input['price_reference_format']) : 'USD';
+        
+        // Guardar en opciones individuales también
+        update_option('wvp_show_igtf', $sanitized['show_igtf']);
+        update_option('wvp_igtf_enabled', $sanitized['igtf_enabled']);
+        update_option('wvp_igtf_rate', $sanitized['igtf_rate']);
+        update_option('wvp_price_reference_format', $sanitized['price_reference_format']);
+        
+        return $sanitized;
     }
     
     /**
@@ -554,7 +665,7 @@ class WVP_Admin_Restructured {
                         <td>
                             <label>
                                 <input type="checkbox" name="wvp_general_settings[show_igtf]" 
-                                       value="1" <?php checked(get_option('wvp_show_igtf', '1'), '1'); ?> />
+                                       value="1" <?php checked(get_option('wvp_show_igtf', '0'), '1'); ?> />
                                 <?php _e('Mostrar IGTF en el checkout.', 'wvp'); ?>
                             </label>
                             <p class="description"><?php _e('Desmarca esta opción para ocultar el IGTF en el checkout.', 'wvp'); ?></p>
@@ -565,7 +676,7 @@ class WVP_Admin_Restructured {
                         <td>
                             <label>
                                 <input type="checkbox" name="wvp_general_settings[igtf_enabled]" 
-                                       value="yes" <?php checked(get_option('wvp_igtf_enabled', 'yes'), 'yes'); ?> />
+                                       value="yes" <?php checked(get_option('wvp_igtf_enabled', 'no'), 'yes'); ?> />
                                 <?php _e('Activar sistema de IGTF.', 'wvp'); ?>
                             </label>
                             <p class="description"><?php _e('Desmarca esta opción para desactivar completamente el sistema de IGTF.', 'wvp'); ?></p>
@@ -1571,23 +1682,24 @@ class WVP_Admin_Restructured {
             ');
         }
         
-        wp_enqueue_script(
-            'wvp-admin-restructured',
-            WVP_PLUGIN_URL . 'assets/js/admin-restructured.js',
-            array('jquery'),
-            WVP_VERSION,
-            true
-        );
+        // Deshabilitar AJAX temporalmente para evitar errores 400
+        // wp_enqueue_script(
+        //     'wvp-admin-restructured',
+        //     WVP_PLUGIN_URL . 'assets/js/admin-restructured.js',
+        //     array('jquery'),
+        //     WVP_VERSION,
+        //     true
+        // );
         
-        wp_localize_script('wvp-admin-restructured', 'wvp_admin', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('wvp_admin_nonce'),
-            'strings' => array(
-                'saving' => __('Guardando...', 'wvp'),
-                'saved' => __('Guardado correctamente', 'wvp'),
-                'error' => __('Error al guardar', 'wvp')
-            )
-        ));
+        // wp_localize_script('wvp-admin-restructured', 'wvp_admin', array(
+        //     'ajax_url' => admin_url('admin-ajax.php'),
+        //     'nonce' => wp_create_nonce('wvp_admin_nonce'),
+        //     'strings' => array(
+        //         'saving' => __('Guardando...', 'wvp'),
+        //         'saved' => __('Guardado correctamente', 'wvp'),
+        //         'error' => __('Error al guardar', 'wvp')
+        //     )
+        // ));
     }
     
     /**
@@ -1672,6 +1784,20 @@ class WVP_Admin_Restructured {
     public function display_error_monitor() {
         $this->current_tab = 'error-monitor';
         $this->display_admin_page();
+    }
+    
+    /**
+     * Mostrar página de prueba de checkboxes
+     */
+    public function display_test_checkboxes() {
+        include WVP_PLUGIN_PATH . 'test-checkboxes-admin.php';
+    }
+    
+    /**
+     * Mostrar página de debug del formulario principal
+     */
+    public function display_debug_main_form() {
+        include WVP_PLUGIN_PATH . 'debug-main-form.php';
     }
     
     /**
