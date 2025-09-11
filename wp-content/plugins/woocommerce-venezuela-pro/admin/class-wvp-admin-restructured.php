@@ -147,26 +147,6 @@ class WVP_Admin_Restructured {
             array($this, 'display_error_monitor')
         );
         
-        // Añadir página de prueba de checkboxes (temporal)
-        add_submenu_page(
-            'wvp-dashboard',
-            __('Prueba Checkboxes', 'wvp'),
-            __('Prueba Checkboxes', 'wvp'),
-            'manage_options',
-            'wvp-test-checkboxes',
-            array($this, 'display_test_checkboxes')
-        );
-        
-        // Añadir página de debug del formulario principal (temporal)
-        add_submenu_page(
-            'wvp-dashboard',
-            __('Debug Formulario', 'wvp'),
-            __('Debug Formulario', 'wvp'),
-            'manage_options',
-            'wvp-debug-main-form',
-            array($this, 'display_debug_main_form')
-        );
-        
         add_submenu_page(
             'wvp-dashboard',
             __('Apariencia', 'wvp'),
@@ -184,6 +164,7 @@ class WVP_Admin_Restructured {
             'wvp-help',
             array($this, 'display_help')
         );
+        
     }
     
     /**
@@ -1710,6 +1691,119 @@ class WVP_Admin_Restructured {
     }
     
     /**
+     * Mostrar página de verificación de base de datos
+     */
+    public function display_db_check() {
+        ?>
+        <div class="wrap">
+            <h1><?php _e('Verificación de Base de Datos', 'wvp'); ?></h1>
+            
+            <div class="wvp-db-check">
+                <?php
+                global $wpdb;
+                
+                echo "<h2>1. Tablas de WooCommerce</h2>";
+                $wc_tables = $wpdb->get_results("SHOW TABLES LIKE '{$wpdb->prefix}woocommerce%'");
+                if ($wc_tables) {
+                    echo "<ul>";
+                    foreach ($wc_tables as $table) {
+                        $table_name = array_values((array)$table)[0];
+                        echo "<li>✅ $table_name</li>";
+                    }
+                    echo "</ul>";
+                } else {
+                    echo "<p>❌ No se encontraron tablas de WooCommerce</p>";
+                }
+                
+                echo "<h2>2. Tablas de Pedidos</h2>";
+                
+                // Verificar tabla tradicional
+                $posts_table = $wpdb->get_var("SHOW TABLES LIKE '{$wpdb->posts}'");
+                if ($posts_table) {
+                    echo "<p>✅ {$wpdb->posts} (tabla tradicional)</p>";
+                    $orders_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'shop_order'");
+                    echo "<p>📊 Pedidos en wp_posts: <strong>$orders_count</strong></p>";
+                } else {
+                    echo "<p>❌ {$wpdb->posts} no existe</p>";
+                }
+                
+                // Verificar tabla HPOS
+                $hpos_table = $wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}wc_orders'");
+                if ($hpos_table) {
+                    echo "<p>✅ {$wpdb->prefix}wc_orders (tabla HPOS)</p>";
+                    $hpos_orders_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}wc_orders");
+                    echo "<p>📊 Pedidos en wc_orders: <strong>$hpos_orders_count</strong></p>";
+                } else {
+                    echo "<p>❌ {$wpdb->prefix}wc_orders no existe</p>";
+                }
+                
+                echo "<h2>3. Tablas del Plugin</h2>";
+                $plugin_tables = $wpdb->get_results("SHOW TABLES LIKE '{$wpdb->prefix}wvp_%'");
+                if ($plugin_tables) {
+                    echo "<ul>";
+                    foreach ($plugin_tables as $table) {
+                        $table_name = array_values((array)$table)[0];
+                        echo "<li>✅ $table_name</li>";
+                    }
+                    echo "</ul>";
+                } else {
+                    echo "<p>❌ No hay tablas del plugin</p>";
+                }
+                
+                echo "<h2>4. Estado de HPOS</h2>";
+                if (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil')) {
+                    echo "<p>✅ OrderUtil disponible</p>";
+                    
+                    if (\Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
+                        echo "<p>✅ <strong>HPOS HABILITADO</strong></p>";
+                        echo "<p>📊 Usando tablas personalizadas para pedidos</p>";
+                    } else {
+                        echo "<p>⚠️ <strong>HPOS DESHABILITADO</strong></p>";
+                        echo "<p>📊 Usando wp_posts para pedidos</p>";
+                    }
+                } else {
+                    echo "<p>❌ OrderUtil no disponible</p>";
+                    echo "<p>📊 Versión de WooCommerce muy antigua</p>";
+                }
+                
+                echo "<h2>5. Versión de WooCommerce</h2>";
+                if (class_exists('WooCommerce')) {
+                    $version = WC()->version;
+                    echo "<p>📊 Versión: <strong>$version</strong></p>";
+                } else {
+                    echo "<p>❌ WooCommerce no está activo</p>";
+                }
+                
+                echo "<h2>6. Recomendaciones</h2>";
+                if ($hpos_table && class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
+                    echo "<p>✅ El plugin debería funcionar correctamente con HPOS</p>";
+                    echo "<p>📋 Asegúrate de que el plugin declare compatibilidad con HPOS</p>";
+                } else {
+                    echo "<p>⚠️ HPOS no está habilitado o no está disponible</p>";
+                    echo "<p>📋 Considera habilitar HPOS para mejor rendimiento</p>";
+                    echo "<p>📋 El plugin funcionará con el método tradicional</p>";
+                }
+                ?>
+            </div>
+        </div>
+        
+        <style>
+        .wvp-db-check h2 {
+            color: #0073aa;
+            border-bottom: 2px solid #0073aa;
+            padding-bottom: 5px;
+        }
+        .wvp-db-check ul {
+            margin: 10px 0;
+        }
+        .wvp-db-check li {
+            margin: 5px 0;
+        }
+        </style>
+        <?php
+    }
+    
+    /**
      * Cargar scripts del admin
      */
     public function enqueue_admin_scripts($hook) {
@@ -1924,20 +2018,6 @@ class WVP_Admin_Restructured {
     public function display_error_monitor() {
         $this->current_tab = 'error-monitor';
         $this->display_admin_page();
-    }
-    
-    /**
-     * Mostrar página de prueba de checkboxes
-     */
-    public function display_test_checkboxes() {
-        include WVP_PLUGIN_PATH . 'test-checkboxes-admin.php';
-    }
-    
-    /**
-     * Mostrar página de debug del formulario principal
-     */
-    public function display_debug_main_form() {
-        include WVP_PLUGIN_PATH . 'debug-main-form.php';
     }
     
     /**

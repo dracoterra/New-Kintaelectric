@@ -315,16 +315,29 @@ class WVP_Fiscal_Reports {
     public function generate_fiscal_report($date_from, $date_to) {
         global $wpdb;
         
-        // Obtener pedidos del período
-        $orders = $wpdb->get_results($wpdb->prepare("
-            SELECT p.ID, p.post_date, p.post_status
-            FROM {$wpdb->posts} p
-            WHERE p.post_type = 'shop_order'
-            AND p.post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
-            AND p.post_date >= %s
-            AND p.post_date <= %s
-            ORDER BY p.post_date ASC
-        ", $date_from . ' 00:00:00', $date_to . ' 23:59:59'));
+        // Obtener pedidos del período (compatible con HPOS)
+        if (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
+            // Usar HPOS
+            $orders = $wpdb->get_results($wpdb->prepare("
+                SELECT id, date_created_gmt, status
+                FROM {$wpdb->prefix}wc_orders
+                WHERE status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND date_created_gmt >= %s
+                AND date_created_gmt <= %s
+                ORDER BY date_created_gmt ASC
+            ", $date_from . ' 00:00:00', $date_to . ' 23:59:59'));
+        } else {
+            // Usar método tradicional
+            $orders = $wpdb->get_results($wpdb->prepare("
+                SELECT p.ID, p.post_date, p.post_status
+                FROM {$wpdb->posts} p
+                WHERE p.post_type = 'shop_order'
+                AND p.post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND p.post_date >= %s
+                AND p.post_date <= %s
+                ORDER BY p.post_date ASC
+            ", $date_from . ' 00:00:00', $date_to . ' 23:59:59'));
+        }
         
         $report_data = array(
             'total_orders' => 0,
@@ -335,8 +348,15 @@ class WVP_Fiscal_Reports {
         );
         
         foreach ($orders as $order_data) {
-            $order = wc_get_order($order_data->ID);
+            // Obtener ID del pedido según el método usado
+            if (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
+                $order_id = $order_data->id;
+            } else {
+                $order_id = $order_data->ID;
+            }
             
+            // Obtener el objeto pedido
+            $order = wc_get_order($order_id);
             if (!$order) {
                 continue;
             }
