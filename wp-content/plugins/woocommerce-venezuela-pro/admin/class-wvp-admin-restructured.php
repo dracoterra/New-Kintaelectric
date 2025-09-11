@@ -1538,34 +1538,174 @@ class WVP_Admin_Restructured {
     private function display_help_content() {
         ?>
         <div class="wvp-help">
-            <h2><?php _e('Ayuda y Soporte', 'wvp'); ?></h2>
+            <h1><?php _e('📚 Guía Completa - WooCommerce Venezuela Pro', 'wvp'); ?></h1>
             
-            <div class="wvp-help-sections">
-                <div class="wvp-help-section">
-                    <h3><?php _e('🚀 Configuración Inicial', 'wvp'); ?></h3>
-                    <ol>
-                        <li><?php _e('Instalar y activar el plugin BCV Dólar Tracker', 'wvp'); ?></li>
-                        <li><?php _e('Configurar las pasarelas de pago en WooCommerce', 'wvp'); ?></li>
-                        <li><?php _e('Configurar Cashea (obtener API Keys)', 'wvp'); ?></li>
-                        <li><?php _e('Configurar delivery local (zonas y tarifas)', 'wvp'); ?></li>
-                        <li><?php _e('Establecer el prefijo y próximo número de control', 'wvp'); ?></li>
-                        <li><?php _e('Configurar la tasa de IGTF si es necesaria', 'wvp'); ?></li>
-                        <li><?php _e('Personalizar plantillas de WhatsApp', 'wvp'); ?></li>
-                        <li><?php _e('Probar el flujo completo de compra', 'wvp'); ?></li>
-                    </ol>
-                </div>
+            <div class="wvp-help-section">
+                <h2>🎯 ¿Qué es WooCommerce Venezuela Pro?</h2>
+                <p>Es un plugin especializado para tiendas online en Venezuela que integra funcionalidades específicas del mercado venezolano con WooCommerce, incluyendo:</p>
+                <ul>
+                    <li>✅ <strong>Integración con BCV Dólar Tracker</strong> - Tasas de cambio en tiempo real</li>
+                    <li>✅ <strong>Sistema IGTF</strong> - Impuesto a las Grandes Transacciones Financieras</li>
+                    <li>✅ <strong>Validaciones venezolanas</strong> - Cédula/RIF, teléfonos</li>
+                    <li>✅ <strong>Pasarelas de pago locales</strong> - Pago Móvil, Zelle, Cashea</li>
+                    <li>✅ <strong>Facturación híbrida</strong> - USD/VES</li>
+                    <li>✅ <strong>Zonas de envío</strong> - Estados y municipios de Venezuela</li>
+                    <li>✅ <strong>Notificaciones WhatsApp</strong> - Confirmaciones automáticas</li>
+                    <li>✅ <strong>Personalización visual</strong> - Múltiples estilos para precios</li>
+                </ul>
+            </div>
+
+            <div class="wvp-help-section">
+                <h2>⚙️ Configuración Inicial</h2>
+                <h3>1. Configuraciones Generales</h3>
+                <p><strong>Ubicación:</strong> Venezuela Pro → Configuraciones</p>
+                <ul>
+                    <li><strong>Formato de Referencia de Precio:</strong> Define cómo mostrar precios en bolívares (ej: "Ref. %s Bs.")</li>
+                    <li><strong>Tasa IGTF:</strong> Porcentaje del impuesto (por defecto 3%)</li>
+                    <li><strong>Mostrar IGTF:</strong> Activa/desactiva la visualización en checkout</li>
+                    <li><strong>Habilitar IGTF:</strong> Activa/desactiva todo el sistema IGTF</li>
+                </ul>
+
+                <h3>2. Pasarelas de Pago</h3>
+                <p><strong>Ubicación:</strong> Venezuela Pro → Pasarelas de Pago</p>
+                <ul>
+                    <li><strong>Pago Móvil:</strong> Configuración para pagos móviles venezolanos</li>
+                    <li><strong>Zelle:</strong> Integración con Zelle para pagos en USD</li>
+                    <li><strong>Cashea:</strong> Pasarela de pago local</li>
+                </ul>
+
+                <h3>3. Sistema Fiscal</h3>
+                <p><strong>Ubicación:</strong> Venezuela Pro → Sistema Fiscal</p>
+                <ul>
+                    <li><strong>Prefijo de Número de Control:</strong> Para facturación (ej: "00-")</li>
+                    <li><strong>Próximo Número de Control:</strong> Secuencia de numeración</li>
+                </ul>
+            </div>
+
+            <div class="wvp-help-section">
+                <h2>🎨 Personalización Visual</h2>
+                <p><strong>Ubicación:</strong> Venezuela Pro → Apariencia</p>
+                <h3>Estilos Disponibles:</h3>
+                <ul>
+                    <li><strong>Minimal:</strong> Diseño limpio y simple</li>
+                    <li><strong>Modern:</strong> Estilo contemporáneo con sombras</li>
+                    <li><strong>Elegant:</strong> Diseño elegante con bordes redondeados</li>
+                    <li><strong>Compact:</strong> Diseño compacto para espacios reducidos</li>
+                    <li><strong>Vintage:</strong> Estilo retro con tipografía clásica</li>
+                    <li><strong>Futuristic:</strong> Diseño futurista con efectos modernos</li>
+                    <li><strong>Advanced Minimalist:</strong> Minimalismo avanzado</li>
+                </ul>
                 
-                <div class="wvp-help-section">
-                    <h3><?php _e('🔧 Solución de Problemas', 'wvp'); ?></h3>
-                    <ul>
-                        <li><strong><?php _e('Tasa BCV no disponible:', 'wvp'); ?></strong> <?php _e('Verificar que BCV Dólar Tracker esté activo', 'wvp'); ?></li>
-                        <li><strong><?php _e('IGTF no se aplica:', 'wvp'); ?></strong> <?php _e('Verificar configuración de pasarelas de pago', 'wvp'); ?></li>
-                        <li><strong><?php _e('Cashea no aparece:', 'wvp'); ?></strong> <?php _e('Verificar API Keys y montos configurados', 'wvp'); ?></li>
-                        <li><strong><?php _e('Delivery local no funciona:', 'wvp'); ?></strong> <?php _e('Verificar que el cliente esté en DC o Miranda', 'wvp'); ?></li>
-                    </ul>
-                </div>
+                <h3>Personalización Avanzada:</h3>
+                <ul>
+                    <li><strong>Colores:</strong> Primario, secundario, éxito, advertencia</li>
+                    <li><strong>Tipografía:</strong> Familia, tamaño, peso, transformación</li>
+                    <li><strong>Espaciado:</strong> Padding, margen, radio de borde, sombra</li>
+                    <li><strong>Temas Predefinidos:</strong> Default, Green, Purple, Orange, Red, Dark</li>
+                </ul>
+            </div>
+
+            <div class="wvp-help-section">
+                <h2>📱 Funcionalidades Específicas</h2>
+                
+                <h3>🔄 Conversión de Monedas</h3>
+                <p>El plugin convierte automáticamente precios entre USD y VES usando tasas del BCV:</p>
+                <ul>
+                    <li>Precios base en USD</li>
+                    <li>Conversión automática a VES</li>
+                    <li>Actualización en tiempo real</li>
+                    <li>Selector de moneda en frontend</li>
+                </ul>
+
+                <h3>💰 Sistema IGTF</h3>
+                <p>Impuesto aplicado a transacciones en efectivo con billetes en dólares:</p>
+                <ul>
+                    <li>Se aplica solo a pasarelas de pago en efectivo</li>
+                    <li>No se aplica a transferencias digitales</li>
+                    <li>Configurable desde administración</li>
+                    <li>Visible en checkout cuando aplica</li>
+                </ul>
+
+                <h3>📋 Validaciones Venezolanas</h3>
+                <ul>
+                    <li><strong>Cédula/RIF:</strong> Formato V-12345678, J-12345678-9</li>
+                    <li><strong>Teléfonos:</strong> Formato venezolano (0412-1234567)</li>
+                    <li><strong>Campos obligatorios:</strong> Cédula/RIF en checkout</li>
+                </ul>
+
+                <h3>🚚 Zonas de Envío</h3>
+                <ul>
+                    <li>Estados de Venezuela preconfigurados</li>
+                    <li>Municipios por estado</li>
+                    <li>Costos de envío configurables</li>
+                    <li>Selector dinámico en checkout</li>
+                </ul>
+            </div>
+
+            <div class="wvp-help-section">
+                <h2>🔧 Solución de Problemas</h2>
+                
+                <h3>Problemas Comunes:</h3>
+                <ul>
+                    <li><strong>IGTF no se desactiva:</strong> Verifica ambas opciones en Configuraciones</li>
+                    <li><strong>Precios no se convierten:</strong> Verifica que BCV Dólar Tracker esté activo</li>
+                    <li><strong>Errores AJAX:</strong> Desactiva plugins de caché temporalmente</li>
+                    <li><strong>Estilos no se aplican:</strong> Limpia caché del navegador</li>
+                </ul>
+
+                <h3>Logs y Debug:</h3>
+                <ul>
+                    <li><strong>Debug Log:</strong> wp-content/debug.log</li>
+                    <li><strong>Monitor de Errores:</strong> Venezuela Pro → Monitor de Errores</li>
+                    <li><strong>Reportes:</strong> Venezuela Pro → Reportes</li>
+                </ul>
+            </div>
+
+            <div class="wvp-help-section">
+                <h2>📞 Soporte y Contacto</h2>
+                <p>Para soporte técnico o consultas:</p>
+                <ul>
+                    <li>📧 <strong>Email:</strong> soporte@ejemplo.com</li>
+                    <li>📱 <strong>WhatsApp:</strong> +58 412-1234567</li>
+                    <li>🌐 <strong>Web:</strong> www.ejemplo.com</li>
+                </ul>
+            </div>
+
+            <div class="wvp-help-section">
+                <h2>📄 Documentación Técnica</h2>
+                <p>Para desarrolladores:</p>
+                <ul>
+                    <li><strong>Hooks disponibles:</strong> woocommerce_checkout_fields, wc_get_price_html</li>
+                    <li><strong>Filtros:</strong> wvp_igtf_rate, wvp_currency_symbol</li>
+                    <li><strong>Acciones:</strong> wvp_after_price_display, wvp_before_checkout</li>
+                    <li><strong>Clases principales:</strong> WVP_Product_Display_Manager, WVP_Checkout</li>
+                </ul>
             </div>
         </div>
+
+        <style>
+        .wvp-help-section {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #0073aa;
+            border-radius: 4px;
+        }
+        .wvp-help-section h2 {
+            color: #0073aa;
+            margin-top: 0;
+        }
+        .wvp-help-section h3 {
+            color: #333;
+            margin-top: 15px;
+        }
+        .wvp-help-section ul {
+            margin: 10px 0;
+        }
+        .wvp-help-section li {
+            margin: 5px 0;
+        }
+        </style>
         <?php
     }
     

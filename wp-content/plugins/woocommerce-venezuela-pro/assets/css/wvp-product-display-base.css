@@ -16,7 +16,7 @@
     --wvp-warning-color: #ffc107;
     --wvp-danger-color: #dc3545;
     --wvp-light-color: #f8f9fa;
-    --wvp-dark-color: #343a40;
+    --wvp-dark-color: #343a40 !important;
     --wvp-border-color: #e9ecef;
     --wvp-shadow: 0 2px 4px rgba(0,0,0,0.1);
     --wvp-shadow-lg: 0 4px 15px rgba(0,0,0,0.15);
