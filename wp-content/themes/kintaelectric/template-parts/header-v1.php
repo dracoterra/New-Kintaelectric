@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<li id="menu-item-5167" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5167"><a title="Store Locator" href="#"><i class="ec ec-map-pointer"></i>Store Locator</a></li>
 			<li id="menu-item-5299" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5299"><a title="Track Your Order" href="track-your-order/index.htm"><i class="ec ec-transport"></i>Track Your Order</a></li>
 			<li id="menu-item-5293" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5293"><a title="Shop" href="shop/index.htm"><i class="ec ec-shopping-bag"></i>Shop</a></li>
-			<li id="menu-item-5294" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5294"><a title="My Account" href="my-account/index.htm"><i class="ec ec-user"></i>My Account</a>
+			<li id="menu-item-5294" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5294"><a title="Mi Cuenta" href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>"><i class="ec ec-user"></i>Mi Cuenta</a>
 			</li>
 		</ul>
 	</div>
@@ -122,23 +122,50 @@ if ( ! defined( 'ABSPATH' ) ) {
 								?>
 							</div>
 							<div class="header-icon header-icon__user-account dropdown animate-dropdown"
-								data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="My Account">
-								<a class="dropdown-toggle" href="my-account/index.htm" data-bs-toggle="dropdown"><i
+								data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Mi Cuenta">
+								<a class="dropdown-toggle" href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" data-bs-toggle="dropdown"><i
 										class="ec ec-user"></i></a>
 								<ul class="dropdown-menu dropdown-menu-user-account">
 									<li>
-										<div class="register-sign-in-dropdown-inner">
-											<div class="sign-in">
-												<p>Returning Customer ?</p>
-												<div class="sign-in-action"><a href="my-account/index.htm"
-														class="sign-in-button">Sign in</a></div>
-											</div>
-											<div class="register">
-												<p>Don&#039;t have an account ?</p>
-												<div class="register-action"><a href="my-account/index.htm">Register</a>
+										<?php if (is_user_logged_in()) : ?>
+											<div class="register-sign-in-dropdown-inner">
+												<div class="sign-in">
+													<p>Hola, <?php echo esc_html(wp_get_current_user()->display_name); ?>!</p>
+													<div class="sign-in-action">
+														<a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" class="sign-in-button">
+															Mi Cuenta
+														</a>
+													</div>
+												</div>
+												<div class="register">
+													<p>¿Quieres salir?</p>
+													<div class="register-action">
+														<a href="<?php echo esc_url(wp_logout_url(wc_get_page_permalink('myaccount'))); ?>">
+															Cerrar Sesión
+														</a>
+													</div>
 												</div>
 											</div>
-										</div>
+										<?php else : ?>
+											<div class="register-sign-in-dropdown-inner">
+												<div class="sign-in">
+													<p>¿Cliente frecuente?</p>
+													<div class="sign-in-action">
+														<a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" class="sign-in-button">
+															Iniciar Sesión
+														</a>
+													</div>
+												</div>
+												<div class="register">
+													<p>¿No tienes cuenta?</p>
+													<div class="register-action">
+														<a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>">
+															Registrarse
+														</a>
+													</div>
+												</div>
+											</div>
+										<?php endif; ?>
 									</li>
 								</ul>
 							</div>
@@ -184,6 +211,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 								'walker'         => new KintaElectric_YAMM_Walker(),
 							) );
 							?>
+						</div>
+						<div class="col-auto align-self-center d-none d-xl-block">
+							Ilumina tu Hogar con Nuestros Bombillos
 						</div>
 					</div>
 				</div>
@@ -237,7 +267,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									</div>
 								</li>
 								<li class="my-account">
-									<a href="my-account/index.htm"><i class="ec ec-user"></i></a>
+									<a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>"><i class="ec ec-user"></i></a>
 								</li>
 								<li class="cart">
 									<a class="footer-cart-contents" href="<?php echo esc_url(wc_get_cart_url()); ?>"
