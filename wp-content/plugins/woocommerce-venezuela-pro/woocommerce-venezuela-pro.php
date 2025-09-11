@@ -104,6 +104,8 @@ class WooCommerce_Venezuela_Pro {
             new WVP_Admin_Restructured();
         }
         
+        // Inicializar gestor de visualización de productos (se inicializa en init_components)
+        
         // Log de inicialización
         error_log('WooCommerce Venezuela Pro: Plugin inicializado correctamente');
     }
@@ -165,10 +167,10 @@ class WooCommerce_Venezuela_Pro {
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-asset-optimizer.php';
         
         // Archivos de frontend
-        require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-price-display.php';
+        // require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-price-display.php'; // ELIMINADO - usando nuevo sistema
         require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-checkout.php';
-        require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-currency-switcher.php';
-        require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-dual-breakdown.php';
+        // require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-currency-switcher.php'; // ELIMINADO - usando nuevo sistema
+        // require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-dual-breakdown.php'; // ELIMINADO - usando nuevo sistema
         require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-hybrid-invoicing.php';
         
         // Archivos de administración
@@ -203,6 +205,9 @@ class WooCommerce_Venezuela_Pro {
         // Sistema de monitoreo de errores
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-error-monitor.php';
         
+        // Gestor de visualización de productos
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-product-display-manager.php';
+        
         // Archivos de pruebas (solo en desarrollo)
         if (defined('WP_DEBUG') && WP_DEBUG) {
             require_once WVP_PLUGIN_PATH . 'tests/test-woocommerce-compatibility.php';
@@ -223,10 +228,7 @@ class WooCommerce_Venezuela_Pro {
                 return;
             }
             
-            if (!class_exists('WVP_Price_Display')) {
-                error_log('WVP Error: WVP_Price_Display no está disponible');
-                return;
-            }
+            // WVP_Price_Display deshabilitado - usando nuevo sistema
             
             if (!class_exists('WVP_Checkout')) {
                 error_log('WVP Error: WVP_Checkout no está disponible');
@@ -272,16 +274,16 @@ class WooCommerce_Venezuela_Pro {
             }
             
             // Inicializar componentes de frontend
-            $this->price_display = new WVP_Price_Display();
+            // $this->price_display = new WVP_Price_Display(); // Deshabilitado - usando nuevo sistema
             $this->checkout = new WVP_Checkout();
             
-            // Inicializar switcher de moneda
-            if (class_exists('WVP_Currency_Switcher')) {
+            // Inicializar switcher de moneda (deshabilitado - usando nuevo sistema)
+            if (false && class_exists('WVP_Currency_Switcher')) {
                 new WVP_Currency_Switcher();
             }
             
-            // Inicializar desglose dual si está disponible
-            if (class_exists('WVP_Dual_Breakdown')) {
+            // Inicializar desglose dual si está disponible (deshabilitado - usando nuevo sistema)
+            if (false && class_exists('WVP_Dual_Breakdown')) {
                 $this->dual_breakdown = new WVP_Dual_Breakdown();
             }
             
@@ -313,6 +315,11 @@ class WooCommerce_Venezuela_Pro {
                 if (class_exists('WVP_Config_Manager')) {
                     new WVP_Config_Manager();
                 }
+            }
+            
+            // Cargar gestor de visualización de productos
+            if (class_exists('WVP_Product_Display_Manager')) {
+                new WVP_Product_Display_Manager();
             }
             
             // Registrar pasarelas de pago

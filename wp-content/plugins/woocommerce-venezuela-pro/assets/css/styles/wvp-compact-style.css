@@ -1,0 +1,331 @@
+/**
+ * Estilo Compacto - WooCommerce Venezuela Pro
+ * Diseño optimizado para listas de productos y espacios reducidos
+ * 
+ * @package WooCommerce_Venezuela_Pro
+ * @since 1.0.0
+ */
+
+/* ========================================
+   ESTILO COMPACTO
+   ======================================== */
+.wvp-compact .wvp-product-price-container {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 5px 0;
+    box-shadow: none;
+}
+
+.wvp-compact .wvp-currency-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 4px 0;
+    font-size: 12px;
+}
+
+.wvp-compact .wvp-currency-switcher button,
+.wvp-compact .wvp-currency-switcher .wvp-currency-option {
+    padding: 3px 8px;
+    border: 1px solid #ddd;
+    background: #ffffff;
+    color: #666;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    min-width: 35px;
+    text-align: center;
+    cursor: pointer;
+    line-height: 1.2;
+}
+
+.wvp-compact .wvp-currency-switcher button:hover,
+.wvp-compact .wvp-currency-switcher .wvp-currency-option:hover {
+    border-color: var(--wvp-primary-color);
+    color: var(--wvp-primary-color);
+    background: #f8f9fa;
+}
+
+.wvp-compact .wvp-currency-switcher button.active,
+.wvp-compact .wvp-currency-switcher .wvp-currency-option.active {
+    background: var(--wvp-primary-color);
+    border-color: var(--wvp-primary-color);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.wvp-compact .wvp-price-display {
+    margin: 3px 0;
+    display: inline-block;
+}
+
+.wvp-compact .wvp-price-usd,
+.wvp-compact .wvp-price-ves {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--wvp-dark-color);
+    margin: 0;
+    display: inline;
+}
+
+.wvp-compact .wvp-price-ves {
+    color: var(--wvp-secondary-color);
+}
+
+.wvp-compact .wvp-price-conversion {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 3px;
+    padding: 3px 6px;
+    margin: 2px 0;
+    font-size: 10px;
+    color: #666;
+    font-style: italic;
+    display: inline-block;
+}
+
+.wvp-compact .wvp-price-conversion .wvp-ves-reference {
+    margin: 0;
+    font-size: inherit;
+    color: inherit;
+}
+
+.wvp-compact .wvp-currency-badge {
+    background: #e9ecef;
+    color: #666;
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 6px;
+    margin-left: 4px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.wvp-compact .wvp-currency-badge.wvp-usd {
+    background: #d4edda;
+    color: #155724;
+}
+
+.wvp-compact .wvp-currency-badge.wvp-ves {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.wvp-compact .wvp-rate-info {
+    font-size: 9px;
+    color: #999;
+    margin-top: 2px;
+    font-style: italic;
+    display: block;
+}
+
+/* ========================================
+   LAYOUT COMPACTO ESPECÍFICO
+   ======================================== */
+.wvp-compact .wvp-price-layout {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.wvp-compact .wvp-price-layout .wvp-price-display {
+    margin: 0;
+}
+
+.wvp-compact .wvp-price-layout .wvp-currency-switcher {
+    margin: 0;
+}
+
+.wvp-compact .wvp-price-layout .wvp-price-conversion {
+    margin: 0;
+    font-size: 9px;
+    padding: 2px 4px;
+}
+
+/* ========================================
+   INTEGRACIÓN CON WOOCOMMERCE COMPACTO
+   ======================================== */
+.woocommerce .wvp-compact .wvp-product-price-container {
+    margin: 8px 0;
+}
+
+.woocommerce .product .wvp-compact .wvp-product-price-container {
+    margin: 10px 0;
+}
+
+.woocommerce ul.products li.product .wvp-compact .wvp-product-price-container {
+    margin: 5px 0;
+}
+
+.woocommerce-cart .wvp-compact .wvp-product-price-container {
+    margin: 3px 0;
+}
+
+.woocommerce-checkout .wvp-compact .wvp-product-price-container {
+    margin: 3px 0;
+}
+
+/* Lista de productos - estilo compacto */
+.woocommerce ul.products li.product .wvp-compact .wvp-currency-switcher {
+    justify-content: center;
+    margin: 3px 0;
+}
+
+.woocommerce ul.products li.product .wvp-compact .wvp-price-conversion {
+    text-align: center;
+    font-size: 9px;
+    padding: 2px 4px;
+}
+
+/* Widgets - estilo compacto */
+.widget .wvp-compact .wvp-product-price-container {
+    margin: 5px 0;
+}
+
+.widget .wvp-compact .wvp-currency-switcher {
+    justify-content: center;
+    font-size: 11px;
+}
+
+.widget .wvp-compact .wvp-currency-switcher button,
+.widget .wvp-compact .wvp-currency-switcher .wvp-currency-option {
+    padding: 2px 6px;
+    font-size: 10px;
+    min-width: 30px;
+}
+
+.widget .wvp-compact .wvp-price-conversion {
+    font-size: 9px;
+    padding: 2px 4px;
+}
+
+/* ========================================
+   RESPONSIVE COMPACTO
+   ======================================== */
+@media (max-width: 768px) {
+    .wvp-compact .wvp-currency-switcher {
+        gap: 3px;
+        font-size: 11px;
+    }
+    
+    .wvp-compact .wvp-currency-switcher button,
+    .wvp-compact .wvp-currency-switcher .wvp-currency-option {
+        padding: 2px 6px;
+        font-size: 10px;
+        min-width: 32px;
+    }
+    
+    .wvp-compact .wvp-price-usd,
+    .wvp-compact .wvp-price-ves {
+        font-size: 13px;
+    }
+    
+    .wvp-compact .wvp-price-conversion {
+        font-size: 9px;
+        padding: 2px 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .wvp-compact .wvp-currency-switcher {
+        gap: 2px;
+        font-size: 10px;
+    }
+    
+    .wvp-compact .wvp-currency-switcher button,
+    .wvp-compact .wvp-currency-switcher .wvp-currency-option {
+        padding: 2px 4px;
+        font-size: 9px;
+        min-width: 28px;
+    }
+    
+    .wvp-compact .wvp-price-usd,
+    .wvp-compact .wvp-price-ves {
+        font-size: 12px;
+    }
+    
+    .wvp-compact .wvp-price-conversion {
+        font-size: 8px;
+        padding: 1px 3px;
+    }
+}
+
+/* ========================================
+   VARIANTES COMPACTAS
+   ======================================== */
+
+/* Variante horizontal */
+.wvp-compact.wvp-horizontal .wvp-price-layout {
+    flex-direction: row;
+    align-items: center;
+}
+
+.wvp-compact.wvp-horizontal .wvp-currency-switcher {
+    margin-left: 8px;
+}
+
+/* Variante vertical */
+.wvp-compact.wvp-vertical .wvp-price-layout {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.wvp-compact.wvp-vertical .wvp-currency-switcher {
+    margin: 0;
+}
+
+/* Variante centrada */
+.wvp-compact.wvp-centered .wvp-price-layout {
+    justify-content: center;
+    text-align: center;
+}
+
+.wvp-compact.wvp-centered .wvp-currency-switcher {
+    justify-content: center;
+}
+
+/* ========================================
+   MODO OSCURO COMPACTO
+   ======================================== */
+@media (prefers-color-scheme: dark) {
+    .wvp-compact .wvp-currency-switcher button,
+    .wvp-compact .wvp-currency-switcher .wvp-currency-option {
+        background: #3c3c3c;
+        border-color: #555;
+        color: #ccc;
+    }
+    
+    .wvp-compact .wvp-currency-switcher button:hover,
+    .wvp-compact .wvp-currency-switcher .wvp-currency-option:hover {
+        background: #4c4c4c;
+        border-color: var(--wvp-primary-color);
+        color: var(--wvp-primary-color);
+    }
+    
+    .wvp-compact .wvp-currency-switcher button.active,
+    .wvp-compact .wvp-currency-switcher .wvp-currency-option.active {
+        background: var(--wvp-primary-color);
+        border-color: var(--wvp-primary-color);
+        color: #ffffff;
+    }
+    
+    .wvp-compact .wvp-price-conversion {
+        background: #3c3c3c;
+        border-color: #555;
+        color: #ccc;
+    }
+    
+    .wvp-compact .wvp-currency-badge {
+        background: #555;
+        color: #ccc;
+    }
+    
+    .wvp-compact .wvp-rate-info {
+        color: #aaa;
+    }
+}

@@ -1,0 +1,224 @@
+/**
+ * Estilo Minimalista - WooCommerce Venezuela Pro
+ * Diseño limpio y simple para máxima compatibilidad
+ * 
+ * @package WooCommerce_Venezuela_Pro
+ * @since 1.0.0
+ */
+
+/* ========================================
+   ESTILO MINIMALISTA
+   ======================================== */
+.wvp-minimal .wvp-product-price-container {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 10px 0;
+    box-shadow: none;
+}
+
+.wvp-minimal .wvp-currency-switcher {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+.wvp-minimal .wvp-currency-switcher button,
+.wvp-minimal .wvp-currency-switcher .wvp-currency-option {
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    background: transparent;
+    color: #666;
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    min-width: 50px;
+    text-align: center;
+}
+
+.wvp-minimal .wvp-currency-switcher button:hover,
+.wvp-minimal .wvp-currency-switcher .wvp-currency-option:hover {
+    border-color: var(--wvp-primary-color);
+    color: var(--wvp-primary-color);
+    background: #f8f9fa;
+}
+
+.wvp-minimal .wvp-currency-switcher button.active,
+.wvp-minimal .wvp-currency-switcher .wvp-currency-option.active {
+    background: var(--wvp-primary-color);
+    border-color: var(--wvp-primary-color);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.wvp-minimal .wvp-price-display {
+    margin: 5px 0;
+}
+
+.wvp-minimal .wvp-price-usd,
+.wvp-minimal .wvp-price-ves {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--wvp-dark-color);
+    margin: 0;
+}
+
+.wvp-minimal .wvp-price-ves {
+    color: var(--wvp-secondary-color);
+}
+
+.wvp-minimal .wvp-price-conversion {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin: 8px 0;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
+.wvp-minimal .wvp-price-conversion .wvp-ves-reference {
+    margin: 0;
+    font-size: inherit;
+}
+
+.wvp-minimal .wvp-currency-badge {
+    background: #e9ecef;
+    color: #666;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    margin-left: 6px;
+    font-weight: 500;
+}
+
+.wvp-minimal .wvp-currency-badge.wvp-usd {
+    background: #d4edda;
+    color: #155724;
+}
+
+.wvp-minimal .wvp-currency-badge.wvp-ves {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.wvp-minimal .wvp-rate-info {
+    font-size: 10px;
+    color: #999;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* ========================================
+   INTEGRACIÓN CON WOOCOMMERCE MINIMAL
+   ======================================== */
+.woocommerce .wvp-minimal .wvp-product-price-container {
+    margin: 15px 0;
+}
+
+.woocommerce .product .wvp-minimal .wvp-product-price-container {
+    margin: 20px 0;
+}
+
+.woocommerce ul.products li.product .wvp-minimal .wvp-product-price-container {
+    margin: 10px 0;
+}
+
+.woocommerce-cart .wvp-minimal .wvp-product-price-container {
+    margin: 8px 0;
+}
+
+.woocommerce-checkout .wvp-minimal .wvp-product-price-container {
+    margin: 8px 0;
+}
+
+/* ========================================
+   RESPONSIVE MINIMAL
+   ======================================== */
+@media (max-width: 768px) {
+    .wvp-minimal .wvp-currency-switcher {
+        flex-direction: row;
+        justify-content: center;
+        gap: 6px;
+    }
+    
+    .wvp-minimal .wvp-currency-switcher button,
+    .wvp-minimal .wvp-currency-switcher .wvp-currency-option {
+        padding: 6px 10px;
+        font-size: 12px;
+        min-width: 45px;
+    }
+    
+    .wvp-minimal .wvp-price-usd,
+    .wvp-minimal .wvp-price-ves {
+        font-size: 14px;
+    }
+    
+    .wvp-minimal .wvp-price-conversion {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .wvp-minimal .wvp-currency-switcher {
+        gap: 4px;
+    }
+    
+    .wvp-minimal .wvp-currency-switcher button,
+    .wvp-minimal .wvp-currency-switcher .wvp-currency-option {
+        padding: 4px 8px;
+        font-size: 11px;
+        min-width: 40px;
+    }
+    
+    .wvp-minimal .wvp-price-usd,
+    .wvp-minimal .wvp-price-ves {
+        font-size: 13px;
+    }
+}
+
+/* ========================================
+   MODO OSCURO MINIMAL
+   ======================================== */
+@media (prefers-color-scheme: dark) {
+    .wvp-minimal .wvp-currency-switcher button,
+    .wvp-minimal .wvp-currency-switcher .wvp-currency-option {
+        background: #3c3c3c;
+        border-color: #555;
+        color: #ccc;
+    }
+    
+    .wvp-minimal .wvp-currency-switcher button:hover,
+    .wvp-minimal .wvp-currency-switcher .wvp-currency-option:hover {
+        background: #4c4c4c;
+        border-color: var(--wvp-primary-color);
+        color: var(--wvp-primary-color);
+    }
+    
+    .wvp-minimal .wvp-currency-switcher button.active,
+    .wvp-minimal .wvp-currency-switcher .wvp-currency-option.active {
+        background: var(--wvp-primary-color);
+        border-color: var(--wvp-primary-color);
+        color: #ffffff;
+    }
+    
+    .wvp-minimal .wvp-price-conversion {
+        background: #3c3c3c;
+        border-color: #555;
+        color: #ccc;
+    }
+    
+    .wvp-minimal .wvp-currency-badge {
+        background: #555;
+        color: #ccc;
+    }
+    
+    .wvp-minimal .wvp-rate-info {
+        color: #aaa;
+    }
+}

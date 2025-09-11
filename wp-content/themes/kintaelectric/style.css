@@ -28345,7 +28345,7 @@ section.product-categories-menu-list {
 .owl-item>.product .price,
 .products>.product .price {
     font-size: 1.143em;
-    line-height: 1em;
+    line-height: 1.143em;
     font-weight: 400
 }
 
