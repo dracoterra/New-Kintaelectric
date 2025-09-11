@@ -70,24 +70,13 @@ class WVP_Admin_Settings {
             "wvp-settings",
             array($this, "display_settings_page")
         );
-        
-        // Agregar submenú de diagnóstico HPOS
-        add_submenu_page(
-            "wvp-settings",
-            __("Diagnóstico HPOS", "wvp"),
-            __("Diagnóstico HPOS", "wvp"),
-            "manage_woocommerce",
-            "wvp-hpos-diagnostic",
-            array($this, "display_hpos_diagnostic_page")
-        );
-        
     }
     
     /**
      * Registrar configuraciones
      */
     public function register_settings() {
-        // Registrar grupo de configuraciones de forma simple
+        // Registrar grupo de configuraciones
         register_setting("wvp_settings", "wvp_settings");
         
         // Sección de configuraciones generales
@@ -344,16 +333,19 @@ class WVP_Admin_Settings {
      * Procesar guardado de configuraciones
      */
     public function process_settings_save() {
-        // Solo procesar si estamos en la página correcta
+        // Solo procesar si estamos en la página correcta y hay datos POST
         if (!isset($_POST['option_page']) || $_POST['option_page'] !== 'wvp_settings') {
             return;
         }
         
-        // Verificar permisos
-        if (!current_user_can('manage_options')) {
+        if (!isset($_POST['wvp_settings']) || !isset($_POST['_wpnonce'])) {
             return;
         }
         
+        // Verificar nonce
+        if (!wp_verify_nonce($_POST['_wpnonce'], 'wvp_settings-options')) {
+            return;
+        }
         
         // Mostrar mensaje de éxito
         add_action('admin_notices', function() {
@@ -369,8 +361,7 @@ class WVP_Admin_Settings {
         $checkbox_fields = array(
             'enable_currency_switcher',
             'enable_dual_breakdown', 
-            'enable_hybrid_invoicing',
-            'show_igtf'
+            'enable_hybrid_invoicing'
         );
         
         foreach ($checkbox_fields as $field) {
@@ -454,10 +445,8 @@ class WVP_Admin_Settings {
      * Callback para mostrar IGTF
      */
     public function show_igtf_callback() {
-        $settings = get_option('wvp_settings', array());
-        $value = isset($settings['show_igtf']) ? $settings['show_igtf'] : 'yes';
-        $checked = ($value === "yes" || $value === "1") ? 'checked="checked"' : '';
-        echo '<input type="checkbox" name="wvp_settings[show_igtf]" value="yes" ' . $checked . ' />';
+        $value = $this->plugin ? $this->plugin->get_option("show_igtf", "1") : "1";
+        echo '<input type="checkbox" name="wvp_settings[show_igtf]" value="1" ' . checked($value, "1", false) . ' />';
         echo '<p class="description">' . __("Mostrar IGTF en el checkout.", "wvp") . '</p>';
     }
     
@@ -1169,291 +1158,5 @@ class WVP_Admin_Settings {
             array(),
             WVP_VERSION
         );
-    }
-    
-    /**
-     * Mostrar página de diagnóstico HPOS
-     */
-    public function display_hpos_diagnostic_page() {
-        // Procesar acciones si las hay
-        if (isset($_POST['wvp_hpos_action']) && wp_verify_nonce($_POST['wvp_hpos_nonce'], 'wvp_hpos_action')) {
-            $this->process_hpos_action($_POST['wvp_hpos_action']);
-        }
-        
-        // Obtener datos de diagnóstico
-        $diagnostic_data = $this->get_hpos_diagnostic_data();
-        
-        ?>
-        <div class="wrap">
-            <h1><?php _e('🔍 Diagnóstico HPOS - WooCommerce Venezuela Pro', 'wvp'); ?></h1>
-            <p><strong><?php _e('Fecha:', 'wvp'); ?></strong> <?php echo current_time('Y-m-d H:i:s'); ?></p>
-            
-            <div class="notice notice-info">
-                <p><strong><?php _e('ℹ️ Información:', 'wvp'); ?></strong> <?php _e('Esta herramienta te ayuda a diagnosticar problemas de compatibilidad HPOS con WooCommerce Venezuela Pro.', 'wvp'); ?></p>
-            </div>
-            
-            <?php if ($diagnostic_data['has_errors']): ?>
-                <div class="notice notice-error">
-                    <p><strong><?php _e('❌ Se encontraron problemas:', 'wvp'); ?></strong> <?php _e('Revisa los detalles a continuación.', 'wvp'); ?></p>
-                </div>
-            <?php endif; ?>
-            
-            <?php if ($diagnostic_data['is_compatible']): ?>
-                <div class="notice notice-success">
-                    <p><strong><?php _e('✅ Plugin compatible:', 'wvp'); ?></strong> <?php _e('WooCommerce Venezuela Pro está marcado como compatible con HPOS.', 'wvp'); ?></p>
-                </div>
-            <?php endif; ?>
-            
-            <div class="wvp-diagnostic-container">
-                <div class="wvp-diagnostic-section">
-                    <h2><?php _e('📊 Información del Sistema', 'wvp'); ?></h2>
-                    <table class="widefat">
-                        <tr>
-                            <td><strong><?php _e('WordPress:', 'wvp'); ?></strong></td>
-                            <td><?php echo get_bloginfo('version'); ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong><?php _e('WooCommerce:', 'wvp'); ?></strong></td>
-                            <td><?php echo $diagnostic_data['woocommerce_version']; ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong><?php _e('PHP:', 'wvp'); ?></strong></td>
-                            <td><?php echo PHP_VERSION; ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong><?php _e('Plugin WVP:', 'wvp'); ?></strong></td>
-                            <td><?php echo $diagnostic_data['plugin_version']; ?> (<?php echo $diagnostic_data['plugin_status']; ?>)</td>
-                        </tr>
-                    </table>
-                </div>
-                
-                <div class="wvp-diagnostic-section">
-                    <h2><?php _e('🔧 Estado de HPOS', 'wvp'); ?></h2>
-                    <table class="widefat">
-                        <tr>
-                            <td><strong><?php _e('HPOS Habilitado:', 'wvp'); ?></strong></td>
-                            <td><?php echo $diagnostic_data['hpos_enabled'] ? '✅ SÍ' : '❌ NO'; ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong><?php _e('FeaturesUtil Disponible:', 'wvp'); ?></strong></td>
-                            <td><?php echo $diagnostic_data['featuresutil_available'] ? '✅ SÍ' : '❌ NO'; ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong><?php _e('OrderUtil Disponible:', 'wvp'); ?></strong></td>
-                            <td><?php echo $diagnostic_data['orderutil_available'] ? '✅ SÍ' : '❌ NO'; ?></td>
-                        </tr>
-                        <tr>
-                            <td><strong><?php _e('Plugin Compatible:', 'wvp'); ?></strong></td>
-                            <td><?php echo $diagnostic_data['is_compatible'] ? '✅ SÍ' : '❌ NO'; ?></td>
-                        </tr>
-                    </table>
-                </div>
-                
-                <div class="wvp-diagnostic-section">
-                    <h2><?php _e('📋 Plugins Compatibles con HPOS', 'wvp'); ?></h2>
-                    <?php if (!empty($diagnostic_data['compatible_plugins'])): ?>
-                        <ul>
-                            <?php foreach ($diagnostic_data['compatible_plugins'] as $plugin): ?>
-                                <li><?php echo $plugin === 'woocommerce-venezuela-pro/woocommerce-venezuela-pro.php' ? '✅' : '  '; ?> <?php echo esc_html($plugin); ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php else: ?>
-                        <p><?php _e('No se encontraron plugins compatibles con HPOS.', 'wvp'); ?></p>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="wvp-diagnostic-section">
-                    <h2><?php _e('🛠️ Acciones de Diagnóstico', 'wvp'); ?></h2>
-                    <form method="post" style="display: inline-block; margin-right: 10px;">
-                        <input type="hidden" name="wvp_hpos_action" value="force_declare_compatibility">
-                        <?php wp_nonce_field('wvp_hpos_action', 'wvp_hpos_nonce'); ?>
-                        <button type="submit" class="button button-primary">🔄 <?php _e('Forzar Declaración HPOS', 'wvp'); ?></button>
-                    </form>
-                    
-                    <form method="post" style="display: inline-block; margin-right: 10px;">
-                        <input type="hidden" name="wvp_hpos_action" value="clear_cache">
-                        <?php wp_nonce_field('wvp_hpos_action', 'wvp_hpos_nonce'); ?>
-                        <button type="submit" class="button">🧹 <?php _e('Limpiar Caché', 'wvp'); ?></button>
-                    </form>
-                    
-                    <form method="post" style="display: inline-block;">
-                        <input type="hidden" name="wvp_hpos_action" value="generate_logs">
-                        <?php wp_nonce_field('wvp_hpos_action', 'wvp_hpos_nonce'); ?>
-                        <button type="submit" class="button">📝 <?php _e('Generar Logs', 'wvp'); ?></button>
-                    </form>
-                </div>
-                
-                <div class="wvp-diagnostic-section">
-                    <h2><?php _e('💡 Recomendaciones', 'wvp'); ?></h2>
-                    <div class="wvp-recommendations">
-                        <?php if (!$diagnostic_data['is_compatible']): ?>
-                            <div class="notice notice-warning">
-                                <p><strong><?php _e('⚠️ Plugin no compatible:', 'wvp'); ?></strong> <?php _e('El plugin no está marcado como compatible con HPOS. Usa el botón "Forzar Declaración HPOS" arriba.', 'wvp'); ?></p>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <?php if (!$diagnostic_data['hpos_enabled']): ?>
-                            <div class="notice notice-warning">
-                                <p><strong><?php _e('⚠️ HPOS deshabilitado:', 'wvp'); ?></strong> <?php _e('Ve a WooCommerce > Ajustes > Avanzado > Características y habilita "Almacenamiento de pedidos de alto rendimiento".', 'wvp'); ?></p>
-                            </div>
-                        <?php endif; ?>
-                        
-                        <?php if ($diagnostic_data['is_compatible'] && $diagnostic_data['hpos_enabled']): ?>
-                            <div class="notice notice-success">
-                                <p><strong><?php _e('✅ Todo configurado correctamente:', 'wvp'); ?></strong> <?php _e('Si aún ves advertencias, desactiva y reactiva el plugin.', 'wvp'); ?></p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <style>
-            .wvp-diagnostic-container {
-                max-width: 1200px;
-            }
-            .wvp-diagnostic-section {
-                margin: 20px 0;
-                padding: 15px;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                background: #fff;
-            }
-            .wvp-diagnostic-section h2 {
-                margin-top: 0;
-                color: #333;
-            }
-            .wvp-diagnostic-section table {
-                margin: 10px 0;
-            }
-            .wvp-diagnostic-section table td {
-                padding: 8px 12px;
-                border-bottom: 1px solid #eee;
-            }
-            .wvp-diagnostic-section table td:first-child {
-                font-weight: bold;
-                width: 200px;
-            }
-            .wvp-recommendations .notice {
-                margin: 10px 0;
-            }
-        </style>
-        <?php
-    }
-    
-    /**
-     * Procesar acciones de diagnóstico HPOS
-     */
-    private function process_hpos_action($action) {
-        switch ($action) {
-            case 'force_declare_compatibility':
-                $this->force_declare_hpos_compatibility();
-                add_action('admin_notices', function() {
-                    echo '<div class="notice notice-success"><p>✅ ' . __('Declaración HPOS forzada. Recarga la página para ver los cambios.', 'wvp') . '</p></div>';
-                });
-                break;
-                
-            case 'clear_cache':
-                $this->clear_hpos_cache();
-                add_action('admin_notices', function() {
-                    echo '<div class="notice notice-success"><p>✅ ' . __('Caché limpiado. Recarga la página para ver los cambios.', 'wvp') . '</p></div>';
-                });
-                break;
-                
-            case 'generate_logs':
-                $this->generate_diagnostic_logs();
-                add_action('admin_notices', function() {
-                    echo '<div class="notice notice-success"><p>✅ ' . __('Logs generados. Revisa la sección de logs abajo.', 'wvp') . '</p></div>';
-                });
-                break;
-        }
-    }
-    
-    /**
-     * Obtener datos de diagnóstico HPOS
-     */
-    private function get_hpos_diagnostic_data() {
-        $data = array(
-            'has_errors' => false,
-            'woocommerce_version' => __('No disponible', 'wvp'),
-            'plugin_version' => WVP_VERSION,
-            'plugin_status' => __('Activo', 'wvp'),
-            'hpos_enabled' => false,
-            'featuresutil_available' => false,
-            'orderutil_available' => false,
-            'is_compatible' => false,
-            'compatible_plugins' => array()
-        );
-        
-        // Verificar WooCommerce
-        if (class_exists('WooCommerce')) {
-            $data['woocommerce_version'] = WC()->version;
-        } else {
-            $data['has_errors'] = true;
-        }
-        
-        // Verificar FeaturesUtil
-        if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
-            $data['featuresutil_available'] = true;
-            
-            // Verificar compatibilidad - método get_compatible_plugins no existe en FeaturesUtil
-            $data['compatible_plugins'] = array();
-            $data['is_compatible'] = true; // Asumir compatibilidad ya que declaramos correctamente
-        } else {
-            $data['has_errors'] = true;
-        }
-        
-        // Verificar OrderUtil
-        if (class_exists(\Automattic\WooCommerce\Utilities\OrderUtil::class)) {
-            $data['orderutil_available'] = true;
-            
-            try {
-                $data['hpos_enabled'] = \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled();
-            } catch (Exception $e) {
-                $data['has_errors'] = true;
-            }
-        } else {
-            $data['has_errors'] = true;
-        }
-        
-        return $data;
-    }
-    
-    /**
-     * Forzar declaración de compatibilidad HPOS
-     */
-    private function force_declare_hpos_compatibility() {
-        if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
-            try {
-                \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', WVP_PLUGIN_PATH . 'woocommerce-venezuela-pro.php', true);
-                error_log('WVP: ✅ Compatibilidad HPOS forzada desde admin');
-            } catch (Exception $e) {
-                error_log('WVP: ❌ Error al forzar compatibilidad HPOS: ' . $e->getMessage());
-            }
-        }
-    }
-    
-    /**
-     * Limpiar caché de HPOS
-     */
-    private function clear_hpos_cache() {
-        wp_cache_delete('woocommerce_compatible_plugins_hpos', 'woocommerce');
-        delete_transient('woocommerce_compatible_plugins_hpos');
-        wp_cache_flush();
-        error_log('WVP: ✅ Caché HPOS limpiado desde admin');
-    }
-    
-    /**
-     * Generar logs de diagnóstico
-     */
-    private function generate_diagnostic_logs() {
-        error_log('WVP DIAGNÓSTICO ADMIN: Iniciado');
-        error_log('WVP DIAGNÓSTICO ADMIN: WooCommerce ' . (class_exists('WooCommerce') ? WC()->version : 'NO ACTIVO'));
-        error_log('WVP DIAGNÓSTICO ADMIN: FeaturesUtil ' . (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class) ? 'DISPONIBLE' : 'NO DISPONIBLE'));
-        error_log('WVP DIAGNÓSTICO ADMIN: OrderUtil ' . (class_exists(\Automattic\WooCommerce\Utilities\OrderUtil::class) ? 'DISPONIBLE' : 'NO DISPONIBLE'));
-        
-        if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
-            error_log('WVP DIAGNÓSTICO ADMIN: FeaturesUtil disponible - método get_compatible_plugins no existe');
-        }
     }
 }

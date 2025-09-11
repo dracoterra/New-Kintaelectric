@@ -125,11 +125,6 @@ class WVP_Dual_Breakdown {
             return $subtotal_html;
         }
         
-        // Verificar que $cart es un objeto WC_Cart válido
-        if (!$cart || !is_object($cart) || !method_exists($cart, 'get_subtotal')) {
-            return $subtotal_html;
-        }
-        
         $subtotal = $cart->get_subtotal();
         
         if ($subtotal > 0) {

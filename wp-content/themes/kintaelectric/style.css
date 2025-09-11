@@ -28149,7 +28149,7 @@ section.product-categories-menu-list {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    height: 2.571em
+    height: auto;
 }
 
 .owl-item>.product .product-thumbnail,
@@ -28479,7 +28479,7 @@ section.product-categories-menu-list {
 
     .owl-item>.product .price,
     .products>.product .price {
-        font-size: 1.429em
+        font-size: 1em
     }
 
     .owl-item>.product .add-to-cart-wrap,

@@ -5,18 +5,25 @@
  * @since 1.0.0
  */
 
+console.log('WVP: Currency Switcher cargado');
+
 // Función principal
 function initCurrencySwitcher() {
+    console.log('WVP: Inicializando switcher de moneda');
+    
     // Buscar todos los switchers
     const switchers = document.querySelectorAll('.wvp-currency-switcher');
+    console.log('WVP: Encontrados', switchers.length, 'switchers');
     
     if (switchers.length === 0) {
+        console.log('WVP: No se encontraron switchers, reintentando en 1 segundo');
         setTimeout(initCurrencySwitcher, 1000);
         return;
     }
     
     // Configurar cada switcher
     switchers.forEach(function(switcher, index) {
+        console.log('WVP: Configurando switcher', index);
         setupSwitcher(switcher);
     });
 }
@@ -27,6 +34,7 @@ function setupSwitcher(switcher) {
     const vesButton = switcher.querySelector('.wvp-ves');
     
     if (!usdButton || !vesButton) {
+        console.log('WVP: Botones no encontrados en switcher');
         return;
     }
     
@@ -43,6 +51,7 @@ function setupSwitcher(switcher) {
     newUsdButton.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
+        console.log('WVP: Click en USD');
         switchToCurrency(switcher, 'usd');
     });
     
@@ -51,8 +60,11 @@ function setupSwitcher(switcher) {
     newVesButton.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
+        console.log('WVP: Click en VES');
         switchToCurrency(switcher, 'ves');
     });
+    
+    console.log('WVP: Switcher configurado correctamente');
 }
 
 // Cambiar moneda
@@ -67,6 +79,7 @@ function switchToCurrency(switcher, currency) {
     }
     
     if (!priceElement) {
+        console.log('WVP: No se encontró elemento de precio');
         return;
     }
     
@@ -76,6 +89,7 @@ function switchToCurrency(switcher, currency) {
             priceElement.innerHTML = usdPrice;
             usdButton.classList.add('active');
             vesButton.classList.remove('active');
+            console.log('WVP: Cambiado a USD:', usdPrice);
         }
     } else if (currency === 'ves') {
         const vesPrice = switcher.getAttribute('data-price-ves');
@@ -83,6 +97,7 @@ function switchToCurrency(switcher, currency) {
             priceElement.innerHTML = vesPrice;
             vesButton.classList.add('active');
             usdButton.classList.remove('active');
+            console.log('WVP: Cambiado a VES:', vesPrice);
         }
     }
 }
@@ -97,3 +112,5 @@ if (document.readyState === 'loading') {
 // Reinicializar cuando se actualice el contenido
 document.addEventListener('updated_wc_div', initCurrencySwitcher);
 document.addEventListener('updated_cart_totals', initCurrencySwitcher);
+
+console.log('WVP: Currency Switcher inicializado');
