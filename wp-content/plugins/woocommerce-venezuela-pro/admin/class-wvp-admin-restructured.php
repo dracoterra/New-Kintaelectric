@@ -131,6 +131,24 @@ class WVP_Admin_Restructured {
         
         add_submenu_page(
             'wvp-dashboard',
+            __('Reportes', 'wvp'),
+            __('Reportes', 'wvp'),
+            'manage_woocommerce',
+            'wvp-reports',
+            array($this, 'display_reports')
+        );
+        
+        add_submenu_page(
+            'wvp-dashboard',
+            __('Monitor de Errores', 'wvp'),
+            __('Monitor de Errores', 'wvp'),
+            'manage_woocommerce',
+            'wvp-error-monitor',
+            array($this, 'display_error_monitor')
+        );
+        
+        add_submenu_page(
+            'wvp-dashboard',
             __('Apariencia', 'wvp'),
             __('Apariencia', 'wvp'),
             'manage_woocommerce',
@@ -171,6 +189,37 @@ class WVP_Admin_Restructured {
         register_setting('wvp_appearance_settings', 'wvp_margin');
         register_setting('wvp_appearance_settings', 'wvp_border_radius');
         register_setting('wvp_appearance_settings', 'wvp_shadow');
+        
+        // Añadir callback para procesar configuraciones
+        add_action('update_option_wvp_general_settings', array($this, 'process_general_settings'), 10, 2);
+    }
+    
+    /**
+     * Procesar configuraciones generales
+     */
+    public function process_general_settings($old_value, $new_value) {
+        // Procesar checkbox de mostrar IGTF
+        if (isset($new_value['show_igtf'])) {
+            update_option('wvp_show_igtf', '1');
+        } else {
+            update_option('wvp_show_igtf', '0');
+        }
+        
+        // Procesar checkbox de habilitar IGTF
+        if (isset($new_value['igtf_enabled'])) {
+            update_option('wvp_igtf_enabled', 'yes');
+        } else {
+            update_option('wvp_igtf_enabled', 'no');
+        }
+        
+        // Procesar otros campos
+        if (isset($new_value['price_reference_format'])) {
+            update_option('wvp_price_reference_format', sanitize_text_field($new_value['price_reference_format']));
+        }
+        
+        if (isset($new_value['igtf_rate'])) {
+            update_option('wvp_igtf_rate', floatval($new_value['igtf_rate']));
+        }
     }
     
     /**
@@ -364,6 +413,12 @@ class WVP_Admin_Restructured {
                 case 'help':
                     $this->display_help_content();
                     break;
+                case 'reports':
+                    $this->display_reports_content();
+                    break;
+                case 'error-monitor':
+                    $this->display_error_monitor_content();
+                    break;
         }
     }
     
@@ -502,6 +557,18 @@ class WVP_Admin_Restructured {
                                        value="1" <?php checked(get_option('wvp_show_igtf', '1'), '1'); ?> />
                                 <?php _e('Mostrar IGTF en el checkout.', 'wvp'); ?>
                             </label>
+                            <p class="description"><?php _e('Desmarca esta opción para ocultar el IGTF en el checkout.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Habilitar IGTF', 'wvp'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="wvp_general_settings[igtf_enabled]" 
+                                       value="yes" <?php checked(get_option('wvp_igtf_enabled', 'yes'), 'yes'); ?> />
+                                <?php _e('Activar sistema de IGTF.', 'wvp'); ?>
+                            </label>
+                            <p class="description"><?php _e('Desmarca esta opción para desactivar completamente el sistema de IGTF.', 'wvp'); ?></p>
                         </td>
                     </tr>
                 </table>
@@ -1589,5 +1656,45 @@ class WVP_Admin_Restructured {
         wp_send_json_success(array(
             'content' => $content
         ));
+    }
+    
+    /**
+     * Mostrar reportes
+     */
+    public function display_reports() {
+        $this->current_tab = 'reports';
+        $this->display_admin_page();
+    }
+    
+    /**
+     * Mostrar monitor de errores
+     */
+    public function display_error_monitor() {
+        $this->current_tab = 'error-monitor';
+        $this->display_admin_page();
+    }
+    
+    /**
+     * Mostrar contenido de reportes
+     */
+    private function display_reports_content() {
+        ?>
+        <div class="wvp-reports">
+            <h2><?php _e('Reportes', 'wvp'); ?></h2>
+            <p><?php _e('Aquí puedes ver los reportes del plugin.', 'wvp'); ?></p>
+        </div>
+        <?php
+    }
+    
+    /**
+     * Mostrar contenido del monitor de errores
+     */
+    private function display_error_monitor_content() {
+        ?>
+        <div class="wvp-error-monitor">
+            <h2><?php _e('Monitor de Errores', 'wvp'); ?></h2>
+            <p><?php _e('Aquí puedes monitorear los errores del plugin.', 'wvp'); ?></p>
+        </div>
+        <?php
     }
 }

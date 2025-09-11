@@ -295,6 +295,14 @@ class WVP_Performance_Optimizer {
      * Optimizar consultas de pedidos
      */
     public function optimize_order_queries($query) {
+        // Desactivado temporalmente por incompatibilidad con WooCommerce 10.1.2
+        return $query;
+        
+        // Verificar que el objeto tenga el método set
+        if (!is_object($query) || !method_exists($query, 'set')) {
+            return $query;
+        }
+        
         // Limitar campos seleccionados
         $query->set('fields', 'ids');
         

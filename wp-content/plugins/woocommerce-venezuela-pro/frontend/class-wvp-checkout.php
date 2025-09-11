@@ -749,8 +749,14 @@ class WVP_Checkout {
      * @return bool True si se debe aplicar IGTF
      */
     private function should_apply_igtf() {
-        // Verificar si la opción está habilitada
-        $show_igtf = $this->plugin ? $this->plugin->get_option("show_igtf") : true;
+        // Verificar si el sistema de IGTF está habilitado
+        $igtf_enabled = get_option('wvp_igtf_enabled', 'yes') === 'yes';
+        if (!$igtf_enabled) {
+            return false;
+        }
+        
+        // Verificar si se debe mostrar IGTF
+        $show_igtf = get_option('wvp_show_igtf', '1') === '1';
         if (!$show_igtf) {
             return false;
         }
