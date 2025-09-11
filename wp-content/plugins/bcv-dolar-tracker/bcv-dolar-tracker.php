@@ -95,11 +95,17 @@ class BCV_Dolar_Tracker {
      * Inicializar el plugin
      */
     public function init() {
+        // Evitar inicializaciones múltiples
+        if (did_action('bcv_plugin_initialized')) {
+            return;
+        }
+        
         // Inicializar hooks
         $this->init_hooks();
         
-        // Log de inicialización
-        error_log('BCV Dólar Tracker: Plugin inicializado correctamente');
+        // Marcar como inicializado
+        do_action('bcv_plugin_initialized');
+        
     }
     
     /**
@@ -116,8 +122,6 @@ class BCV_Dolar_Tracker {
         add_action('wp_ajax_bcv_save_cron_settings', array($this, 'save_cron_settings'));
         add_action('wp_ajax_bcv_test_scraping', array($this, 'test_scraping'));
         
-        // Log de hooks inicializados
-        error_log('BCV Dólar Tracker: Hooks inicializados correctamente');
     }
     
     /**
@@ -242,8 +246,6 @@ class BCV_Dolar_Tracker {
      */
     public function add_admin_menu() {
         // Esta función se implementará en la Fase 4
-        // Por ahora solo registramos que se llamó
-        error_log('BCV Dólar Tracker: Función add_admin_menu() llamada');
         
         // La funcionalidad del menú se maneja en la clase BCV_Admin
         // que se inicializa automáticamente en load_dependencies()
@@ -254,8 +256,6 @@ class BCV_Dolar_Tracker {
      */
     public function enqueue_admin_assets($hook) {
         // Esta función se implementará en la Fase 4
-        // Por ahora solo registramos que se llamó
-        error_log('BCV Dólar Tracker: Función enqueue_admin_assets() llamada en hook: ' . $hook);
     }
     
     /**

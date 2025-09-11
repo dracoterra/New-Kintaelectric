@@ -173,14 +173,16 @@ class WVP_Price_Display {
         
         // SIEMPRE cargar JavaScript del switcher
         $script_url = WVP_PLUGIN_URL . "assets/js/currency-switcher.js";
-        error_log('WVP DEBUG: Encolando script: ' . $script_url);
         
         // Verificar si el archivo existe
         $script_path = WVP_PLUGIN_PATH . "assets/js/currency-switcher.js";
-        if (file_exists($script_path)) {
-            error_log('WVP DEBUG: Archivo JavaScript existe: ' . $script_path);
-        } else {
-            error_log('WVP DEBUG: Archivo JavaScript NO existe: ' . $script_path);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP DEBUG: Encolando script: ' . $script_url);
+            if (file_exists($script_path)) {
+                error_log('WVP DEBUG: Archivo JavaScript existe: ' . $script_path);
+            } else {
+                error_log('WVP DEBUG: Archivo JavaScript NO existe: ' . $script_path);
+            }
         }
         
         wp_enqueue_script(
@@ -191,6 +193,8 @@ class WVP_Price_Display {
             false
         );
         
-        error_log('WVP DEBUG: Script encolado correctamente');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP DEBUG: Script encolado correctamente');
+        }
     }
 }

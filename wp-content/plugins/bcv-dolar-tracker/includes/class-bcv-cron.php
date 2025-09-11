@@ -75,7 +75,6 @@ class BCV_Cron {
         
         // Si el cron está deshabilitado, no programar
         if (!$this->settings['enabled']) {
-            error_log('BCV Dólar Tracker: Cron deshabilitado, no se programará');
             return true;
         }
         
@@ -89,10 +88,8 @@ class BCV_Cron {
         $scheduled = wp_schedule_event(time(), $interval_name, $this->cron_hook);
         
         if ($scheduled) {
-            error_log("BCV Dólar Tracker: Cron programado para ejecutarse cada {$interval} segundos usando intervalo '{$interval_name}'");
             return true;
         } else {
-            error_log('BCV Dólar Tracker: Error al programar el cron');
             return false;
         }
     }
@@ -133,11 +130,7 @@ class BCV_Cron {
     public function clear_cron() {
         $cleared = wp_clear_scheduled_hook($this->cron_hook);
         
-        if ($cleared) {
-            error_log('BCV Dólar Tracker: Cron limpiado correctamente');
-        } else {
-            error_log('BCV Dólar Tracker: No se encontraron tareas cron para limpiar');
-        }
+        // Cron limpiado
         
         return $cleared;
     }
@@ -170,7 +163,6 @@ class BCV_Cron {
             'display' => 'Cada ' . $display_name
         );
         
-        error_log("BCV Dólar Tracker: Intervalo personalizado registrado: {$interval_name} ({$interval} segundos)");
         
         return $schedules;
     }
