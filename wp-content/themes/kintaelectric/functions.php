@@ -1378,7 +1378,7 @@ add_action( 'init', 'kintaelectric_disable_problematic_scripts' );
  */
 function kintaelectric_get_product_categories() {
     if ( ! class_exists( 'WooCommerce' ) ) {
-        return '<option value="0" selected="selected">All Categories</option>';
+        return '<option value="0" selected="selected">Todas las Categorías</option>';
     }
     
     $categories = get_terms( array(
@@ -1390,10 +1390,10 @@ function kintaelectric_get_product_categories() {
     ) );
     
     if ( is_wp_error( $categories ) || empty( $categories ) ) {
-        return '<option value="0" selected="selected">All Categories</option>';
+        return '<option value="0" selected="selected">Todas las Categorías</option>';
     }
     
-    $options = '<option value="0" selected="selected">All Categories</option>';
+    $options = '<option value="0" selected="selected">Todas las Categorías</option>';
     
     foreach ( $categories as $category ) {
         $options .= sprintf(

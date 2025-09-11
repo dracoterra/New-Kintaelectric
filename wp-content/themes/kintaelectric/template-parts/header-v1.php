@@ -64,12 +64,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 						<form class="navbar-search col" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>"
 							autocomplete="off">
-							<label class="sr-only screen-reader-text visually-hidden" for="search">Search for:</label>
+							<label class="sr-only screen-reader-text visually-hidden" for="search">Buscar:</label>
 							<div class="input-group">
 								<div class="input-search-field">
 									<input type="text" id="search"
 										class="form-control search-field product-search-field" dir="ltr" value=""
-										name="s" placeholder="Search for Products" autocomplete="off">
+										name="s" placeholder="Buscar productos..." autocomplete="off">
 								</div>
 								<div class="input-group-addon search-categories d-flex">
 									<select name='product_cat' id='electro_header_search_categories_dropdown'
@@ -250,17 +250,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 						<div class="handheld-header-links">
 							<ul class="columns-3">
 								<li class="search">
-									<a href="">Search</a>
+									<a href="">Buscar</a>
 									<div class="site-search">
 										<div class="widget woocommerce widget_product_search">
 											<form role="search" method="get" class="woocommerce-product-search"
-												action="https://electro.madrasthemes.com/">
+												action="<?php echo esc_url( home_url( '/' ) ); ?>">
 												<label class="screen-reader-text"
-													for="woocommerce-product-search-field-0">Search for:</label>
+													for="woocommerce-product-search-field-0">Buscar:</label>
 												<input type="search" id="woocommerce-product-search-field-0"
-													class="search-field" placeholder="Search products&hellip;" value=""
+													class="search-field" placeholder="Buscar productos..." value=""
 													name="s">
-												<button type="submit" value="Search" class="">Search</button>
+												<button type="submit" value="Buscar" class="">Buscar</button>
 												<input type="hidden" name="post_type" value="product">
 											</form>
 										</div>
