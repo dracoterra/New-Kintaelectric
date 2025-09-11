@@ -1,0 +1,633 @@
+/**
+ * Estilos específicos para la administración reestructurada
+ * Prefijo wvp- para evitar conflictos con temas
+ * 
+ * @package WooCommerce_Venezuela_Pro
+ * @since 1.0.0
+ */
+
+/* Variables CSS específicas del plugin */
+:root {
+    --wvp-primary: #0073aa;
+    --wvp-primary-dark: #005a87;
+    --wvp-secondary: #00a0d2;
+    --wvp-success: #46b450;
+    --wvp-warning: #ffb900;
+    --wvp-error: #dc3232;
+    --wvp-info: #00a0d2;
+    --wvp-light: #f8f9fa;
+    --wvp-dark: #2c2c2c;
+    --wvp-border: #e9ecef;
+    --wvp-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    --wvp-shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.15);
+    --wvp-radius: 8px;
+    --wvp-radius-sm: 4px;
+    --wvp-transition: all 0.3s ease;
+}
+
+/* Contenedor principal del admin */
+.wvp-admin-container {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color: var(--wvp-dark);
+}
+
+/* Header del admin */
+.wvp-admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--wvp-border);
+}
+
+.wvp-admin-title {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--wvp-primary);
+}
+
+.wvp-admin-title .dashicons {
+    margin-right: 10px;
+    font-size: 32px;
+}
+
+.wvp-admin-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* Navegación por pestañas */
+.wvp-admin-nav {
+    margin-bottom: 30px;
+}
+
+.wvp-nav-tabs {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 2px solid var(--wvp-border);
+    flex-wrap: wrap;
+}
+
+.wvp-nav-tab {
+    margin: 0;
+}
+
+.wvp-nav-tab a {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: #666;
+    border-bottom: 3px solid transparent;
+    transition: var(--wvp-transition);
+    font-weight: 500;
+}
+
+.wvp-nav-tab a:hover {
+    color: var(--wvp-primary);
+    background-color: var(--wvp-light);
+}
+
+.wvp-nav-tab.active a {
+    color: var(--wvp-primary);
+    border-bottom-color: var(--wvp-primary);
+    background-color: #fff;
+}
+
+.wvp-nav-tab .dashicons {
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+/* Contenido del admin */
+.wvp-admin-content {
+    background: #fff;
+    border: 1px solid var(--wvp-border);
+    border-radius: var(--wvp-radius);
+    box-shadow: var(--wvp-shadow);
+    padding: 30px;
+    min-height: 400px;
+}
+
+/* Dashboard */
+.wvp-dashboard {
+    max-width: 1200px;
+}
+
+.wvp-status-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.wvp-status-card {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    border-radius: var(--wvp-radius);
+    box-shadow: var(--wvp-shadow);
+    transition: var(--wvp-transition);
+}
+
+.wvp-status-card:hover {
+    box-shadow: var(--wvp-shadow-hover);
+    transform: translateY(-2px);
+}
+
+.wvp-status-card.wvp-status-success {
+    background: linear-gradient(135deg, #46b450, #3a9b42);
+    color: white;
+}
+
+.wvp-status-card.wvp-status-info {
+    background: linear-gradient(135deg, #00a0d2, #0073aa);
+    color: white;
+}
+
+.wvp-status-card.wvp-status-warning {
+    background: linear-gradient(135deg, #ffb900, #e6a700);
+    color: white;
+}
+
+.wvp-status-icon {
+    margin-right: 15px;
+}
+
+.wvp-status-icon .dashicons {
+    font-size: 32px;
+    opacity: 0.8;
+}
+
+.wvp-status-content h3 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.wvp-status-content p {
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* Acciones rápidas */
+.wvp-quick-actions {
+    margin-bottom: 40px;
+}
+
+.wvp-quick-actions h2 {
+    margin: 0 0 20px 0;
+    color: var(--wvp-dark);
+    font-size: 20px;
+}
+
+.wvp-action-buttons {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.wvp-action-buttons .button {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    border-radius: var(--wvp-radius-sm);
+    font-weight: 500;
+    transition: var(--wvp-transition);
+}
+
+.wvp-action-buttons .button .dashicons {
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+/* Información del sistema */
+.wvp-system-info {
+    background: var(--wvp-light);
+    padding: 20px;
+    border-radius: var(--wvp-radius);
+    border: 1px solid var(--wvp-border);
+}
+
+.wvp-system-info h2 {
+    margin: 0 0 20px 0;
+    color: var(--wvp-dark);
+    font-size: 18px;
+}
+
+.wvp-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.wvp-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--wvp-border);
+}
+
+.wvp-info-item:last-child {
+    border-bottom: none;
+}
+
+.wvp-info-item strong {
+    color: var(--wvp-dark);
+    font-weight: 600;
+}
+
+.wvp-info-item span {
+    color: #666;
+}
+
+/* Configuraciones */
+.wvp-settings {
+    max-width: 800px;
+}
+
+.wvp-settings h2 {
+    margin: 0 0 30px 0;
+    color: var(--wvp-dark);
+    font-size: 24px;
+    border-bottom: 2px solid var(--wvp-border);
+    padding-bottom: 10px;
+}
+
+.wvp-settings-form .form-table {
+    margin-top: 20px;
+}
+
+.wvp-settings-form .form-table th {
+    width: 200px;
+    padding: 20px 10px 20px 0;
+    vertical-align: top;
+    font-weight: 600;
+    color: var(--wvp-dark);
+}
+
+.wvp-settings-form .form-table td {
+    padding: 15px 10px;
+}
+
+.wvp-settings-form .form-table input[type="text"],
+.wvp-settings-form .form-table input[type="number"],
+.wvp-settings-form .form-table textarea {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px 12px;
+    border: 1px solid var(--wvp-border);
+    border-radius: var(--wvp-radius-sm);
+    font-size: 14px;
+    transition: var(--wvp-transition);
+}
+
+.wvp-settings-form .form-table input:focus,
+.wvp-settings-form .form-table textarea:focus {
+    border-color: var(--wvp-primary);
+    box-shadow: 0 0 0 2px rgba(0, 115, 170, 0.1);
+    outline: none;
+}
+
+.wvp-settings-form .form-table .description {
+    margin-top: 5px;
+    font-size: 13px;
+    color: #666;
+    font-style: italic;
+}
+
+/* Pasarelas de pago */
+.wvp-payment-gateways {
+    max-width: 1000px;
+}
+
+.wvp-payment-gateways h2 {
+    margin: 0 0 20px 0;
+    color: var(--wvp-dark);
+    font-size: 24px;
+}
+
+.wvp-payment-gateways p {
+    margin: 0 0 30px 0;
+    color: #666;
+    font-size: 16px;
+}
+
+.wvp-gateway-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.wvp-gateway-card {
+    background: #fff;
+    border: 1px solid var(--wvp-border);
+    border-radius: var(--wvp-radius);
+    padding: 25px;
+    box-shadow: var(--wvp-shadow);
+    transition: var(--wvp-transition);
+}
+
+.wvp-gateway-card:hover {
+    box-shadow: var(--wvp-shadow-hover);
+    transform: translateY(-2px);
+}
+
+.wvp-gateway-card h3 {
+    margin: 0 0 10px 0;
+    color: var(--wvp-primary);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.wvp-gateway-card p {
+    margin: 0 0 20px 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.wvp-gateway-card .button {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-radius: var(--wvp-radius-sm);
+    font-weight: 500;
+    transition: var(--wvp-transition);
+}
+
+/* Sistema fiscal */
+.wvp-fiscal {
+    max-width: 800px;
+}
+
+.wvp-fiscal h2 {
+    margin: 0 0 30px 0;
+    color: var(--wvp-dark);
+    font-size: 24px;
+    border-bottom: 2px solid var(--wvp-border);
+    padding-bottom: 10px;
+}
+
+.wvp-fiscal-actions {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid var(--wvp-border);
+}
+
+.wvp-fiscal-actions h3 {
+    margin: 0 0 20px 0;
+    color: var(--wvp-dark);
+    font-size: 18px;
+}
+
+/* Envíos */
+.wvp-shipping {
+    max-width: 1000px;
+}
+
+.wvp-shipping h2 {
+    margin: 0 0 20px 0;
+    color: var(--wvp-dark);
+    font-size: 24px;
+}
+
+.wvp-shipping p {
+    margin: 0 0 30px 0;
+    color: #666;
+    font-size: 16px;
+}
+
+.wvp-shipping-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.wvp-shipping-card {
+    background: #fff;
+    border: 1px solid var(--wvp-border);
+    border-radius: var(--wvp-radius);
+    padding: 25px;
+    box-shadow: var(--wvp-shadow);
+    transition: var(--wvp-transition);
+}
+
+.wvp-shipping-card:hover {
+    box-shadow: var(--wvp-shadow-hover);
+    transform: translateY(-2px);
+}
+
+.wvp-shipping-card h3 {
+    margin: 0 0 10px 0;
+    color: var(--wvp-primary);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.wvp-shipping-card p {
+    margin: 0 0 20px 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Notificaciones */
+.wvp-notifications {
+    max-width: 800px;
+}
+
+.wvp-notifications h2 {
+    margin: 0 0 30px 0;
+    color: var(--wvp-dark);
+    font-size: 24px;
+    border-bottom: 2px solid var(--wvp-border);
+    padding-bottom: 10px;
+}
+
+/* Monitoreo */
+.wvp-monitoring {
+    max-width: 1000px;
+}
+
+.wvp-monitoring h2 {
+    margin: 0 0 30px 0;
+    color: var(--wvp-dark);
+    font-size: 24px;
+}
+
+.wvp-monitoring-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.wvp-monitoring-card {
+    background: #fff;
+    border: 1px solid var(--wvp-border);
+    border-radius: var(--wvp-radius);
+    padding: 25px;
+    box-shadow: var(--wvp-shadow);
+    transition: var(--wvp-transition);
+}
+
+.wvp-monitoring-card:hover {
+    box-shadow: var(--wvp-shadow-hover);
+    transform: translateY(-2px);
+}
+
+.wvp-monitoring-card h3 {
+    margin: 0 0 10px 0;
+    color: var(--wvp-primary);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.wvp-monitoring-card p {
+    margin: 0 0 20px 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Ayuda */
+.wvp-help {
+    max-width: 1000px;
+}
+
+.wvp-help h2 {
+    margin: 0 0 30px 0;
+    color: var(--wvp-dark);
+    font-size: 24px;
+}
+
+.wvp-help-sections {
+    display: grid;
+    gap: 30px;
+}
+
+.wvp-help-section {
+    background: #fff;
+    border: 1px solid var(--wvp-border);
+    border-radius: var(--wvp-radius);
+    padding: 25px;
+    box-shadow: var(--wvp-shadow);
+}
+
+.wvp-help-section h3 {
+    margin: 0 0 20px 0;
+    color: var(--wvp-primary);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.wvp-help-section ol,
+.wvp-help-section ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.wvp-help-section li {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.wvp-help-section strong {
+    color: var(--wvp-primary);
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wvp-admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    
+    .wvp-nav-tabs {
+        flex-direction: column;
+    }
+    
+    .wvp-nav-tab a {
+        padding: 12px 15px;
+    }
+    
+    .wvp-status-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .wvp-action-buttons {
+        flex-direction: column;
+    }
+    
+    .wvp-gateway-cards,
+    .wvp-shipping-cards,
+    .wvp-monitoring-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .wvp-admin-content {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .wvp-admin-title {
+        font-size: 24px;
+    }
+    
+    .wvp-status-card {
+        padding: 15px;
+    }
+    
+    .wvp-gateway-card,
+    .wvp-shipping-card,
+    .wvp-monitoring-card,
+    .wvp-help-section {
+        padding: 20px;
+    }
+}
+
+/* Animaciones */
+.wvp-fade-in {
+    animation: wvp-fade-in 0.5s ease-in;
+}
+
+.wvp-slide-in {
+    animation: wvp-slide-in 0.5s ease-out;
+}
+
+@keyframes wvp-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes wvp-slide-in {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Utilidades */
+.wvp-text-center { text-align: center; }
+.wvp-text-left { text-align: left; }
+.wvp-text-right { text-align: right; }
+
+.wvp-mb-0 { margin-bottom: 0; }
+.wvp-mb-1 { margin-bottom: 10px; }
+.wvp-mb-2 { margin-bottom: 20px; }
+.wvp-mb-3 { margin-bottom: 30px; }
+
+.wvp-mt-0 { margin-top: 0; }
+.wvp-mt-1 { margin-top: 10px; }
+.wvp-mt-2 { margin-top: 20px; }
+.wvp-mt-3 { margin-top: 30px; }

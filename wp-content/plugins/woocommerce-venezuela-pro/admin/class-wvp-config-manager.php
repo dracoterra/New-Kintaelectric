@@ -382,7 +382,7 @@ class WVP_Config_Manager {
     /**
      * Mostrar configuración de IGTF
      */
-    private function display_igtf_settings() {
+    public function display_igtf_settings() {
         ?>
         <h2><?php _e('Configuración de IGTF', 'wvp'); ?></h2>
         
@@ -427,7 +427,7 @@ class WVP_Config_Manager {
     /**
      * Mostrar configuración de validaciones
      */
-    private function display_validation_settings() {
+    public function display_validation_settings() {
         ?>
         <h2><?php _e('Configuración de Validaciones', 'wvp'); ?></h2>
         
@@ -623,7 +623,7 @@ class WVP_Config_Manager {
     /**
      * Mostrar configuración de rendimiento
      */
-    private function display_performance_settings() {
+    public function display_performance_settings() {
         ?>
         <h2><?php _e('Configuración de Rendimiento', 'wvp'); ?></h2>
         

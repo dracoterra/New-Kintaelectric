@@ -99,6 +99,11 @@ class WooCommerce_Venezuela_Pro {
         // Inicializar componentes
         $this->init_components();
         
+        // Inicializar administración reestructurada
+        if (is_admin()) {
+            new WVP_Admin_Restructured();
+        }
+        
         // Log de inicialización
         error_log('WooCommerce Venezuela Pro: Plugin inicializado correctamente');
     }
@@ -169,6 +174,7 @@ class WooCommerce_Venezuela_Pro {
         // Archivos de administración
         require_once WVP_PLUGIN_PATH . 'admin/class-wvp-order-meta.php';
         require_once WVP_PLUGIN_PATH . 'admin/class-wvp-admin-settings.php';
+        require_once WVP_PLUGIN_PATH . 'admin/class-wvp-admin-restructured.php';
         require_once WVP_PLUGIN_PATH . 'admin/class-wvp-reports.php';
         require_once WVP_PLUGIN_PATH . 'admin/class-wvp-payment-verification.php';
         require_once WVP_PLUGIN_PATH . 'admin/class-wvp-config-manager.php';
@@ -193,6 +199,9 @@ class WooCommerce_Venezuela_Pro {
         
         // Notificaciones WhatsApp
         require_once WVP_PLUGIN_PATH . 'admin/class-wvp-whatsapp-notifications.php';
+        
+        // Sistema de monitoreo de errores
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-error-monitor.php';
         
         // Archivos de pruebas (solo en desarrollo)
         if (defined('WP_DEBUG') && WP_DEBUG) {
@@ -281,8 +290,8 @@ class WooCommerce_Venezuela_Pro {
                 $this->hybrid_invoicing = new WVP_Hybrid_Invoicing();
             }
             
-            // Inicializar componentes de administración
-            if (is_admin()) {
+            // Inicializar componentes de administración (deshabilitado temporalmente)
+            if (is_admin() && false) { // Deshabilitado para usar la nueva administración
                 if (class_exists('WVP_Order_Meta')) {
                     $this->order_meta = new WVP_Order_Meta();
                 }
@@ -401,11 +410,11 @@ class WooCommerce_Venezuela_Pro {
     private function create_database_tables() {
         global $wpdb;
         
-        // Tabla para logs de seguridad
-        $table_name = $wpdb->prefix . 'wvp_security_logs';
         $charset_collate = $wpdb->get_charset_collate();
         
-        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+        // Tabla para logs de seguridad
+        $security_table = $wpdb->prefix . 'wvp_security_logs';
+        $security_sql = "CREATE TABLE IF NOT EXISTS $security_table (
             id mediumint(9) NOT NULL AUTO_INCREMENT,
             timestamp datetime DEFAULT CURRENT_TIMESTAMP,
             event_type varchar(100) NOT NULL,
@@ -419,8 +428,26 @@ class WooCommerce_Venezuela_Pro {
             KEY user_id (user_id)
         ) $charset_collate;";
         
+        // Tabla para logs de errores
+        $error_table = $wpdb->prefix . 'wvp_error_logs';
+        $error_sql = "CREATE TABLE IF NOT EXISTS $error_table (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            timestamp datetime NOT NULL,
+            level varchar(20) NOT NULL,
+            message text NOT NULL,
+            context longtext,
+            user_id int(11) DEFAULT NULL,
+            url varchar(255) DEFAULT NULL,
+            ip varchar(45) DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY timestamp (timestamp),
+            KEY level (level),
+            KEY user_id (user_id)
+        ) $charset_collate;";
+        
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        dbDelta($sql);
+        dbDelta($security_sql);
+        dbDelta($error_sql);
     }
     
     /**
