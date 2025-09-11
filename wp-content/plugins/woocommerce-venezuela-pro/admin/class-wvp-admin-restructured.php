@@ -855,30 +855,470 @@ class WVP_Admin_Restructured {
      * Mostrar contenido de monitoreo
      */
     private function display_monitoring_content() {
-        $error_monitor = new WVP_Error_Monitor();
-        $error_summary = $error_monitor->get_error_summary();
+        global $wpdb;
         ?>
         <div class="wvp-monitoring">
-            <h2><?php _e('Monitoreo del Sistema', 'wvp'); ?></h2>
+            <h2><?php _e('📊 Monitor de Sistema - WooCommerce Venezuela Pro', 'wvp'); ?></h2>
             
-            <div class="wvp-monitoring-cards">
+            <div class="wvp-monitoring-grid">
+                <!-- Estado General del Sistema -->
                 <div class="wvp-monitoring-card">
-                    <h3><?php _e('Errores del Sistema', 'wvp'); ?></h3>
-                    <p><?php echo $error_summary['total_errors']; ?> <?php _e('errores totales', 'wvp'); ?></p>
-                    <a href="<?php echo admin_url('admin.php?page=wvp-error-monitor'); ?>" class="button">
-                        <?php _e('Ver Detalles', 'wvp'); ?>
-                    </a>
+                    <h3>🎯 Estado General del Sistema</h3>
+                    <div class="wvp-status-indicators">
+                        <?php
+                        // Verificar WooCommerce
+                        if (class_exists('WooCommerce')) {
+                            $wc_version = WC()->version;
+                            echo '<div class="wvp-status-item success">';
+                            echo '<span class="status-icon">✅</span>';
+                            echo '<span class="status-text">WooCommerce Activo (v' . $wc_version . ')</span>';
+                            echo '</div>';
+                        } else {
+                            echo '<div class="wvp-status-item error">';
+                            echo '<span class="status-icon">❌</span>';
+                            echo '<span class="status-text">WooCommerce No Activo</span>';
+                            echo '</div>';
+                        }
+                        
+                        // Verificar BCV Dólar Tracker
+                        if (class_exists('BCV_Dolar_Tracker')) {
+                            echo '<div class="wvp-status-item success">';
+                            echo '<span class="status-icon">✅</span>';
+                            echo '<span class="status-text">BCV Dólar Tracker Activo</span>';
+                            echo '</div>';
+                        } else {
+                            echo '<div class="wvp-status-item warning">';
+                            echo '<span class="status-icon">⚠️</span>';
+                            echo '<span class="status-text">BCV Dólar Tracker No Activo</span>';
+                            echo '</div>';
+                        }
+                        
+                        // Verificar HPOS
+                        if (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil')) {
+                            if (\Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
+                                echo '<div class="wvp-status-item success">';
+                                echo '<span class="status-icon">✅</span>';
+                                echo '<span class="status-text">HPOS Habilitado</span>';
+                                echo '</div>';
+                            } else {
+                                echo '<div class="wvp-status-item warning">';
+                                echo '<span class="status-icon">⚠️</span>';
+                                echo '<span class="status-text">HPOS Deshabilitado</span>';
+                                echo '</div>';
+                            }
+                        } else {
+                            echo '<div class="wvp-status-item error">';
+                            echo '<span class="status-icon">❌</span>';
+                            echo '<span class="status-text">HPOS No Disponible</span>';
+                            echo '</div>';
+                        }
+                        ?>
+                    </div>
                 </div>
-                
+
+                <!-- Base de Datos -->
                 <div class="wvp-monitoring-card">
-                    <h3><?php _e('Estado de Dependencias', 'wvp'); ?></h3>
-                    <p><?php _e('Verificar estado de plugins requeridos', 'wvp'); ?></p>
-                    <button type="button" class="button" id="wvp-check-dependencies">
-                        <?php _e('Verificar', 'wvp'); ?>
-                    </button>
+                    <h3>🗄️ Estado de Base de Datos</h3>
+                    <div class="wvp-db-info">
+                        <?php
+                        // Tablas de WooCommerce
+                        $wc_tables = $wpdb->get_results("SHOW TABLES LIKE '{$wpdb->prefix}woocommerce%'");
+                        echo '<div class="wvp-db-section">';
+                        echo '<h4>Tablas de WooCommerce</h4>';
+                        echo '<p class="wvp-db-count">' . count($wc_tables) . ' tablas encontradas</p>';
+                        if (count($wc_tables) > 0) {
+                            echo '<div class="wvp-db-tables">';
+                            foreach (array_slice($wc_tables, 0, 5) as $table) {
+                                $table_name = array_values((array)$table)[0];
+                                echo '<span class="wvp-db-table">' . str_replace($wpdb->prefix, '', $table_name) . '</span>';
+                            }
+                            if (count($wc_tables) > 5) {
+                                echo '<span class="wvp-db-more">... y ' . (count($wc_tables) - 5) . ' más</span>';
+                            }
+                            echo '</div>';
+                        }
+                        echo '</div>';
+                        
+                        // Tablas de Pedidos
+                        echo '<div class="wvp-db-section">';
+                        echo '<h4>Tablas de Pedidos</h4>';
+                        
+                        // Tabla tradicional
+                        $posts_table = $wpdb->get_var("SHOW TABLES LIKE '{$wpdb->posts}'");
+                        if ($posts_table) {
+                            $orders_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'shop_order'");
+                            echo '<div class="wvp-db-table-info">';
+                            echo '<span class="wvp-db-table-name">wp_posts (tradicional)</span>';
+                            echo '<span class="wvp-db-table-count">' . $orders_count . ' pedidos</span>';
+                            echo '</div>';
+                        }
+                        
+                        // Tabla HPOS
+                        $hpos_table = $wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}wc_orders'");
+                        if ($hpos_table) {
+                            $hpos_orders_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}wc_orders");
+                            echo '<div class="wvp-db-table-info">';
+                            echo '<span class="wvp-db-table-name">wc_orders (HPOS)</span>';
+                            echo '<span class="wvp-db-table-count">' . $hpos_orders_count . ' pedidos</span>';
+                            echo '</div>';
+                        }
+                        echo '</div>';
+                        
+                        // Tablas del Plugin
+                        $plugin_tables = $wpdb->get_results("SHOW TABLES LIKE '{$wpdb->prefix}wvp_%'");
+                        echo '<div class="wvp-db-section">';
+                        echo '<h4>Tablas del Plugin</h4>';
+                        if ($plugin_tables) {
+                            echo '<p class="wvp-db-count">' . count($plugin_tables) . ' tablas encontradas</p>';
+                            foreach ($plugin_tables as $table) {
+                                $table_name = array_values((array)$table)[0];
+                                echo '<span class="wvp-db-table">' . str_replace($wpdb->prefix, '', $table_name) . '</span>';
+                            }
+                        } else {
+                            echo '<p class="wvp-db-count">No hay tablas personalizadas del plugin</p>';
+                        }
+                        echo '</div>';
+                        ?>
+                    </div>
+                </div>
+
+                <!-- Configuraciones del Plugin -->
+                <div class="wvp-monitoring-card">
+                    <h3>⚙️ Configuraciones del Plugin</h3>
+                    <div class="wvp-config-info">
+                        <?php
+                        $general_settings = get_option('wvp_general_settings', array());
+                        $igtf_enabled = isset($general_settings['igtf_enabled']) ? $general_settings['igtf_enabled'] : 'no';
+                        $show_igtf = isset($general_settings['show_igtf']) ? $general_settings['show_igtf'] : '0';
+                        $igtf_rate = isset($general_settings['igtf_rate']) ? $general_settings['igtf_rate'] : '3';
+                        $price_format = isset($general_settings['price_format']) ? $general_settings['price_format'] : 'Ref. %s Bs.';
+                        
+                        echo '<div class="wvp-config-item">';
+                        echo '<span class="wvp-config-label">IGTF Habilitado:</span>';
+                        echo '<span class="wvp-config-value ' . ($igtf_enabled === 'yes' ? 'enabled' : 'disabled') . '">';
+                        echo $igtf_enabled === 'yes' ? 'Sí' : 'No';
+                        echo '</span>';
+                        echo '</div>';
+                        
+                        echo '<div class="wvp-config-item">';
+                        echo '<span class="wvp-config-label">Mostrar IGTF:</span>';
+                        echo '<span class="wvp-config-value ' . ($show_igtf === '1' ? 'enabled' : 'disabled') . '">';
+                        echo $show_igtf === '1' ? 'Sí' : 'No';
+                        echo '</span>';
+                        echo '</div>';
+                        
+                        echo '<div class="wvp-config-item">';
+                        echo '<span class="wvp-config-label">Tasa IGTF:</span>';
+                        echo '<span class="wvp-config-value">' . $igtf_rate . '%</span>';
+                        echo '</div>';
+                        
+                        echo '<div class="wvp-config-item">';
+                        echo '<span class="wvp-config-label">Formato de Precio:</span>';
+                        echo '<span class="wvp-config-value">' . esc_html($price_format) . '</span>';
+                        echo '</div>';
+                        ?>
+                    </div>
+                </div>
+
+                <!-- Estadísticas de Uso -->
+                <div class="wvp-monitoring-card">
+                    <h3>📈 Estadísticas de Uso</h3>
+                    <div class="wvp-stats-info">
+                        <?php
+                        // Contar productos con precios en USD
+                        $products_with_usd = $wpdb->get_var("
+                            SELECT COUNT(*) 
+                            FROM {$wpdb->postmeta} pm 
+                            INNER JOIN {$wpdb->posts} p ON pm.post_id = p.ID 
+                            WHERE p.post_type = 'product' 
+                            AND p.post_status = 'publish'
+                            AND pm.meta_key = '_price'
+                            AND pm.meta_value > 0
+                        ");
+                        
+                        // Contar pedidos del mes actual
+                        $current_month_orders = $wpdb->get_var("
+                            SELECT COUNT(*) 
+                            FROM " . (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() ? 
+                                "{$wpdb->prefix}wc_orders" : 
+                                "{$wpdb->posts}") . " 
+                            WHERE " . (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() ? 
+                                "status IN ('wc-completed', 'wc-processing', 'wc-on-hold') AND MONTH(date_created_gmt) = " . date('n') . " AND YEAR(date_created_gmt) = " . date('Y') :
+                                "post_type = 'shop_order' AND post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold') AND MONTH(post_date) = " . date('n') . " AND YEAR(post_date) = " . date('Y'))
+                        );
+                        
+                        echo '<div class="wvp-stat-item">';
+                        echo '<span class="wvp-stat-label">Productos con Precios:</span>';
+                        echo '<span class="wvp-stat-value">' . $products_with_usd . '</span>';
+                        echo '</div>';
+                        
+                        echo '<div class="wvp-stat-item">';
+                        echo '<span class="wvp-stat-label">Pedidos este Mes:</span>';
+                        echo '<span class="wvp-stat-value">' . $current_month_orders . '</span>';
+                        echo '</div>';
+                        
+                        // Verificar última actualización de BCV
+                        if (class_exists('BCV_Dolar_Tracker')) {
+                            $last_bcv_update = get_option('bcv_last_update', 'Nunca');
+                            echo '<div class="wvp-stat-item">';
+                            echo '<span class="wvp-stat-label">Última Actualización BCV:</span>';
+                            echo '<span class="wvp-stat-value">' . $last_bcv_update . '</span>';
+                            echo '</div>';
+                        }
+                        ?>
+                    </div>
+                </div>
+
+                <!-- Logs de Errores -->
+                <div class="wvp-monitoring-card">
+                    <h3>🚨 Logs de Errores Recientes</h3>
+                    <div class="wvp-logs-info">
+                        <?php
+                        $debug_log = WP_CONTENT_DIR . '/debug.log';
+                        if (file_exists($debug_log)) {
+                            $log_content = file_get_contents($debug_log);
+                            $lines = explode("\n", $log_content);
+                            $recent_lines = array_slice($lines, -10);
+                            
+                            echo '<div class="wvp-logs-container">';
+                            foreach ($recent_lines as $line) {
+                                if (!empty(trim($line))) {
+                                    $is_error = strpos($line, 'ERROR') !== false || strpos($line, 'Fatal') !== false;
+                                    $is_warning = strpos($line, 'WARNING') !== false;
+                                    $class = $is_error ? 'error' : ($is_warning ? 'warning' : 'info');
+                                    echo '<div class="wvp-log-line ' . $class . '">' . esc_html($line) . '</div>';
+                                }
+                            }
+                            echo '</div>';
+                        } else {
+                            echo '<p>No hay archivo de debug.log</p>';
+                        }
+                        ?>
+                    </div>
+                </div>
+
+                <!-- Recomendaciones -->
+                <div class="wvp-monitoring-card">
+                    <h3>💡 Recomendaciones del Sistema</h3>
+                    <div class="wvp-recommendations">
+                        <?php
+                        $recommendations = array();
+                        
+                        // Verificar HPOS
+                        if (!class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') || 
+                            !\Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
+                            $recommendations[] = 'Considera habilitar HPOS para mejor rendimiento con pedidos';
+                        }
+                        
+                        // Verificar BCV Dólar Tracker
+                        if (!class_exists('BCV_Dolar_Tracker')) {
+                            $recommendations[] = 'Instala y activa BCV Dólar Tracker para tasas de cambio automáticas';
+                        }
+                        
+                        // Verificar configuración de IGTF
+                        if ($igtf_enabled === 'yes' && $show_igtf === '0') {
+                            $recommendations[] = 'IGTF está habilitado pero no se muestra - verifica configuración';
+                        }
+                        
+                        if (empty($recommendations)) {
+                            echo '<p class="wvp-no-recommendations">✅ Sistema funcionando correctamente</p>';
+                        } else {
+                            echo '<ul class="wvp-recommendations-list">';
+                            foreach ($recommendations as $rec) {
+                                echo '<li>' . $rec . '</li>';
+                            }
+                            echo '</ul>';
+                        }
+                        ?>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <style>
+        .wvp-monitoring-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .wvp-monitoring-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .wvp-monitoring-card h3 {
+            margin-top: 0;
+            color: #0073aa;
+            border-bottom: 2px solid #0073aa;
+            padding-bottom: 10px;
+        }
+        
+        .wvp-status-indicators {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .wvp-status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        
+        .wvp-status-item.success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        
+        .wvp-status-item.warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .wvp-status-item.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .wvp-db-section {
+            margin-bottom: 15px;
+        }
+        
+        .wvp-db-section h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .wvp-db-count {
+            font-weight: bold;
+            color: #0073aa;
+            margin: 5px 0;
+        }
+        
+        .wvp-db-tables {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        .wvp-db-table {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .wvp-db-table-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .wvp-db-table-name {
+            font-weight: bold;
+        }
+        
+        .wvp-db-table-count {
+            color: #0073aa;
+        }
+        
+        .wvp-config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .wvp-config-label {
+            font-weight: bold;
+        }
+        
+        .wvp-config-value.enabled {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .wvp-config-value.disabled {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .wvp-stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .wvp-stat-label {
+            font-weight: bold;
+        }
+        
+        .wvp-stat-value {
+            color: #0073aa;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .wvp-logs-container {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .wvp-log-line {
+            font-family: monospace;
+            font-size: 12px;
+            margin: 2px 0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        
+        .wvp-log-line.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .wvp-log-line.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .wvp-log-line.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .wvp-recommendations-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .wvp-recommendations-list li {
+            margin: 5px 0;
+            color: #856404;
+        }
+        
+        .wvp-no-recommendations {
+            color: #28a745;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+        }
+        </style>
         <?php
     }
     
@@ -1690,118 +2130,6 @@ class WVP_Admin_Restructured {
         <?php
     }
     
-    /**
-     * Mostrar página de verificación de base de datos
-     */
-    public function display_db_check() {
-        ?>
-        <div class="wrap">
-            <h1><?php _e('Verificación de Base de Datos', 'wvp'); ?></h1>
-            
-            <div class="wvp-db-check">
-                <?php
-                global $wpdb;
-                
-                echo "<h2>1. Tablas de WooCommerce</h2>";
-                $wc_tables = $wpdb->get_results("SHOW TABLES LIKE '{$wpdb->prefix}woocommerce%'");
-                if ($wc_tables) {
-                    echo "<ul>";
-                    foreach ($wc_tables as $table) {
-                        $table_name = array_values((array)$table)[0];
-                        echo "<li>✅ $table_name</li>";
-                    }
-                    echo "</ul>";
-                } else {
-                    echo "<p>❌ No se encontraron tablas de WooCommerce</p>";
-                }
-                
-                echo "<h2>2. Tablas de Pedidos</h2>";
-                
-                // Verificar tabla tradicional
-                $posts_table = $wpdb->get_var("SHOW TABLES LIKE '{$wpdb->posts}'");
-                if ($posts_table) {
-                    echo "<p>✅ {$wpdb->posts} (tabla tradicional)</p>";
-                    $orders_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'shop_order'");
-                    echo "<p>📊 Pedidos en wp_posts: <strong>$orders_count</strong></p>";
-                } else {
-                    echo "<p>❌ {$wpdb->posts} no existe</p>";
-                }
-                
-                // Verificar tabla HPOS
-                $hpos_table = $wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}wc_orders'");
-                if ($hpos_table) {
-                    echo "<p>✅ {$wpdb->prefix}wc_orders (tabla HPOS)</p>";
-                    $hpos_orders_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}wc_orders");
-                    echo "<p>📊 Pedidos en wc_orders: <strong>$hpos_orders_count</strong></p>";
-                } else {
-                    echo "<p>❌ {$wpdb->prefix}wc_orders no existe</p>";
-                }
-                
-                echo "<h2>3. Tablas del Plugin</h2>";
-                $plugin_tables = $wpdb->get_results("SHOW TABLES LIKE '{$wpdb->prefix}wvp_%'");
-                if ($plugin_tables) {
-                    echo "<ul>";
-                    foreach ($plugin_tables as $table) {
-                        $table_name = array_values((array)$table)[0];
-                        echo "<li>✅ $table_name</li>";
-                    }
-                    echo "</ul>";
-                } else {
-                    echo "<p>❌ No hay tablas del plugin</p>";
-                }
-                
-                echo "<h2>4. Estado de HPOS</h2>";
-                if (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil')) {
-                    echo "<p>✅ OrderUtil disponible</p>";
-                    
-                    if (\Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
-                        echo "<p>✅ <strong>HPOS HABILITADO</strong></p>";
-                        echo "<p>📊 Usando tablas personalizadas para pedidos</p>";
-                    } else {
-                        echo "<p>⚠️ <strong>HPOS DESHABILITADO</strong></p>";
-                        echo "<p>📊 Usando wp_posts para pedidos</p>";
-                    }
-                } else {
-                    echo "<p>❌ OrderUtil no disponible</p>";
-                    echo "<p>📊 Versión de WooCommerce muy antigua</p>";
-                }
-                
-                echo "<h2>5. Versión de WooCommerce</h2>";
-                if (class_exists('WooCommerce')) {
-                    $version = WC()->version;
-                    echo "<p>📊 Versión: <strong>$version</strong></p>";
-                } else {
-                    echo "<p>❌ WooCommerce no está activo</p>";
-                }
-                
-                echo "<h2>6. Recomendaciones</h2>";
-                if ($hpos_table && class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
-                    echo "<p>✅ El plugin debería funcionar correctamente con HPOS</p>";
-                    echo "<p>📋 Asegúrate de que el plugin declare compatibilidad con HPOS</p>";
-                } else {
-                    echo "<p>⚠️ HPOS no está habilitado o no está disponible</p>";
-                    echo "<p>📋 Considera habilitar HPOS para mejor rendimiento</p>";
-                    echo "<p>📋 El plugin funcionará con el método tradicional</p>";
-                }
-                ?>
-            </div>
-        </div>
-        
-        <style>
-        .wvp-db-check h2 {
-            color: #0073aa;
-            border-bottom: 2px solid #0073aa;
-            padding-bottom: 5px;
-        }
-        .wvp-db-check ul {
-            margin: 10px 0;
-        }
-        .wvp-db-check li {
-            margin: 5px 0;
-        }
-        </style>
-        <?php
-    }
     
     /**
      * Cargar scripts del admin
