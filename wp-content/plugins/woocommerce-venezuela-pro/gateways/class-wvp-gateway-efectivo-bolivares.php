@@ -17,6 +17,8 @@ class WVP_Gateway_Efectivo_Bolivares extends WC_Payment_Gateway {
      * Propiedades de la pasarela
      */
     public $apply_igtf;
+    public $min_amount;
+    public $max_amount;
     
     /**
      * Constructor de la pasarela
@@ -37,6 +39,8 @@ class WVP_Gateway_Efectivo_Bolivares extends WC_Payment_Gateway {
         $this->description = $this->get_option("description");
         $this->enabled = $this->get_option("enabled");
         $this->apply_igtf = $this->get_option("apply_igtf");
+        $this->min_amount = $this->get_option("min_amount");
+        $this->max_amount = $this->get_option("max_amount");
         
         // Hooks
         add_action("woocommerce_update_options_payment_gateways_" . $this->id, array($this, "process_admin_options"));
@@ -73,6 +77,20 @@ class WVP_Gateway_Efectivo_Bolivares extends WC_Payment_Gateway {
                 "label" => __("Aplicar IGTF a esta pasarela", "wvp"),
                 "default" => "no",
                 "description" => __("IGTF NO se aplica a pagos en bolívares, solo a pagos en dólares en efectivo.", "wvp")
+            ),
+            "min_amount" => array(
+                "title" => __("Monto Mínimo (USD)", "wvp"),
+                "type" => "price",
+                "description" => __("Monto mínimo para activar esta pasarela", "wvp"),
+                "default" => "",
+                "desc_tip" => true
+            ),
+            "max_amount" => array(
+                "title" => __("Monto Máximo (USD)", "wvp"),
+                "type" => "price",
+                "description" => __("Monto máximo para activar esta pasarela", "wvp"),
+                "default" => "",
+                "desc_tip" => true
             )
         );
     }
@@ -122,10 +140,54 @@ class WVP_Gateway_Efectivo_Bolivares extends WC_Payment_Gateway {
     }
     
     /**
+     * Verificar si la pasarela está disponible
+     */
+    public function is_available() {
+        if (!$this->enabled) {
+            return false;
+        }
+        
+        $cart_total = floatval(WC()->cart->get_total('raw'));
+        
+        // Verificar monto mínimo
+        if ($this->min_amount && $cart_total < floatval($this->min_amount)) {
+            return false;
+        }
+        
+        // Verificar monto máximo
+        if ($this->max_amount && $cart_total > floatval($this->max_amount)) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
      * Validar campos de pago
      */
     public function validate_fields() {
-        $confirmation = $_POST[$this->id . '-confirmation'] ?? '';
+        // 1. Verificar nonce CSRF
+        if (!WVP_Security_Validator::validate_nonce($_POST['woocommerce-process-checkout-nonce'] ?? '', 'woocommerce-process_checkout')) {
+            wc_add_notice(__("Error de seguridad. Intente nuevamente.", "wvp"), "error");
+            WVP_Security_Validator::log_security_event("CSRF validation failed in Efectivo Bolívares gateway");
+            return false;
+        }
+        
+        // 2. Verificar permisos del usuario
+        if (!WVP_Security_Validator::validate_user_permissions()) {
+            wc_add_notice(__("No tiene permisos para realizar esta acción.", "wvp"), "error");
+            WVP_Security_Validator::log_security_event("User permission validation failed in Efectivo Bolívares gateway");
+            return false;
+        }
+        
+        // 3. Verificar rate limiting
+        if (!WVP_Rate_Limiter::check_rate_limit(get_current_user_id(), 'payment_attempt')) {
+            wc_add_notice(__("Demasiados intentos de pago. Intente más tarde.", "wvp"), "error");
+            return false;
+        }
+        
+        // 4. Sanitizar y validar datos
+        $confirmation = WVP_Security_Validator::sanitize_input($_POST[$this->id . '-confirmation'] ?? '');
         
         if (empty($confirmation)) {
             wc_add_notice(__("Debe confirmar el pago en efectivo.", "wvp"), "error");
@@ -147,52 +209,97 @@ class WVP_Gateway_Efectivo_Bolivares extends WC_Payment_Gateway {
      * @return array Resultado del pago
      */
     public function process_payment($order_id) {
-        $order = wc_get_order($order_id);
-        
-        if (!$order) {
+        try {
+            // 1. Verificar permisos del usuario
+            if (!WVP_Security_Validator::validate_user_permissions()) {
+                wc_add_notice(__("No tiene permisos para realizar esta acción.", "wvp"), "error");
+                return array("result" => "fail", "redirect" => "");
+            }
+            
+            // 2. Obtener y validar pedido
+            $order = wc_get_order($order_id);
+            if (!WVP_Security_Validator::validate_order_status($order)) {
+                wc_add_notice(__("Este pedido ya fue procesado o no existe.", "wvp"), "error");
+                return array("result" => "fail", "redirect" => "");
+            }
+            
+            // 3. Verificar que el pedido pertenece al usuario
+            if (!WVP_Security_Validator::validate_order_ownership($order)) {
+                wc_add_notice(__("No tiene permisos para procesar este pedido.", "wvp"), "error");
+                return array("result" => "fail", "redirect" => "");
+            }
+            
+            // 4. Verificar rate limiting
+            if (!WVP_Rate_Limiter::check_rate_limit(get_current_user_id(), 'payment_attempt')) {
+                wc_add_notice(__("Demasiados intentos de pago. Intente más tarde.", "wvp"), "error");
+                return array("result" => "fail", "redirect" => "");
+            }
+            
+            // 5. Validar campos
+            if (!$this->validate_fields()) {
+                return array("result" => "fail", "redirect" => "");
+            }
+            
+            // 6. Sanitizar datos de entrada
+            $confirmation = WVP_Security_Validator::sanitize_input($_POST[$this->id . '-confirmation'] ?? '');
+            
+            // 7. Validar monto del pedido
+            $order_total = floatval($order->get_total());
+            if (!WVP_Security_Validator::validate_amount($order_total, floatval($this->min_amount), floatval($this->max_amount))) {
+                wc_add_notice(__("El monto del pedido no está dentro del rango permitido para esta pasarela.", "wvp"), "error");
+                return array("result" => "fail", "redirect" => "");
+            }
+            
+            // 8. Guardar información del pago
+            $order->update_meta_data("_payment_confirmation", $confirmation);
+            $order->update_meta_data("_payment_method_title", $this->title);
+            $order->update_meta_data("_payment_type", "efectivo_bolivares");
+            $order->update_meta_data("_payment_gateway_id", $this->id);
+            
+            // 9. Guardar tasa BCV utilizada
+            $rate = WVP_BCV_Integrator::get_rate();
+            if ($rate !== null) {
+                $order->update_meta_data("_bcv_rate_at_purchase", $rate);
+            }
+            
+            // 10. Marcar como pendiente de pago
+            $order->update_status("on-hold", __("Pago en efectivo (bolívares) pendiente de verificación.", "wvp"));
+            $order->add_order_note(__("Pago en efectivo (bolívares) pendiente de verificación.", "wvp"), false, true);
+            
+            // 11. Reducir stock
+            $order->reduce_order_stock();
+            
+            // 12. Limpiar carrito
+            WC()->cart->empty_cart();
+            
+            // 13. Guardar pedido
+            $order->save();
+            
+            // 14. Limpiar rate limit en caso de éxito
+            WVP_Rate_Limiter::clear_rate_limit(get_current_user_id(), 'payment_attempt');
+            
+            // 15. Log de éxito
+            WVP_Security_Validator::log_security_event("Payment processed successfully", array(
+                'order_id' => $order_id,
+                'gateway' => 'efectivo_bolivares',
+                'user_id' => get_current_user_id()
+            ));
+            
             return array(
-                "result" => "fail",
-                "redirect" => ""
+                "result" => "success",
+                "redirect" => $this->get_return_url($order)
             );
+            
+        } catch (Exception $e) {
+            // Log del error
+            WVP_Security_Validator::log_security_event("Payment processing error: " . $e->getMessage(), array(
+                'order_id' => $order_id,
+                'gateway' => 'efectivo_bolivares',
+                'user_id' => get_current_user_id()
+            ));
+            
+            wc_add_notice(__("Error al procesar el pago. Intente nuevamente.", "wvp"), "error");
+            return array("result" => "fail", "redirect" => "");
         }
-        
-        // Validar campos
-        if (!$this->validate_fields()) {
-            return array(
-                "result" => "fail",
-                "redirect" => ""
-            );
-        }
-        
-        // Obtener confirmación
-        $confirmation = sanitize_text_field($_POST[$this->id . '-confirmation']);
-        
-        // Guardar información del pago
-        $order->update_meta_data("_payment_confirmation", $confirmation);
-        $order->update_meta_data("_payment_method_title", $this->title);
-        $order->update_meta_data("_payment_type", "efectivo_bolivares");
-        
-        // Guardar tasa de cambio usada
-        $rate = WVP_BCV_Integrator::get_rate();
-        if ($rate !== null) {
-            $order->update_meta_data("_bcv_rate_used", $rate);
-        }
-        
-        // Marcar como pendiente de pago
-        $order->update_status("on-hold", __("Pago en efectivo (bolívares) pendiente de verificación.", "wvp"));
-        
-        // Reducir stock
-        $order->reduce_order_stock();
-        
-        // Limpiar carrito
-        WC()->cart->empty_cart();
-        
-        // Guardar pedido
-        $order->save();
-        
-        return array(
-            "result" => "success",
-            "redirect" => $this->get_return_url($order)
-        );
     }
 }

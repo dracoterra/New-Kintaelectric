@@ -1,0 +1,158 @@
+/**
+ * Estilos para el desglose dual (USD y VES)
+ * 
+ * @package WooCommerce_Venezuela_Pro
+ * @since 1.0.0
+ */
+
+/* Referencias VES en el carrito */
+.wvp-ves-reference {
+    color: #666;
+    font-size: 12px;
+    font-style: italic;
+    display: block;
+    margin-top: 2px;
+}
+
+/* Carrito */
+.woocommerce-cart .wvp-ves-reference {
+    color: #007cba;
+    font-weight: 500;
+}
+
+/* Checkout */
+.woocommerce-checkout .wvp-ves-reference {
+    color: #666;
+    font-size: 11px;
+}
+
+/* Páginas de productos */
+.single-product .wvp-ves-reference {
+    color: #888;
+    font-size: 13px;
+}
+
+/* Tienda */
+.woocommerce-loop-product__title + .wvp-ves-reference {
+    color: #666;
+    font-size: 11px;
+}
+
+/* Total del carrito */
+.woocommerce-cart .cart_totals .wvp-ves-reference {
+    color: #007cba;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Total del checkout */
+.woocommerce-checkout .order-total .wvp-ves-reference {
+    color: #007cba;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+/* Envío */
+.woocommerce-shipping-totals .wvp-ves-reference {
+    color: #666;
+    font-size: 12px;
+}
+
+/* Impuestos */
+.woocommerce-tax-totals .wvp-ves-reference {
+    color: #666;
+    font-size: 12px;
+}
+
+/* Resumen del pedido */
+.woocommerce-checkout-review-order-table .wvp-ves-reference {
+    color: #666;
+    font-size: 11px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wvp-ves-reference {
+        font-size: 11px;
+    }
+    
+    .woocommerce-cart .wvp-ves-reference {
+        font-size: 12px;
+    }
+    
+    .woocommerce-checkout .wvp-ves-reference {
+        font-size: 10px;
+    }
+}
+
+/* Animaciones */
+.wvp-ves-reference {
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.wvp-ves-reference:hover {
+    opacity: 1;
+}
+
+/* Modo oscuro */
+@media (prefers-color-scheme: dark) {
+    .wvp-ves-reference {
+        color: #ccc;
+    }
+    
+    .woocommerce-cart .wvp-ves-reference {
+        color: #4fc3f7;
+    }
+    
+    .woocommerce-checkout .wvp-ves-reference {
+        color: #ccc;
+    }
+    
+    .woocommerce-cart .cart_totals .wvp-ves-reference {
+        color: #4fc3f7;
+    }
+    
+    .woocommerce-checkout .order-total .wvp-ves-reference {
+        color: #4fc3f7;
+    }
+}
+
+/* Integración con temas */
+.theme-storefront .wvp-ves-reference {
+    color: #666;
+    font-size: 12px;
+}
+
+.theme-astra .wvp-ves-reference {
+    color: #666;
+    font-size: 12px;
+}
+
+.theme-oceanwp .wvp-ves-reference {
+    color: #666;
+    font-size: 12px;
+}
+
+/* Estados de hover */
+.woocommerce-cart .cart_item:hover .wvp-ves-reference {
+    color: #005a87;
+}
+
+.woocommerce-checkout .cart_item:hover .wvp-ves-reference {
+    color: #888;
+}
+
+/* Accesibilidad */
+.wvp-ves-reference:focus {
+    outline: 1px solid #007cba;
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .wvp-ves-reference {
+        color: #000 !important;
+        font-size: 10px !important;
+    }
+}

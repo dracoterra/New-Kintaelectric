@@ -109,10 +109,18 @@ class WooCommerce_Venezuela_Pro {
      * @return bool True si las dependencias están disponibles
      */
     private function check_dependencies() {
-        // Verificar WooCommerce
+        // Verificar WooCommerce y versión mínima
         if (!class_exists('WooCommerce')) {
             add_action('admin_notices', function() {
                 echo '<div class="notice notice-error"><p>WooCommerce Venezuela Pro requiere WooCommerce para funcionar.</p></div>';
+            });
+            return false;
+        }
+        
+        // Verificar versión mínima de WooCommerce
+        if (version_compare(WC()->version, '5.0', '<')) {
+            add_action('admin_notices', function() {
+                echo '<div class="notice notice-error"><p>WooCommerce Venezuela Pro requiere WooCommerce 5.0 o superior. Versión actual: ' . WC()->version . '</p></div>';
             });
             return false;
         }
@@ -136,9 +144,25 @@ class WooCommerce_Venezuela_Pro {
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-dependencies.php';
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-bcv-integrator.php';
         
+        // Clases de seguridad (CRÍTICAS - CARGAR PRIMERO)
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-security-validator.php';
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-rate-limiter.php';
+        
+        // Clases de lógica de negocio
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-igtf-manager.php';
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-business-validator.php';
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-price-calculator.php';
+        
+        // Clases de optimización
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-performance-optimizer.php';
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-advanced-cache.php';
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-advanced-features.php';
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-asset-optimizer.php';
+        
         // Archivos de frontend
         require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-price-display.php';
         require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-checkout.php';
+        require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-currency-switcher.php';
         require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-dual-breakdown.php';
         require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-hybrid-invoicing.php';
         
@@ -147,6 +171,12 @@ class WooCommerce_Venezuela_Pro {
         require_once WVP_PLUGIN_PATH . 'admin/class-wvp-admin-settings.php';
         require_once WVP_PLUGIN_PATH . 'admin/class-wvp-reports.php';
         require_once WVP_PLUGIN_PATH . 'admin/class-wvp-payment-verification.php';
+        require_once WVP_PLUGIN_PATH . 'admin/class-wvp-config-manager.php';
+        
+        // Widgets
+        require_once WVP_PLUGIN_PATH . 'widgets/class-wvp-currency-converter-widget.php';
+        require_once WVP_PLUGIN_PATH . 'widgets/class-wvp-product-info-widget.php';
+        require_once WVP_PLUGIN_PATH . 'widgets/class-wvp-order-status-widget.php';
         
         // Generador de facturas
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-invoice-generator.php';
@@ -163,6 +193,14 @@ class WooCommerce_Venezuela_Pro {
         
         // Notificaciones WhatsApp
         require_once WVP_PLUGIN_PATH . 'admin/class-wvp-whatsapp-notifications.php';
+        
+        // Archivos de pruebas (solo en desarrollo)
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            require_once WVP_PLUGIN_PATH . 'tests/test-woocommerce-compatibility.php';
+            require_once WVP_PLUGIN_PATH . 'tests/test-functionalities.php';
+            require_once WVP_PLUGIN_PATH . 'tests/test-business-logic.php';
+            require_once WVP_PLUGIN_PATH . 'tests/test-optimizations.php';
+        }
     }
     
     /**
@@ -189,9 +227,49 @@ class WooCommerce_Venezuela_Pro {
             // Inicializar integrador BCV
             $this->bcv_integrator = new WVP_BCV_Integrator();
             
+            // Inicializar gestor de IGTF
+            if (class_exists('WVP_IGTF_Manager')) {
+                new WVP_IGTF_Manager();
+            }
+            
+            // Inicializar validador de negocio
+            if (class_exists('WVP_Business_Validator')) {
+                new WVP_Business_Validator();
+            }
+            
+            // Inicializar calculadora de precios
+            if (class_exists('WVP_Price_Calculator')) {
+                new WVP_Price_Calculator();
+            }
+            
+            // Inicializar optimizador de rendimiento
+            if (class_exists('WVP_Performance_Optimizer')) {
+                new WVP_Performance_Optimizer();
+            }
+            
+            // Inicializar caché avanzado
+            if (class_exists('WVP_Advanced_Cache')) {
+                new WVP_Advanced_Cache();
+            }
+            
+            // Inicializar funcionalidades avanzadas
+            if (class_exists('WVP_Advanced_Features')) {
+                new WVP_Advanced_Features();
+            }
+            
+            // Inicializar optimizador de assets
+            if (class_exists('WVP_Asset_Optimizer')) {
+                new WVP_Asset_Optimizer();
+            }
+            
             // Inicializar componentes de frontend
             $this->price_display = new WVP_Price_Display();
             $this->checkout = new WVP_Checkout();
+            
+            // Inicializar switcher de moneda
+            if (class_exists('WVP_Currency_Switcher')) {
+                new WVP_Currency_Switcher();
+            }
             
             // Inicializar desglose dual si está disponible
             if (class_exists('WVP_Dual_Breakdown')) {
@@ -222,6 +300,9 @@ class WooCommerce_Venezuela_Pro {
                 }
                 if (class_exists('WVP_WhatsApp_Notifications')) {
                     $this->whatsapp_notifications = new WVP_WhatsApp_Notifications();
+                }
+                if (class_exists('WVP_Config_Manager')) {
+                    new WVP_Config_Manager();
                 }
             }
             
@@ -301,11 +382,63 @@ class WooCommerce_Venezuela_Pro {
             );
         }
         
+        // Crear tablas de base de datos si es necesario
+        $this->create_database_tables();
+        
+        // Configurar opciones por defecto
+        $this->set_default_options();
+        
         // Limpiar caché de rewrite rules
         flush_rewrite_rules();
         
         // Log de activación
         error_log('WooCommerce Venezuela Pro: Plugin activado correctamente');
+    }
+    
+    /**
+     * Crear tablas de base de datos necesarias
+     */
+    private function create_database_tables() {
+        global $wpdb;
+        
+        // Tabla para logs de seguridad
+        $table_name = $wpdb->prefix . 'wvp_security_logs';
+        $charset_collate = $wpdb->get_charset_collate();
+        
+        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            timestamp datetime DEFAULT CURRENT_TIMESTAMP,
+            event_type varchar(100) NOT NULL,
+            message text NOT NULL,
+            context longtext,
+            user_id bigint(20),
+            ip_address varchar(45),
+            PRIMARY KEY (id),
+            KEY event_type (event_type),
+            KEY timestamp (timestamp),
+            KEY user_id (user_id)
+        ) $charset_collate;";
+        
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+    }
+    
+    /**
+     * Configurar opciones por defecto
+     */
+    private function set_default_options() {
+        // Configurar opciones por defecto si no existen
+        if (!get_option('wvp_igtf_rate')) {
+            update_option('wvp_igtf_rate', 3.0);
+        }
+        
+        if (!get_option('wvp_bcv_cache_duration')) {
+            update_option('wvp_bcv_cache_duration', 3600); // 1 hora
+        }
+        
+        if (!get_option('wvp_security_log_retention')) {
+            update_option('wvp_security_log_retention', 30); // 30 días
+        }
     }
     
     /**

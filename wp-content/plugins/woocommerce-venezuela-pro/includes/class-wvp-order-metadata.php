@@ -35,7 +35,7 @@ class WVP_Order_Metadata {
      */
     private function init_hooks() {
         // Guardar metadatos cuando se actualiza el pedido
-        add_action('woocommerce_checkout_update_order_meta', array($this, 'save_venezuela_metadata'));
+        add_action('woocommerce_checkout_create_order', array($this, 'save_venezuela_metadata_modern'));
         
         // Guardar metadatos cuando se procesa el pago
         add_action('woocommerce_payment_complete', array($this, 'save_payment_metadata'));
@@ -48,7 +48,7 @@ class WVP_Order_Metadata {
     }
     
     /**
-     * Guardar metadatos venezolanos en el pedido
+     * Guardar metadatos venezolanos en el pedido (método obsoleto)
      * 
      * @param int $order_id ID del pedido
      */
@@ -76,7 +76,37 @@ class WVP_Order_Metadata {
     }
     
     /**
-     * Guardar tasa BCV en el pedido
+     * Guardar metadatos venezolanos usando método moderno (compatible con WC 8.0+)
+     * 
+     * @param WC_Order $order Pedido
+     */
+    public function save_venezuela_metadata_modern($order) {
+        // Verificar que el pedido existe
+        if (!$order || !is_a($order, 'WC_Order')) {
+            return;
+        }
+        
+        $order_id = $order->get_id();
+        
+        // Guardar tasa BCV actual
+        $this->save_bcv_rate_modern($order);
+        
+        // Guardar información de IGTF
+        $this->save_igtf_info_modern($order);
+        
+        // Guardar información de pago
+        $this->save_payment_info_modern($order);
+        
+        // Guardar timestamp de procesamiento
+        $order->update_meta_data('_wvp_processed_at', current_time('mysql'));
+        $order->save();
+        
+        // Log de guardado
+        error_log("WVP Order Metadata: Metadatos venezolanos guardados para pedido #{$order_id}");
+    }
+    
+    /**
+     * Guardar tasa BCV en el pedido (método obsoleto)
      * 
      * @param int $order_id ID del pedido
      */
@@ -96,7 +126,27 @@ class WVP_Order_Metadata {
     }
     
     /**
-     * Guardar información de IGTF en el pedido
+     * Guardar tasa BCV usando método moderno (compatible con WC 8.0+)
+     * 
+     * @param WC_Order $order Pedido
+     */
+    private function save_bcv_rate_modern($order) {
+        $bcv_rate = WVP_BCV_Integrator::get_rate();
+        
+        if ($bcv_rate && $bcv_rate > 0) {
+            $order->update_meta_data('_bcv_rate_at_purchase', $bcv_rate);
+            $order->update_meta_data('_bcv_rate_date', current_time('mysql'));
+            
+            // Guardar información adicional de la tasa
+            $rate_info = WVP_BCV_Integrator::get_rate_info();
+            if ($rate_info) {
+                $order->update_meta_data('_bcv_rate_info', $rate_info);
+            }
+        }
+    }
+    
+    /**
+     * Guardar información de IGTF en el pedido (método obsoleto)
      * 
      * @param int $order_id ID del pedido
      */
@@ -128,7 +178,33 @@ class WVP_Order_Metadata {
     }
     
     /**
-     * Guardar información de pago en el pedido
+     * Guardar información de IGTF usando método moderno (compatible con WC 8.0+)
+     * 
+     * @param WC_Order $order Pedido
+     */
+    private function save_igtf_info_modern($order) {
+        // Verificar si se debe aplicar IGTF
+        $payment_method = $order->get_payment_method();
+        $should_apply_igtf = $this->should_apply_igtf($payment_method);
+        
+        if ($should_apply_igtf) {
+            $order_total = $order->get_total('raw');
+            $igtf_rate = $this->get_igtf_rate();
+            $igtf_amount = ($order_total * $igtf_rate) / 100;
+            
+            $order->update_meta_data('_igtf_applied', 'yes');
+            $order->update_meta_data('_igtf_rate', $igtf_rate);
+            $order->update_meta_data('_igtf_amount', $igtf_amount);
+            $order->update_meta_data('_igtf_calculated_at', current_time('mysql'));
+        } else {
+            $order->update_meta_data('_igtf_applied', 'no');
+            $order->update_meta_data('_igtf_rate', 0);
+            $order->update_meta_data('_igtf_amount', 0);
+        }
+    }
+    
+    /**
+     * Guardar información de pago en el pedido (método obsoleto)
      * 
      * @param int $order_id ID del pedido
      */
@@ -156,7 +232,29 @@ class WVP_Order_Metadata {
     }
     
     /**
-     * Guardar información específica de Zelle
+     * Guardar información de pago usando método moderno (compatible con WC 8.0+)
+     * 
+     * @param WC_Order $order Pedido
+     */
+    private function save_payment_info_modern($order) {
+        $payment_method = $order->get_payment_method();
+        
+        // Guardar método de pago
+        $order->update_meta_data('_wvp_payment_method', $payment_method);
+        
+        // Guardar información específica según el método de pago
+        switch ($payment_method) {
+            case 'wvp_zelle':
+                $this->save_zelle_info_modern($order);
+                break;
+            case 'wvp_pago_movil':
+                $this->save_pago_movil_info_modern($order);
+                break;
+        }
+    }
+    
+    /**
+     * Guardar información específica de Zelle (método obsoleto)
      * 
      * @param int $order_id ID del pedido
      */
@@ -176,7 +274,27 @@ class WVP_Order_Metadata {
     }
     
     /**
-     * Guardar información específica de Pago Móvil
+     * Guardar información específica de Zelle usando método moderno (compatible con WC 8.0+)
+     * 
+     * @param WC_Order $order Pedido
+     */
+    private function save_zelle_info_modern($order) {
+        $confirmation_number = sanitize_text_field($_POST['wvp_zelle_confirmation_number'] ?? '');
+        
+        if (!empty($confirmation_number)) {
+            $order->update_meta_data('_payment_reference', $confirmation_number);
+            $order->update_meta_data('_zelle_confirmation', $confirmation_number);
+        }
+        
+        // Guardar configuración de Zelle
+        $zelle_settings = get_option('woocommerce_wvp_zelle_settings', array());
+        if (!empty($zelle_settings['zelle_email'])) {
+            $order->update_meta_data('_zelle_email', $zelle_settings['zelle_email']);
+        }
+    }
+    
+    /**
+     * Guardar información específica de Pago Móvil (método obsoleto)
      * 
      * @param int $order_id ID del pedido
      */
@@ -210,6 +328,44 @@ class WVP_Order_Metadata {
             if ($ves_total) {
                 update_post_meta($order_id, '_total_ves', $ves_total);
                 update_post_meta($order_id, '_total_ves_formatted', WVP_BCV_Integrator::format_ves_price($ves_total));
+            }
+        }
+    }
+    
+    /**
+     * Guardar información específica de Pago Móvil usando método moderno (compatible con WC 8.0+)
+     * 
+     * @param WC_Order $order Pedido
+     */
+    private function save_pago_movil_info_modern($order) {
+        $confirmation_number = sanitize_text_field($_POST['wvp_pago_movil_confirmation_number'] ?? '');
+        
+        if (!empty($confirmation_number)) {
+            $order->update_meta_data('_payment_reference', $confirmation_number);
+            $order->update_meta_data('_pago_movil_confirmation', $confirmation_number);
+        }
+        
+        // Guardar configuración de Pago Móvil
+        $pago_movil_settings = get_option('woocommerce_wvp_pago_movil_settings', array());
+        if (!empty($pago_movil_settings['bank_name'])) {
+            $order->update_meta_data('_bank_name', $pago_movil_settings['bank_name']);
+        }
+        if (!empty($pago_movil_settings['bank_ci'])) {
+            $order->update_meta_data('_bank_ci', $pago_movil_settings['bank_ci']);
+        }
+        if (!empty($pago_movil_settings['bank_phone'])) {
+            $order->update_meta_data('_bank_phone', $pago_movil_settings['bank_phone']);
+        }
+        
+        // Guardar total en bolívares
+        $bcv_rate = WVP_BCV_Integrator::get_rate();
+        if ($bcv_rate && $bcv_rate > 0) {
+            $order_total = $order->get_total('raw');
+            $ves_total = WVP_BCV_Integrator::convert_to_ves($order_total, $bcv_rate);
+            
+            if ($ves_total) {
+                $order->update_meta_data('_total_ves', $ves_total);
+                $order->update_meta_data('_total_ves_formatted', WVP_BCV_Integrator::format_ves_price($ves_total));
             }
         }
     }

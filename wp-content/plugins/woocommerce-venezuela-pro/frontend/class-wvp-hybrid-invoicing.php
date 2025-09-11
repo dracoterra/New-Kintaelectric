@@ -46,6 +46,9 @@ class WVP_Hybrid_Invoicing {
      * Inicializar hooks de WordPress
      */
     private function init_hooks() {
+        // Cargar CSS
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_styles'));
+        
         // Hooks para correos electrónicos
         add_filter("woocommerce_email_order_details", array($this, "modify_email_order_details"), 10, 4);
         add_filter("woocommerce_email_order_meta", array($this, "add_hybrid_invoicing_note"), 10, 4);
@@ -55,6 +58,26 @@ class WVP_Hybrid_Invoicing {
         
         // Hooks para páginas de pedido
         add_action("woocommerce_order_details_after_order_table", array($this, "add_hybrid_invoicing_note_frontend"), 10, 1);
+        
+        // Hook para modificar totales en el admin
+        add_action("woocommerce_admin_order_totals_after_total", array($this, "add_hybrid_invoicing_admin_note"), 10, 1);
+    }
+    
+    /**
+     * Cargar estilos CSS
+     */
+    public function enqueue_styles() {
+        // Solo cargar en páginas de pedidos
+        if (!is_order_received_page() && !is_view_order_page()) {
+            return;
+        }
+        
+        wp_enqueue_style(
+            'wvp-hybrid-invoicing',
+            WVP_PLUGIN_URL . 'assets/css/hybrid-invoicing.css',
+            array(),
+            WVP_VERSION
+        );
     }
     
     /**
@@ -63,6 +86,18 @@ class WVP_Hybrid_Invoicing {
     private function is_hybrid_invoicing_enabled() {
         $settings = get_option('wvp_settings', array());
         return isset($settings['enable_hybrid_invoicing']) && $settings['enable_hybrid_invoicing'] === 'yes';
+    }
+    
+    /**
+     * Formatear precio en VES
+     */
+    private function format_ves_price($ves_price) {
+        if (!$ves_price) {
+            return '';
+        }
+        
+        $formatted = number_format($ves_price, 2, ',', '.');
+        return 'Bs. ' . $formatted;
     }
     
     /**
@@ -195,6 +230,9 @@ class WVP_Hybrid_Invoicing {
         
         // Guardar la tasa para uso en los filtros
         $this->current_historical_rate = $historical_rate;
+        
+        // Añadir nota aclaratoria
+        $this->add_hybrid_invoicing_note($order, false, $plain_text, null);
     }
     
     /**
@@ -213,8 +251,8 @@ class WVP_Hybrid_Invoicing {
         if (isset($this->current_historical_rate)) {
             $amount = $item->get_subtotal();
             $ves_amount = $amount * $this->current_historical_rate;
-            $formatted_ves = WVP_BCV_Integrator::format_ves_price($ves_amount);
-            return $formatted_ves . ' Bs.';
+            $formatted_ves = $this->format_ves_price($ves_amount);
+            return $formatted_ves;
         }
         return $subtotal;
     }

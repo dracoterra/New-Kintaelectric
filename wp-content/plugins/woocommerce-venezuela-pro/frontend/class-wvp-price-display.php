@@ -44,6 +44,12 @@ class WVP_Price_Display {
         
         // Añadir estilos para los precios
         add_action("wp_enqueue_scripts", array($this, "enqueue_styles"));
+        
+        // Hook para mostrar precios en páginas de productos
+        add_action("woocommerce_single_product_summary", array($this, "display_price_with_conversion"), 10);
+        
+        // Hook para mostrar precios en listas de productos
+        add_action("woocommerce_after_shop_loop_item_title", array($this, "display_price_with_conversion"), 10);
     }
     
     /**
@@ -192,5 +198,49 @@ class WVP_Price_Display {
         );
         
         error_log('WVP DEBUG: Script encolado correctamente');
+    }
+    
+    /**
+     * Mostrar precio con conversión automática
+     */
+    public function display_price_with_conversion() {
+        global $product;
+        
+        if (!$product || !is_a($product, 'WC_Product')) {
+            return;
+        }
+        
+        $price = $product->get_price();
+        if (!$price) {
+            return;
+        }
+        
+        // Obtener tasa BCV
+        $rate = WVP_BCV_Integrator::get_rate();
+        if (!$rate || $rate <= 0) {
+            return;
+        }
+        
+        // Calcular precio en VES
+        $ves_price = $price * $rate;
+        
+        // Mostrar conversión
+        echo '<div class="wvp-price-conversion">';
+        echo '<small class="wvp-ves-reference">';
+        printf(__('Equivale a %s', 'wvp'), $this->format_ves_price($ves_price));
+        echo '</small>';
+        echo '</div>';
+    }
+    
+    /**
+     * Formatear precio en VES
+     */
+    private function format_ves_price($ves_price) {
+        if (!$ves_price) {
+            return '';
+        }
+        
+        $formatted = number_format($ves_price, 2, ',', '.');
+        return 'Bs. ' . $formatted;
     }
 }

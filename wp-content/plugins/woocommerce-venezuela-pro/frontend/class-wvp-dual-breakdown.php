@@ -39,6 +39,9 @@ class WVP_Dual_Breakdown {
      * Inicializar hooks de WordPress
      */
     private function init_hooks() {
+        // Cargar CSS
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_styles'));
+        
         // Hooks para el carrito
         add_filter("woocommerce_cart_item_price", array($this, "add_ves_reference_to_cart_item_price"), 10, 3);
         add_filter("woocommerce_cart_item_subtotal", array($this, "add_ves_reference_to_cart_item_subtotal"), 10, 3);
@@ -56,11 +59,62 @@ class WVP_Dual_Breakdown {
     }
     
     /**
+     * Cargar estilos CSS
+     */
+    public function enqueue_styles() {
+        // Solo cargar en páginas de WooCommerce
+        if (!is_woocommerce() && !is_cart() && !is_checkout()) {
+            return;
+        }
+        
+        wp_enqueue_style(
+            'wvp-dual-breakdown',
+            WVP_PLUGIN_URL . 'assets/css/dual-breakdown.css',
+            array(),
+            WVP_VERSION
+        );
+    }
+    
+    /**
      * Verificar si el desglose dual está activado
      */
     private function is_dual_breakdown_enabled() {
         $settings = get_option('wvp_settings', array());
         return isset($settings['enable_dual_breakdown']) && $settings['enable_dual_breakdown'] === 'yes';
+    }
+    
+    /**
+     * Obtener tasa BCV actual
+     */
+    private function get_bcv_rate() {
+        if (class_exists('WVP_BCV_Integrator')) {
+            return WVP_BCV_Integrator::get_rate();
+        }
+        return null;
+    }
+    
+    /**
+     * Convertir precio USD a VES
+     */
+    private function convert_to_ves($usd_price) {
+        $rate = $this->get_bcv_rate();
+        if (!$rate || $rate <= 0) {
+            return null;
+        }
+        
+        return $usd_price * $rate;
+    }
+    
+    /**
+     * Formatear precio en VES
+     */
+    private function format_ves_price($ves_price) {
+        if (!$ves_price) {
+            return '';
+        }
+        
+        $formatted = number_format($ves_price, 2, ',', '.');
+        return 'Bs. ' . $formatted;
     }
     
     /**
@@ -241,19 +295,22 @@ class WVP_Dual_Breakdown {
      */
     private function calculate_ves_reference($amount) {
         // Obtener la tasa de cambio
-        $rate = WVP_BCV_Integrator::get_rate();
-        if ($rate === null || $rate <= 0) {
+        $rate = $this->get_bcv_rate();
+        if (!$rate || $rate <= 0) {
             return '';
         }
         
         // Calcular el precio en bolívares
-        $ves_price = $amount * $rate;
+        $ves_price = $this->convert_to_ves($amount);
+        if (!$ves_price) {
+            return '';
+        }
         
         // Formatear el precio en bolívares
-        $formatted_ves = WVP_BCV_Integrator::format_ves_price($ves_price);
+        $formatted_ves = $this->format_ves_price($ves_price);
         
         // Obtener el formato de referencia
-        $format = $this->plugin ? $this->plugin->get_option("price_reference_format", "(Ref. %s Bs.)") : "(Ref. %s Bs.)";
+        $format = get_option('wvp_price_reference_format', '(Ref. %s)');
         
         // Crear la referencia en bolívares
         $ves_reference = sprintf($format, $formatted_ves);

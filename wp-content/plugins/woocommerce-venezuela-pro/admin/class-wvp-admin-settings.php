@@ -48,6 +48,12 @@ class WVP_Admin_Settings {
         // Cargar scripts y estilos
         add_action("admin_enqueue_scripts", array($this, "enqueue_admin_scripts"));
         
+        // Hook moderno para WooCommerce 8.0+
+        add_action("woocommerce_admin_order_data_after_billing_address", array($this, "display_venezuela_order_data"));
+        
+        // Hook para mostrar datos venezolanos en la API
+        add_filter("woocommerce_rest_prepare_shop_order_object", array($this, "add_venezuela_data_to_api"), 10, 3);
+        
         // Hook para asignar números de control automáticamente
         add_action("woocommerce_order_status_completed", array($this, "assign_control_number"));
         
@@ -1158,5 +1164,81 @@ class WVP_Admin_Settings {
             array(),
             WVP_VERSION
         );
+    }
+    
+    /**
+     * Mostrar datos venezolanos en la interfaz de administración (método moderno)
+     * 
+     * @param WC_Order $order Pedido
+     */
+    public function display_venezuela_order_data($order) {
+        if (!$order || !is_a($order, 'WC_Order')) {
+            return;
+        }
+        
+        echo '<div class="wvp-order-data">';
+        echo '<h3>' . __('Información Venezuela', 'wvp') . '</h3>';
+        
+        // Mostrar cédula/RIF
+        $cedula_rif = $order->get_meta('_billing_cedula_rif');
+        if ($cedula_rif) {
+            echo '<p><strong>' . __('Cédula/RIF:', 'wvp') . '</strong> ' . esc_html($cedula_rif) . '</p>';
+        }
+        
+        // Mostrar tasa BCV
+        $bcv_rate = $order->get_meta('_bcv_rate_at_purchase');
+        if ($bcv_rate) {
+            echo '<p><strong>' . __('Tasa BCV:', 'wvp') . '</strong> ' . number_format($bcv_rate, 2, ',', '.') . ' Bs./USD</p>';
+        }
+        
+        // Mostrar IGTF
+        $igtf_applied = $order->get_meta('_igtf_applied');
+        if ($igtf_applied === 'yes') {
+            $igtf_amount = $order->get_meta('_igtf_amount');
+            $igtf_rate = $order->get_meta('_igtf_rate');
+            echo '<p><strong>' . __('IGTF:', 'wvp') . '</strong> ' . wc_price($igtf_amount) . ' (' . $igtf_rate . '%)</p>';
+        }
+        
+        // Mostrar información de pago
+        $payment_method = $order->get_payment_method();
+        if (in_array($payment_method, ['wvp_zelle', 'wvp_pago_movil'])) {
+            $confirmation = $order->get_meta('_payment_reference');
+            if ($confirmation) {
+                echo '<p><strong>' . __('Número de Confirmación:', 'wvp') . '</strong> ' . esc_html($confirmation) . '</p>';
+            }
+        }
+        
+        echo '</div>';
+    }
+    
+    /**
+     * Añadir datos venezolanos a la API de WooCommerce
+     * 
+     * @param WP_REST_Response $response Respuesta de la API
+     * @param WC_Order $order Pedido
+     * @param WP_REST_Request $request Request de la API
+     * @return WP_REST_Response
+     */
+    public function add_venezuela_data_to_api($response, $order, $request) {
+        if (!$order || !is_a($order, 'WC_Order')) {
+            return $response;
+        }
+        
+        $data = $response->get_data();
+        
+        // Añadir datos venezolanos
+        $data['venezuela_data'] = array(
+            'cedula_rif' => $order->get_meta('_billing_cedula_rif'),
+            'bcv_rate' => $order->get_meta('_bcv_rate_at_purchase'),
+            'igtf_applied' => $order->get_meta('_igtf_applied'),
+            'igtf_amount' => $order->get_meta('_igtf_amount'),
+            'igtf_rate' => $order->get_meta('_igtf_rate'),
+            'payment_reference' => $order->get_meta('_payment_reference'),
+            'total_ves' => $order->get_meta('_total_ves'),
+            'total_ves_formatted' => $order->get_meta('_total_ves_formatted')
+        );
+        
+        $response->set_data($data);
+        return $response;
     }
 }

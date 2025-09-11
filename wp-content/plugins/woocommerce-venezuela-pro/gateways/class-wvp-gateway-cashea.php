@@ -65,7 +65,7 @@ class WVP_Gateway_Cashea extends WC_Payment_Gateway {
      * Definir campos de configuración
      */
     public function init_form_fields() {
-        // Obtener estados de pedido de WooCommerce
+        // Obtener estados de pedido de WooCommerce (compatible con WC 8.0+)
         $order_statuses = wc_get_order_statuses();
         
         $this->form_fields = array(
@@ -155,99 +155,231 @@ class WVP_Gateway_Cashea extends WC_Payment_Gateway {
     }
     
     /**
+     * Verificar si la pasarela está disponible
+     */
+    public function is_available() {
+        if (!$this->enabled) {
+            return false;
+        }
+        
+        $cart_total = floatval(WC()->cart->get_total('raw'));
+        
+        // Verificar monto mínimo
+        if ($this->min_amount && $cart_total < floatval($this->min_amount)) {
+            return false;
+        }
+        
+        // Verificar monto máximo
+        if ($this->max_amount && $cart_total > floatval($this->max_amount)) {
+            return false;
+        }
+        
+        // Verificar que la API key esté configurada
+        $api_key = ($this->environment === "production") ? $this->api_key_production : $this->api_key_sandbox;
+        if (empty($api_key)) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Validar campos de pago
+     */
+    public function validate_fields() {
+        // 1. Verificar nonce CSRF
+        if (!WVP_Security_Validator::validate_nonce($_POST['woocommerce-process-checkout-nonce'] ?? '', 'woocommerce-process_checkout')) {
+            wc_add_notice(__("Error de seguridad. Intente nuevamente.", "wvp"), "error");
+            WVP_Security_Validator::log_security_event("CSRF validation failed in Cashea gateway");
+            return false;
+        }
+        
+        // 2. Verificar permisos del usuario
+        if (!WVP_Security_Validator::validate_user_permissions()) {
+            wc_add_notice(__("No tiene permisos para realizar esta acción.", "wvp"), "error");
+            WVP_Security_Validator::log_security_event("User permission validation failed in Cashea gateway");
+            return false;
+        }
+        
+        // 3. Verificar rate limiting
+        if (!WVP_Rate_Limiter::check_rate_limit(get_current_user_id(), 'payment_attempt')) {
+            wc_add_notice(__("Demasiados intentos de pago. Intente más tarde.", "wvp"), "error");
+            return false;
+        }
+        
+        // 4. Validar datos del cliente
+        $billing_email = WVP_Security_Validator::sanitize_input($_POST['billing_email'] ?? '', 'email');
+        if (!WVP_Security_Validator::validate_email($billing_email)) {
+            wc_add_notice(__("Email de facturación inválido.", "wvp"), "error");
+            return false;
+        }
+        
+        $billing_phone = WVP_Security_Validator::sanitize_input($_POST['billing_phone'] ?? '');
+        if (!WVP_Security_Validator::validate_venezuelan_phone($billing_phone)) {
+            wc_add_notice(__("Teléfono de facturación inválido.", "wvp"), "error");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
      * Procesar pago
      * 
      * @param int $order_id ID del pedido
      * @return array Resultado del pago
      */
     public function process_payment($order_id) {
-        $order = wc_get_order($order_id);
-        
-        if (!$order) {
-            $this->log_debug("Error: Pedido no encontrado - ID: " . $order_id);
-            return array(
-                "result" => "failure",
-                "messages" => __("Pedido no encontrado", "wvp")
-            );
-        }
-        
-        // Obtener API key según el entorno
-        $api_key = ($this->environment === "production") ? $this->api_key_production : $this->api_key_sandbox;
-        
-        // Verificar credenciales
-        if (empty($api_key)) {
-            $this->log_debug("Error: API Key no configurada para el entorno: " . $this->environment);
-            wc_add_notice(__("Error de configuración: API Key de Cashea no configurada", "wvp"), "error");
-            return array(
-                "result" => "failure"
-            );
-        }
-        
-        // Preparar datos del pedido para Cashea
-        $order_data = array(
-            "order_id" => $order_id,
-            "amount" => $order->get_total(),
-            "currency" => $order->get_currency(),
-            "customer" => array(
-                "name" => $order->get_billing_first_name() . " " . $order->get_billing_last_name(),
-                "email" => $order->get_billing_email(),
-                "phone" => $order->get_billing_phone(),
-                "document" => $order->get_meta('_cedula_rif') // Cédula/RIF del cliente
-            ),
-            "billing_address" => array(
-                "address_1" => $order->get_billing_address_1(),
-                "address_2" => $order->get_billing_address_2(),
-                "city" => $order->get_billing_city(),
-                "state" => $order->get_billing_state(),
-                "postcode" => $order->get_billing_postcode(),
-                "country" => $order->get_billing_country()
-            ),
-            "shipping_address" => array(
-                "address_1" => $order->get_shipping_address_1(),
-                "address_2" => $order->get_shipping_address_2(),
-                "city" => $order->get_shipping_city(),
-                "state" => $order->get_shipping_state(),
-                "postcode" => $order->get_shipping_postcode(),
-                "country" => $order->get_shipping_country()
-            ),
-            "items" => $this->get_order_items($order),
-            "return_url" => $this->get_return_url($order),
-            "cancel_url" => wc_get_checkout_url(),
-            "webhook_url" => $this->webhook_url,
-            "metadata" => array(
-                "woocommerce_order_id" => $order_id,
-                "environment" => $this->environment
-            )
-        );
-        
-        $this->log_debug("Creando transacción en Cashea", $order_data);
-        
-        // Crear transacción en Cashea
-        $cashea_response = $this->create_cashea_transaction($order_data, $api_key);
-        
-        if ($cashea_response && isset($cashea_response['success']) && $cashea_response['success']) {
-            // Guardar datos de la transacción
-            $order->update_meta_data("_cashea_transaction_id", $cashea_response['transaction_id']);
-            $order->update_meta_data("_cashea_checkout_url", $cashea_response['checkout_url']);
-            $order->update_meta_data("_cashea_environment", $this->environment);
-            $order->save();
+        try {
+            // 1. Verificar permisos del usuario
+            if (!WVP_Security_Validator::validate_user_permissions()) {
+                wc_add_notice(__("No tiene permisos para realizar esta acción.", "wvp"), "error");
+                return array("result" => "failure");
+            }
             
-            $this->log_debug("Transacción creada exitosamente", $cashea_response);
+            // 2. Obtener y validar pedido
+            $order = wc_get_order($order_id);
+            if (!WVP_Security_Validator::validate_order_status($order)) {
+                wc_add_notice(__("Este pedido ya fue procesado o no existe.", "wvp"), "error");
+                return array("result" => "failure");
+            }
             
-            // Redirigir a Cashea
-            return array(
-                "result" => "success",
-                "redirect" => $cashea_response['checkout_url']
+            // 3. Verificar que el pedido pertenece al usuario
+            if (!WVP_Security_Validator::validate_order_ownership($order)) {
+                wc_add_notice(__("No tiene permisos para procesar este pedido.", "wvp"), "error");
+                return array("result" => "failure");
+            }
+            
+            // 4. Verificar rate limiting
+            if (!WVP_Rate_Limiter::check_rate_limit(get_current_user_id(), 'payment_attempt')) {
+                wc_add_notice(__("Demasiados intentos de pago. Intente más tarde.", "wvp"), "error");
+                return array("result" => "failure");
+            }
+            
+            // 5. Validar campos
+            if (!$this->validate_fields()) {
+                return array("result" => "failure");
+            }
+            
+            if (!$order) {
+                $this->log_debug("Error: Pedido no encontrado - ID: " . $order_id);
+                return array(
+                    "result" => "failure",
+                    "messages" => __("Pedido no encontrado", "wvp")
+                );
+            }
+        
+            // 6. Obtener API key según el entorno
+            $api_key = ($this->environment === "production") ? $this->api_key_production : $this->api_key_sandbox;
+            
+            // 7. Verificar credenciales
+            if (empty($api_key)) {
+                $this->log_debug("Error: API Key no configurada para el entorno: " . $this->environment);
+                wc_add_notice(__("Error de configuración: API Key de Cashea no configurada", "wvp"), "error");
+                return array("result" => "failure");
+            }
+        
+            // 8. Preparar datos del pedido para Cashea
+            $order_data = array(
+                "order_id" => $order_id,
+                "amount" => $order->get_total(),
+                "currency" => $order->get_currency(),
+                "customer" => array(
+                    "name" => $order->get_billing_first_name() . " " . $order->get_billing_last_name(),
+                    "email" => $order->get_billing_email(),
+                    "phone" => $order->get_billing_phone(),
+                    "document" => $order->get_meta('_cedula_rif') // Cédula/RIF del cliente
+                ),
+                "billing_address" => array(
+                    "address_1" => $order->get_billing_address_1(),
+                    "address_2" => $order->get_billing_address_2(),
+                    "city" => $order->get_billing_city(),
+                    "state" => $order->get_billing_state(),
+                    "postcode" => $order->get_billing_postcode(),
+                    "country" => $order->get_billing_country()
+                ),
+                "shipping_address" => array(
+                    "address_1" => $order->get_shipping_address_1(),
+                    "address_2" => $order->get_shipping_address_2(),
+                    "city" => $order->get_shipping_city(),
+                    "state" => $order->get_shipping_state(),
+                    "postcode" => $order->get_shipping_postcode(),
+                    "country" => $order->get_shipping_country()
+                ),
+                "items" => $this->get_order_items($order),
+                "return_url" => $this->get_return_url($order),
+                "cancel_url" => wc_get_checkout_url(),
+                "webhook_url" => $this->webhook_url,
+                "metadata" => array(
+                    "woocommerce_order_id" => $order_id,
+                    "environment" => $this->environment
+                )
             );
-        } else {
-            $error_message = isset($cashea_response['message']) ? $cashea_response['message'] : __("Error al procesar el pago con Cashea", "wvp");
-            $this->log_debug("Error al crear transacción", $cashea_response);
             
-            wc_add_notice($error_message, "error");
+            $this->log_debug("Creando transacción en Cashea", $order_data);
             
-            return array(
-                "result" => "failure"
-            );
+            // 9. Crear transacción en Cashea
+            $cashea_response = $this->create_cashea_transaction($order_data, $api_key);
+            
+            if ($cashea_response && isset($cashea_response['success']) && $cashea_response['success']) {
+                // 10. Guardar datos de la transacción
+                $order->update_meta_data("_cashea_transaction_id", $cashea_response['transaction_id']);
+                $order->update_meta_data("_cashea_checkout_url", $cashea_response['checkout_url']);
+                $order->update_meta_data("_cashea_environment", $this->environment);
+                $order->update_meta_data("_payment_gateway_id", $this->id);
+                
+                // 11. Guardar tasa BCV utilizada
+                $rate = WVP_BCV_Integrator::get_rate();
+                if ($rate !== null) {
+                    $order->update_meta_data("_bcv_rate_at_purchase", $rate);
+                }
+                
+                $order->save();
+                
+                // 12. Limpiar rate limit en caso de éxito
+                WVP_Rate_Limiter::clear_rate_limit(get_current_user_id(), 'payment_attempt');
+                
+                // 13. Log de éxito
+                WVP_Security_Validator::log_security_event("Payment processed successfully", array(
+                    'order_id' => $order_id,
+                    'gateway' => 'cashea',
+                    'user_id' => get_current_user_id(),
+                    'transaction_id' => $cashea_response['transaction_id']
+                ));
+                
+                $this->log_debug("Transacción creada exitosamente", $cashea_response);
+                
+                // 14. Redirigir a Cashea
+                return array(
+                    "result" => "success",
+                    "redirect" => $cashea_response['checkout_url']
+                );
+            } else {
+                $error_message = isset($cashea_response['message']) ? $cashea_response['message'] : __("Error al procesar el pago con Cashea", "wvp");
+                $this->log_debug("Error al crear transacción", $cashea_response);
+                
+                // Log del error
+                WVP_Security_Validator::log_security_event("Payment processing error: " . $error_message, array(
+                    'order_id' => $order_id,
+                    'gateway' => 'cashea',
+                    'user_id' => get_current_user_id()
+                ));
+                
+                wc_add_notice($error_message, "error");
+                
+                return array("result" => "failure");
+            }
+            
+        } catch (Exception $e) {
+            // Log del error
+            WVP_Security_Validator::log_security_event("Payment processing error: " . $e->getMessage(), array(
+                'order_id' => $order_id,
+                'gateway' => 'cashea',
+                'user_id' => get_current_user_id()
+            ));
+            
+            wc_add_notice(__("Error al procesar el pago. Intente nuevamente.", "wvp"), "error");
+            return array("result" => "failure");
         }
     }
     

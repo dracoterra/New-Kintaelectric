@@ -46,8 +46,8 @@ class WVP_Checkout {
         add_action("woocommerce_checkout_create_order", array($this, "save_cedula_rif_field"));
         add_action("woocommerce_admin_order_data_after_billing_address", array($this, "display_cedula_rif_in_admin"));
         
-        // Hook estándar para guardar campos personalizados (funciona con Blocks y clásico)
-        add_action("woocommerce_checkout_update_order_meta", array($this, "save_cedula_rif_field"));
+        // Hook moderno para guardar campos personalizados (compatible con WooCommerce 8.0+)
+        add_action("woocommerce_checkout_create_order", array($this, "save_cedula_rif_field_modern"));
         
         // Hook específico para WooCommerce Blocks
         add_action("woocommerce_store_api_checkout_update_order_meta", array($this, "save_cedula_rif_field_blocks"), 10, 1);
@@ -449,6 +449,44 @@ class WVP_Checkout {
         }
         
         error_log('WVP Debug: ===== FIN GUARDAR CÉDULA/RIF =====');
+    }
+    
+    /**
+     * Guardar campo de cédula/RIF usando método moderno (compatible con WC 8.0+)
+     * 
+     * @param WC_Order $order Pedido
+     */
+    public function save_cedula_rif_field_modern($order) {
+        // Verificar que el pedido existe
+        if (!$order || !is_a($order, 'WC_Order')) {
+            return;
+        }
+        
+        // Obtener datos del request actual
+        $cedula_rif = '';
+        
+        // 1. Buscar en $_POST (checkout clásico)
+        if (isset($_POST['billing_cedula_rif'])) {
+            $cedula_rif = sanitize_text_field($_POST['billing_cedula_rif']);
+        } elseif (isset($_POST['cedula_rif'])) {
+            $cedula_rif = sanitize_text_field($_POST['cedula_rif']);
+        }
+        
+        // 2. Buscar en datos del pedido (WooCommerce Blocks)
+        if (empty($cedula_rif)) {
+            $cedula_rif = $order->get_meta('billing_cedula_rif');
+        }
+        
+        // 3. Buscar en datos de facturación
+        if (empty($cedula_rif)) {
+            $cedula_rif = $order->get_meta('_billing_cedula_rif');
+        }
+        
+        // Guardar si existe
+        if (!empty($cedula_rif)) {
+            $order->update_meta_data('_billing_cedula_rif', $cedula_rif);
+            $order->save();
+        }
     }
     
     /**
