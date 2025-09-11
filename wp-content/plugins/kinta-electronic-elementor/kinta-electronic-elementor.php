@@ -1,20 +1,12 @@
 <?php
 /**
- * Plugin Name: KintaElectronic Elementor
- * Plugin URI: https://kinta-electric.com
- * Description: Clean plugin for Kinta Electric project. Widgets removed - ready for new development.
- * Version: 1.0.2
+ * Plugin Name: Kinta Electric Elementor
+ * Plugin URI: https://kintaelectric.com
+ * Description: Widget de Elementor para el slider de Kinta Electric
+ * Version: 1.0.0
  * Author: Kinta Electric
- * Author URI: https://kinta-electric.com
- * Text Domain: kinta-electronic-elementor
+ * Text Domain: kinta-electric-elementor
  * Domain Path: /languages
- * Requires at least: 5.0
- * Tested up to: 6.4
- * Requires PHP: 7.4
- * License: GPL v2 or later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * WC requires at least: 8.0
- * WC tested up to: 10.0
  */
 
 // Prevent direct access
@@ -24,152 +16,154 @@ if (!defined('ABSPATH')) {
 
 // Define plugin constants
 define('KEE_PLUGIN_FILE', __FILE__);
-define('KEE_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('KEE_PLUGIN_PATH', plugin_dir_path(__FILE__));
 define('KEE_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('KEE_PLUGIN_VERSION', '1.0.2');
+define('KEE_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
 /**
- * Main KintaElectronic Elementor Plugin Class
+ * Main Plugin Class
  */
-class KintaElectronicElementor {
-
+class KintaElectricElementor {
+    
+    const VERSION = '1.0.0';
+    
     /**
-     * Plugin version
+     * Single instance of the class
      */
-    const VERSION = '1.0.2';
-
+    protected static $_instance = null;
+    
     /**
-     * Minimum WooCommerce version required
+     * Main Instance
      */
-    const MINIMUM_WOOCOMMERCE_VERSION = '8.0.0';
-
+    public static function instance() {
+        if (is_null(self::$_instance)) {
+            self::$_instance = new self();
+        }
+        return self::$_instance;
+    }
+    
     /**
      * Constructor
      */
     public function __construct() {
-        // Activation/deactivation hooks
-        register_activation_hook(__FILE__, array($this, 'activate'));
-        register_deactivation_hook(__FILE__, array($this, 'deactivate'));
-        
-        // Initialize plugin
-        add_action('plugins_loaded', array($this, 'init'));
-        
-        // Elementor hooks (commented out - no widgets needed)
-        // add_action('elementor/widgets/register', array($this, 'register_widgets'));
-        // add_action('elementor/elements/categories_registered', array($this, 'add_widget_categories'));
-        
-        // Scripts and styles
+        add_action('init', array($this, 'init'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
-        
-        // Shortcode removed - no widgets needed
+        add_action('elementor/widgets/register', array($this, 'register_widgets'));
+        add_action('elementor/elements/categories_registered', array($this, 'add_widget_categories'));
     }
-
-    /**
-     * Activate plugin
-     */
-    public function activate() {
-        // Check minimum requirements
-        $this->check_requirements();
-        
-        // Create tables or options if needed
-        flush_rewrite_rules();
-    }
-
-    /**
-     * Deactivate plugin
-     */
-    public function deactivate() {
-        flush_rewrite_rules();
-    }
-
+    
     /**
      * Initialize plugin
      */
     public function init() {
-        // Check minimum requirements
-        if (!$this->check_requirements()) {
-            return;
-        }
-
         // Load text domain
-        load_plugin_textdomain('kinta-electronic-elementor', false, dirname(plugin_basename(__FILE__)) . '/languages');
-        
-        // Load development tools in debug mode
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            require_once KEE_PLUGIN_DIR . 'dev-tools.php';
-        }
+        load_plugin_textdomain('kinta-electric-elementor', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
-
+    
     /**
-     * Check minimum requirements
+     * Register Elementor widgets
      */
-    private function check_requirements() {
-        // Check WooCommerce version if active
-        if (class_exists('WooCommerce')) {
-            if (!version_compare(WC()->version, self::MINIMUM_WOOCOMMERCE_VERSION, '>=')) {
-                add_action('admin_notices', array($this, 'admin_notice_minimum_woocommerce_version'));
-                return false;
-            }
-        }
-
-        return true;
+    public function register_widgets() {
+        require_once KEE_PLUGIN_PATH . 'widgets/home-slider-kintaelectic-widget.php';
+        
+        \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Home_Slider_Kintaelectic_Widget());
     }
-
-    // Widget methods removed - no widgets needed for this project
-
+    
+    /**
+     * Add widget categories
+     */
+    public function add_widget_categories($elements_manager) {
+        $elements_manager->add_category(
+            'kinta-electric',
+            [
+                'title' => __('Kinta Electric', 'kinta-electric-elementor'),
+                'icon' => 'fa fa-bolt',
+            ]
+        );
+    }
+    
     /**
      * Enqueue scripts and styles
      */
     public function enqueue_scripts() {
-        // Only load on frontend, not in admin
-        if (is_admin()) {
-            return;
-        }
-
+        $this->enqueue_styles();
+        $this->enqueue_scripts_js();
+    }
+    
+    /**
+     * Enqueue CSS files
+     */
+    private function enqueue_styles() {
+        // Animate.css
+        wp_enqueue_style(
+            'animate-css',
+            'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css',
+            array(),
+            '4.1.1'
+        );
+        
+        // Font Awesome
+        wp_enqueue_style(
+            'font-awesome',
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
+            array(),
+            '6.0.0'
+        );
+        
+        // Owl Carousel CSS
+        wp_enqueue_style(
+            'owl-carousel-css',
+            'https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css',
+            array(),
+            '2.3.4'
+        );
+        
+        wp_enqueue_style(
+            'owl-carousel-theme-css',
+            'https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css',
+            array('owl-carousel-css'),
+            '2.3.4'
+        );
+        
         // Main plugin CSS
         wp_enqueue_style(
             'kinta-electronic-elementor-style',
             KEE_PLUGIN_URL . 'assets/css/kinta-electronic-elementor.css',
-            array(),
+            array('owl-carousel-css', 'animate-css', 'font-awesome'),
             self::VERSION
         );
-
-        // Main plugin JavaScript
+    }
+    
+    /**
+     * Enqueue JavaScript files
+     */
+    private function enqueue_scripts_js() {
+        // Owl Carousel JS
+        wp_enqueue_script(
+            'owl-carousel-js',
+            'https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js',
+            array('jquery'),
+            '2.3.4',
+            true
+        );
+        
+        // Main plugin JS
         wp_enqueue_script(
             'kinta-electronic-elementor-script',
             KEE_PLUGIN_URL . 'assets/js/kinta-electronic-elementor.js',
-            array('jquery'),
+            array('jquery', 'owl-carousel-js'),
             self::VERSION,
             true
         );
-
-        // Localize script for AJAX
-        wp_localize_script('kinta-electronic-elementor-script', 'kee_ajax', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('kee_nonce'),
-        ));
-    }
-
-    // Shortcode and HTML methods removed - no widgets needed
-
-    // Elementor admin notices removed - no Elementor dependency
-
-    /**
-     * Admin notice for minimum WooCommerce version
-     */
-    public function admin_notice_minimum_woocommerce_version() {
-        if (isset($_GET['activate'])) unset($_GET['activate']);
-
-        $message = sprintf(
-            esc_html__('"%1$s" requires "%2$s" version %3$s or greater.', 'kinta-electronic-elementor'),
-            '<strong>' . esc_html__('KintaElectronic Elementor', 'kinta-electronic-elementor') . '</strong>',
-            '<strong>' . esc_html__('WooCommerce', 'kinta-electronic-elementor') . '</strong>',
-            self::MINIMUM_WOOCOMMERCE_VERSION
-        );
-
-        printf('<div class="notice notice-warning is-dismissible"><p>%1$s</p></div>', $message);
     }
 }
 
-// Initialize the plugin
-new KintaElectronicElementor();
+/**
+ * Initialize the plugin
+ */
+function kinta_electric_elementor() {
+    return KintaElectricElementor::instance();
+}
+
+// Start the plugin
+kinta_electric_elementor();
