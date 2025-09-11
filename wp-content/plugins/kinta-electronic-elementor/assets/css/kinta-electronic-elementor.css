@@ -520,3 +520,68 @@
         min-height: 12rem !important;
     }
 }
+
+/* ==========================================================================
+   Paginación - Sobrescribir estilos del theme original
+   ========================================================================== */
+.u-slick__pagination {
+    position: absolute !important;
+    bottom: 2rem !important;
+    right: 2rem !important;
+    left: auto !important;
+    width: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+    z-index: 10 !important;
+}
+
+.u-slick__pagination:not(.u-slick__pagination--block) {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    pointer-events: auto !important;
+}
+
+.u-slick__pagination--long {
+    justify-content: flex-end !important;
+    margin-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Estilos para los puntos de paginación */
+.u-slick__pagination li {
+    display: inline-block !important;
+    margin: 0 0.25rem !important;
+    cursor: pointer !important;
+}
+
+.u-slick__pagination li span {
+    display: inline-block !important;
+    width: 12px !important;
+    height: 12px !important;
+    background-color: rgba(255, 255, 255, 0.5) !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+}
+
+.u-slick__pagination li.slick-active span,
+.u-slick__pagination li.active span {
+    background-color: #ccc634 !important;
+    transform: scale(1.2) !important;
+}
+
+/* Ocultar la paginación original de Owl Carousel */
+.owl-dots {
+    display: none !important;
+}
+
+/* Ajustes responsive para paginación */
+@media (max-width: 767.98px) {
+    .u-slick__pagination {
+        bottom: 1rem !important;
+        right: 1rem !important;
+    }
+}
