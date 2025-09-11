@@ -89,7 +89,6 @@
                 // Inicializar el slider
                 try {
                     $slider.owlCarousel(sliderConfig);
-                    console.log('Slider inicializado correctamente');
                 } catch (error) {
                     console.error('Error inicializando slider:', error);
                 }
