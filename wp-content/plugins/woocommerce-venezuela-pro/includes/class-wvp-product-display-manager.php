@@ -227,7 +227,7 @@ class WVP_Product_Display_Manager {
         return sprintf(
             '<div class="wvp-product-price-container %s">
                 <div class="wvp-price-display">
-                    <span class="wvp-price-usd">%s</span>
+                    <span class="wvp-price-usd" style="display: block;">%s</span>
                     <span class="wvp-price-ves" style="display: none;">%s</span>
                 </div>
                 <div class="wvp-currency-switcher" data-price-usd="%s" data-price-ves="%s">
@@ -256,7 +256,7 @@ class WVP_Product_Display_Manager {
         return sprintf(
             '<div class="wvp-product-price-container %s">
                 <div class="wvp-price-display">
-                    <span class="wvp-price-usd">%s</span>
+                    <span class="wvp-price-usd" style="display: block;">%s</span>
                     <span class="wvp-price-ves" style="display: none;">%s</span>
                 </div>
                 <div class="wvp-currency-switcher" data-price-usd="%s" data-price-ves="%s">
@@ -289,7 +289,7 @@ class WVP_Product_Display_Manager {
         return sprintf(
             '<div class="wvp-product-price-container %s">
                 <div class="wvp-price-display">
-                    <span class="wvp-price-usd">%s</span>
+                    <span class="wvp-price-usd" style="display: block;">%s</span>
                     <span class="wvp-price-ves" style="display: none;">%s</span>
                 </div>
                 <div class="wvp-currency-switcher" data-price-usd="%s" data-price-ves="%s">

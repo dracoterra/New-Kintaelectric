@@ -312,7 +312,8 @@ class WooCommerce_Venezuela_Pro {
                 if (class_exists('WVP_WhatsApp_Notifications')) {
                     $this->whatsapp_notifications = new WVP_WhatsApp_Notifications();
                 }
-                if (class_exists('WVP_Config_Manager')) {
+                // WVP_Config_Manager deshabilitado - usando nuevo sistema de administración
+                if (false && class_exists('WVP_Config_Manager')) {
                     new WVP_Config_Manager();
                 }
             }

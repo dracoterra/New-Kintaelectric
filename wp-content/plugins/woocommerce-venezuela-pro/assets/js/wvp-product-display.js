@@ -70,18 +70,29 @@
             const priceVes = $switcher.data('price-ves');
             
             if (!currency || !priceUsd || !priceVes) {
+                console.warn('WVP: No se pudo cambiar moneda - datos faltantes');
                 return;
             }
+            
+            // Prevenir múltiples clics
+            if ($button.hasClass('wvp-switching')) {
+                return;
+            }
+            
+            $button.addClass('wvp-switching');
             
             // Actualizar botones activos
             $switcher.find('button, .wvp-currency-option').removeClass('active');
             $button.addClass('active');
             
-            // Mostrar/ocultar precios
+            // Mostrar/ocultar precios con animación suave
             this.updatePriceDisplay($container, currency, priceUsd, priceVes);
             
             // Guardar preferencia
             this.saveUserPreference(currency);
+            
+            // Actualizar todos los switchers en la página
+            this.updateAllSwitchers(currency);
             
             // Animación
             if (this.animations) {
@@ -95,6 +106,11 @@
                 priceVes: priceVes,
                 container: $container
             });
+            
+            // Remover clase de switching
+            setTimeout(() => {
+                $button.removeClass('wvp-switching');
+            }, 300);
         }
         
         /**
@@ -106,14 +122,49 @@
             const $conversion = $container.find('.wvp-price-conversion');
             
             if (currency === 'usd') {
-                $priceUsd.show();
-                $priceVes.hide();
-                $conversion.show();
+                $priceVes.fadeOut(200, function() {
+                    $priceUsd.fadeIn(200);
+                });
+                $conversion.fadeIn(200);
             } else {
-                $priceUsd.hide();
-                $priceVes.show();
-                $conversion.hide();
+                $priceUsd.fadeOut(200, function() {
+                    $priceVes.fadeIn(200);
+                });
+                $conversion.fadeOut(200);
             }
+        }
+        
+        /**
+         * Actualizar todos los switchers en la página
+         */
+        updateAllSwitchers(currency) {
+            $('.wvp-currency-switcher').each(function() {
+                const $switcher = $(this);
+                const $container = $switcher.closest('.wvp-product-price-container');
+                const priceUsd = $switcher.data('price-usd');
+                const priceVes = $switcher.data('price-ves');
+                
+                if (priceUsd && priceVes) {
+                    // Actualizar botones
+                    $switcher.find('button, .wvp-currency-option').removeClass('active');
+                    $switcher.find(`[data-currency="${currency}"]`).addClass('active');
+                    
+                    // Actualizar precios
+                    const $priceUsd = $container.find('.wvp-price-usd');
+                    const $priceVes = $container.find('.wvp-price-ves');
+                    const $conversion = $container.find('.wvp-price-conversion');
+                    
+                    if (currency === 'usd') {
+                        $priceVes.hide();
+                        $priceUsd.show();
+                        $conversion.show();
+                    } else if (currency === 'ves') {
+                        $priceUsd.hide();
+                        $priceVes.show();
+                        $conversion.hide();
+                    }
+                }
+            });
         }
         
         /**

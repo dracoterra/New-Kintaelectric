@@ -131,6 +131,15 @@ class WVP_Admin_Restructured {
         
         add_submenu_page(
             'wvp-dashboard',
+            __('Apariencia', 'wvp'),
+            __('Apariencia', 'wvp'),
+            'manage_woocommerce',
+            'wvp-appearance',
+            array($this, 'display_appearance')
+        );
+        
+        add_submenu_page(
+            'wvp-dashboard',
             __('Ayuda', 'wvp'),
             __('Ayuda', 'wvp'),
             'manage_woocommerce',
@@ -149,6 +158,19 @@ class WVP_Admin_Restructured {
         register_setting('wvp_fiscal_settings', 'wvp_fiscal_settings');
         register_setting('wvp_shipping_settings', 'wvp_shipping_settings');
         register_setting('wvp_notification_settings', 'wvp_notification_settings');
+        register_setting('wvp_appearance_settings', 'wvp_display_style');
+        register_setting('wvp_appearance_settings', 'wvp_primary_color');
+        register_setting('wvp_appearance_settings', 'wvp_secondary_color');
+        register_setting('wvp_appearance_settings', 'wvp_success_color');
+        register_setting('wvp_appearance_settings', 'wvp_warning_color');
+        register_setting('wvp_appearance_settings', 'wvp_font_family');
+        register_setting('wvp_appearance_settings', 'wvp_font_size');
+        register_setting('wvp_appearance_settings', 'wvp_font_weight');
+        register_setting('wvp_appearance_settings', 'wvp_text_transform');
+        register_setting('wvp_appearance_settings', 'wvp_padding');
+        register_setting('wvp_appearance_settings', 'wvp_margin');
+        register_setting('wvp_appearance_settings', 'wvp_border_radius');
+        register_setting('wvp_appearance_settings', 'wvp_shadow');
     }
     
     /**
@@ -180,6 +202,14 @@ class WVP_Admin_Restructured {
      */
     public function display_fiscal() {
         $this->current_tab = 'fiscal';
+        $this->display_admin_page();
+    }
+    
+    /**
+     * Mostrar configuración de apariencia
+     */
+    public function display_appearance() {
+        $this->current_tab = 'appearance';
         $this->display_admin_page();
     }
     
@@ -279,6 +309,12 @@ class WVP_Admin_Restructured {
                             <?php _e('Monitoreo', 'wvp'); ?>
                         </a>
                     </li>
+                    <li class="wvp-nav-tab <?php echo $this->current_tab === 'appearance' ? 'active' : ''; ?>">
+                        <a href="<?php echo admin_url('admin.php?page=wvp-appearance'); ?>">
+                            <span class="dashicons dashicons-admin-appearance"></span>
+                            <?php _e('Apariencia', 'wvp'); ?>
+                        </a>
+                    </li>
                     <li class="wvp-nav-tab <?php echo $this->current_tab === 'help' ? 'active' : ''; ?>">
                         <a href="<?php echo admin_url('admin.php?page=wvp-help'); ?>">
                             <span class="dashicons dashicons-editor-help"></span>
@@ -319,12 +355,15 @@ class WVP_Admin_Restructured {
             case 'notifications':
                 $this->display_notifications_content();
                 break;
-            case 'monitoring':
-                $this->display_monitoring_content();
-                break;
-            case 'help':
-                $this->display_help_content();
-                break;
+                case 'monitoring':
+                    $this->display_monitoring_content();
+                    break;
+                case 'appearance':
+                    $this->display_appearance_content();
+                    break;
+                case 'help':
+                    $this->display_help_content();
+                    break;
         }
     }
     
@@ -685,6 +724,637 @@ class WVP_Admin_Restructured {
     }
     
     /**
+     * Mostrar contenido de apariencia
+     */
+    private function display_appearance_content() {
+        $current_style = get_option('wvp_display_style', 'minimal');
+        $available_styles = array(
+            'minimal' => 'Minimalista',
+            'modern' => 'Moderno',
+            'elegant' => 'Elegante',
+            'compact' => 'Compacto',
+            'vintage' => 'Vintage (Retro)',
+            'futuristic' => 'Futurista',
+            'advanced-minimal' => 'Minimalista Avanzado'
+        );
+        ?>
+        <div class="wvp-admin-content">
+            <h2><?php _e('Control de Apariencia', 'wvp'); ?></h2>
+            <p><?php _e('Personaliza la visualización de precios y conversiones en tu tienda.', 'wvp'); ?></p>
+            
+            <form method="post" action="options.php">
+                <?php settings_fields('wvp_appearance_settings'); ?>
+                
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php _e('Estilo de Visualización', 'wvp'); ?></th>
+                        <td>
+                            <select name="wvp_display_style" id="wvp_display_style">
+                                <?php foreach ($available_styles as $key => $label): ?>
+                                    <option value="<?php echo esc_attr($key); ?>" <?php selected($current_style, $key); ?>>
+                                        <?php echo esc_html($label); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p class="description"><?php _e('Selecciona el estilo de visualización de precios.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Temas de Color', 'wvp'); ?></th>
+                        <td>
+                            <div class="wvp-color-themes">
+                                <button type="button" class="wvp-theme-btn" data-theme="default">
+                                    <div class="wvp-theme-preview" style="background: linear-gradient(45deg, #007cba, #005a87);"></div>
+                                    <span>Azul Clásico</span>
+                                </button>
+                                <button type="button" class="wvp-theme-btn" data-theme="green">
+                                    <div class="wvp-theme-preview" style="background: linear-gradient(45deg, #28a745, #1e7e34);"></div>
+                                    <span>Verde Natural</span>
+                                </button>
+                                <button type="button" class="wvp-theme-btn" data-theme="purple">
+                                    <div class="wvp-theme-preview" style="background: linear-gradient(45deg, #6f42c1, #5a32a3);"></div>
+                                    <span>Púrpura Elegante</span>
+                                </button>
+                                <button type="button" class="wvp-theme-btn" data-theme="orange">
+                                    <div class="wvp-theme-preview" style="background: linear-gradient(45deg, #fd7e14, #e55100);"></div>
+                                    <span>Naranja Vibrante</span>
+                                </button>
+                                <button type="button" class="wvp-theme-btn" data-theme="red">
+                                    <div class="wvp-theme-preview" style="background: linear-gradient(45deg, #dc3545, #c82333);"></div>
+                                    <span>Rojo Intenso</span>
+                                </button>
+                                <button type="button" class="wvp-theme-btn" data-theme="dark">
+                                    <div class="wvp-theme-preview" style="background: linear-gradient(45deg, #343a40, #212529);"></div>
+                                    <span>Oscuro Profesional</span>
+                                </button>
+                            </div>
+                            <p class="description"><?php _e('Selecciona un tema de color predefinido o personaliza los colores manualmente.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Colores Personalizados', 'wvp'); ?></th>
+                        <td>
+                            <table class="wvp-color-settings">
+                                <tr>
+                                    <td>
+                                        <label for="wvp_primary_color"><?php _e('Color Primario', 'wvp'); ?></label>
+                                        <input type="color" id="wvp_primary_color" name="wvp_primary_color" 
+                                               value="<?php echo esc_attr(get_option('wvp_primary_color', '#007cba')); ?>">
+                                    </td>
+                                    <td>
+                                        <label for="wvp_secondary_color"><?php _e('Color Secundario', 'wvp'); ?></label>
+                                        <input type="color" id="wvp_secondary_color" name="wvp_secondary_color" 
+                                               value="<?php echo esc_attr(get_option('wvp_secondary_color', '#005a87')); ?>">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label for="wvp_success_color"><?php _e('Color de Éxito', 'wvp'); ?></label>
+                                        <input type="color" id="wvp_success_color" name="wvp_success_color" 
+                                               value="<?php echo esc_attr(get_option('wvp_success_color', '#28a745')); ?>">
+                                    </td>
+                                    <td>
+                                        <label for="wvp_warning_color"><?php _e('Color de Advertencia', 'wvp'); ?></label>
+                                        <input type="color" id="wvp_warning_color" name="wvp_warning_color" 
+                                               value="<?php echo esc_attr(get_option('wvp_warning_color', '#ffc107')); ?>">
+                                    </td>
+                                </tr>
+                            </table>
+                            <p class="description"><?php _e('Personaliza los colores del display de precios manualmente.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Configuración de Fuentes', 'wvp'); ?></th>
+                        <td>
+                            <table class="wvp-font-settings">
+                                <tr>
+                                    <td>
+                                        <label for="wvp_font_family"><?php _e('Familia de Fuente', 'wvp'); ?></label>
+                                        <select id="wvp_font_family" name="wvp_font_family">
+                                            <?php
+                                            $font_families = array(
+                                                'system' => 'Sistema (Recomendado)',
+                                                'arial' => 'Arial',
+                                                'helvetica' => 'Helvetica',
+                                                'georgia' => 'Georgia',
+                                                'times' => 'Times New Roman',
+                                                'verdana' => 'Verdana',
+                                                'tahoma' => 'Tahoma',
+                                                'trebuchet' => 'Trebuchet MS',
+                                                'courier' => 'Courier New',
+                                                'monospace' => 'Monospace'
+                                            );
+                                            $current_font = get_option('wvp_font_family', 'system');
+                                            foreach ($font_families as $value => $label) {
+                                                echo '<option value="' . esc_attr($value) . '" ' . selected($current_font, $value, false) . '>' . esc_html($label) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <label for="wvp_font_size"><?php _e('Tamaño de Fuente', 'wvp'); ?></label>
+                                        <select id="wvp_font_size" name="wvp_font_size">
+                                            <?php
+                                            $font_sizes = array(
+                                                'small' => 'Pequeño (12px)',
+                                                'medium' => 'Mediano (14px)',
+                                                'large' => 'Grande (16px)',
+                                                'xlarge' => 'Extra Grande (18px)',
+                                                'xxlarge' => 'Muy Grande (20px)'
+                                            );
+                                            $current_size = get_option('wvp_font_size', 'medium');
+                                            foreach ($font_sizes as $value => $label) {
+                                                echo '<option value="' . esc_attr($value) . '" ' . selected($current_size, $value, false) . '>' . esc_html($label) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label for="wvp_font_weight"><?php _e('Peso de Fuente', 'wvp'); ?></label>
+                                        <select id="wvp_font_weight" name="wvp_font_weight">
+                                            <?php
+                                            $font_weights = array(
+                                                '300' => 'Ligero (300)',
+                                                '400' => 'Normal (400)',
+                                                '500' => 'Medio (500)',
+                                                '600' => 'Semi-Bold (600)',
+                                                '700' => 'Bold (700)',
+                                                '800' => 'Extra Bold (800)'
+                                            );
+                                            $current_weight = get_option('wvp_font_weight', '400');
+                                            foreach ($font_weights as $value => $label) {
+                                                echo '<option value="' . esc_attr($value) . '" ' . selected($current_weight, $value, false) . '>' . esc_html($label) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <label for="wvp_text_transform"><?php _e('Transformación de Texto', 'wvp'); ?></label>
+                                        <select id="wvp_text_transform" name="wvp_text_transform">
+                                            <?php
+                                            $text_transforms = array(
+                                                'none' => 'Normal',
+                                                'uppercase' => 'MAYÚSCULAS',
+                                                'lowercase' => 'minúsculas',
+                                                'capitalize' => 'Primera Letra Mayúscula'
+                                            );
+                                            $current_transform = get_option('wvp_text_transform', 'none');
+                                            foreach ($text_transforms as $value => $label) {
+                                                echo '<option value="' . esc_attr($value) . '" ' . selected($current_transform, $value, false) . '>' . esc_html($label) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p class="description"><?php _e('Personaliza la tipografía del display de precios.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Configuración de Espaciado', 'wvp'); ?></th>
+                        <td>
+                            <table class="wvp-spacing-settings">
+                                <tr>
+                                    <td>
+                                        <label for="wvp_padding"><?php _e('Padding Interno', 'wvp'); ?></label>
+                                        <select id="wvp_padding" name="wvp_padding">
+                                            <?php
+                                            $padding_options = array(
+                                                'none' => 'Sin padding (0px)',
+                                                'small' => 'Pequeño (5px)',
+                                                'medium' => 'Mediano (10px)',
+                                                'large' => 'Grande (15px)',
+                                                'xlarge' => 'Extra Grande (20px)'
+                                            );
+                                            $current_padding = get_option('wvp_padding', 'medium');
+                                            foreach ($padding_options as $value => $label) {
+                                                echo '<option value="' . esc_attr($value) . '" ' . selected($current_padding, $value, false) . '>' . esc_html($label) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <label for="wvp_margin"><?php _e('Margen Externo', 'wvp'); ?></label>
+                                        <select id="wvp_margin" name="wvp_margin">
+                                            <?php
+                                            $margin_options = array(
+                                                'none' => 'Sin margen (0px)',
+                                                'small' => 'Pequeño (5px)',
+                                                'medium' => 'Mediano (10px)',
+                                                'large' => 'Grande (15px)',
+                                                'xlarge' => 'Extra Grande (20px)'
+                                            );
+                                            $current_margin = get_option('wvp_margin', 'medium');
+                                            foreach ($margin_options as $value => $label) {
+                                                echo '<option value="' . esc_attr($value) . '" ' . selected($current_margin, $value, false) . '>' . esc_html($label) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <label for="wvp_border_radius"><?php _e('Radio de Borde', 'wvp'); ?></label>
+                                        <select id="wvp_border_radius" name="wvp_border_radius">
+                                            <?php
+                                            $border_radius_options = array(
+                                                'none' => 'Sin bordes redondeados (0px)',
+                                                'small' => 'Pequeño (3px)',
+                                                'medium' => 'Mediano (6px)',
+                                                'large' => 'Grande (12px)',
+                                                'xlarge' => 'Extra Grande (20px)',
+                                                'round' => 'Completamente redondeado (50px)'
+                                            );
+                                            $current_radius = get_option('wvp_border_radius', 'medium');
+                                            foreach ($border_radius_options as $value => $label) {
+                                                echo '<option value="' . esc_attr($value) . '" ' . selected($current_radius, $value, false) . '>' . esc_html($label) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <label for="wvp_shadow"><?php _e('Sombra', 'wvp'); ?></label>
+                                        <select id="wvp_shadow" name="wvp_shadow">
+                                            <?php
+                                            $shadow_options = array(
+                                                'none' => 'Sin sombra',
+                                                'small' => 'Sombra pequeña',
+                                                'medium' => 'Sombra mediana',
+                                                'large' => 'Sombra grande',
+                                                'glow' => 'Efecto de resplandor'
+                                            );
+                                            $current_shadow = get_option('wvp_shadow', 'small');
+                                            foreach ($shadow_options as $value => $label) {
+                                                echo '<option value="' . esc_attr($value) . '" ' . selected($current_shadow, $value, false) . '>' . esc_html($label) . '</option>';
+                                            }
+                                            ?>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p class="description"><?php _e('Personaliza el espaciado y efectos visuales del display de precios.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Vista Previa', 'wvp'); ?></th>
+                        <td>
+                            <div id="wvp-style-preview" class="wvp-preview-container">
+                                <div class="wvp-product-price-container wvp-<?php echo esc_attr($current_style); ?>" 
+                                     id="wvp-preview-container">
+                                    <div class="wvp-price-display">
+                                        <span class="wvp-price-usd" style="display: block;">$15.00</span>
+                                        <span class="wvp-price-ves" style="display: none;">Bs. 2.365,93</span>
+                                    </div>
+                                    <div class="wvp-currency-switcher" data-price-usd="15.00" data-price-ves="2365.93">
+                                        <button class="wvp-currency-option active" data-currency="usd">USD</button>
+                                        <button class="wvp-currency-option" data-currency="ves">VES</button>
+                                    </div>
+                                    <div class="wvp-price-conversion">
+                                        <span class="wvp-ves-reference">Equivale a Bs. 2.365,93</span>
+                                    </div>
+                                    <div class="wvp-rate-info">Tasa BCV: 157,73</div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                
+                <?php submit_button(__('Guardar Configuración', 'wvp')); ?>
+            </form>
+            
+            <hr style="margin: 30px 0;">
+            
+            <h3><?php _e('Exportar/Importar Configuraciones', 'wvp'); ?></h3>
+            <p><?php _e('Guarda tus configuraciones personalizadas o restaura configuraciones guardadas.', 'wvp'); ?></p>
+            
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><?php _e('Exportar Configuración', 'wvp'); ?></th>
+                    <td>
+                        <button type="button" id="wvp-export-config" class="button button-secondary">
+                            <span class="dashicons dashicons-download"></span> <?php _e('Exportar Configuración', 'wvp'); ?>
+                        </button>
+                        <p class="description"><?php _e('Descarga un archivo JSON con tu configuración actual.', 'wvp'); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php _e('Importar Configuración', 'wvp'); ?></th>
+                    <td>
+                        <input type="file" id="wvp-import-file" accept=".json" style="margin-bottom: 10px;">
+                        <br>
+                        <button type="button" id="wvp-import-config" class="button button-secondary" disabled>
+                            <span class="dashicons dashicons-upload"></span> <?php _e('Importar Configuración', 'wvp'); ?>
+                        </button>
+                        <p class="description"><?php _e('Selecciona un archivo JSON de configuración para importar.', 'wvp'); ?></p>
+                    </td>
+                </tr>
+            </table>
+            
+            <script>
+            jQuery(document).ready(function($) {
+                // Cambio de estilo
+                $('#wvp_display_style').on('change', function() {
+                    var style = $(this).val();
+                    var $preview = $('#wvp-style-preview .wvp-product-price-container');
+                    
+                    // Remover clases de estilo anteriores
+                    $preview.removeClass('wvp-minimal wvp-modern wvp-elegant wvp-compact wvp-vintage wvp-futuristic wvp-advanced-minimal');
+                    
+                    // Añadir nueva clase de estilo
+                    $preview.addClass('wvp-' + style);
+                });
+                
+                // Temas de color predefinidos
+                $('.wvp-theme-btn').on('click', function() {
+                    var theme = $(this).data('theme');
+                    var $preview = $('#wvp-preview-container');
+                    
+                    // Remover tema anterior
+                    $('.wvp-theme-btn').removeClass('active');
+                    $(this).addClass('active');
+                    
+                    // Aplicar tema
+                    var themes = {
+                        'default': {
+                            primary: '#007cba',
+                            secondary: '#005a87',
+                            success: '#28a745',
+                            warning: '#ffc107'
+                        },
+                        'green': {
+                            primary: '#28a745',
+                            secondary: '#1e7e34',
+                            success: '#20c997',
+                            warning: '#ffc107'
+                        },
+                        'purple': {
+                            primary: '#6f42c1',
+                            secondary: '#5a32a3',
+                            success: '#28a745',
+                            warning: '#fd7e14'
+                        },
+                        'orange': {
+                            primary: '#fd7e14',
+                            secondary: '#e55100',
+                            success: '#28a745',
+                            warning: '#ffc107'
+                        },
+                        'red': {
+                            primary: '#dc3545',
+                            secondary: '#c82333',
+                            success: '#28a745',
+                            warning: '#ffc107'
+                        },
+                        'dark': {
+                            primary: '#343a40',
+                            secondary: '#212529',
+                            success: '#28a745',
+                            warning: '#ffc107'
+                        }
+                    };
+                    
+                    if (themes[theme]) {
+                        // Actualizar inputs de color
+                        $('#wvp_primary_color').val(themes[theme].primary);
+                        $('#wvp_secondary_color').val(themes[theme].secondary);
+                        $('#wvp_success_color').val(themes[theme].success);
+                        $('#wvp_warning_color').val(themes[theme].warning);
+                        
+                        // Aplicar colores en preview
+                        $preview.css('--wvp-primary-color', themes[theme].primary);
+                        $preview.css('--wvp-secondary-color', themes[theme].secondary);
+                        $preview.css('--wvp-success-color', themes[theme].success);
+                        $preview.css('--wvp-warning-color', themes[theme].warning);
+                    }
+                });
+                
+                // Cambio de colores
+                $('input[type="color"]').on('change', function() {
+                    var color = $(this).val();
+                    var colorType = $(this).attr('name').replace('wvp_', '').replace('_color', '');
+                    var $preview = $('#wvp-preview-container');
+                    
+                    // Remover tema activo
+                    $('.wvp-theme-btn').removeClass('active');
+                    
+                    // Aplicar color en tiempo real
+                    $preview.css('--wvp-' + colorType + '-color', color);
+                });
+                
+                // Cambio de fuentes
+                $('#wvp_font_family, #wvp_font_size, #wvp_font_weight, #wvp_text_transform').on('change', function() {
+                    var $preview = $('#wvp-preview-container');
+                    var fontFamily = $('#wvp_font_family').val();
+                    var fontSize = $('#wvp_font_size').val();
+                    var fontWeight = $('#wvp_font_weight').val();
+                    var textTransform = $('#wvp_text_transform').val();
+                    
+                    // Aplicar fuentes en tiempo real
+                    var fontFamilyMap = {
+                        'system': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                        'arial': 'Arial, sans-serif',
+                        'helvetica': 'Helvetica, Arial, sans-serif',
+                        'georgia': 'Georgia, serif',
+                        'times': 'Times New Roman, serif',
+                        'verdana': 'Verdana, sans-serif',
+                        'tahoma': 'Tahoma, sans-serif',
+                        'trebuchet': 'Trebuchet MS, sans-serif',
+                        'courier': 'Courier New, monospace',
+                        'monospace': 'monospace'
+                    };
+                    
+                    var fontSizeMap = {
+                        'small': '12px',
+                        'medium': '14px',
+                        'large': '16px',
+                        'xlarge': '18px',
+                        'xxlarge': '20px'
+                    };
+                    
+                    $preview.css({
+                        'font-family': fontFamilyMap[fontFamily] || fontFamily,
+                        'font-size': fontSizeMap[fontSize] || fontSize,
+                        'font-weight': fontWeight,
+                        'text-transform': textTransform
+                    });
+                });
+                
+                // Cambio de espaciado
+                $('#wvp_padding, #wvp_margin, #wvp_border_radius, #wvp_shadow').on('change', function() {
+                    var $preview = $('#wvp-preview-container');
+                    var padding = $('#wvp_padding').val();
+                    var margin = $('#wvp_margin').val();
+                    var borderRadius = $('#wvp_border_radius').val();
+                    var shadow = $('#wvp_shadow').val();
+                    
+                    // Aplicar espaciado en tiempo real
+                    var paddingMap = {
+                        'none': '0px',
+                        'small': '5px',
+                        'medium': '10px',
+                        'large': '15px',
+                        'xlarge': '20px'
+                    };
+                    
+                    var marginMap = {
+                        'none': '0px',
+                        'small': '5px',
+                        'medium': '10px',
+                        'large': '15px',
+                        'xlarge': '20px'
+                    };
+                    
+                    var borderRadiusMap = {
+                        'none': '0px',
+                        'small': '3px',
+                        'medium': '6px',
+                        'large': '12px',
+                        'xlarge': '20px',
+                        'round': '50px'
+                    };
+                    
+                    var shadowMap = {
+                        'none': 'none',
+                        'small': '0 2px 4px rgba(0,0,0,0.1)',
+                        'medium': '0 4px 8px rgba(0,0,0,0.15)',
+                        'large': '0 8px 16px rgba(0,0,0,0.2)',
+                        'glow': '0 0 20px rgba(0,123,186,0.3)'
+                    };
+                    
+                    $preview.css({
+                        'padding': paddingMap[padding] || padding,
+                        'margin': marginMap[margin] || margin,
+                        'border-radius': borderRadiusMap[borderRadius] || borderRadius,
+                        'box-shadow': shadowMap[shadow] || shadow
+                    });
+                });
+                
+                // Switcher de moneda en preview
+                $('#wvp-preview-container .wvp-currency-switcher button').on('click', function(e) {
+                    e.preventDefault();
+                    var currency = $(this).data('currency');
+                    var $container = $(this).closest('.wvp-product-price-container');
+                    var $usdPrice = $container.find('.wvp-price-usd');
+                    var $vesPrice = $container.find('.wvp-price-ves');
+                    var $conversion = $container.find('.wvp-price-conversion');
+                    
+                    // Actualizar botones
+                    $container.find('.wvp-currency-option').removeClass('active');
+                    $(this).addClass('active');
+                    
+                    // Cambiar precios
+                    if (currency === 'usd') {
+                        $vesPrice.fadeOut(200, function() {
+                            $usdPrice.fadeIn(200);
+                        });
+                        $conversion.fadeIn(200);
+                    } else {
+                        $usdPrice.fadeOut(200, function() {
+                            $vesPrice.fadeIn(200);
+                        });
+                        $conversion.fadeOut(200);
+                    }
+                });
+                
+                // Exportar configuración
+                $('#wvp-export-config').on('click', function() {
+                    var config = {
+                        display_style: $('#wvp_display_style').val(),
+                        primary_color: $('#wvp_primary_color').val(),
+                        secondary_color: $('#wvp_secondary_color').val(),
+                        success_color: $('#wvp_success_color').val(),
+                        warning_color: $('#wvp_warning_color').val(),
+                        font_family: $('#wvp_font_family').val(),
+                        font_size: $('#wvp_font_size').val(),
+                        font_weight: $('#wvp_font_weight').val(),
+                        text_transform: $('#wvp_text_transform').val(),
+                        padding: $('#wvp_padding').val(),
+                        margin: $('#wvp_margin').val(),
+                        border_radius: $('#wvp_border_radius').val(),
+                        shadow: $('#wvp_shadow').val(),
+                        export_date: new Date().toISOString(),
+                        plugin_version: '<?php echo WVP_VERSION; ?>'
+                    };
+                    
+                    var dataStr = JSON.stringify(config, null, 2);
+                    var dataBlob = new Blob([dataStr], {type: 'application/json'});
+                    var url = URL.createObjectURL(dataBlob);
+                    
+                    var link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'wvp-appearance-config-' + new Date().toISOString().split('T')[0] + '.json';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                });
+                
+                // Importar configuración
+                $('#wvp-import-file').on('change', function() {
+                    var file = this.files[0];
+                    if (file) {
+                        $('#wvp-import-config').prop('disabled', false);
+                    } else {
+                        $('#wvp-import-config').prop('disabled', true);
+                    }
+                });
+                
+                $('#wvp-import-config').on('click', function() {
+                    var file = $('#wvp-import-file')[0].files[0];
+                    if (!file) return;
+                    
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            var config = JSON.parse(e.target.result);
+                            
+                            // Validar que sea una configuración válida
+                            if (config.display_style && config.primary_color) {
+                                // Aplicar configuración
+                                $('#wvp_display_style').val(config.display_style);
+                                $('#wvp_primary_color').val(config.primary_color);
+                                $('#wvp_secondary_color').val(config.secondary_color);
+                                $('#wvp_success_color').val(config.success_color);
+                                $('#wvp_warning_color').val(config.warning_color);
+                                $('#wvp_font_family').val(config.font_family);
+                                $('#wvp_font_size').val(config.font_size);
+                                $('#wvp_font_weight').val(config.font_weight);
+                                $('#wvp_text_transform').val(config.text_transform);
+                                $('#wvp_padding').val(config.padding);
+                                $('#wvp_margin').val(config.margin);
+                                $('#wvp_border_radius').val(config.border_radius);
+                                $('#wvp_shadow').val(config.shadow);
+                                
+                                // Actualizar preview
+                                $('#wvp_display_style').trigger('change');
+                                $('input[type="color"]').trigger('change');
+                                $('#wvp_font_family, #wvp_font_size, #wvp_font_weight, #wvp_text_transform').trigger('change');
+                                $('#wvp_padding, #wvp_margin, #wvp_border_radius, #wvp_shadow').trigger('change');
+                                
+                                alert('Configuración importada exitosamente. Recuerda guardar los cambios.');
+                            } else {
+                                alert('Error: Archivo de configuración inválido.');
+                            }
+                        } catch (error) {
+                            alert('Error al leer el archivo: ' + error.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+            });
+            </script>
+        </div>
+        <?php
+    }
+    
+    /**
      * Mostrar contenido de ayuda
      */
     private function display_help_content() {
@@ -735,6 +1405,104 @@ class WVP_Admin_Restructured {
             array(),
             WVP_VERSION
         );
+        
+        // CSS adicional para panel de apariencia
+        if (isset($_GET['page']) && $_GET['page'] === 'wvp-appearance') {
+            wp_add_inline_style('wvp-admin-restructured', '
+                .wvp-color-settings {
+                    border-collapse: separate;
+                    border-spacing: 15px;
+                }
+                .wvp-color-settings td {
+                    vertical-align: top;
+                }
+                .wvp-color-settings label {
+                    display: block;
+                    margin-bottom: 5px;
+                    font-weight: 600;
+                }
+                .wvp-color-settings input[type="color"] {
+                    width: 60px;
+                    height: 40px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+                .wvp-preview-container {
+                    background: #f9f9f9;
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin-top: 10px;
+                }
+                #wvp-preview-container {
+                    max-width: 300px;
+                    margin: 0 auto;
+                }
+                .wvp-preview-container .wvp-currency-switcher button {
+                    cursor: pointer;
+                }
+                .wvp-font-settings, .wvp-spacing-settings {
+                    border-collapse: separate;
+                    border-spacing: 15px;
+                }
+                .wvp-font-settings td, .wvp-spacing-settings td {
+                    vertical-align: top;
+                }
+                .wvp-font-settings label, .wvp-spacing-settings label {
+                    display: block;
+                    margin-bottom: 5px;
+                    font-weight: 600;
+                }
+                .wvp-font-settings select, .wvp-spacing-settings select {
+                    width: 100%;
+                    padding: 5px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                }
+                .wvp-color-themes {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                    margin-bottom: 15px;
+                }
+                .wvp-theme-btn {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    padding: 10px;
+                    border: 2px solid #ddd;
+                    border-radius: 8px;
+                    background: white;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    min-width: 80px;
+                }
+                .wvp-theme-btn:hover {
+                    border-color: #007cba;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                }
+                .wvp-theme-btn.active {
+                    border-color: #007cba;
+                    background: #f8f9fa;
+                    box-shadow: 0 0 0 2px rgba(0, 124, 186, 0.2);
+                }
+                .wvp-theme-preview {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    margin-bottom: 5px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                .wvp-theme-btn span {
+                    font-size: 11px;
+                    text-align: center;
+                    color: #666;
+                    font-weight: 500;
+                }
+            ');
+        }
         
         wp_enqueue_script(
             'wvp-admin-restructured',

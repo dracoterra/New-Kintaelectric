@@ -1,0 +1,326 @@
+/**
+ * Estilo Minimalista Avanzado - WooCommerce Venezuela Pro
+ * Diseño ultra limpio con máxima simplicidad
+ * 
+ * @package WooCommerce_Venezuela_Pro
+ * @since 1.0.0
+ */
+
+/* ========================================
+   ESTILO MINIMALISTA AVANZADO - VARIABLES
+   ======================================== */
+.wvp-advanced-minimal {
+    --wvp-minimal-primary: #2C3E50;
+    --wvp-minimal-secondary: #34495E;
+    --wvp-minimal-accent: #3498DB;
+    --wvp-minimal-text: #2C3E50;
+    --wvp-minimal-bg: #FFFFFF;
+    --wvp-minimal-border: #E8E8E8;
+    --wvp-minimal-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --wvp-minimal-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ========================================
+   CONTENEDOR PRINCIPAL MINIMALISTA AVANZADO
+   ======================================== */
+.wvp-product-price-container.wvp-advanced-minimal {
+    background: var(--wvp-minimal-bg);
+    border: 1px solid var(--wvp-minimal-border);
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    font-family: var(--wvp-minimal-font);
+    position: relative;
+    overflow: visible;
+    max-width: 100%;
+}
+
+/* ========================================
+   DISPLAY DE PRECIOS MINIMALISTA AVANZADO
+   ======================================== */
+.wvp-advanced-minimal .wvp-price-display {
+    text-align: left;
+    margin-bottom: 8px;
+    position: relative;
+    padding: 0;
+}
+
+.wvp-advanced-minimal .wvp-price-usd,
+.wvp-advanced-minimal .wvp-price-ves {
+    font-size: 24px;
+    font-weight: 300;
+    color: var(--wvp-minimal-text);
+    text-shadow: none;
+    letter-spacing: 0;
+    position: relative;
+    display: block;
+    line-height: 1.2;
+    margin: 0;
+    padding: 0;
+}
+
+.wvp-advanced-minimal .wvp-price-usd::before,
+.wvp-advanced-minimal .wvp-price-ves::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background: var(--wvp-minimal-accent);
+    border-radius: 0;
+}
+
+/* ========================================
+   SWITCHER DE MONEDA MINIMALISTA AVANZADO
+   ======================================== */
+.wvp-advanced-minimal .wvp-currency-switcher {
+    display: flex;
+    justify-content: flex-start;
+    gap: 0;
+    margin: 12px 0;
+    border-bottom: 1px solid var(--wvp-minimal-border);
+    padding-bottom: 8px;
+}
+
+.wvp-advanced-minimal .wvp-currency-option {
+    background: transparent;
+    color: var(--wvp-minimal-secondary);
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    padding: 4px 0;
+    margin-right: 20px;
+    font-family: var(--wvp-minimal-font);
+    font-weight: 400;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: none;
+    letter-spacing: 0;
+    box-shadow: none;
+    position: relative;
+    overflow: visible;
+}
+
+.wvp-advanced-minimal .wvp-currency-option::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--wvp-minimal-accent);
+    transition: width 0.3s ease;
+}
+
+.wvp-advanced-minimal .wvp-currency-option:hover {
+    transform: none;
+    box-shadow: none;
+    background: transparent;
+    color: var(--wvp-minimal-text);
+}
+
+.wvp-advanced-minimal .wvp-currency-option:hover::before {
+    width: 100%;
+}
+
+.wvp-advanced-minimal .wvp-currency-option.active {
+    background: transparent;
+    color: var(--wvp-minimal-text);
+    box-shadow: none;
+    border-bottom-color: var(--wvp-minimal-accent);
+}
+
+.wvp-advanced-minimal .wvp-currency-option.active::before {
+    width: 100%;
+}
+
+/* ========================================
+   CONVERSIÓN DE PRECIOS MINIMALISTA AVANZADO
+   ======================================== */
+.wvp-advanced-minimal .wvp-price-conversion {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 8px 0;
+    text-align: left;
+    position: relative;
+}
+
+.wvp-advanced-minimal .wvp-ves-reference {
+    color: var(--wvp-minimal-secondary);
+    font-style: normal;
+    font-size: 13px;
+    font-weight: 300;
+    text-shadow: none;
+    line-height: 1.4;
+}
+
+.wvp-advanced-minimal .wvp-ves-reference::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    background: var(--wvp-minimal-accent);
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* ========================================
+   INFORMACIÓN DE TASA MINIMALISTA AVANZADO
+   ======================================== */
+.wvp-advanced-minimal .wvp-rate-info {
+    background: transparent;
+    color: var(--wvp-minimal-secondary);
+    padding: 0;
+    border-radius: 0;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 300;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 8px;
+    box-shadow: none;
+    position: relative;
+    opacity: 0.7;
+}
+
+.wvp-advanced-minimal .wvp-rate-info::before {
+    content: '';
+    display: inline-block;
+    width: 2px;
+    height: 2px;
+    background: var(--wvp-minimal-secondary);
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+/* ========================================
+   EFECTOS ESPECIALES MINIMALISTA AVANZADO
+   ======================================== */
+.wvp-advanced-minimal .wvp-product-price-container {
+    position: relative;
+}
+
+.wvp-advanced-minimal .wvp-product-price-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--wvp-minimal-border), transparent);
+    opacity: 0.5;
+}
+
+/* ========================================
+   HOVER EFFECTS MINIMALISTA AVANZADO
+   ======================================== */
+.wvp-advanced-minimal .wvp-product-price-container:hover {
+    background: rgba(52, 152, 219, 0.02);
+    border-color: var(--wvp-minimal-accent);
+}
+
+.wvp-advanced-minimal .wvp-product-price-container:hover .wvp-price-usd,
+.wvp-advanced-minimal .wvp-product-price-container:hover .wvp-price-ves {
+    color: var(--wvp-minimal-accent);
+}
+
+/* ========================================
+   RESPONSIVE MINIMALISTA AVANZADO
+   ======================================== */
+@media (max-width: 768px) {
+    .wvp-advanced-minimal .wvp-price-usd,
+    .wvp-advanced-minimal .wvp-price-ves {
+        font-size: 20px;
+    }
+    
+    .wvp-advanced-minimal .wvp-currency-option {
+        font-size: 13px;
+        margin-right: 15px;
+    }
+    
+    .wvp-advanced-minimal .wvp-product-price-container {
+        padding: 0;
+    }
+}
+
+/* ========================================
+   ANIMACIONES MINIMALISTA AVANZADO
+   ======================================== */
+.wvp-advanced-minimal .wvp-price-display {
+    animation: minimal-fade-in 0.4s ease-out;
+}
+
+@keyframes minimal-fade-in {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+.wvp-advanced-minimal .wvp-currency-switcher {
+    animation: minimal-slide-down 0.3s ease-out 0.1s both;
+}
+
+@keyframes minimal-slide-down {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.wvp-advanced-minimal .wvp-price-conversion {
+    animation: minimal-fade-in 0.2s ease-out 0.2s both;
+}
+
+/* ========================================
+   TIPOGRAFÍA MINIMALISTA AVANZADO
+   ======================================== */
+.wvp-advanced-minimal {
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+.wvp-advanced-minimal .wvp-price-usd,
+.wvp-advanced-minimal .wvp-price-ves {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ========================================
+   ESTADOS DE FOCUS MINIMALISTA AVANZADO
+   ======================================== */
+.wvp-advanced-minimal .wvp-currency-option:focus {
+    outline: none;
+    color: var(--wvp-minimal-accent);
+}
+
+.wvp-advanced-minimal .wvp-currency-option:focus::before {
+    width: 100%;
+}
+
+/* ========================================
+   MICRO-INTERACCIONES MINIMALISTA AVANZADO
+   ======================================== */
+.wvp-advanced-minimal .wvp-currency-option {
+    position: relative;
+}
+
+.wvp-advanced-minimal .wvp-currency-option::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--wvp-minimal-accent);
+    transition: width 0.2s ease;
+}
+
+.wvp-advanced-minimal .wvp-currency-option:hover::after {
+    width: 100%;
+}
