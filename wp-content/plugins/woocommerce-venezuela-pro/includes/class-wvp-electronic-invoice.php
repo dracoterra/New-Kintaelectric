@@ -46,12 +46,10 @@ class WVP_Electronic_Invoice {
         add_action('woocommerce_order_status_completed', array($this, 'generate_electronic_invoice'));
         add_action('woocommerce_order_status_processing', array($this, 'generate_electronic_invoice'));
         
-        // Añadir campos de facturación al checkout
-        add_action('woocommerce_after_checkout_billing_form', array($this, 'add_billing_fiscal_fields'));
-        add_action('woocommerce_checkout_process', array($this, 'validate_fiscal_fields'));
-        
-        // Guardar campos de facturación
-        add_action('woocommerce_checkout_update_order_meta', array($this, 'save_fiscal_fields'));
+        // DESHABILITADO - Evitar duplicación con class-wvp-checkout.php
+        // add_action('woocommerce_after_checkout_billing_form', array($this, 'add_billing_fiscal_fields'));
+        // add_action('woocommerce_checkout_process', array($this, 'validate_fiscal_fields'));
+        // add_action('woocommerce_checkout_update_order_meta', array($this, 'save_fiscal_fields'));
         
         // Mostrar campos de facturación en admin
         add_action('woocommerce_admin_order_data_after_billing_address', array($this, 'display_fiscal_fields_in_admin'));
@@ -61,6 +59,9 @@ class WVP_Electronic_Invoice {
      * Añadir campos de facturación al checkout (adaptado para Venezuela)
      */
     public function add_billing_fiscal_fields($checkout) {
+        // DESHABILITADO TEMPORALMENTE - Evitar duplicación con class-wvp-checkout.php
+        return;
+        
         // Solo mostrar si está habilitada la facturación electrónica
         if (!isset($this->fiscal_settings['enable_electronic_invoice']) || !$this->fiscal_settings['enable_electronic_invoice']) {
             return;

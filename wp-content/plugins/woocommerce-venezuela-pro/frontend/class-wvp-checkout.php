@@ -39,9 +39,9 @@ class WVP_Checkout {
      * Inicializar hooks de WordPress
      */
     private function init_hooks() {
-        // Hooks para el campo de cédula/RIF usando múltiples enfoques
-        add_filter("woocommerce_billing_fields", array($this, "add_cedula_rif_field"));
+        // Hooks para el campo de cédula/RIF - USAR SOLO UNO PARA EVITAR DUPLICACIÓN
         add_filter("woocommerce_checkout_fields", array($this, "add_cedula_rif_field_checkout"));
+        // DESHABILITADO - Evitar duplicación: add_filter("woocommerce_billing_fields", array($this, "add_cedula_rif_field"));
         add_action("woocommerce_checkout_process", array($this, "validate_cedula_rif_advanced"));
         add_action("woocommerce_checkout_create_order", array($this, "save_cedula_rif_field"));
         add_action("woocommerce_admin_order_data_after_billing_address", array($this, "display_cedula_rif_in_admin"));
@@ -55,8 +55,7 @@ class WVP_Checkout {
         // Registrar campo nativo en WooCommerce Blocks
         add_action("woocommerce_blocks_loaded", array($this, "register_cedula_rif_block_field"));
         
-        // Hook adicional para asegurar que el campo se registre
-        add_action("woocommerce_checkout_fields", array($this, "ensure_cedula_rif_field_registration"));
+        // DESHABILITADO - Evitar duplicación: add_action("woocommerce_checkout_fields", array($this, "ensure_cedula_rif_field_registration"));
         
         // Hook para mostrar selector de zona de delivery
         add_action("woocommerce_before_checkout_billing_form", array($this, "display_delivery_zone_selector"));
@@ -74,8 +73,8 @@ class WVP_Checkout {
         // Mostrar información de IGTF en el checkout
         add_action("woocommerce_review_order_before_payment", array($this, "display_igtf_info"));
         
-        // Añadir scripts y estilos del checkout
-        add_action("wp_enqueue_scripts", array($this, "enqueue_checkout_scripts"));
+        // DESHABILITADO TEMPORALMENTE - Investigar duplicación de campos
+        // add_action("wp_enqueue_scripts", array($this, "enqueue_checkout_scripts"));
         
         // Hook para mostrar información de pago móvil
         add_action("woocommerce_review_order_after_payment", array($this, "display_pago_movil_info"));
@@ -443,6 +442,8 @@ class WVP_Checkout {
         
         if (!empty($cedula_rif)) {
             $order->update_meta_data('_billing_cedula_rif', sanitize_text_field($cedula_rif));
+            // MAPEAR TAMBIÉN A _billing_cedula para compatibilidad con reportes SENIAT
+            $order->update_meta_data('_billing_cedula', sanitize_text_field($cedula_rif));
             error_log('WVP Debug: Campo guardado en pedido: ' . $order->get_id());
         } else {
             error_log('WVP Debug: Campo vacío - no se guardó');
@@ -485,6 +486,18 @@ class WVP_Checkout {
         // Guardar si existe
         if (!empty($cedula_rif)) {
             $order->update_meta_data('_billing_cedula_rif', $cedula_rif);
+            // MAPEAR TAMBIÉN A _billing_cedula para compatibilidad con reportes SENIAT
+            $order->update_meta_data('_billing_cedula', $cedula_rif);
+            
+            // GUARDAR TASA DE CAMBIO ACTUAL PARA REPORTES SENIAT
+            if (class_exists('WVP_BCV_Integrator')) {
+                $rate = WVP_BCV_Integrator::get_rate();
+                if ($rate && $rate > 0) {
+                    $order->update_meta_data('_exchange_rate_at_purchase', $rate);
+                    $order->update_meta_data('_exchange_rate_date', current_time('Y-m-d H:i:s'));
+                }
+            }
+            
             $order->save();
         }
     }

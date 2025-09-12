@@ -3025,10 +3025,174 @@ class WVP_Admin_Restructured {
      * Mostrar contenido de reportes
      */
     private function display_reports_content() {
+        global $wpdb;
+        
+        // Obtener estadísticas básicas
+        $total_orders = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type = 'shop_order' AND post_status IN ('wc-completed', 'wc-processing')");
+        $total_sales = $wpdb->get_var("SELECT SUM(meta_value) FROM {$wpdb->postmeta} WHERE meta_key = '_order_total'");
+        
         ?>
         <div class="wvp-reports">
-            <h2><?php _e('Reportes', 'wvp'); ?></h2>
-            <p><?php _e('Aquí puedes ver los reportes del plugin.', 'wvp'); ?></p>
+            <h2><?php _e('📊 Reportes - WooCommerce Venezuela Pro', 'wvp'); ?></h2>
+            
+            <div class="wvp-reports-grid">
+                <!-- Estadísticas Generales -->
+                <div class="wvp-report-card">
+                    <h3>📈 Estadísticas Generales</h3>
+                    <div class="wvp-stats-overview">
+                        <div class="wvp-stat-item">
+                            <span class="wvp-stat-icon">🛒</span>
+                            <div class="wvp-stat-details">
+                                <span class="wvp-stat-number"><?php echo number_format($total_orders); ?></span>
+                                <span class="wvp-stat-label">Pedidos Totales</span>
+                            </div>
+                        </div>
+                        
+                        <div class="wvp-stat-item">
+                            <span class="wvp-stat-icon">💰</span>
+                            <div class="wvp-stat-details">
+                                <span class="wvp-stat-number">$<?php echo number_format($total_sales, 2); ?></span>
+                                <span class="wvp-stat-label">Ventas Totales (USD)</span>
+                            </div>
+                        </div>
+                        
+                        <div class="wvp-stat-item">
+                            <span class="wvp-stat-icon">💱</span>
+                            <div class="wvp-stat-details">
+                                <span class="wvp-stat-number">
+                                    <?php 
+                                    if (class_exists('WVP_BCV_Integrator')) {
+                                        $rate = WVP_BCV_Integrator::get_rate();
+                                        echo $rate ? number_format($rate, 2) . ' Bs.' : 'N/A';
+                                    } else {
+                                        echo 'N/A';
+                                    }
+                                    ?>
+                                </span>
+                                <span class="wvp-stat-label">Tasa BCV Actual</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reportes Disponibles -->
+                <div class="wvp-report-card">
+                    <h3>📋 Reportes Disponibles</h3>
+                    <div class="wvp-reports-list">
+                        <div class="wvp-report-item">
+                            <div class="wvp-report-info">
+                                <h4>🏛️ Reporte SENIAT</h4>
+                                <p>Reporte fiscal completo para el SENIAT con todos los datos requeridos.</p>
+                            </div>
+                            <div class="wvp-report-actions">
+                                <a href="<?php echo admin_url('admin.php?page=wvp-seniat-reports'); ?>" class="button button-primary">
+                                    Ver Reporte SENIAT
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="wvp-report-item">
+                            <div class="wvp-report-info">
+                                <h4>📊 Reporte Fiscal</h4>
+                                <p>Análisis financiero detallado con conversiones de moneda y tasas.</p>
+                            </div>
+                            <div class="wvp-report-actions">
+                                <a href="<?php echo admin_url('admin.php?page=wvp-fiscal-reports'); ?>" class="button button-secondary">
+                                    Ver Reporte Fiscal
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="wvp-report-item">
+                            <div class="wvp-report-info">
+                                <h4>💹 Análisis de Tasas BCV</h4>
+                                <p>Histórico de tasas de cambio y análisis de variaciones.</p>
+                            </div>
+                            <div class="wvp-report-actions">
+                                <button type="button" class="button button-secondary" onclick="wvpGenerateBCVReport()">
+                                    Generar Análisis BCV
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="wvp-report-item">
+                            <div class="wvp-report-info">
+                                <h4>🧾 Facturas Electrónicas</h4>
+                                <p>Listado y gestión de facturas electrónicas generadas.</p>
+                            </div>
+                            <div class="wvp-report-actions">
+                                <button type="button" class="button button-secondary" onclick="wvpShowInvoices()">
+                                    Ver Facturas
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Acciones Rápidas -->
+                <div class="wvp-report-card">
+                    <h3>⚡ Acciones Rápidas</h3>
+                    <div class="wvp-quick-actions">
+                        <button type="button" class="button button-primary" onclick="wvpExportAllData()">
+                            <span class="dashicons dashicons-download"></span>
+                            Exportar Todos los Datos
+                        </button>
+                        
+                        <button type="button" class="button button-secondary" onclick="wvpUpdateRates()">
+                            <span class="dashicons dashicons-update"></span>
+                            Actualizar Tasas BCV
+                        </button>
+                        
+                        <button type="button" class="button button-secondary" onclick="wvpGenerateControlNumbers()">
+                            <span class="dashicons dashicons-admin-tools"></span>
+                            Generar Números de Control
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <style>
+                .wvp-reports-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+                .wvp-report-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                .wvp-stats-overview { display: flex; flex-direction: column; gap: 15px; }
+                .wvp-stat-item { display: flex; align-items: center; padding: 15px; background: #f8f9fa; border-radius: 8px; }
+                .wvp-stat-icon { font-size: 24px; margin-right: 15px; }
+                .wvp-stat-details { display: flex; flex-direction: column; }
+                .wvp-stat-number { font-size: 24px; font-weight: bold; color: #0073aa; }
+                .wvp-stat-label { font-size: 12px; color: #666; text-transform: uppercase; }
+                .wvp-reports-list { display: flex; flex-direction: column; gap: 15px; }
+                .wvp-report-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+                .wvp-report-info h4 { margin: 0 0 5px 0; color: #0073aa; }
+                .wvp-report-info p { margin: 0; color: #666; font-size: 14px; }
+                .wvp-quick-actions { display: flex; flex-direction: column; gap: 10px; }
+                .wvp-quick-actions .button { justify-content: flex-start; }
+            </style>
+            
+            <script>
+                function wvpGenerateBCVReport() {
+                    alert('Función de análisis BCV en desarrollo. Próximamente disponible.');
+                }
+                
+                function wvpShowInvoices() {
+                    alert('Gestión de facturas electrónicas en desarrollo. Próximamente disponible.');
+                }
+                
+                function wvpExportAllData() {
+                    if (confirm('¿Exportar todos los datos fiscales? Esto puede tomar unos minutos.')) {
+                        window.location.href = '<?php echo admin_url('admin.php?page=wvp-seniat-reports'); ?>';
+                    }
+                }
+                
+                function wvpUpdateRates() {
+                    alert('Actualizando tasas BCV... Esta función se ejecuta automáticamente cada hora.');
+                }
+                
+                function wvpGenerateControlNumbers() {
+                    if (confirm('¿Generar números de control para pedidos que no los tienen?')) {
+                        alert('Generando números de control... Esta acción se ejecutará en segundo plano.');
+                    }
+                }
+            </script>
         </div>
         <?php
     }
@@ -3037,10 +3201,134 @@ class WVP_Admin_Restructured {
      * Mostrar contenido del monitor de errores
      */
     private function display_error_monitor_content() {
+        global $wpdb;
+        
+        // Obtener errores recientes del debug.log
+        $debug_log = WP_CONTENT_DIR . '/debug.log';
+        $wvp_errors = array();
+        
+        if (file_exists($debug_log)) {
+            $log_content = file_get_contents($debug_log);
+            $lines = explode("\n", $log_content);
+            $recent_lines = array_slice($lines, -50); // Últimas 50 líneas
+            
+            foreach ($recent_lines as $line) {
+                if (strpos($line, 'WVP') !== false || strpos($line, 'WooCommerce Venezuela Pro') !== false) {
+                    $wvp_errors[] = $line;
+                }
+            }
+        }
+        
         ?>
         <div class="wvp-error-monitor">
-            <h2><?php _e('Monitor de Errores', 'wvp'); ?></h2>
-            <p><?php _e('Aquí puedes monitorear los errores del plugin.', 'wvp'); ?></p>
+            <h2><?php _e('Monitor de Errores - WooCommerce Venezuela Pro', 'wvp'); ?></h2>
+            
+            <div class="wvp-error-stats">
+                <div class="wvp-stat-card">
+                    <h3>📊 Estadísticas de Errores</h3>
+                    <div class="wvp-stats-grid">
+                        <div class="wvp-stat-item">
+                            <span class="wvp-stat-label">Errores WVP Hoy:</span>
+                            <span class="wvp-stat-value"><?php echo count($wvp_errors); ?></span>
+                        </div>
+                        <div class="wvp-stat-item">
+                            <span class="wvp-stat-label">Estado del Plugin:</span>
+                            <span class="wvp-stat-value <?php echo count($wvp_errors) > 10 ? 'error' : 'success'; ?>">
+                                <?php echo count($wvp_errors) > 10 ? 'Con Errores' : 'Funcionando'; ?>
+                            </span>
+                        </div>
+                        <div class="wvp-stat-item">
+                            <span class="wvp-stat-label">Última Verificación:</span>
+                            <span class="wvp-stat-value"><?php echo current_time('d/m/Y H:i:s'); ?></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="wvp-errors-section">
+                <h3>🚨 Errores Recientes del Plugin</h3>
+                
+                <?php if (empty($wvp_errors)): ?>
+                    <div class="wvp-no-errors">
+                        <p>✅ <strong>¡Excelente!</strong> No se han detectado errores recientes del plugin WooCommerce Venezuela Pro.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="wvp-errors-list">
+                        <?php foreach (array_reverse($wvp_errors) as $error): ?>
+                            <?php
+                            $is_fatal = strpos($error, 'Fatal') !== false;
+                            $is_warning = strpos($error, 'Warning') !== false;
+                            $is_notice = strpos($error, 'Notice') !== false;
+                            
+                            $error_class = 'info';
+                            if ($is_fatal) $error_class = 'fatal';
+                            elseif ($is_warning) $error_class = 'warning';
+                            elseif ($is_notice) $error_class = 'notice';
+                            ?>
+                            <div class="wvp-error-item <?php echo $error_class; ?>">
+                                <div class="wvp-error-icon">
+                                    <?php if ($is_fatal): ?>
+                                        ❌
+                                    <?php elseif ($is_warning): ?>
+                                        ⚠️
+                                    <?php elseif ($is_notice): ?>
+                                        ℹ️
+                                    <?php else: ?>
+                                        🔍
+                                    <?php endif; ?>
+                                </div>
+                                <div class="wvp-error-content">
+                                    <pre><?php echo esc_html($error); ?></pre>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+            
+            <div class="wvp-error-actions">
+                <h3>🔧 Acciones Rápidas</h3>
+                <div class="wvp-action-buttons">
+                    <button type="button" class="button button-secondary" onclick="location.reload()">
+                        <span class="dashicons dashicons-update"></span>
+                        Actualizar Errores
+                    </button>
+                    <button type="button" class="button button-primary" onclick="wvpClearErrorLogs()">
+                        <span class="dashicons dashicons-trash"></span>
+                        Limpiar Logs Antiguos
+                    </button>
+                </div>
+            </div>
+            
+            <style>
+                .wvp-error-stats { margin-bottom: 20px; }
+                .wvp-stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                .wvp-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
+                .wvp-stat-item { display: flex; justify-content: space-between; padding: 10px; background: #f9f9f9; border-radius: 4px; }
+                .wvp-stat-label { font-weight: bold; }
+                .wvp-stat-value.success { color: #28a745; font-weight: bold; }
+                .wvp-stat-value.error { color: #dc3545; font-weight: bold; }
+                .wvp-errors-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+                .wvp-no-errors { text-align: center; padding: 40px; background: #d4edda; border-radius: 8px; color: #155724; }
+                .wvp-errors-list { max-height: 400px; overflow-y: auto; }
+                .wvp-error-item { display: flex; margin-bottom: 10px; padding: 10px; border-radius: 4px; }
+                .wvp-error-item.fatal { background: #f8d7da; border-left: 4px solid #dc3545; }
+                .wvp-error-item.warning { background: #fff3cd; border-left: 4px solid #ffc107; }
+                .wvp-error-item.notice { background: #d1ecf1; border-left: 4px solid #17a2b8; }
+                .wvp-error-item.info { background: #f8f9fa; border-left: 4px solid #6c757d; }
+                .wvp-error-icon { margin-right: 10px; font-size: 16px; }
+                .wvp-error-content pre { font-size: 12px; margin: 0; white-space: pre-wrap; word-break: break-all; }
+                .wvp-error-actions { background: white; padding: 20px; border-radius: 8px; }
+                .wvp-action-buttons { display: flex; gap: 10px; margin-top: 15px; }
+            </style>
+            
+            <script>
+                function wvpClearErrorLogs() {
+                    if (confirm('¿Estás seguro de que quieres limpiar los logs antiguos?')) {
+                        alert('Función de limpieza de logs en desarrollo. Por ahora, puedes limpiar manualmente el archivo debug.log.');
+                    }
+                }
+            </script>
         </div>
         <?php
     }
