@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 /**
  * Widget Home Slider Kintaelectic
  */
-class KEE_Home_Slider_Kintaelectic_Widget extends \Elementor\Widget_Base {
+class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
 
     /**
      * Obtener nombre del widget

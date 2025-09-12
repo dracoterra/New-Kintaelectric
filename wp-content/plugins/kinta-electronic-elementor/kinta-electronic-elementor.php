@@ -64,6 +64,10 @@ class KintaElectricElementor {
      * Register Elementor widgets
      */
     public function register_widgets() {
+        // Cargar clase base primero
+        require_once KEE_PLUGIN_PATH . 'includes/class-base-widget.php';
+        
+        // Cargar widgets
         require_once KEE_PLUGIN_PATH . 'widgets/home-slider-kintaelectic-widget.php';
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric02-deals-widget.php';
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric03-deals-and-tabs-widget.php';

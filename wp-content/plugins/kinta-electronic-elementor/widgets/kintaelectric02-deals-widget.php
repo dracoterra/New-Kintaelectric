@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
 /**
  * Widget Kintaelectric02 Deals
  */
-class KEE_Kintaelectric02_Deals_Widget extends \Elementor\Widget_Base {
+class KEE_Kintaelectric02_Deals_Widget extends KEE_Base_Widget {
 
     /**
      * Obtener nombre del widget
@@ -51,16 +51,16 @@ class KEE_Kintaelectric02_Deals_Widget extends \Elementor\Widget_Base {
     }
 
     /**
-     * Obtener dependencias de scripts
+     * Obtener dependencias de scripts específicas del widget
      */
-    public function get_script_depends() {
+    protected function get_widget_script_depends() {
         return ['kinta-electric-elementor-script'];
     }
 
     /**
-     * Obtener dependencias de estilos
+     * Obtener dependencias de estilos específicas del widget
      */
-    public function get_style_depends() {
+    protected function get_widget_style_depends() {
         return ['kinta-electric-elementor-style'];
     }
 

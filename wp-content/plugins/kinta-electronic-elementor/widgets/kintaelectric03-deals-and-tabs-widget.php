@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
-class KEE_Kintaelectric03_Deals_And_Tabs_Widget extends \Elementor\Widget_Base
+class KEE_Kintaelectric03_Deals_And_Tabs_Widget extends KEE_Base_Widget
 {
     public function get_name()
     {
@@ -36,6 +36,20 @@ class KEE_Kintaelectric03_Deals_And_Tabs_Widget extends \Elementor\Widget_Base
     public function get_keywords()
     {
         return ['ofertas', 'pestañas', 'woocommerce', 'productos', 'countdown', 'descuentos', 'deals', 'tabs', 'products', 'offers'];
+    }
+
+    /**
+     * Obtener dependencias de scripts específicas del widget
+     */
+    protected function get_widget_script_depends() {
+        return ['kintaelectric03-countdown'];
+    }
+
+    /**
+     * Obtener dependencias de estilos específicas del widget
+     */
+    protected function get_widget_style_depends() {
+        return ['kintaelectric03-countdown'];
     }
 
     protected function register_controls()

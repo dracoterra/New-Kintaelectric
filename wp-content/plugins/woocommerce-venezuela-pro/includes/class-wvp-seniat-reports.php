@@ -497,6 +497,8 @@ class WVP_SENIAT_Reports {
         global $wpdb;
         
         // Obtener transacciones del período
+        // IMPORTANTE: Solo incluir órdenes completadas (wc-completed) para SENIAT
+        // No incluir wc-processing o wc-on-hold ya que son pagos no confirmados
         if (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
             // HPOS
             $transactions = $wpdb->get_results($wpdb->prepare("
@@ -519,7 +521,7 @@ class WVP_SENIAT_Reports {
                 LEFT JOIN {$wpdb->prefix}wc_orders_meta om_rate ON o.id = om_rate.order_id AND om_rate.meta_key = '_exchange_rate_at_purchase'
                 LEFT JOIN {$wpdb->prefix}wc_orders_meta om_rate_date ON o.id = om_rate_date.order_id AND om_rate_date.meta_key = '_exchange_rate_date'
                 WHERE o.type = 'shop_order'
-                AND o.status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND o.status = 'wc-completed'
                 AND o.date_created_gmt >= %s 
                 AND o.date_created_gmt <= %s
                 ORDER BY o.date_created_gmt ASC
@@ -547,7 +549,7 @@ class WVP_SENIAT_Reports {
                 LEFT JOIN {$wpdb->postmeta} pm_rate ON p.ID = pm_rate.post_id AND pm_rate.meta_key = '_exchange_rate_at_purchase'
                 LEFT JOIN {$wpdb->postmeta} pm_rate_date ON p.ID = pm_rate.post_id AND pm_rate_date.meta_key = '_exchange_rate_date'
                 WHERE p.post_type = 'shop_order'
-                AND p.post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND p.post_status = 'wc-completed'
                 AND p.post_date >= %s 
                 AND p.post_date <= %s
                 ORDER BY p.post_date ASC

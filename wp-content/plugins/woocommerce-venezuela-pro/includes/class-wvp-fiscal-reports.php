@@ -321,7 +321,7 @@ class WVP_Fiscal_Reports {
             $orders = $wpdb->get_results($wpdb->prepare("
                 SELECT id, date_created_gmt, status
                 FROM {$wpdb->prefix}wc_orders
-                WHERE status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                WHERE status = 'wc-completed'
                 AND date_created_gmt >= %s
                 AND date_created_gmt <= %s
                 ORDER BY date_created_gmt ASC
@@ -332,7 +332,7 @@ class WVP_Fiscal_Reports {
                 SELECT p.ID, p.post_date, p.post_status
                 FROM {$wpdb->posts} p
                 WHERE p.post_type = 'shop_order'
-                AND p.post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND p.post_status = 'wc-completed'
                 AND p.post_date >= %s
                 AND p.post_date <= %s
                 ORDER BY p.post_date ASC

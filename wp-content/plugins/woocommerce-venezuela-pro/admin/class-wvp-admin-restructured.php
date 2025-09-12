@@ -1093,7 +1093,7 @@ class WVP_Admin_Restructured {
                 SELECT COUNT(*) 
                 FROM {$wpdb->prefix}wc_orders 
                 WHERE type = 'shop_order' 
-                AND status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND status = 'wc-completed'
             ");
         } else {
             // Posts tradicional
@@ -1101,7 +1101,7 @@ class WVP_Admin_Restructured {
                 SELECT COUNT(*) 
                 FROM {$wpdb->posts} 
                 WHERE post_type = 'shop_order' 
-                AND post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND post_status = 'wc-completed'
             ");
         }
         
@@ -1215,7 +1215,7 @@ class WVP_Admin_Restructured {
                 LEFT JOIN {$wpdb->prefix}wc_orders_meta om_email ON o.id = om_email.order_id AND om_email.meta_key = '_billing_email'
                 LEFT JOIN {$wpdb->prefix}wc_orders_meta om_control ON o.id = om_control.order_id AND om_control.meta_key = '_seniat_control_number'
                 WHERE o.type = 'shop_order'
-                AND o.status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND o.status = 'wc-completed'
                 ORDER BY o.date_created_gmt DESC
             ");
         } else {
@@ -1716,8 +1716,8 @@ class WVP_Admin_Restructured {
                                 "{$wpdb->prefix}wc_orders" : 
                                 "{$wpdb->posts}") . " 
                             WHERE " . (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() ? 
-                                "status IN ('wc-completed', 'wc-processing', 'wc-on-hold') AND MONTH(date_created_gmt) = " . date('n') . " AND YEAR(date_created_gmt) = " . date('Y') :
-                                "post_type = 'shop_order' AND post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold') AND MONTH(post_date) = " . date('n') . " AND YEAR(post_date) = " . date('Y'))
+                                "status = 'wc-completed' AND MONTH(date_created_gmt) = " . date('n') . " AND YEAR(date_created_gmt) = " . date('Y') :
+                                "post_type = 'shop_order' AND post_status = 'wc-completed' AND MONTH(post_date) = " . date('n') . " AND YEAR(post_date) = " . date('Y'))
                         );
                         
                         echo '<div class="wvp-stat-item">';

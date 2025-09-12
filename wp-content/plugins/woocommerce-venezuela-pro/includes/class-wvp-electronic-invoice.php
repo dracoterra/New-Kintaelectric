@@ -42,9 +42,9 @@ class WVP_Electronic_Invoice {
      * Inicializar hooks de WordPress
      */
     private function init_hooks() {
-        // Generar factura electrónica al completar pedido
+        // Generar factura electrónica SOLO al completar pedido (pago confirmado)
         add_action('woocommerce_order_status_completed', array($this, 'generate_electronic_invoice'));
-        add_action('woocommerce_order_status_processing', array($this, 'generate_electronic_invoice'));
+        // REMOVIDO: wc-processing ya que el pago no está confirmado
         
         // DESHABILITADO - Evitar duplicación con class-wvp-checkout.php
         // add_action('woocommerce_after_checkout_billing_form', array($this, 'add_billing_fiscal_fields'));
