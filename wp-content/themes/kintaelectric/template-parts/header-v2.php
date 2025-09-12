@@ -13,28 +13,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 
 <div class="top-bar hidden-lg-down d-none d-xl-block">
-    <div class="container clearfix">
-        <ul id="menu-top-bar-left" class="nav nav-inline float-start electro-animate-dropdown flip">
-            <li id="menu-item-5166" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5166">
-                <a title="Welcome to Worldwide Electronics Store" href="#">Welcome to Worldwide Electronics Store</a>
-            </li>
-        </ul>
-        <ul id="menu-top-bar-right" class="nav nav-inline float-end electro-animate-dropdown flip">
-            <li id="menu-item-5167" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5167">
-                <a title="Store Locator" href="#"><i class="ec ec-map-pointer"></i>Store Locator</a>
-            </li>
-            <li id="menu-item-5299" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5299">
-                <a title="Track Your Order" href="../track-your-order/index.htm"><i class="ec ec-transport"></i>Track
-                    Your Order</a>
-            </li>
-            <li id="menu-item-5293" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5293">
-                <a title="Shop" href="../shop/index.htm"><i class="ec ec-shopping-bag"></i>Shop</a>
-            </li>
-            <li id="menu-item-5294" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5294">
-                <a title="My Account" href="../my-account/index.htm"><i class="ec ec-user"></i>My Account</a>
-            </li>
-        </ul>
-    </div>
+	<div class="container clearfix">
+		<ul id="menu-top-bar-left" class="nav nav-inline float-start electro-animate-dropdown flip">
+			<li id="menu-item-5166" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5166"><a title="Welcome to Worldwide Electronics Store" href="#">
+					Bienvenido a la tienda kintaelectric
+				</a>
+			</li>
+		</ul>
+		<ul id="menu-top-bar-right" class="nav nav-inline float-end electro-animate-dropdown flip">
+			<li id="menu-item-5167" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5167"><a title="Localizador de Tiendas" href="/contact"><i class="ec ec-map-pointer"></i>Localizador de Tiendas</a></li>
+			<li id="menu-item-5299" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5299"><a title="Rastrea tu Pedido" href="track-your-order/index.htm"><i class="ec ec-transport"></i>Rastrea tu Pedido</a></li>
+			<li id="menu-item-5293" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5293"><a title="Tienda" href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>"><i class="ec ec-shopping-bag"></i>Tienda</a></li>
+			<li id="menu-item-5294" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5294">
+				<?php if (is_user_logged_in()) : ?>
+					<a title="<?php echo esc_attr(wp_get_current_user()->display_name); ?>" href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>">
+						<i class="ec ec-user"></i><?php echo esc_html(wp_get_current_user()->display_name); ?>
+					</a>
+				<?php else : ?>
+					<a title="Mi Cuenta" href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>">
+						<i class="ec ec-user"></i>Mi Cuenta
+					</a>
+				<?php endif; ?>
+			</li>
+		</ul>
+	</div>
 </div>
 <header id="masthead" class="site-header header-v3 stick-this">
 	<div class="container hidden-lg-down d-none d-xl-block">
