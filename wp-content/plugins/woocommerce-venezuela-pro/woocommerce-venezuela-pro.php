@@ -222,6 +222,9 @@ class WooCommerce_Venezuela_Pro {
         // Cargar configuraciones de visualización
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-display-settings.php';
         
+        // Script para forzar ocultación en sidebar
+        require_once WVP_PLUGIN_PATH . 'force-hide-sidebar.php';
+        
         // Archivos de pruebas (solo en desarrollo)
         if (defined('WP_DEBUG') && WP_DEBUG) {
             require_once WVP_PLUGIN_PATH . 'tests/test-woocommerce-compatibility.php';

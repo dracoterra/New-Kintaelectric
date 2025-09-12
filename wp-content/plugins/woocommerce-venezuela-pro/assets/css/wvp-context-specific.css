@@ -22,7 +22,52 @@
 /* Ocultar selectores de moneda en sidebar */
 .sidebar .wvp-currency-switcher,
 .sidebar .wvp-price-conversion,
-.sidebar .wvp-rate-info {
+.sidebar .wvp-rate-info,
+#sidebar .wvp-currency-switcher,
+#sidebar .wvp-price-conversion,
+#sidebar .wvp-rate-info,
+.widget-area .wvp-currency-switcher,
+.widget-area .wvp-price-conversion,
+.widget-area .wvp-rate-info {
+    display: none !important;
+}
+
+/* Ocultar selectores en sidebar de WooCommerce shop */
+.woocommerce-shop .sidebar .wvp-currency-switcher,
+.woocommerce-shop .sidebar .wvp-price-conversion,
+.woocommerce-shop .sidebar .wvp-rate-info,
+.woocommerce-shop #sidebar .wvp-currency-switcher,
+.woocommerce-shop #sidebar .wvp-price-conversion,
+.woocommerce-shop #sidebar .wvp-rate-info,
+.woocommerce-shop .widget-area .wvp-currency-switcher,
+.woocommerce-shop .widget-area .wvp-price-conversion,
+.woocommerce-shop .widget-area .wvp-rate-info {
+    display: none !important;
+}
+
+/* Ocultar selectores en cualquier sidebar o área de widgets */
+aside .wvp-currency-switcher,
+aside .wvp-price-conversion,
+aside .wvp-rate-info,
+[class*="sidebar"] .wvp-currency-switcher,
+[class*="sidebar"] .wvp-price-conversion,
+[class*="sidebar"] .wvp-rate-info,
+[class*="widget"] .wvp-currency-switcher,
+[class*="widget"] .wvp-price-conversion,
+[class*="widget"] .wvp-rate-info {
+    display: none !important;
+}
+
+/* Ocultar selectores en listas de productos en sidebar */
+.sidebar ul.products .wvp-currency-switcher,
+.sidebar ul.products .wvp-price-conversion,
+.sidebar ul.products .wvp-rate-info,
+#sidebar ul.products .wvp-currency-switcher,
+#sidebar ul.products .wvp-price-conversion,
+#sidebar ul.products .wvp-rate-info,
+.widget-area ul.products .wvp-currency-switcher,
+.widget-area ul.products .wvp-price-conversion,
+.widget-area ul.products .wvp-rate-info {
     display: none !important;
 }
 
