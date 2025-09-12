@@ -164,10 +164,10 @@ class WooCommerce_Venezuela_Pro {
         
         // Inicializar gestor de visualización de productos (se inicializa en init_components)
         
-        // Log de inicialización (solo en modo debug)
-        if (defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
-            error_log('WooCommerce Venezuela Pro: Plugin inicializado correctamente');
-        }
+        // Log de inicialización (solo en modo debug) - DESHABILITADO para evitar spam
+        // if (defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+        //     error_log('WooCommerce Venezuela Pro: Plugin inicializado correctamente');
+        // }
     }
     
     /**
@@ -286,18 +286,11 @@ class WooCommerce_Venezuela_Pro {
         
         // Cargar reportes SENIAT
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-seniat-reports.php';
+
+        // Cargar funciones AJAX faltantes
+        require_once WVP_PLUGIN_PATH . 'ajax-functions.php';
         
         // Script para forzar ocultación en sidebar
-        require_once WVP_PLUGIN_PATH . 'force-hide-sidebar.php';
-        
-        // Archivos de pruebas (solo en desarrollo)
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            require_once WVP_PLUGIN_PATH . 'tests/test-woocommerce-compatibility.php';
-            require_once WVP_PLUGIN_PATH . 'tests/test-functionalities.php';
-            require_once WVP_PLUGIN_PATH . 'tests/test-business-logic.php';
-            require_once WVP_PLUGIN_PATH . 'tests/test-optimizations.php';
-        }
-        
     }
     
     /**

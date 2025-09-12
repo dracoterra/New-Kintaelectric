@@ -303,27 +303,36 @@ class WVP_Display_Control {
      * Obtener configuraciones de visualización
      */
     private function get_display_settings() {
+        // Usar las configuraciones centralizadas de WVP_Display_Settings
+        if (class_exists('WVP_Display_Settings')) {
+            return WVP_Display_Settings::get_settings();
+        }
+        
+        // Fallback con configuraciones consistentes
         return get_option('wvp_display_settings', array(
             'currency_conversion' => array(
                 'single_product' => true,
                 'shop_loop' => true,
                 'cart' => true,
                 'checkout' => true,
-                'widget' => true
+                'widget' => false,  // DESHABILITADO en widgets
+                'footer' => false   // DESHABILITADO en footer
             ),
             'bcv_rate' => array(
                 'single_product' => false,
                 'shop_loop' => false,
                 'cart' => false,
                 'checkout' => false,
-                'widget' => true
+                'widget' => false,  // DESHABILITADO en widgets
+                'footer' => false   // DESHABILITADO en footer
             ),
             'currency_switcher' => array(
                 'single_product' => true,
                 'shop_loop' => true,
                 'cart' => true,
                 'checkout' => true,
-                'widget' => true
+                'widget' => false,  // DESHABILITADO en widgets
+                'footer' => false   // DESHABILITADO en footer
             )
         ));
     }
