@@ -1,0 +1,135 @@
+/**
+ * Estilos específicos por contexto para WooCommerce Venezuela Pro
+ * 
+ * @package WooCommerce_Venezuela_Pro
+ * @since 1.0.0
+ */
+
+/* Ocultar selectores de moneda en widgets */
+.widget .wvp-currency-switcher,
+.widget .wvp-price-conversion,
+.widget .wvp-rate-info {
+    display: none !important;
+}
+
+/* Ocultar selectores de moneda en footer */
+.footer .wvp-currency-switcher,
+.footer .wvp-price-conversion,
+.footer .wvp-rate-info {
+    display: none !important;
+}
+
+/* Ocultar selectores de moneda en sidebar */
+.sidebar .wvp-currency-switcher,
+.sidebar .wvp-price-conversion,
+.sidebar .wvp-rate-info {
+    display: none !important;
+}
+
+/* Ocultar selectores de moneda en áreas específicas del footer */
+#footer .wvp-currency-switcher,
+#footer .wvp-price-conversion,
+#footer .wvp-rate-info,
+.site-footer .wvp-currency-switcher,
+.site-footer .wvp-price-conversion,
+.site-footer .wvp-rate-info {
+    display: none !important;
+}
+
+/* Ocultar selectores de moneda en widgets específicos */
+.widget_woocommerce_products .wvp-currency-switcher,
+.widget_woocommerce_products .wvp-price-conversion,
+.widget_woocommerce_products .wvp-rate-info,
+.widget_woocommerce_product_categories .wvp-currency-switcher,
+.widget_woocommerce_product_categories .wvp-price-conversion,
+.widget_woocommerce_product_categories .wvp-rate-info {
+    display: none !important;
+}
+
+/* Asegurar que solo se muestren en áreas principales de productos */
+.woocommerce .products .wvp-currency-switcher,
+.woocommerce .products .wvp-price-conversion,
+.woocommerce .products .wvp-rate-info,
+.woocommerce .product .wvp-currency-switcher,
+.woocommerce .product .wvp-price-conversion,
+.woocommerce .product .wvp-rate-info {
+    display: block !important;
+}
+
+/* Ocultar en listas de productos en widgets */
+.widget ul.products .wvp-currency-switcher,
+.widget ul.products .wvp-price-conversion,
+.widget ul.products .wvp-rate-info {
+    display: none !important;
+}
+
+/* Ocultar en listas de productos en footer */
+.footer ul.products .wvp-currency-switcher,
+.footer ul.products .wvp-price-conversion,
+.footer ul.products .wvp-rate-info,
+#footer ul.products .wvp-currency-switcher,
+#footer ul.products .wvp-price-conversion,
+#footer ul.products .wvp-rate-info {
+    display: none !important;
+}
+
+/* Ocultar en secciones específicas del theme */
+.section-products-carousel .wvp-currency-switcher,
+.section-products-carousel .wvp-price-conversion,
+.section-products-carousel .wvp-rate-info {
+    display: none !important;
+}
+
+/* Mostrar solo en la grilla principal de productos */
+.woocommerce .products.grid .wvp-currency-switcher,
+.woocommerce .products.grid .wvp-price-conversion,
+.woocommerce .products.grid .wvp-rate-info {
+    display: block !important;
+}
+
+/* Ocultar en carruseles y secciones promocionales */
+.owl-carousel .wvp-currency-switcher,
+.owl-carousel .wvp-price-conversion,
+.owl-carousel .wvp-rate-info,
+.carousel .wvp-currency-switcher,
+.carousel .wvp-price-conversion,
+.carousel .wvp-rate-info {
+    display: none !important;
+}
+
+/* Forzar ocultación de conversión cuando está deshabilitada */
+.wvp-price-conversion[style*="display: none"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Ocultar conversión en contextos específicos */
+.widget .wvp-price-conversion,
+.footer .wvp-price-conversion,
+.sidebar .wvp-price-conversion,
+#footer .wvp-price-conversion,
+.site-footer .wvp-price-conversion {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Forzar ocultación de conversión en todas las áreas no principales */
+.wvp-price-conversion {
+    display: none !important;
+}
+
+/* Mostrar conversión solo en áreas principales de productos */
+.woocommerce .products .wvp-price-conversion,
+.woocommerce .product .wvp-price-conversion {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    overflow: visible !important;
+}

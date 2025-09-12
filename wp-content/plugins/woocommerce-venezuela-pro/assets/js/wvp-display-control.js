@@ -32,25 +32,28 @@
          * Vincular eventos
          */
         bindEvents() {
-            // Selector de moneda global
-            $(document).on('click', '.wvp-currency-switcher .wvp-currency-btn', (e) => {
+            // Selector de moneda - usar event delegation con scope específico
+            $(document).on('click', '.wvp-currency-switcher button, .wvp-currency-switcher .wvp-currency-option', (e) => {
                 e.preventDefault();
+                e.stopPropagation(); // Prevenir propagación
                 this.handleCurrencySwitch($(e.currentTarget));
             });
             
             // Dropdown de moneda
             $(document).on('change', '.wvp-currency-dropdown', (e) => {
+                e.stopPropagation();
                 this.handleCurrencyDropdown($(e.currentTarget));
             });
             
             // Toggle de moneda
             $(document).on('change', '.wvp-currency-toggle .wvp-toggle-input', (e) => {
+                e.stopPropagation();
                 this.handleCurrencyToggle($(e.currentTarget));
             });
             
-            // Actualizar todos los switchers cuando cambia la moneda
+            // Actualizar solo switchers globales cuando cambia la moneda
             $(document).on('wvp:currencyChanged', (e, currency) => {
-                this.updateAllSwitchers(currency);
+                this.updateGlobalSwitchers(currency);
             });
         }
         
@@ -62,37 +65,59 @@
             $('.wvp-currency-switcher').each((index, element) => {
                 this.initializeSwitcher($(element));
             });
+            
+            // Inicializar estados de precios
+            this.initializePriceStates();
+        }
+        
+        /**
+         * Inicializar estados de precios
+         */
+        initializePriceStates() {
+            $('.wvp-product-price-container').each((index, element) => {
+                const $container = $(element);
+                const $usdPrice = $container.find('.wvp-price-usd');
+                const $vesPrice = $container.find('.wvp-price-ves');
+                
+                // Forzar estado inicial correcto
+                $usdPrice.css('display', 'block');
+                $vesPrice.css('display', 'none');
+                
+                console.log('WVP: Inicializado producto', index, '- USD visible, VES oculto');
+            });
         }
         
         /**
          * Inicializar selector individual
          */
         initializeSwitcher($switcher) {
+            // Forzar scope local para productos individuales
             const scope = $switcher.hasClass('wvp-scope-global') ? 'global' : 'local';
             const currentCurrency = this.getCurrentCurrency();
             
-            // Establecer moneda actual
-            $switcher.find('.wvp-currency-btn').removeClass('active');
-            $switcher.find(`[data-currency="${currentCurrency}"]`).addClass('active');
+            // Establecer moneda actual (asegurar mayúsculas)
+            $switcher.find('.wvp-currency-btn, .wvp-currency-option').removeClass('active');
+            $switcher.find(`[data-currency="USD"]`).addClass('active');
             
-            // Configurar alcance
-            if (scope === 'global') {
-                $switcher.attr('data-scope', 'global');
-            } else {
-                $switcher.attr('data-scope', 'local');
-            }
+            // Siempre configurar como local para productos individuales
+            $switcher.attr('data-scope', 'local');
         }
         
         /**
          * Manejar cambio de moneda en botones
          */
         handleCurrencySwitch($button) {
+            // Obtener el contenedor del producto más cercano
+            const $productContainer = $button.closest('.wvp-product-price-container');
             const $switcher = $button.closest('.wvp-currency-switcher');
             const currency = $button.data('currency');
-            const scope = $switcher.attr('data-scope') || 'global';
             
-            if (!currency) {
-                console.warn('WVP: No se pudo cambiar moneda - datos faltantes');
+            console.log('WVP: Botón clickeado:', $button[0]);
+            console.log('WVP: data-currency:', currency, 'tipo:', typeof currency);
+            console.log('WVP: Atributos del botón:', $button[0].attributes);
+            
+            if (!currency || !$productContainer.length) {
+                console.warn('WVP: No se pudo cambiar moneda - datos faltantes o contenedor no encontrado');
                 return;
             }
             
@@ -103,19 +128,14 @@
             
             $button.addClass('wvp-switching');
             
-            // Actualizar botones activos en este switcher
-            $switcher.find('.wvp-currency-btn').removeClass('active');
+            // Actualizar solo este switcher específico
+            $switcher.find('button, .wvp-currency-option').removeClass('active');
             $button.addClass('active');
             
-            // Cambiar moneda según el alcance
-            if (scope === 'global') {
-                this.changeGlobalCurrency(currency);
-            } else {
-                this.changeLocalCurrency($switcher, currency);
-            }
+            // Actualizar solo este producto específico
+            this.updateSingleProduct($productContainer, currency);
             
-            // Guardar preferencia
-            this.saveUserPreference(currency);
+            console.log('WVP: Cambio de moneda individual - Producto:', $productContainer.attr('class'), 'Moneda:', currency);
             
             // Remover clase de switching
             setTimeout(() => {
@@ -158,28 +178,16 @@
         }
         
         /**
-         * Cambiar moneda globalmente
+         * Cambiar moneda globalmente (solo para shortcodes globales)
          */
         changeGlobalCurrency(currency) {
-            // Actualizar todos los switchers globales
+            // Solo actualizar switchers marcados como globales
             $('.wvp-currency-switcher[data-scope="global"]').each((index, element) => {
                 this.updateSwitcher($(element), currency);
             });
             
-            // Actualizar precios en toda la página
-            this.updateAllPrices(currency);
-            
             // Disparar evento personalizado
             $(document).trigger('wvp:currencyChanged', [currency]);
-        }
-        
-        /**
-         * Cambiar moneda localmente
-         */
-        changeLocalCurrency($switcher, currency) {
-            // Solo actualizar este switcher y productos cercanos
-            this.updateSwitcher($switcher, currency);
-            this.updateNearbyPrices($switcher, currency);
         }
         
         /**
@@ -201,22 +209,25 @@
         }
         
         /**
-         * Actualizar todos los selectores
+         * Actualizar selectores globales (solo para cambios globales)
          */
-        updateAllSwitchers(currency) {
-            $('.wvp-currency-switcher').each((index, element) => {
+        updateGlobalSwitchers(currency) {
+            // Solo actualizar selectores marcados como globales
+            $('.wvp-currency-switcher[data-scope="global"]').each((index, element) => {
                 this.updateSwitcher($(element), currency);
             });
         }
         
         /**
-         * Actualizar todos los precios
+         * Actualizar todos los precios (solo productos, no widgets)
          */
         updateAllPrices(currency) {
-            $('.wvp-product-price-container').each((index, element) => {
+            // Solo actualizar contenedores de productos, no widgets ni footer
+            $('.wvp-product-price-container').not('.widget .wvp-product-price-container, .footer .wvp-product-price-container').each((index, element) => {
                 this.updatePriceContainer($(element), currency);
             });
         }
+        
         
         /**
          * Actualizar precios cercanos
@@ -233,31 +244,59 @@
         }
         
         /**
-         * Actualizar contenedor de precio
+         * Actualizar un solo producto específico
          */
-        updatePriceContainer($container, currency) {
-            const $usdPrice = $container.find('.wvp-price-usd');
-            const $vesPrice = $container.find('.wvp-price-ves');
-            const $conversion = $container.find('.wvp-price-conversion');
-            const $rateInfo = $container.find('.wvp-rate-info');
+        updateSingleProduct($productContainer, currency) {
+            console.log('WVP: updateSingleProduct ejecutado, moneda:', currency);
+            console.log('WVP: Contenedor del producto:', $productContainer[0]);
+            
+            const $usdPrice = $productContainer.find('.wvp-price-usd');
+            const $vesPrice = $productContainer.find('.wvp-price-ves');
+            const $conversion = $productContainer.find('.wvp-price-conversion');
+            const $rateInfo = $productContainer.find('.wvp-rate-info');
+            
+            console.log('WVP: Elementos encontrados:');
+            console.log('WVP: - USD Price:', $usdPrice.length, $usdPrice[0]);
+            console.log('WVP: - VES Price:', $vesPrice.length, $vesPrice[0]);
+            console.log('WVP: - Conversion:', $conversion.length, $conversion[0]);
+            console.log('WVP: - Rate Info:', $rateInfo.length, $rateInfo[0]);
+            
+            // Forzar estilos iniciales correctos
+            $usdPrice.css('display', 'block');
+            $vesPrice.css('display', 'none');
+            
+            console.log('WVP: Comparando moneda:', currency, 'tipo:', typeof currency);
             
             if (currency === 'USD') {
+                console.log('WVP: Cambiando a USD');
                 $vesPrice.fadeOut(200, () => {
                     $usdPrice.fadeIn(200);
+                    console.log('WVP: USD mostrado, VES oculto');
                 });
                 $conversion.fadeIn(200);
                 if ($rateInfo.length) {
                     $rateInfo.fadeIn(200);
                 }
-            } else {
+            } else if (currency === 'VES') {
+                console.log('WVP: Cambiando a VES');
                 $usdPrice.fadeOut(200, () => {
                     $vesPrice.fadeIn(200);
+                    console.log('WVP: VES mostrado, USD oculto');
                 });
                 $conversion.fadeOut(200);
                 if ($rateInfo.length) {
                     $rateInfo.fadeOut(200);
                 }
+            } else {
+                console.log('WVP: Moneda no reconocida:', currency, 'tipo:', typeof currency);
             }
+        }
+        
+        /**
+         * Actualizar contenedor de precio (método legacy)
+         */
+        updatePriceContainer($container, currency) {
+            this.updateSingleProduct($container, currency);
         }
         
         /**

@@ -51,6 +51,9 @@ class WVP_Product_Display_Manager {
      * Constructor de la clase
      */
     public function __construct() {
+        // Log para verificar que se está inicializando
+        error_log('WVP Product Display Manager: Constructor ejecutado');
+        
         // Obtener instancia del plugin de forma segura
         if (class_exists('WooCommerce_Venezuela_Pro')) {
             $this->plugin = WooCommerce_Venezuela_Pro::get_instance();
@@ -59,11 +62,13 @@ class WVP_Product_Display_Manager {
         }
         
         // Obtener configuración
-        $this->current_style = get_option('wvp_display_style', 'minimal');
+        $this->current_style = 'minimal'; // Forzar estilo minimal
         $this->theme_compatibility = $this->detect_theme();
         
         // Inicializar hooks
         $this->init_hooks();
+        
+        error_log('WVP Product Display Manager: Hooks inicializados');
     }
     
     /**
@@ -84,9 +89,9 @@ class WVP_Product_Display_Manager {
         add_shortcode('wvp_price_display', array($this, 'shortcode_price_display'));
         add_shortcode('wvp_currency_badge', array($this, 'shortcode_currency_badge'));
         
-        // AJAX para cambio de moneda
-        add_action('wp_ajax_wvp_switch_currency', array($this, 'ajax_switch_currency'));
-        add_action('wp_ajax_nopriv_wvp_switch_currency', array($this, 'ajax_switch_currency'));
+        // AJAX para cambio de moneda (temporalmente deshabilitado)
+        // add_action('wp_ajax_wvp_switch_currency', array($this, 'ajax_switch_currency'));
+        // add_action('wp_ajax_nopriv_wvp_switch_currency', array($this, 'ajax_switch_currency'));
     }
     
     /**
@@ -153,27 +158,42 @@ class WVP_Product_Display_Manager {
      * Modificar visualización de precios
      */
     public function modify_price_display($price_html, $product) {
+        // Log para verificar que se está ejecutando
+        error_log('WVP Product Display Manager: modify_price_display ejecutado para producto ID: ' . $product->get_id());
+        
         // Solo en frontend
         if (is_admin()) {
+            error_log('WVP Product Display Manager: En admin, saltando modificación');
             return $price_html;
         }
         
-        // Solo en páginas de productos y tienda
-        if (!is_product() && !is_shop() && !is_product_category() && !is_product_tag()) {
+        // Usar el nuevo detector de contexto
+        $context_detector = WVP_Context_Detector::get_instance();
+        $context = $context_detector->get_current_context();
+        error_log('WVP Product Display Manager: Contexto detectado: ' . $context);
+        
+        // Verificar si debemos mostrar elementos en este contexto
+        if (!$context_detector->should_show_in_context('currency_conversion') && 
+            !$context_detector->should_show_in_context('currency_switcher')) {
+            error_log('WVP Product Display Manager: No se debe mostrar conversión ni switcher en contexto: ' . $context);
             return $price_html;
         }
         
         // Obtener precio del producto
         $price = $product->get_price();
         if (!$price || $price <= 0) {
+            error_log('WVP Product Display Manager: Precio inválido: ' . $price);
             return $price_html;
         }
         
         // Obtener tasa BCV
         $rate = WVP_BCV_Integrator::get_rate();
         if (!$rate || $rate <= 0) {
+            error_log('WVP Product Display Manager: Tasa BCV inválida: ' . $rate);
             return $price_html;
         }
+        
+        error_log('WVP Product Display Manager: Generando HTML del display');
         
         // Generar HTML del display
         return $this->generate_price_display_html($price_html, $price, $rate, $product);
@@ -225,6 +245,7 @@ class WVP_Product_Display_Manager {
      */
     private function generate_minimal_html($price_html, $formatted_usd, $formatted_ves, $price, $ves_price, $rate, $style_class) {
         $context = $this->get_current_context();
+        error_log('WVP Product Display Manager: generate_minimal_html ejecutado, contexto: ' . $context);
         
         $html = '<div class="wvp-product-price-container ' . esc_attr($style_class) . '">';
         $html .= '<div class="wvp-price-display">';
@@ -233,22 +254,30 @@ class WVP_Product_Display_Manager {
         $html .= '</div>';
         
         // Solo mostrar selector si está habilitado para este contexto
-        if (apply_filters('wvp_show_currency_switcher', true, $context)) {
-            $html .= '<div class="wvp-currency-switcher wvp-scope-global" data-price-usd="' . esc_attr($price) . '" data-price-ves="' . esc_attr($ves_price) . '">';
-            $html .= '<button class="wvp-currency-option active" data-currency="usd">USD</button>';
-            $html .= '<button class="wvp-currency-option" data-currency="ves">VES</button>';
+        $show_switcher = WVP_Display_Settings::should_show_switcher($context);
+        error_log('WVP Product Display Manager: Debe mostrar switcher: ' . ($show_switcher ? 'SÍ' : 'NO'));
+        
+        if ($show_switcher) {
+            error_log('WVP Product Display Manager: Generando selector de moneda');
+            // Forzar scope local para productos individuales
+            $scope = ($context === 'widget') ? WVP_Display_Settings::get_switcher_scope($context) : 'local';
+            $html .= '<div class="wvp-currency-switcher wvp-scope-' . $scope . '" data-price-usd="' . esc_attr($price) . '" data-price-ves="' . esc_attr($ves_price) . '" data-scope="local">';
+            $html .= '<button class="wvp-currency-option active" data-currency="USD">USD</button>';
+            $html .= '<button class="wvp-currency-option" data-currency="VES">VES</button>';
             $html .= '</div>';
+        } else {
+            error_log('WVP Product Display Manager: NO se generará selector de moneda');
         }
         
         // Solo mostrar conversión si está habilitada para este contexto
-        if (apply_filters('wvp_show_currency_conversion', true, $context)) {
+        if (WVP_Display_Settings::should_show_conversion($context)) {
             $html .= '<div class="wvp-price-conversion">';
             $html .= '<span class="wvp-ves-reference">Equivale a ' . $formatted_ves . '</span>';
             $html .= '</div>';
         }
         
         // Solo mostrar tasa BCV si está habilitada para este contexto
-        if (apply_filters('wvp_show_bcv_rate', false, $context)) {
+        if (WVP_Display_Settings::should_show_bcv_rate($context)) {
             $html .= '<div class="wvp-rate-info">Tasa BCV: ' . number_format($rate, 2, ',', '.') . '</div>';
         }
         
@@ -261,95 +290,120 @@ class WVP_Product_Display_Manager {
      * Generar HTML estilo moderno
      */
     private function generate_modern_html($price_html, $formatted_usd, $formatted_ves, $price, $ves_price, $rate, $style_class) {
-        return sprintf(
-            '<div class="wvp-product-price-container %s">
-                <div class="wvp-price-display">
-                    <span class="wvp-price-usd" style="display: block;">%s</span>
-                    <span class="wvp-price-ves" style="display: none;">%s</span>
-                </div>
-                <div class="wvp-currency-switcher" data-price-usd="%s" data-price-ves="%s">
-                    <button class="wvp-currency-option active" data-currency="usd">
-                        <span>USD</span>
-                    </button>
-                    <button class="wvp-currency-option" data-currency="ves">
-                        <span>VES</span>
-                    </button>
-                </div>
-                <div class="wvp-price-conversion">
-                    <span class="wvp-ves-reference">Equivale a %s</span>
-                </div>
-                <div class="wvp-rate-info">Tasa BCV: %s</div>
-            </div>',
-            esc_attr($style_class),
-            $formatted_usd,
-            $formatted_ves,
-            esc_attr($price),
-            esc_attr($ves_price),
-            $formatted_ves,
-            number_format($rate, 2, ',', '.')
-        );
+        $context = $this->get_current_context();
+        
+        $html = '<div class="wvp-product-price-container ' . esc_attr($style_class) . '">';
+        $html .= '<div class="wvp-price-display">';
+        $html .= '<span class="wvp-price-usd" style="display: block;">' . $formatted_usd . '</span>';
+        $html .= '<span class="wvp-price-ves" style="display: none;">' . $formatted_ves . '</span>';
+        $html .= '</div>';
+        
+        // Solo mostrar selector si está habilitado para este contexto
+        if (WVP_Display_Settings::should_show_switcher($context)) {
+            $scope = ($context === 'widget') ? WVP_Display_Settings::get_switcher_scope($context) : 'local';
+            $html .= '<div class="wvp-currency-switcher wvp-scope-' . $scope . '" data-price-usd="' . esc_attr($price) . '" data-price-ves="' . esc_attr($ves_price) . '" data-scope="local">';
+            $html .= '<button class="wvp-currency-option active" data-currency="USD">';
+            $html .= '<span>USD</span>';
+            $html .= '</button>';
+            $html .= '<button class="wvp-currency-option" data-currency="VES">';
+            $html .= '<span>VES</span>';
+            $html .= '</button>';
+            $html .= '</div>';
+        }
+        
+        // Solo mostrar conversión si está habilitada para este contexto
+        if (WVP_Display_Settings::should_show_conversion($context)) {
+            $html .= '<div class="wvp-price-conversion">';
+            $html .= '<span class="wvp-ves-reference">Equivale a ' . $formatted_ves . '</span>';
+            $html .= '</div>';
+        }
+        
+        // Solo mostrar tasa BCV si está habilitada para este contexto
+        if (WVP_Display_Settings::should_show_bcv_rate($context)) {
+            $html .= '<div class="wvp-rate-info">Tasa BCV: ' . number_format($rate, 2, ',', '.') . '</div>';
+        }
+        
+        $html .= '</div>';
+        
+        return $html;
     }
     
     /**
      * Generar HTML estilo elegante
      */
     private function generate_elegant_html($price_html, $formatted_usd, $formatted_ves, $price, $ves_price, $rate, $style_class) {
-        return sprintf(
-            '<div class="wvp-product-price-container %s">
-                <div class="wvp-price-display">
-                    <span class="wvp-price-usd" style="display: block;">%s</span>
-                    <span class="wvp-price-ves" style="display: none;">%s</span>
-                </div>
-                <div class="wvp-currency-switcher" data-price-usd="%s" data-price-ves="%s">
-                    <button class="wvp-currency-option active" data-currency="usd">
-                        <span>USD</span>
-                    </button>
-                    <button class="wvp-currency-option" data-currency="ves">
-                        <span>VES</span>
-                    </button>
-                </div>
-                <div class="wvp-price-conversion">
-                    <span class="wvp-ves-reference">Equivale a %s</span>
-                </div>
-                <div class="wvp-rate-info">Tasa BCV: %s</div>
-            </div>',
-            esc_attr($style_class),
-            $formatted_usd,
-            $formatted_ves,
-            esc_attr($price),
-            esc_attr($ves_price),
-            $formatted_ves,
-            number_format($rate, 2, ',', '.')
-        );
+        $context = $this->get_current_context();
+        
+        $html = '<div class="wvp-product-price-container ' . esc_attr($style_class) . '">';
+        $html .= '<div class="wvp-price-display">';
+        $html .= '<span class="wvp-price-usd" style="display: block;">' . $formatted_usd . '</span>';
+        $html .= '<span class="wvp-price-ves" style="display: none;">' . $formatted_ves . '</span>';
+        $html .= '</div>';
+        
+        // Solo mostrar selector si está habilitado para este contexto
+        if (WVP_Display_Settings::should_show_switcher($context)) {
+            $scope = ($context === 'widget') ? WVP_Display_Settings::get_switcher_scope($context) : 'local';
+            $html .= '<div class="wvp-currency-switcher wvp-scope-' . $scope . '" data-price-usd="' . esc_attr($price) . '" data-price-ves="' . esc_attr($ves_price) . '" data-scope="local">';
+            $html .= '<button class="wvp-currency-option active" data-currency="USD">';
+            $html .= '<span>USD</span>';
+            $html .= '</button>';
+            $html .= '<button class="wvp-currency-option" data-currency="VES">';
+            $html .= '<span>VES</span>';
+            $html .= '</button>';
+            $html .= '</div>';
+        }
+        
+        // Solo mostrar conversión si está habilitada para este contexto
+        if (WVP_Display_Settings::should_show_conversion($context)) {
+            $html .= '<div class="wvp-price-conversion">';
+            $html .= '<span class="wvp-ves-reference">Equivale a ' . $formatted_ves . '</span>';
+            $html .= '</div>';
+        }
+        
+        // Solo mostrar tasa BCV si está habilitada para este contexto
+        if (WVP_Display_Settings::should_show_bcv_rate($context)) {
+            $html .= '<div class="wvp-rate-info">Tasa BCV: ' . number_format($rate, 2, ',', '.') . '</div>';
+        }
+        
+        $html .= '</div>';
+        
+        return $html;
     }
     
     /**
      * Generar HTML estilo compacto
      */
     private function generate_compact_html($price_html, $formatted_usd, $formatted_ves, $price, $ves_price, $rate, $style_class) {
-        return sprintf(
-            '<div class="wvp-product-price-container %s">
-                <div class="wvp-price-layout">
-                    <div class="wvp-price-display">
-                        <span class="wvp-price-usd">%s</span>
-                        <span class="wvp-price-ves" style="display: none;">%s</span>
-                    </div>
-                    <div class="wvp-currency-switcher" data-price-usd="%s" data-price-ves="%s">
-                        <button class="wvp-currency-option active" data-currency="usd">USD</button>
-                        <button class="wvp-currency-option" data-currency="ves">VES</button>
-                    </div>
-                </div>
-                <div class="wvp-price-conversion">
-                    <span class="wvp-ves-reference">%s</span>
-                </div>
-            </div>',
-            esc_attr($style_class),
-            $formatted_usd,
-            $formatted_ves,
-            esc_attr($price),
-            esc_attr($ves_price),
-            $formatted_ves
-        );
+        $context = $this->get_current_context();
+        
+        $html = '<div class="wvp-product-price-container ' . esc_attr($style_class) . '">';
+        $html .= '<div class="wvp-price-layout">';
+        $html .= '<div class="wvp-price-display">';
+        $html .= '<span class="wvp-price-usd">' . $formatted_usd . '</span>';
+        $html .= '<span class="wvp-price-ves" style="display: none;">' . $formatted_ves . '</span>';
+        $html .= '</div>';
+        
+        // Solo mostrar selector si está habilitado para este contexto
+        if (WVP_Display_Settings::should_show_switcher($context)) {
+            $scope = ($context === 'widget') ? WVP_Display_Settings::get_switcher_scope($context) : 'local';
+            $html .= '<div class="wvp-currency-switcher wvp-scope-' . $scope . '" data-price-usd="' . esc_attr($price) . '" data-price-ves="' . esc_attr($ves_price) . '" data-scope="local">';
+            $html .= '<button class="wvp-currency-option active" data-currency="USD">USD</button>';
+            $html .= '<button class="wvp-currency-option" data-currency="VES">VES</button>';
+            $html .= '</div>';
+        }
+        
+        $html .= '</div>';
+        
+        // Solo mostrar conversión si está habilitada para este contexto
+        if (WVP_Display_Settings::should_show_conversion($context)) {
+            $html .= '<div class="wvp-price-conversion">';
+            $html .= '<span class="wvp-ves-reference">' . $formatted_ves . '</span>';
+            $html .= '</div>';
+        }
+        
+        $html .= '</div>';
+        
+        return $html;
     }
     
     /**
@@ -527,18 +581,6 @@ class WVP_Product_Display_Manager {
      * Obtener contexto actual
      */
     private function get_current_context() {
-        if (is_product()) {
-            return 'single_product';
-        } elseif (is_shop() || is_product_category() || is_product_tag()) {
-            return 'shop_loop';
-        } elseif (is_cart()) {
-            return 'cart';
-        } elseif (is_checkout()) {
-            return 'checkout';
-        } elseif (is_active_sidebar('sidebar-1') || is_active_sidebar('shop-sidebar')) {
-            return 'widget';
-        }
-        
-        return 'default';
+        return WVP_Display_Settings::get_current_context();
     }
 }

@@ -157,6 +157,7 @@ class WooCommerce_Venezuela_Pro {
         // Archivos principales
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-dependencies.php';
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-bcv-integrator.php';
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-context-detector.php';
         
         // Clases de seguridad (CRÍTICAS - CARGAR PRIMERO)
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-security-validator.php';
@@ -218,6 +219,9 @@ class WooCommerce_Venezuela_Pro {
         // Cargar control de visualización
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-display-control.php';
         
+        // Cargar configuraciones de visualización
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-display-settings.php';
+        
         // Archivos de pruebas (solo en desarrollo)
         if (defined('WP_DEBUG') && WP_DEBUG) {
             require_once WVP_PLUGIN_PATH . 'tests/test-woocommerce-compatibility.php';
@@ -225,6 +229,7 @@ class WooCommerce_Venezuela_Pro {
             require_once WVP_PLUGIN_PATH . 'tests/test-business-logic.php';
             require_once WVP_PLUGIN_PATH . 'tests/test-optimizations.php';
         }
+        
     }
     
     /**
@@ -328,7 +333,7 @@ class WooCommerce_Venezuela_Pro {
                 }
             }
             
-            // Cargar gestor de visualización de productos
+            // Cargar gestor de visualización de productos (siempre, no solo en admin)
             if (class_exists('WVP_Product_Display_Manager')) {
                 new WVP_Product_Display_Manager();
             }

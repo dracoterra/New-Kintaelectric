@@ -335,29 +335,40 @@ class WVP_Admin_Restructured {
         
         // Conversión de monedas
         $sanitized['currency_conversion'] = array(
-            'single_product' => isset($input['currency_conversion']['single_product']) ? true : false,
-            'shop_loop' => isset($input['currency_conversion']['shop_loop']) ? true : false,
-            'cart' => isset($input['currency_conversion']['cart']) ? true : false,
-            'checkout' => isset($input['currency_conversion']['checkout']) ? true : false,
-            'widget' => isset($input['currency_conversion']['widget']) ? true : false
+            'single_product' => isset($input['currency_conversion']['single_product']) && $input['currency_conversion']['single_product'] == '1' ? true : false,
+            'shop_loop' => isset($input['currency_conversion']['shop_loop']) && $input['currency_conversion']['shop_loop'] == '1' ? true : false,
+            'cart' => isset($input['currency_conversion']['cart']) && $input['currency_conversion']['cart'] == '1' ? true : false,
+            'checkout' => isset($input['currency_conversion']['checkout']) && $input['currency_conversion']['checkout'] == '1' ? true : false,
+            'widget' => isset($input['currency_conversion']['widget']) && $input['currency_conversion']['widget'] == '1' ? true : false
         );
         
         // Tasa BCV
         $sanitized['bcv_rate'] = array(
-            'single_product' => isset($input['bcv_rate']['single_product']) ? true : false,
-            'shop_loop' => isset($input['bcv_rate']['shop_loop']) ? true : false,
-            'cart' => isset($input['bcv_rate']['cart']) ? true : false,
-            'checkout' => isset($input['bcv_rate']['checkout']) ? true : false,
-            'widget' => isset($input['bcv_rate']['widget']) ? true : false
+            'single_product' => isset($input['bcv_rate']['single_product']) && $input['bcv_rate']['single_product'] == '1' ? true : false,
+            'shop_loop' => isset($input['bcv_rate']['shop_loop']) && $input['bcv_rate']['shop_loop'] == '1' ? true : false,
+            'cart' => isset($input['bcv_rate']['cart']) && $input['bcv_rate']['cart'] == '1' ? true : false,
+            'checkout' => isset($input['bcv_rate']['checkout']) && $input['bcv_rate']['checkout'] == '1' ? true : false,
+            'widget' => isset($input['bcv_rate']['widget']) && $input['bcv_rate']['widget'] == '1' ? true : false
         );
         
         // Selector de moneda
         $sanitized['currency_switcher'] = array(
-            'single_product' => isset($input['currency_switcher']['single_product']) ? true : false,
-            'shop_loop' => isset($input['currency_switcher']['shop_loop']) ? true : false,
-            'cart' => isset($input['currency_switcher']['cart']) ? true : false,
-            'checkout' => isset($input['currency_switcher']['checkout']) ? true : false,
-            'widget' => isset($input['currency_switcher']['widget']) ? true : false
+            'single_product' => isset($input['currency_switcher']['single_product']) && $input['currency_switcher']['single_product'] == '1' ? true : false,
+            'shop_loop' => isset($input['currency_switcher']['shop_loop']) && $input['currency_switcher']['shop_loop'] == '1' ? true : false,
+            'cart' => isset($input['currency_switcher']['cart']) && $input['currency_switcher']['cart'] == '1' ? true : false,
+            'checkout' => isset($input['currency_switcher']['checkout']) && $input['currency_switcher']['checkout'] == '1' ? true : false,
+            'widget' => isset($input['currency_switcher']['widget']) && $input['currency_switcher']['widget'] == '1' ? true : false,
+            'footer' => isset($input['currency_switcher']['footer']) && $input['currency_switcher']['footer'] == '1' ? true : false
+        );
+        
+        // Alcance del selector
+        $sanitized['switcher_scope'] = array(
+            'single_product' => isset($input['switcher_scope']['single_product']) ? sanitize_text_field($input['switcher_scope']['single_product']) : 'local',
+            'shop_loop' => isset($input['switcher_scope']['shop_loop']) ? sanitize_text_field($input['switcher_scope']['shop_loop']) : 'local',
+            'cart' => isset($input['switcher_scope']['cart']) ? sanitize_text_field($input['switcher_scope']['cart']) : 'local',
+            'checkout' => isset($input['switcher_scope']['checkout']) ? sanitize_text_field($input['switcher_scope']['checkout']) : 'local',
+            'widget' => isset($input['switcher_scope']['widget']) ? sanitize_text_field($input['switcher_scope']['widget']) : 'global',
+            'footer' => isset($input['switcher_scope']['footer']) ? sanitize_text_field($input['switcher_scope']['footer']) : 'global'
         );
         
         return $sanitized;
@@ -921,29 +932,38 @@ class WVP_Admin_Restructured {
      * Mostrar contenido de control de visualización
      */
     private function display_display_control_content() {
-        $settings = get_option('wvp_display_settings', array(
-            'currency_conversion' => array(
-                'single_product' => true,
-                'shop_loop' => true,
-                'cart' => true,
-                'checkout' => true,
-                'widget' => true
-            ),
-            'bcv_rate' => array(
-                'single_product' => false,
-                'shop_loop' => false,
-                'cart' => false,
-                'checkout' => false,
-                'widget' => true
-            ),
-            'currency_switcher' => array(
-                'single_product' => true,
-                'shop_loop' => true,
-                'cart' => true,
-                'checkout' => true,
-                'widget' => true
-            )
-        ));
+        $settings = get_option('wvp_display_settings', WVP_Display_Settings::get_default_settings());
+        
+        // Asegurar que todas las claves existan
+        if (!isset($settings['currency_conversion'])) {
+            $settings['currency_conversion'] = array();
+        }
+        if (!isset($settings['bcv_rate'])) {
+            $settings['bcv_rate'] = array();
+        }
+        if (!isset($settings['currency_switcher'])) {
+            $settings['currency_switcher'] = array();
+        }
+        if (!isset($settings['switcher_scope'])) {
+            $settings['switcher_scope'] = array();
+        }
+        
+        // Valores por defecto para cada contexto
+        $defaults = WVP_Display_Settings::get_default_settings();
+        foreach (['single_product', 'shop_loop', 'cart', 'checkout', 'widget', 'footer'] as $context) {
+            if (!isset($settings['currency_conversion'][$context])) {
+                $settings['currency_conversion'][$context] = $defaults['currency_conversion'][$context];
+            }
+            if (!isset($settings['bcv_rate'][$context])) {
+                $settings['bcv_rate'][$context] = $defaults['bcv_rate'][$context];
+            }
+            if (!isset($settings['currency_switcher'][$context])) {
+                $settings['currency_switcher'][$context] = $defaults['currency_switcher'][$context];
+            }
+            if (!isset($settings['switcher_scope'][$context])) {
+                $settings['switcher_scope'][$context] = $defaults['switcher_scope'][$context];
+            }
+        }
         ?>
         <div class="wvp-display-control">
             <h2><?php _e('Control de Visualización de Precios', 'wvp'); ?></h2>
@@ -993,7 +1013,36 @@ class WVP_Admin_Restructured {
                                 <label><input type="checkbox" name="wvp_display_settings[currency_switcher][shop_loop]" value="1" <?php checked($settings['currency_switcher']['shop_loop'], true); ?> /> <?php _e('Lista de productos (shop)', 'wvp'); ?></label><br>
                                 <label><input type="checkbox" name="wvp_display_settings[currency_switcher][cart]" value="1" <?php checked($settings['currency_switcher']['cart'], true); ?> /> <?php _e('Carrito de compras', 'wvp'); ?></label><br>
                                 <label><input type="checkbox" name="wvp_display_settings[currency_switcher][checkout]" value="1" <?php checked($settings['currency_switcher']['checkout'], true); ?> /> <?php _e('Página de checkout', 'wvp'); ?></label><br>
-                                <label><input type="checkbox" name="wvp_display_settings[currency_switcher][widget]" value="1" <?php checked($settings['currency_switcher']['widget'], true); ?> /> <?php _e('Widgets', 'wvp'); ?></label>
+                                <label><input type="checkbox" name="wvp_display_settings[currency_switcher][widget]" value="1" <?php checked($settings['currency_switcher']['widget'], true); ?> /> <?php _e('Widgets', 'wvp'); ?></label><br>
+                                <label><input type="checkbox" name="wvp_display_settings[currency_switcher][footer]" value="1" <?php checked($settings['currency_switcher']['footer'], true); ?> /> <?php _e('Footer', 'wvp'); ?></label>
+                            </fieldset>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Alcance del Selector', 'wvp'); ?></th>
+                        <td>
+                            <p class="description"><?php _e('Controla si el selector de moneda afecta solo al producto individual (Local) o a toda la página (Global).', 'wvp'); ?></p>
+                            <fieldset>
+                                <legend class="screen-reader-text"><?php _e('Alcance del selector por contexto:', 'wvp'); ?></legend>
+                                <label><?php _e('Página de producto individual:', 'wvp'); ?> 
+                                    <select name="wvp_display_settings[switcher_scope][single_product]">
+                                        <option value="local" <?php selected($settings['switcher_scope']['single_product'], 'local'); ?>><?php _e('Local (solo este producto)', 'wvp'); ?></option>
+                                        <option value="global" <?php selected($settings['switcher_scope']['single_product'], 'global'); ?>><?php _e('Global (toda la página)', 'wvp'); ?></option>
+                                    </select>
+                                </label><br><br>
+                                <label><?php _e('Lista de productos (shop):', 'wvp'); ?> 
+                                    <select name="wvp_display_settings[switcher_scope][shop_loop]">
+                                        <option value="local" <?php selected($settings['switcher_scope']['shop_loop'], 'local'); ?>><?php _e('Local (solo este producto)', 'wvp'); ?></option>
+                                        <option value="global" <?php selected($settings['switcher_scope']['shop_loop'], 'global'); ?>><?php _e('Global (toda la página)', 'wvp'); ?></option>
+                                    </select>
+                                </label><br><br>
+                                <label><?php _e('Widgets:', 'wvp'); ?> 
+                                    <select name="wvp_display_settings[switcher_scope][widget]">
+                                        <option value="local" <?php selected($settings['switcher_scope']['widget'], 'local'); ?>><?php _e('Local (solo este producto)', 'wvp'); ?></option>
+                                        <option value="global" <?php selected($settings['switcher_scope']['widget'], 'global'); ?>><?php _e('Global (toda la página)', 'wvp'); ?></option>
+                                    </select>
+                                </label>
                             </fieldset>
                         </td>
                     </tr>
