@@ -505,7 +505,6 @@
      */
     function updateCartQuantity(productId, quantity) {
         // Implementar actualización de cantidad
-        console.log('Actualizando cantidad:', productId, quantity);
     }
     
     /**
@@ -513,7 +512,6 @@
      */
     function removeFromCart(productId) {
         // Implementar eliminación del carrito
-        console.log('Eliminando producto:', productId);
     }
     
     /**

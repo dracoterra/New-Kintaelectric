@@ -45,7 +45,6 @@ add_action('wp_footer', function() {
                 $('[class*="sidebar"] .wvp-price-conversion').hide();
                 $('[class*="sidebar"] .wvp-rate-info').hide();
                 
-                console.log('WVP Force Sidebar: Selectores ocultados en sidebar');
             }
             
             // Ejecutar inmediatamente

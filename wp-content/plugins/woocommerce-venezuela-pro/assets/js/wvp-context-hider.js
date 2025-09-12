@@ -58,7 +58,6 @@ jQuery(document).ready(function($) {
         // Mostrar conversión solo en áreas principales de productos
         $('.woocommerce .products .wvp-price-conversion, .woocommerce .product .wvp-price-conversion').show();
         
-        console.log('WVP Context Hider: Selectores ocultados en widgets y footer');
     }
     
     // Ejecutar inmediatamente

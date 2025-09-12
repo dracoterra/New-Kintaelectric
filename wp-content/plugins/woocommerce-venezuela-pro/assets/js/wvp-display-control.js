@@ -83,7 +83,6 @@
                 $usdPrice.css('display', 'block');
                 $vesPrice.css('display', 'none');
                 
-                console.log('WVP: Inicializado producto', index, '- USD visible, VES oculto');
             });
         }
         
@@ -112,9 +111,6 @@
             const $switcher = $button.closest('.wvp-currency-switcher');
             const currency = $button.data('currency');
             
-            console.log('WVP: Botón clickeado:', $button[0]);
-            console.log('WVP: data-currency:', currency, 'tipo:', typeof currency);
-            console.log('WVP: Atributos del botón:', $button[0].attributes);
             
             if (!currency || !$productContainer.length) {
                 console.warn('WVP: No se pudo cambiar moneda - datos faltantes o contenedor no encontrado');
@@ -135,7 +131,6 @@
             // Actualizar solo este producto específico
             this.updateSingleProduct($productContainer, currency);
             
-            console.log('WVP: Cambio de moneda individual - Producto:', $productContainer.attr('class'), 'Moneda:', currency);
             
             // Remover clase de switching
             setTimeout(() => {
@@ -247,48 +242,34 @@
          * Actualizar un solo producto específico
          */
         updateSingleProduct($productContainer, currency) {
-            console.log('WVP: updateSingleProduct ejecutado, moneda:', currency);
-            console.log('WVP: Contenedor del producto:', $productContainer[0]);
             
             const $usdPrice = $productContainer.find('.wvp-price-usd');
             const $vesPrice = $productContainer.find('.wvp-price-ves');
             const $conversion = $productContainer.find('.wvp-price-conversion');
             const $rateInfo = $productContainer.find('.wvp-rate-info');
             
-            console.log('WVP: Elementos encontrados:');
-            console.log('WVP: - USD Price:', $usdPrice.length, $usdPrice[0]);
-            console.log('WVP: - VES Price:', $vesPrice.length, $vesPrice[0]);
-            console.log('WVP: - Conversion:', $conversion.length, $conversion[0]);
-            console.log('WVP: - Rate Info:', $rateInfo.length, $rateInfo[0]);
             
             // Forzar estilos iniciales correctos
             $usdPrice.css('display', 'block');
             $vesPrice.css('display', 'none');
             
-            console.log('WVP: Comparando moneda:', currency, 'tipo:', typeof currency);
             
             if (currency === 'USD') {
-                console.log('WVP: Cambiando a USD');
                 $vesPrice.fadeOut(200, () => {
                     $usdPrice.fadeIn(200);
-                    console.log('WVP: USD mostrado, VES oculto');
                 });
                 $conversion.fadeIn(200);
                 if ($rateInfo.length) {
                     $rateInfo.fadeIn(200);
                 }
             } else if (currency === 'VES') {
-                console.log('WVP: Cambiando a VES');
                 $usdPrice.fadeOut(200, () => {
                     $vesPrice.fadeIn(200);
-                    console.log('WVP: VES mostrado, USD oculto');
                 });
                 $conversion.fadeOut(200);
                 if ($rateInfo.length) {
                     $rateInfo.fadeOut(200);
                 }
-            } else {
-                console.log('WVP: Moneda no reconocida:', currency, 'tipo:', typeof currency);
             }
         }
         

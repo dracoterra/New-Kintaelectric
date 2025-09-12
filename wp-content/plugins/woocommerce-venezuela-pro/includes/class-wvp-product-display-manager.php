@@ -52,7 +52,6 @@ class WVP_Product_Display_Manager {
      */
     public function __construct() {
         // Log para verificar que se está inicializando
-        error_log('WVP Product Display Manager: Constructor ejecutado');
         
         // Obtener instancia del plugin de forma segura
         if (class_exists('WooCommerce_Venezuela_Pro')) {
@@ -68,7 +67,6 @@ class WVP_Product_Display_Manager {
         // Inicializar hooks
         $this->init_hooks();
         
-        error_log('WVP Product Display Manager: Hooks inicializados');
     }
     
     /**
@@ -159,41 +157,34 @@ class WVP_Product_Display_Manager {
      */
     public function modify_price_display($price_html, $product) {
         // Log para verificar que se está ejecutando
-        error_log('WVP Product Display Manager: modify_price_display ejecutado para producto ID: ' . $product->get_id());
         
         // Solo en frontend
         if (is_admin()) {
-            error_log('WVP Product Display Manager: En admin, saltando modificación');
             return $price_html;
         }
         
         // Usar el nuevo detector de contexto
         $context_detector = WVP_Context_Detector::get_instance();
         $context = $context_detector->get_current_context();
-        error_log('WVP Product Display Manager: Contexto detectado: ' . $context);
         
         // Verificar si debemos mostrar elementos en este contexto
         if (!$context_detector->should_show_in_context('currency_conversion') && 
             !$context_detector->should_show_in_context('currency_switcher')) {
-            error_log('WVP Product Display Manager: No se debe mostrar conversión ni switcher en contexto: ' . $context);
             return $price_html;
         }
         
         // Obtener precio del producto
         $price = $product->get_price();
         if (!$price || $price <= 0) {
-            error_log('WVP Product Display Manager: Precio inválido: ' . $price);
             return $price_html;
         }
         
         // Obtener tasa BCV
         $rate = WVP_BCV_Integrator::get_rate();
         if (!$rate || $rate <= 0) {
-            error_log('WVP Product Display Manager: Tasa BCV inválida: ' . $rate);
             return $price_html;
         }
         
-        error_log('WVP Product Display Manager: Generando HTML del display');
         
         // Generar HTML del display
         return $this->generate_price_display_html($price_html, $price, $rate, $product);
@@ -245,7 +236,6 @@ class WVP_Product_Display_Manager {
      */
     private function generate_minimal_html($price_html, $formatted_usd, $formatted_ves, $price, $ves_price, $rate, $style_class) {
         $context = $this->get_current_context();
-        error_log('WVP Product Display Manager: generate_minimal_html ejecutado, contexto: ' . $context);
         
         $html = '<div class="wvp-product-price-container ' . esc_attr($style_class) . '">';
         $html .= '<div class="wvp-price-display">';
@@ -255,10 +245,8 @@ class WVP_Product_Display_Manager {
         
         // Solo mostrar selector si está habilitado para este contexto
         $show_switcher = WVP_Display_Settings::should_show_switcher($context);
-        error_log('WVP Product Display Manager: Debe mostrar switcher: ' . ($show_switcher ? 'SÍ' : 'NO'));
         
         if ($show_switcher) {
-            error_log('WVP Product Display Manager: Generando selector de moneda');
             // Forzar scope local para productos individuales
             $scope = ($context === 'widget') ? WVP_Display_Settings::get_switcher_scope($context) : 'local';
             $html .= '<div class="wvp-currency-switcher wvp-scope-' . $scope . '" data-price-usd="' . esc_attr($price) . '" data-price-ves="' . esc_attr($ves_price) . '" data-scope="local">';
@@ -266,7 +254,6 @@ class WVP_Product_Display_Manager {
             $html .= '<button class="wvp-currency-option" data-currency="VES">VES</button>';
             $html .= '</div>';
         } else {
-            error_log('WVP Product Display Manager: NO se generará selector de moneda');
         }
         
         // Solo mostrar conversión si está habilitada para este contexto
