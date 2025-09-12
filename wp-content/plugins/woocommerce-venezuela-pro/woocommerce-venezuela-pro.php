@@ -53,6 +53,9 @@ class WooCommerce_Venezuela_Pro {
     public $checkout;
     public $dual_breakdown;
     public $hybrid_invoicing;
+    public $fiscal_reports;
+    public $electronic_invoice;
+    public $seniat_reports;
     public $order_meta;
     public $admin_settings;
     public $reports;
@@ -222,6 +225,18 @@ class WooCommerce_Venezuela_Pro {
         // Cargar configuraciones de visualización
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-display-settings.php';
         
+        // Cargar reportes fiscales
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-fiscal-reports.php';
+        
+        // Cargar facturación híbrida
+        require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-hybrid-invoicing.php';
+        
+        // Cargar facturación electrónica
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-electronic-invoice.php';
+        
+        // Cargar reportes SENIAT
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-seniat-reports.php';
+        
         // Script para forzar ocultación en sidebar
         require_once WVP_PLUGIN_PATH . 'force-hide-sidebar.php';
         
@@ -308,6 +323,21 @@ class WooCommerce_Venezuela_Pro {
             // Inicializar facturación híbrida si está disponible
             if (class_exists('WVP_Hybrid_Invoicing')) {
                 $this->hybrid_invoicing = new WVP_Hybrid_Invoicing();
+            }
+            
+            // Inicializar reportes fiscales
+            if (class_exists('WVP_Fiscal_Reports')) {
+                $this->fiscal_reports = new WVP_Fiscal_Reports();
+            }
+            
+            // Inicializar facturación electrónica
+            if (class_exists('WVP_Electronic_Invoice')) {
+                $this->electronic_invoice = new WVP_Electronic_Invoice();
+            }
+            
+            // Inicializar reportes SENIAT
+            if (class_exists('WVP_SENIAT_Reports')) {
+                $this->seniat_reports = new WVP_SENIAT_Reports();
             }
             
             // Inicializar componentes de administración (deshabilitado temporalmente)

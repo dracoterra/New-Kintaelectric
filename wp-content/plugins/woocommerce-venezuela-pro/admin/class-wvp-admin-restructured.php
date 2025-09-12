@@ -48,6 +48,7 @@ class WVP_Admin_Restructured {
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_action('wp_ajax_wvp_save_tab_settings', array($this, 'save_tab_settings'));
         add_action('wp_ajax_wvp_get_tab_content', array($this, 'get_tab_content'));
+        add_action('wp_ajax_wvp_export_fiscal_data', array($this, 'export_fiscal_data_ajax'));
         add_action('admin_init', array($this, 'register_settings'));
     }
     
@@ -798,54 +799,496 @@ class WVP_Admin_Restructured {
      * Mostrar contenido del sistema fiscal
      */
     private function display_fiscal_content() {
+        $fiscal_settings = get_option('wvp_fiscal_settings', array());
+        $control_prefix = isset($fiscal_settings['control_number_prefix']) ? $fiscal_settings['control_number_prefix'] : '00-';
+        $next_control = isset($fiscal_settings['next_control_number']) ? $fiscal_settings['next_control_number'] : '1';
+        $company_rif = isset($fiscal_settings['company_rif']) ? $fiscal_settings['company_rif'] : '';
+        $company_name = isset($fiscal_settings['company_name']) ? $fiscal_settings['company_name'] : '';
+        $company_address = isset($fiscal_settings['company_address']) ? $fiscal_settings['company_address'] : '';
+        $company_phone = isset($fiscal_settings['company_phone']) ? $fiscal_settings['company_phone'] : '';
+        $company_email = isset($fiscal_settings['company_email']) ? $fiscal_settings['company_email'] : '';
+        
+        // Estadísticas fiscales
+        $total_orders = $this->get_total_orders_count();
+        $total_invoices = $this->get_total_invoices_count();
+        $monthly_revenue = $this->get_monthly_revenue();
         ?>
         <div class="wvp-fiscal">
             <h2><?php _e('Sistema Fiscal Venezolano', 'wvp'); ?></h2>
+            <p class="description"><?php _e('Configuración completa para facturación y reportes fiscales según normativas venezolanas.', 'wvp'); ?></p>
+            
+            <!-- Estadísticas rápidas -->
+            <div class="wvp-fiscal-stats">
+                <div class="wvp-stat-box">
+                    <h3><?php echo number_format($total_orders); ?></h3>
+                    <p><?php _e('Pedidos Totales', 'wvp'); ?></p>
+                </div>
+                <div class="wvp-stat-box">
+                    <h3><?php echo number_format($total_invoices); ?></h3>
+                    <p><?php _e('Facturas Generadas', 'wvp'); ?></p>
+                </div>
+                <div class="wvp-stat-box">
+                    <h3><?php echo wc_price($monthly_revenue); ?></h3>
+                    <p><?php _e('Ingresos del Mes', 'wvp'); ?></p>
+                </div>
+            </div>
+            
             <form method="post" action="options.php" class="wvp-fiscal-form">
                 <?php
                 settings_fields('wvp_fiscal_settings');
                 do_settings_sections('wvp_fiscal_settings');
                 ?>
                 
+                <h3><?php _e('Datos de la Empresa (Emisor)', 'wvp'); ?></h3>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php _e('RIF de la Empresa', 'wvp'); ?> <span class="required">*</span></th>
+                        <td>
+                            <input type="text" name="wvp_fiscal_settings[company_rif]" 
+                                   value="<?php echo esc_attr($company_rif); ?>" 
+                                   class="regular-text" placeholder="J-12345678-9" required />
+                            <p class="description"><?php _e('RIF completo de la empresa (ej: J-12345678-9). Campo obligatorio para facturación electrónica.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Razón Social', 'wvp'); ?> <span class="required">*</span></th>
+                        <td>
+                            <input type="text" name="wvp_fiscal_settings[company_name]" 
+                                   value="<?php echo esc_attr($company_name); ?>" 
+                                   class="regular-text" required />
+                            <p class="description"><?php _e('Nombre completo de la empresa según registro mercantil.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Dirección Fiscal', 'wvp'); ?> <span class="required">*</span></th>
+                        <td>
+                            <textarea name="wvp_fiscal_settings[company_address]" rows="3" class="large-text" required><?php echo esc_textarea($company_address); ?></textarea>
+                            <p class="description"><?php _e('Dirección completa para facturación (Estado, Municipio, Parroquia, Urbanización, Calle, Edificio, Piso, Apartamento).', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Teléfono', 'wvp'); ?></th>
+                        <td>
+                            <input type="text" name="wvp_fiscal_settings[company_phone]" 
+                                   value="<?php echo esc_attr($company_phone); ?>" 
+                                   class="regular-text" placeholder="+58-212-1234567" />
+                            <p class="description"><?php _e('Teléfono de contacto fiscal (formato: +58-212-1234567).', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Email Fiscal', 'wvp'); ?></th>
+                        <td>
+                            <input type="email" name="wvp_fiscal_settings[company_email]" 
+                                   value="<?php echo esc_attr($company_email); ?>" 
+                                   class="regular-text" placeholder="facturacion@empresa.com" />
+                            <p class="description"><?php _e('Email para envío de facturas electrónicas.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Actividad Económica', 'wvp'); ?></th>
+                        <td>
+                            <input type="text" name="wvp_fiscal_settings[company_activity]" 
+                                   value="<?php echo esc_attr(isset($fiscal_settings['company_activity']) ? $fiscal_settings['company_activity'] : ''); ?>" 
+                                   class="regular-text" placeholder="Comercio al por menor" />
+                            <p class="description"><?php _e('Descripción de la actividad económica principal.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h3><?php _e('Configuración de Facturación Electrónica', 'wvp'); ?></h3>
+                <table class="form-table">
+                    <tr>
+                        <th scope="row"><?php _e('Tipo de Contribuyente', 'wvp'); ?></th>
+                        <td>
+                            <select name="wvp_fiscal_settings[taxpayer_type]">
+                                <option value="persona_natural" <?php selected(isset($fiscal_settings['taxpayer_type']) ? $fiscal_settings['taxpayer_type'] : '', 'persona_natural'); ?>>
+                                    <?php _e('Persona Natural', 'wvp'); ?>
+                                </option>
+                                <option value="persona_juridica" <?php selected(isset($fiscal_settings['taxpayer_type']) ? $fiscal_settings['taxpayer_type'] : '', 'persona_juridica'); ?>>
+                                    <?php _e('Persona Jurídica', 'wvp'); ?>
+                                </option>
+                            </select>
+                            <p class="description"><?php _e('Tipo de contribuyente según registro en el SENIAT.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Registro de Información Fiscal (RIF)', 'wvp'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="wvp_fiscal_settings[rif_validation]" value="1" 
+                                       <?php checked(isset($fiscal_settings['rif_validation'])); ?> />
+                                <?php _e('Validar RIF de clientes con SENIAT', 'wvp'); ?>
+                            </label>
+                            <p class="description"><?php _e('Validar automáticamente el RIF de los clientes con la base de datos del SENIAT.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Forma de Pago Predeterminada', 'wvp'); ?></th>
+                        <td>
+                            <select name="wvp_fiscal_settings[default_payment_method]">
+                                <option value="efectivo" <?php selected(isset($fiscal_settings['default_payment_method']) ? $fiscal_settings['default_payment_method'] : '', 'efectivo'); ?>>
+                                    <?php _e('Efectivo', 'wvp'); ?>
+                                </option>
+                                <option value="transferencia" <?php selected(isset($fiscal_settings['default_payment_method']) ? $fiscal_settings['default_payment_method'] : '', 'transferencia'); ?>>
+                                    <?php _e('Transferencia Bancaria', 'wvp'); ?>
+                                </option>
+                                <option value="tarjeta" <?php selected(isset($fiscal_settings['default_payment_method']) ? $fiscal_settings['default_payment_method'] : '', 'tarjeta'); ?>>
+                                    <?php _e('Tarjeta de Crédito/Débito', 'wvp'); ?>
+                                </option>
+                                <option value="crypto" <?php selected(isset($fiscal_settings['default_payment_method']) ? $fiscal_settings['default_payment_method'] : '', 'crypto'); ?>>
+                                    <?php _e('Criptomonedas', 'wvp'); ?>
+                                </option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                
+                <h3><?php _e('Configuración de Facturación', 'wvp'); ?></h3>
                 <table class="form-table">
                     <tr>
                         <th scope="row"><?php _e('Prefijo del Número de Control', 'wvp'); ?></th>
                         <td>
                             <input type="text" name="wvp_fiscal_settings[control_number_prefix]" 
-                                   value="<?php echo esc_attr(get_option('wvp_control_number_prefix', '00-')); ?>" 
-                                   class="regular-text" />
-                            <p class="description"><?php _e('Prefijo para los números de control (ej: 00-).', 'wvp'); ?></p>
+                                   value="<?php echo esc_attr($control_prefix); ?>" 
+                                   class="regular-text" placeholder="00-" />
+                            <p class="description"><?php _e('Prefijo para los números de control (ej: 00-). Debe coincidir con el registrado en SENIAT.', 'wvp'); ?></p>
                         </td>
                     </tr>
                     <tr>
                         <th scope="row"><?php _e('Próximo Número de Control', 'wvp'); ?></th>
                         <td>
                             <input type="number" name="wvp_fiscal_settings[next_control_number]" 
-                                   value="<?php echo esc_attr(get_option('wvp_next_control_number', '1')); ?>" 
+                                   value="<?php echo esc_attr($next_control); ?>" 
                                    min="1" step="1" />
                             <p class="description"><?php _e('Próximo número de control a asignar. Se incrementa automáticamente.', 'wvp'); ?></p>
                         </td>
                     </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Tipo de Documento', 'wvp'); ?></th>
+                        <td>
+                            <select name="wvp_fiscal_settings[document_type]">
+                                <option value="factura" <?php selected(isset($fiscal_settings['document_type']) ? $fiscal_settings['document_type'] : '', 'factura'); ?>>
+                                    <?php _e('Factura', 'wvp'); ?>
+                                </option>
+                                <option value="nota_credito" <?php selected(isset($fiscal_settings['document_type']) ? $fiscal_settings['document_type'] : '', 'nota_credito'); ?>>
+                                    <?php _e('Nota de Crédito', 'wvp'); ?>
+                                </option>
+                                <option value="nota_debito" <?php selected(isset($fiscal_settings['document_type']) ? $fiscal_settings['document_type'] : '', 'nota_debito'); ?>>
+                                    <?php _e('Nota de Débito', 'wvp'); ?>
+                                </option>
+                            </select>
+                            <p class="description"><?php _e('Tipo de documento fiscal a generar por defecto.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Aplicar IVA', 'wvp'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="wvp_fiscal_settings[apply_iva]" value="1" 
+                                       <?php checked(isset($fiscal_settings['apply_iva']) ? $fiscal_settings['apply_iva'] : true); ?> />
+                                <?php _e('Aplicar IVA (16%)', 'wvp'); ?>
+                            </label>
+                            <p class="description"><?php _e('Aplicar automáticamente el Impuesto al Valor Agregado del 16%.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Aplicar IGTF', 'wvp'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="wvp_fiscal_settings[apply_igtf]" value="1" 
+                                       <?php checked(isset($fiscal_settings['apply_igtf']) ? $fiscal_settings['apply_igtf'] : false); ?> />
+                                <?php _e('Aplicar IGTF (3%)', 'wvp'); ?>
+                            </label>
+                            <p class="description"><?php _e('Aplicar Impuesto a las Grandes Transacciones Financieras del 3% en pagos en moneda extranjera.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Facturación Híbrida', 'wvp'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="wvp_fiscal_settings[hybrid_invoicing]" value="1" 
+                                       <?php checked(isset($fiscal_settings['hybrid_invoicing'])); ?> />
+                                <?php _e('Facturación Híbrida (USD/VES)', 'wvp'); ?>
+                            </label>
+                            <p class="description"><?php _e('Genera facturas en VES con nota aclaratoria del pago en USD.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php _e('Envío Automático de Facturas', 'wvp'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="wvp_fiscal_settings[auto_send_invoices]" value="1" 
+                                       <?php checked(isset($fiscal_settings['auto_send_invoices'])); ?> />
+                                <?php _e('Enviar facturas automáticamente por email', 'wvp'); ?>
+                            </label>
+                            <p class="description"><?php _e('Enviar automáticamente las facturas electrónicas al email del cliente.', 'wvp'); ?></p>
+                        </td>
+                    </tr>
                 </table>
                 
-                <?php submit_button(); ?>
+                <?php submit_button(__('Guardar Configuración Fiscal', 'wvp')); ?>
             </form>
             
             <div class="wvp-fiscal-actions">
                 <h3><?php _e('Acciones Fiscales', 'wvp'); ?></h3>
                 <div class="wvp-action-buttons">
-                    <a href="<?php echo admin_url('admin.php?page=wvp-reports'); ?>" class="button button-primary">
+                    <a href="<?php echo admin_url('admin.php?page=wvp-seniat-reports'); ?>" class="button button-primary">
                         <span class="dashicons dashicons-chart-bar"></span>
-                        <?php _e('Reportes Fiscales', 'wvp'); ?>
+                        <?php _e('Reportes SENIAT', 'wvp'); ?>
                     </a>
                     <a href="<?php echo admin_url('edit.php?post_type=shop_order'); ?>" class="button button-secondary">
                         <span class="dashicons dashicons-list-view"></span>
                         <?php _e('Ver Pedidos', 'wvp'); ?>
                     </a>
+                    <a href="<?php echo wp_nonce_url(admin_url('admin-ajax.php?action=wvp_export_fiscal_data'), 'wvp_export_fiscal_data'); ?>" class="button button-secondary">
+                        <span class="dashicons dashicons-download"></span>
+                        <?php _e('Exportar Datos Fiscales', 'wvp'); ?>
+                    </a>
                 </div>
             </div>
         </div>
+        
+        <style>
+        .wvp-fiscal-stats {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .wvp-stat-box {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            text-align: center;
+            flex: 1;
+        }
+        .wvp-stat-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+            color: #0073aa;
+        }
+        .wvp-stat-box p {
+            margin: 0;
+            color: #666;
+        }
+        .wvp-action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        </style>
+        
         <?php
+    }
+    
+    /**
+     * Obtener total de pedidos
+     */
+    private function get_total_orders_count() {
+        global $wpdb;
+        
+        if (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
+            // HPOS
+            $count = $wpdb->get_var("
+                SELECT COUNT(*) 
+                FROM {$wpdb->prefix}wc_orders 
+                WHERE type = 'shop_order' 
+                AND status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+            ");
+        } else {
+            // Posts tradicional
+            $count = $wpdb->get_var("
+                SELECT COUNT(*) 
+                FROM {$wpdb->posts} 
+                WHERE post_type = 'shop_order' 
+                AND post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+            ");
+        }
+        
+        return $count ? $count : 0;
+    }
+    
+    /**
+     * Obtener total de facturas generadas
+     */
+    private function get_total_invoices_count() {
+        global $wpdb;
+        
+        if (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
+            // HPOS
+            $count = $wpdb->get_var("
+                SELECT COUNT(*) 
+                FROM {$wpdb->prefix}wc_orders_meta 
+                WHERE meta_key = '_seniat_control_number'
+            ");
+        } else {
+            // Posts tradicional
+            $count = $wpdb->get_var("
+                SELECT COUNT(*) 
+                FROM {$wpdb->postmeta} 
+                WHERE meta_key = '_seniat_control_number'
+            ");
+        }
+        
+        return $count ? $count : 0;
+    }
+    
+    /**
+     * Obtener ingresos del mes actual
+     */
+    private function get_monthly_revenue() {
+        global $wpdb;
+        
+        $current_month = date('Y-m-01');
+        $next_month = date('Y-m-01', strtotime('+1 month'));
+        
+        if (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
+            // HPOS
+            $revenue = $wpdb->get_var($wpdb->prepare("
+                SELECT SUM(total_amount) 
+                FROM {$wpdb->prefix}wc_orders 
+                WHERE type = 'shop_order' 
+                AND status IN ('wc-completed', 'wc-processing') 
+                AND date_created_gmt >= %s 
+                AND date_created_gmt < %s
+            ", $current_month, $next_month));
+        } else {
+            // Posts tradicional
+            $revenue = $wpdb->get_var($wpdb->prepare("
+                SELECT SUM(meta_value) 
+                FROM {$wpdb->postmeta} pm
+                INNER JOIN {$wpdb->posts} p ON pm.post_id = p.ID
+                WHERE p.post_type = 'shop_order' 
+                AND p.post_status IN ('wc-completed', 'wc-processing')
+                AND pm.meta_key = '_order_total'
+                AND p.post_date >= %s 
+                AND p.post_date < %s
+            ", $current_month, $next_month));
+        }
+        
+        return $revenue ? $revenue : 0;
+    }
+    
+    /**
+     * Exportar datos fiscales vía AJAX
+     */
+    public function export_fiscal_data_ajax() {
+        // Verificar permisos
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die('Sin permisos');
+        }
+        
+        // Verificar nonce
+        if (!wp_verify_nonce($_GET['_wpnonce'], 'wvp_export_fiscal_data')) {
+            wp_die('Nonce inválido');
+        }
+        
+        $this->export_fiscal_data();
+    }
+    
+    /**
+     * Exportar datos fiscales
+     */
+    private function export_fiscal_data() {
+        global $wpdb;
+        
+        // Obtener datos de pedidos
+        if (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled()) {
+            // HPOS
+            $orders = $wpdb->get_results("
+                SELECT 
+                    o.id as order_id,
+                    o.status,
+                    o.date_created_gmt,
+                    o.total_amount,
+                    om_rif.meta_value as customer_rif,
+                    om_name.meta_value as customer_name,
+                    om_address.meta_value as customer_address,
+                    om_phone.meta_value as customer_phone,
+                    om_email.meta_value as customer_email,
+                    om_control.meta_value as control_number
+                FROM {$wpdb->prefix}wc_orders o
+                LEFT JOIN {$wpdb->prefix}wc_orders_meta om_rif ON o.id = om_rif.order_id AND om_rif.meta_key = '_billing_rif'
+                LEFT JOIN {$wpdb->prefix}wc_orders_meta om_name ON o.id = om_name.order_id AND om_name.meta_key = '_billing_first_name'
+                LEFT JOIN {$wpdb->prefix}wc_orders_meta om_address ON o.id = om_address.order_id AND om_address.meta_key = '_billing_address_1'
+                LEFT JOIN {$wpdb->prefix}wc_orders_meta om_phone ON o.id = om_phone.order_id AND om_phone.meta_key = '_billing_phone'
+                LEFT JOIN {$wpdb->prefix}wc_orders_meta om_email ON o.id = om_email.order_id AND om_email.meta_key = '_billing_email'
+                LEFT JOIN {$wpdb->prefix}wc_orders_meta om_control ON o.id = om_control.order_id AND om_control.meta_key = '_seniat_control_number'
+                WHERE o.type = 'shop_order'
+                AND o.status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                ORDER BY o.date_created_gmt DESC
+            ");
+        } else {
+            // Posts tradicional
+            $orders = $wpdb->get_results("
+                SELECT 
+                    p.ID as order_id,
+                    p.post_status as status,
+                    p.post_date as date_created_gmt,
+                    pm_total.meta_value as total_amount,
+                    pm_rif.meta_value as customer_rif,
+                    pm_name.meta_value as customer_name,
+                    pm_address.meta_value as customer_address,
+                    pm_phone.meta_value as customer_phone,
+                    pm_email.meta_value as customer_email,
+                    pm_control.meta_value as control_number
+                FROM {$wpdb->posts} p
+                LEFT JOIN {$wpdb->postmeta} pm_total ON p.ID = pm_total.post_id AND pm_total.meta_key = '_order_total'
+                LEFT JOIN {$wpdb->postmeta} pm_rif ON p.ID = pm_rif.post_id AND pm_rif.meta_key = '_billing_rif'
+                LEFT JOIN {$wpdb->postmeta} pm_name ON p.ID = pm_name.post_id AND pm_name.meta_key = '_billing_first_name'
+                LEFT JOIN {$wpdb->postmeta} pm_address ON p.ID = pm_address.post_id AND pm_address.meta_key = '_billing_address_1'
+                LEFT JOIN {$wpdb->postmeta} pm_phone ON p.ID = pm_phone.post_id AND pm_phone.meta_key = '_billing_phone'
+                LEFT JOIN {$wpdb->postmeta} pm_email ON p.ID = pm_email.post_id AND pm_email.meta_key = '_billing_email'
+                LEFT JOIN {$wpdb->postmeta} pm_control ON p.ID = pm_control.post_id AND pm_control.meta_key = '_seniat_control_number'
+                WHERE p.post_type = 'shop_order'
+                AND p.post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                ORDER BY p.post_date DESC
+            ");
+        }
+        
+        // Configurar headers para descarga
+        $filename = 'datos_fiscales_' . date('Y-m-d_H-i-s') . '.csv';
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        
+        // Crear archivo CSV
+        $output = fopen('php://output', 'w');
+        
+        // BOM para UTF-8
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        // Encabezados
+        fputcsv($output, array(
+            'ID Pedido',
+            'Estado',
+            'Fecha',
+            'Total (USD)',
+            'RIF Cliente',
+            'Nombre Cliente',
+            'Dirección',
+            'Teléfono',
+            'Email',
+            'Número de Control SENIAT'
+        ));
+        
+        // Datos
+        foreach ($orders as $order) {
+            fputcsv($output, array(
+                $order->order_id,
+                $order->status,
+                $order->date_created_gmt,
+                $order->total_amount,
+                $order->customer_rif ?: 'N/A',
+                $order->customer_name ?: 'N/A',
+                $order->customer_address ?: 'N/A',
+                $order->customer_phone ?: 'N/A',
+                $order->customer_email ?: 'N/A',
+                $order->control_number ?: 'Pendiente'
+            ));
+        }
+        
+        fclose($output);
+        exit;
     }
     
     /**
