@@ -1572,3 +1572,665 @@ if (is_admin()) {
     require_once kintaelectric_PATH . '/test-template-compatibility.php';
 }
 
+/**
+ * AJAX Error Logger - Sistema de logging para identificar errores 400/500
+ * 
+ * Este sistema intercepta todas las peticiones AJAX y registra información detallada
+ * para identificar qué plugin o archivo está causando el error 400/500 Bad Request
+ */
+if (defined('WP_DEBUG') && WP_DEBUG) {
+    
+    // Fix temporal para YITH WooCommerce Compare - Deshabilitar completamente
+    add_action('init', 'kintaelectric_disable_problematic_ajax', 1);
+    
+    function kintaelectric_disable_problematic_ajax() {
+        // Deshabilitar TODOS los handlers problemáticos de YITH Compare
+        remove_all_actions('wp_ajax_yith_woocompare_reload_compare');
+        remove_all_actions('wp_ajax_nopriv_yith_woocompare_reload_compare');
+        
+        // Reemplazar con handler seguro
+        add_action('wp_ajax_yith_woocompare_reload_compare', 'kintaelectric_safe_compare_reload');
+        add_action('wp_ajax_nopriv_yith_woocompare_reload_compare', 'kintaelectric_safe_compare_reload');
+        
+        // Deshabilitar otros handlers problemáticos de YITH
+        remove_all_actions('wp_ajax_yith_woocompare_add_product');
+        remove_all_actions('wp_ajax_nopriv_yith_woocompare_add_product');
+        remove_all_actions('wp_ajax_yith_woocompare_remove_product');
+        remove_all_actions('wp_ajax_nopriv_yith_woocompare_remove_product');
+        
+        // Log de la deshabilitación
+        error_log('YITH WooCommerce Compare AJAX handlers deshabilitados temporalmente');
+    }
+    
+    function kintaelectric_safe_compare_reload() {
+        // Handler ultra seguro para YITH Compare
+        try {
+            // Headers para evitar problemas
+            if (!headers_sent()) {
+                header('Content-Type: application/json');
+                header('Cache-Control: no-cache, must-revalidate');
+            }
+            
+            // Respuesta simple sin dependencias de WordPress
+            echo json_encode(array(
+                'success' => true,
+                'data' => array(
+                    'message' => 'Compare reload handled safely',
+                    'timestamp' => date('Y-m-d H:i:s')
+                )
+            ));
+            exit;
+            
+        } catch (Exception $e) {
+            error_log('YITH Compare Error: ' . $e->getMessage());
+            
+            if (!headers_sent()) {
+                header('Content-Type: application/json');
+            }
+            
+            echo json_encode(array(
+                'success' => false,
+                'data' => array(
+                    'message' => 'Compare reload failed'
+                )
+            ));
+            exit;
+        }
+    }
+    
+    // Handler de emergencia para interceptar errores fatales
+    add_action('wp_ajax_nopriv_kintaelectric_emergency_handler', 'kintaelectric_emergency_handler', 1);
+    add_action('wp_ajax_kintaelectric_emergency_handler', 'kintaelectric_emergency_handler', 1);
+    
+    function kintaelectric_emergency_handler() {
+        // Handler de emergencia ultra simple
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+            header('Cache-Control: no-cache, must-revalidate');
+        }
+        
+        echo json_encode(array(
+            'success' => true,
+            'data' => array(
+                'message' => 'Emergency handler working',
+                'timestamp' => date('Y-m-d H:i:s'),
+                'memory_usage' => memory_get_usage(true)
+            )
+        ));
+        exit;
+    }
+    
+    // Deshabilitar JavaScript problemático de YITH Compare
+    add_action('wp_enqueue_scripts', 'kintaelectric_disable_yith_compare_js', 999);
+    
+    function kintaelectric_disable_yith_compare_js() {
+        // Desregistrar el JavaScript problemático de YITH Compare
+        wp_dequeue_script('yith-woocompare-main');
+        wp_dequeue_script('yith-woocompare-frontend');
+        
+        // Registrar nuestro propio JavaScript seguro
+        wp_enqueue_script(
+            'kintaelectric-safe-compare',
+            kintaelectric_ASSETS_URL . 'js/safe-compare.js',
+            array('jquery'),
+            '1.0.0',
+            true
+        );
+    }
+    
+    // Hook para interceptar peticiones AJAX - CORREGIDO
+    add_action('init', 'kintaelectric_ajax_logger_init');
+    
+    function kintaelectric_ajax_logger_init() {
+        // Solo ejecutar en peticiones AJAX y si no hay errores fatales
+        if (wp_doing_ajax() && !headers_sent()) {
+            try {
+                // Log de la petición AJAX entrante
+                kintaelectric_log_ajax_request();
+            } catch (Exception $e) {
+                // Si hay error, solo logearlo sin causar más problemas
+                error_log('AJAX Logger Error: ' . $e->getMessage());
+            }
+        }
+    }
+    
+    function kintaelectric_log_ajax_request() {
+        // Verificar que las funciones necesarias estén disponibles
+        if (!function_exists('current_time') || !function_exists('wp_doing_ajax')) {
+            return;
+        }
+        
+        $log_data = array(
+            'timestamp' => current_time('mysql'),
+            'action' => $_REQUEST['action'] ?? 'unknown',
+            'method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown',
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+            'referer' => $_SERVER['HTTP_REFERER'] ?? 'unknown',
+            'request_uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
+            'query_string' => $_SERVER['QUERY_STRING'] ?? '',
+            'post_data' => $_POST,
+            'get_data' => $_GET,
+            'request_data' => $_REQUEST,
+            'headers' => function_exists('getallheaders') ? getallheaders() : array(),
+            'wp_doing_ajax' => wp_doing_ajax(),
+            'is_admin' => function_exists('is_admin') ? is_admin() : false,
+            'is_user_logged_in' => function_exists('is_user_logged_in') ? is_user_logged_in() : false,
+            'current_user_id' => function_exists('get_current_user_id') ? get_current_user_id() : 0,
+            'memory_usage' => memory_get_usage(true),
+            'peak_memory' => memory_get_peak_usage(true)
+        );
+        
+        try {
+            // Log detallado con verificación de errores
+            error_log('=== AJAX REQUEST LOG ===');
+            error_log('Action: ' . $log_data['action']);
+            error_log('Method: ' . $log_data['method']);
+            error_log('User Agent: ' . $log_data['user_agent']);
+            error_log('Referer: ' . $log_data['referer']);
+            error_log('Request URI: ' . $log_data['request_uri']);
+            error_log('POST Data: ' . print_r($log_data['post_data'], true));
+            error_log('GET Data: ' . print_r($log_data['get_data'], true));
+            error_log('Headers: ' . print_r($log_data['headers'], true));
+            error_log('Memory Usage: ' . $log_data['memory_usage'] . ' bytes');
+            error_log('========================');
+            
+            // Log en archivo separado para mejor análisis
+            if (defined('WP_CONTENT_DIR')) {
+                $log_file = WP_CONTENT_DIR . '/ajax-debug.log';
+                $log_entry = date('Y-m-d H:i:s') . " - Action: {$log_data['action']} - Method: {$log_data['method']} - URI: {$log_data['request_uri']}\n";
+                file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
+            }
+        } catch (Exception $e) {
+            // Si hay error en el logging, no causar más problemas
+            error_log('AJAX Logging Error: ' . $e->getMessage());
+        }
+    }
+    
+    // Hook para interceptar errores AJAX - CORREGIDO
+    add_action('wp_ajax_nopriv_kintaelectric_ajax_logger', 'kintaelectric_ajax_logger_handler');
+    add_action('wp_ajax_kintaelectric_ajax_logger', 'kintaelectric_ajax_logger_handler');
+    
+    function kintaelectric_ajax_logger_handler() {
+        // Handler robusto para probar el sistema de logging
+        try {
+            // Verificar que las funciones necesarias estén disponibles
+            if (!function_exists('wp_send_json_success') || !function_exists('current_time')) {
+                throw new Exception('WordPress functions not available');
+            }
+            
+            wp_send_json_success(array(
+                'message' => 'AJAX Logger funcionando',
+                'timestamp' => current_time('mysql'),
+                'action' => $_REQUEST['action'] ?? 'unknown',
+                'method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown',
+                'memory_usage' => memory_get_usage(true)
+            ));
+        } catch (Exception $e) {
+            // Si hay error, devolver respuesta de error simple
+            if (function_exists('wp_send_json_error')) {
+                wp_send_json_error('AJAX Logger Error: ' . $e->getMessage());
+            } else {
+                // Fallback si wp_send_json_error no está disponible
+                header('Content-Type: application/json');
+                echo json_encode(array('success' => false, 'data' => 'AJAX Logger Error: ' . $e->getMessage()));
+                exit;
+            }
+        }
+    }
+    
+    // Hook para interceptar errores de wp_die - CORREGIDO
+    add_action('wp_die_handler', 'kintaelectric_wp_die_logger', 1);
+    
+    // Sistema de rastreo de errores 400 específicos
+    add_action('wp_ajax_nopriv_heartbeat', 'kintaelectric_track_400_errors', 1);
+    add_action('wp_ajax_heartbeat', 'kintaelectric_track_400_errors', 1);
+    add_action('wp_ajax_nopriv_wvp_log_cache_stats', 'kintaelectric_track_400_errors', 1);
+    add_action('wp_ajax_wvp_log_cache_stats', 'kintaelectric_track_400_errors', 1);
+    
+    // Función para rastrear errores 400 específicos
+    function kintaelectric_track_400_errors() {
+        $action = $_REQUEST['action'] ?? 'unknown';
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
+        
+        error_log("=== ERROR 400 TRACKING ===");
+        error_log("Action: " . $action);
+        error_log("Request: " . print_r($_REQUEST, true));
+        error_log("Server: " . print_r($_SERVER, true));
+        error_log("Backtrace: " . print_r($backtrace, true));
+        error_log("=== END ERROR 400 TRACKING ===");
+        
+        // Log específico para errores 400
+        file_put_contents(
+            WP_CONTENT_DIR . '/400-errors.log',
+            date('Y-m-d H:i:s') . " - Action: $action - Request: " . json_encode($_REQUEST) . "\n",
+            FILE_APPEND | LOCK_EX
+        );
+    }
+    
+    function kintaelectric_wp_die_logger($handler) {
+        // Solo interceptar en peticiones AJAX
+        if (wp_doing_ajax()) {
+            error_log('=== WP_DIE AJAX ERROR INTERCEPTED ===');
+            error_log('Handler: ' . print_r($handler, true));
+            error_log('Action: ' . ($_REQUEST['action'] ?? 'unknown'));
+            error_log('=====================================');
+        }
+        
+        // Devolver el handler original para que funcione normalmente
+        return $handler;
+    }
+    
+    // Hook para interceptar errores de wp_send_json - CORREGIDO
+    add_action('wp_ajax_nopriv_kintaelectric_json_logger', 'kintaelectric_json_logger_handler');
+    add_action('wp_ajax_kintaelectric_json_logger', 'kintaelectric_json_logger_handler');
+    
+    function kintaelectric_json_logger_handler() {
+        // Test robusto de wp_send_json
+        try {
+            // Verificar que las funciones necesarias estén disponibles
+            if (!function_exists('wp_send_json_success') || !function_exists('current_time')) {
+                throw new Exception('WordPress functions not available');
+            }
+            
+            wp_send_json_success(array(
+                'message' => 'JSON Logger funcionando',
+                'timestamp' => current_time('mysql')
+            ));
+        } catch (Exception $e) {
+            error_log('JSON Logger Error: ' . $e->getMessage());
+            
+            // Manejo de error robusto
+            if (function_exists('wp_send_json_error')) {
+                wp_send_json_error('JSON Logger Error: ' . $e->getMessage());
+            } else {
+                // Fallback si wp_send_json_error no está disponible
+                header('Content-Type: application/json');
+                echo json_encode(array('success' => false, 'data' => 'JSON Logger Error: ' . $e->getMessage()));
+                exit;
+            }
+        }
+    }
+    
+    // Sistema de diagnóstico avanzado para identificar errores fatales
+    add_action('wp_ajax_nopriv_kintaelectric_diagnostic', 'kintaelectric_diagnostic_handler');
+    add_action('wp_ajax_kintaelectric_diagnostic', 'kintaelectric_diagnostic_handler');
+    
+    function kintaelectric_diagnostic_handler() {
+        // Handler de diagnóstico ultra robusto
+        try {
+            // Verificar estado del sistema
+            $diagnostic = array(
+                'success' => true,
+                'data' => array(
+                    'timestamp' => date('Y-m-d H:i:s'),
+                    'php_version' => PHP_VERSION,
+                    'wp_version' => function_exists('get_bloginfo') ? get_bloginfo('version') : 'Unknown',
+                    'memory_limit' => ini_get('memory_limit'),
+                    'memory_usage' => memory_get_usage(true),
+                    'peak_memory' => memory_get_peak_usage(true),
+                    'error_reporting' => error_reporting(),
+                    'display_errors' => ini_get('display_errors'),
+                    'log_errors' => ini_get('log_errors'),
+                    'wp_doing_ajax' => function_exists('wp_doing_ajax') ? wp_doing_ajax() : false,
+                    'is_admin' => function_exists('is_admin') ? is_admin() : false,
+                    'is_user_logged_in' => function_exists('is_user_logged_in') ? is_user_logged_in() : false,
+                    'current_user_id' => function_exists('get_current_user_id') ? get_current_user_id() : 0,
+                    'active_plugins' => function_exists('get_option') ? get_option('active_plugins', array()) : array(),
+                    'theme' => function_exists('get_option') ? get_option('stylesheet') : 'Unknown',
+                    'template' => function_exists('get_option') ? get_option('template') : 'Unknown',
+                    'server_software' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
+                    'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'Unknown',
+                    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown',
+                    'request_uri' => $_SERVER['REQUEST_URI'] ?? 'Unknown',
+                    'query_string' => $_SERVER['QUERY_STRING'] ?? '',
+                    'post_data' => $_POST,
+                    'get_data' => $_GET,
+                    'request_data' => $_REQUEST
+                )
+            );
+            
+            // Intentar usar wp_send_json_success si está disponible
+            if (function_exists('wp_send_json_success')) {
+                wp_send_json_success($diagnostic['data']);
+            } else {
+                // Fallback directo
+                header('Content-Type: application/json');
+                echo json_encode($diagnostic);
+                exit;
+            }
+            
+        } catch (Exception $e) {
+            // Si hay error, devolver información básica
+            $error_response = array(
+                'success' => false,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'timestamp' => date('Y-m-d H:i:s'),
+                'php_version' => PHP_VERSION,
+                'memory_usage' => memory_get_usage(true)
+            );
+            
+            header('Content-Type: application/json');
+            echo json_encode($error_response);
+            exit;
+        }
+    }
+    
+    // Handlers adicionales para completar el sistema de debug
+    add_action('wp_ajax_nopriv_kintaelectric_test_ajax', 'kintaelectric_test_ajax_handler');
+    add_action('wp_ajax_kintaelectric_test_ajax', 'kintaelectric_test_ajax_handler');
+    
+    function kintaelectric_test_ajax_handler() {
+        try {
+            wp_send_json_success(array(
+                'message' => 'Test AJAX funcionando',
+                'timestamp' => current_time('mysql'),
+                'memory_usage' => memory_get_usage(true)
+            ));
+        } catch (Exception $e) {
+            wp_send_json_error('Test AJAX Error: ' . $e->getMessage());
+        }
+    }
+    
+    add_action('wp_ajax_nopriv_kintaelectric_simple_test', 'kintaelectric_simple_test_handler');
+    add_action('wp_ajax_kintaelectric_simple_test', 'kintaelectric_simple_test_handler');
+    
+    function kintaelectric_simple_test_handler() {
+        try {
+            wp_send_json_success(array(
+                'message' => 'Simple Test funcionando',
+                'timestamp' => current_time('mysql')
+            ));
+        } catch (Exception $e) {
+            wp_send_json_error('Simple Test Error: ' . $e->getMessage());
+        }
+    }
+    
+    add_action('wp_ajax_nopriv_kintaelectric_emergency_test', 'kintaelectric_emergency_test_handler');
+    add_action('wp_ajax_kintaelectric_emergency_test', 'kintaelectric_emergency_test_handler');
+    
+    function kintaelectric_emergency_test_handler() {
+        try {
+            wp_send_json_success(array(
+                'message' => 'Emergency Test funcionando',
+                'timestamp' => current_time('mysql')
+            ));
+        } catch (Exception $e) {
+            wp_send_json_error('Emergency Test Error: ' . $e->getMessage());
+        }
+    }
+    
+    add_action('wp_ajax_nopriv_kintaelectric_direct_test', 'kintaelectric_direct_test_handler');
+    add_action('wp_ajax_kintaelectric_direct_test', 'kintaelectric_direct_test_handler');
+    
+    function kintaelectric_direct_test_handler() {
+        try {
+            wp_send_json_success(array(
+                'message' => 'Direct Test funcionando',
+                'timestamp' => current_time('mysql')
+            ));
+        } catch (Exception $e) {
+            wp_send_json_error('Direct Test Error: ' . $e->getMessage());
+        }
+    }
+    
+    add_action('wp_ajax_nopriv_kintaelectric_server_diagnostic', 'kintaelectric_server_diagnostic_handler');
+    add_action('wp_ajax_kintaelectric_server_diagnostic', 'kintaelectric_server_diagnostic_handler');
+    
+    function kintaelectric_server_diagnostic_handler() {
+        try {
+            wp_send_json_success(array(
+                'message' => 'Server Diagnostic funcionando',
+                'timestamp' => current_time('mysql'),
+                'php_version' => PHP_VERSION,
+                'wp_version' => get_bloginfo('version'),
+                'memory_limit' => ini_get('memory_limit'),
+                'memory_usage' => memory_get_usage(true)
+            ));
+        } catch (Exception $e) {
+            wp_send_json_error('Server Diagnostic Error: ' . $e->getMessage());
+        }
+    }
+    
+    add_action('wp_ajax_nopriv_kintaelectric_memory_test', 'kintaelectric_memory_test_handler');
+    add_action('wp_ajax_kintaelectric_memory_test', 'kintaelectric_memory_test_handler');
+    
+    function kintaelectric_memory_test_handler() {
+        try {
+            wp_send_json_success(array(
+                'message' => 'Memory Test funcionando',
+                'timestamp' => current_time('mysql'),
+                'memory_usage' => memory_get_usage(true),
+                'memory_limit' => ini_get('memory_limit')
+            ));
+        } catch (Exception $e) {
+            wp_send_json_error('Memory Test Error: ' . $e->getMessage());
+        }
+    }
+    
+    add_action('wp_ajax_nopriv_kintaelectric_fatal_test', 'kintaelectric_fatal_test_handler');
+    add_action('wp_ajax_kintaelectric_fatal_test', 'kintaelectric_fatal_test_handler');
+    
+    function kintaelectric_fatal_test_handler() {
+        try {
+            wp_send_json_success(array(
+                'message' => 'Fatal Test funcionando',
+                'timestamp' => current_time('mysql'),
+                'error_reporting' => error_reporting(),
+                'display_errors' => ini_get('display_errors')
+            ));
+        } catch (Exception $e) {
+            wp_send_json_error('Fatal Test Error: ' . $e->getMessage());
+        }
+    }
+    
+    add_action('wp_ajax_nopriv_kintaelectric_ajax_monitor', 'kintaelectric_ajax_monitor_handler_main');
+    add_action('wp_ajax_kintaelectric_ajax_monitor', 'kintaelectric_ajax_monitor_handler_main');
+    
+    function kintaelectric_ajax_monitor_handler_main() {
+        try {
+            wp_send_json_success(array(
+                'message' => 'AJAX Monitor funcionando',
+                'timestamp' => current_time('mysql'),
+                'action' => $_REQUEST['action'] ?? 'unknown'
+            ));
+        } catch (Exception $e) {
+            wp_send_json_error('AJAX Monitor Error: ' . $e->getMessage());
+        }
+    }
+    
+    add_action('wp_ajax_nopriv_kintaelectric_php_error_monitor', 'kintaelectric_php_error_monitor_handler');
+    add_action('wp_ajax_kintaelectric_php_error_monitor', 'kintaelectric_php_error_monitor_handler');
+    
+    function kintaelectric_php_error_monitor_handler() {
+        try {
+            wp_send_json_success(array(
+                'message' => 'PHP Error Monitor funcionando',
+                'timestamp' => current_time('mysql'),
+                'error_reporting' => error_reporting(),
+                'display_errors' => ini_get('display_errors'),
+                'log_errors' => ini_get('log_errors')
+            ));
+        } catch (Exception $e) {
+            wp_send_json_error('PHP Error Monitor Error: ' . $e->getMessage());
+        }
+    }
+    
+    add_action('wp_ajax_nopriv_kintaelectric_list_ajax_actions', 'kintaelectric_list_ajax_actions_handler');
+    add_action('wp_ajax_kintaelectric_list_ajax_actions', 'kintaelectric_list_ajax_actions_handler');
+    
+    function kintaelectric_list_ajax_actions_handler() {
+        try {
+            global $wp_filter;
+            $ajax_actions = array();
+            
+            foreach ($wp_filter as $hook => $filters) {
+                if (strpos($hook, 'wp_ajax_') === 0) {
+                    $ajax_actions[] = $hook;
+                }
+            }
+            
+            wp_send_json_success(array(
+                'message' => 'List AJAX Actions funcionando',
+                'timestamp' => current_time('mysql'),
+                'ajax_actions' => $ajax_actions,
+                'total_actions' => count($ajax_actions)
+            ));
+        } catch (Exception $e) {
+            wp_send_json_error('List AJAX Actions Error: ' . $e->getMessage());
+        }
+    }
+    
+// Handler para Debug AJAX
+add_action('wp_ajax_nopriv_kintaelectric_debug_ajax', 'kintaelectric_debug_ajax_handler');
+add_action('wp_ajax_kintaelectric_debug_ajax', 'kintaelectric_debug_ajax_handler');
+
+function kintaelectric_debug_ajax_handler() {
+    try {
+        wp_send_json_success(array(
+            'message' => 'Debug AJAX funcionando',
+            'timestamp' => current_time('mysql'),
+            'action' => $_REQUEST['action'] ?? 'unknown',
+            'method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown',
+            'memory_usage' => memory_get_usage(true)
+        ));
+    } catch (Exception $e) {
+        wp_send_json_error('Debug AJAX Error: ' . $e->getMessage());
+    }
+}
+
+// Handlers para rastreo de errores 400
+add_action('wp_ajax_nopriv_kintaelectric_track_400_errors', 'kintaelectric_track_400_errors_handler');
+add_action('wp_ajax_kintaelectric_track_400_errors', 'kintaelectric_track_400_errors_handler');
+
+function kintaelectric_track_400_errors_handler() {
+    try {
+        // Leer el archivo de errores 400 si existe
+        $error_file = WP_CONTENT_DIR . '/400-errors.log';
+        $errors = file_exists($error_file) ? file_get_contents($error_file) : 'No hay errores 400 registrados';
+        
+        wp_send_json_success(array(
+            'message' => 'Errores 400 rastreados',
+            'timestamp' => current_time('mysql'),
+            'errors_log' => $errors,
+            'error_file_exists' => file_exists($error_file),
+            'error_file_path' => $error_file
+        ));
+    } catch (Exception $e) {
+        wp_send_json_error('Error al rastrear errores 400: ' . $e->getMessage());
+    }
+}
+
+// Handler para test de heartbeat
+add_action('wp_ajax_nopriv_kintaelectric_test_heartbeat', 'kintaelectric_test_heartbeat_handler');
+add_action('wp_ajax_kintaelectric_test_heartbeat', 'kintaelectric_test_heartbeat_handler');
+
+function kintaelectric_test_heartbeat_handler() {
+    try {
+        // Simular una petición heartbeat
+        $heartbeat_data = array(
+            'wp-auth-check' => is_user_logged_in(),
+            'heartbeat' => 'test',
+            'timestamp' => time()
+        );
+        
+        wp_send_json_success(array(
+            'message' => 'Test Heartbeat exitoso',
+            'heartbeat_data' => $heartbeat_data,
+            'user_logged_in' => is_user_logged_in(),
+            'timestamp' => current_time('mysql')
+        ));
+    } catch (Exception $e) {
+        wp_send_json_error('Error en test heartbeat: ' . $e->getMessage());
+    }
+}
+
+// Handler para test de WooCommerce Venezuela Pro
+add_action('wp_ajax_nopriv_kintaelectric_test_wvp', 'kintaelectric_test_wvp_handler');
+add_action('wp_ajax_kintaelectric_test_wvp', 'kintaelectric_test_wvp_handler');
+
+function kintaelectric_test_wvp_handler() {
+    try {
+        // Verificar si el plugin está activo
+        $wvp_active = class_exists('WooCommerce_Venezuela_Pro');
+        $wvp_functions = array(
+            'wvp_log_cache_stats_exists' => function_exists('wvp_log_cache_stats'),
+            'wvp_get_prices_data_exists' => function_exists('wvp_get_prices_data'),
+            'wvp_test_scraping_exists' => function_exists('wvp_test_scraping')
+        );
+        
+        wp_send_json_success(array(
+            'message' => 'Test WooCommerce Venezuela Pro completado',
+            'plugin_active' => $wvp_active,
+            'functions_status' => $wvp_functions,
+            'timestamp' => current_time('mysql')
+        ));
+    } catch (Exception $e) {
+        wp_send_json_error('Error en test WVP: ' . $e->getMessage());
+    }
+}
+
+// Handlers seguros para WooCommerce Venezuela Pro (funciones faltantes)
+add_action('wp_ajax_nopriv_wvp_log_cache_stats', 'kintaelectric_safe_wvp_log_cache_stats');
+add_action('wp_ajax_wvp_log_cache_stats', 'kintaelectric_safe_wvp_log_cache_stats');
+
+function kintaelectric_safe_wvp_log_cache_stats() {
+    try {
+        // Handler seguro para wvp_log_cache_stats
+        $hits = intval($_POST['hits'] ?? 0);
+        $misses = intval($_POST['misses'] ?? 0);
+        $hit_rate = floatval($_POST['hit_rate'] ?? 0);
+        
+        // Log de la petición para debug
+        error_log("WVP Log Cache Stats - Hits: $hits, Misses: $misses, Hit Rate: $hit_rate");
+        
+        wp_send_json_success(array(
+            'message' => 'WVP cache stats logged safely',
+            'hits' => $hits,
+            'misses' => $misses,
+            'hit_rate' => $hit_rate,
+            'timestamp' => current_time('mysql')
+        ));
+    } catch (Exception $e) {
+        wp_send_json_error('Error en WVP cache stats: ' . $e->getMessage());
+    }
+}
+
+add_action('wp_ajax_nopriv_wvp_get_prices_data', 'kintaelectric_safe_wvp_get_prices_data');
+add_action('wp_ajax_wvp_get_prices_data', 'kintaelectric_safe_wvp_get_prices_data');
+
+function kintaelectric_safe_wvp_get_prices_data() {
+    try {
+        // Handler seguro para wvp_get_prices_data
+        error_log("WVP Get Prices Data - Request received");
+        
+        wp_send_json_success(array(
+            'message' => 'WVP prices data handler working',
+            'data' => array(),
+            'timestamp' => current_time('mysql')
+        ));
+    } catch (Exception $e) {
+        wp_send_json_error('Error en WVP prices data: ' . $e->getMessage());
+    }
+}
+
+add_action('wp_ajax_nopriv_wvp_test_scraping', 'kintaelectric_safe_wvp_test_scraping');
+add_action('wp_ajax_wvp_test_scraping', 'kintaelectric_safe_wvp_test_scraping');
+
+function kintaelectric_safe_wvp_test_scraping() {
+    try {
+        // Handler seguro para wvp_test_scraping
+        error_log("WVP Test Scraping - Request received");
+        
+        wp_send_json_success(array(
+            'message' => 'WVP test scraping handler working',
+            'scraping_status' => 'safe_mode',
+            'timestamp' => current_time('mysql')
+        ));
+    } catch (Exception $e) {
+        wp_send_json_error('Error en WVP test scraping: ' . $e->getMessage());
+    }
+}
+}
+

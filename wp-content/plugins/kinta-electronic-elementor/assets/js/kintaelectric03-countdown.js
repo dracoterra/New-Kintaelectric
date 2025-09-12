@@ -56,54 +56,37 @@
             var minutesLeft = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             var secondsLeft = Math.floor((distance % (1000 * 60)) / 1000);
 
-            // Construir el HTML del countdown con animación suave
+            // Construir el HTML del countdown simple - sin animaciones
             var countdownHTML = '';
 
             if (daysLeft > 0) {
                 countdownHTML += '<span class="days">' +
-                    '<span class="value" data-value="' + daysLeft + '">' + daysLeft + '</span>' +
+                    '<span class="value">' + daysLeft + '</span>' +
                     '<b>' + kintaelectric03Countdown.texts.days + '</b>' +
                     '</span>';
             }
 
             if (hoursLeft > 0 || daysLeft > 0) {
                 countdownHTML += '<span class="hours">' +
-                    '<span class="value" data-value="' + hoursLeft + '">' + hoursLeft + '</span>' +
+                    '<span class="value">' + hoursLeft + '</span>' +
                     '<b>' + kintaelectric03Countdown.texts.hours + '</b>' +
                     '</span>';
             }
 
             if (minutesLeft > 0 || hoursLeft > 0 || daysLeft > 0) {
                 countdownHTML += '<span class="minutes">' +
-                    '<span class="value" data-value="' + minutesLeft + '">' + minutesLeft + '</span>' +
+                    '<span class="value">' + minutesLeft + '</span>' +
                     '<b>' + kintaelectric03Countdown.texts.mins + '</b>' +
                     '</span>';
             }
 
             countdownHTML += '<span class="seconds">' +
-                '<span class="value" data-value="' + secondsLeft + '">' + secondsLeft + '</span>' +
+                '<span class="value">' + secondsLeft + '</span>' +
                 '<b>' + kintaelectric03Countdown.texts.secs + '</b>' +
                 '</span>';
 
-            // Solo actualizar si hay cambios para evitar parpadeos
-            var currentHTML = $countdown.html();
-            if (currentHTML !== countdownHTML) {
-                $countdown.html(countdownHTML);
-                
-                // Aplicar animación suave solo a los valores que cambiaron
-                $countdown.find('.value').each(function() {
-                    var $this = $(this);
-                    var newValue = $this.data('value');
-                    var currentValue = $this.text();
-                    
-                    if (currentValue !== newValue.toString()) {
-                        $this.addClass('countdown-changing');
-                        setTimeout(function() {
-                            $this.removeClass('countdown-changing');
-                        }, 300);
-                    }
-                });
-            }
+            // Actualizar sin animaciones
+            $countdown.html(countdownHTML);
         }
 
         // Actualizar inmediatamente
@@ -135,5 +118,74 @@
             });
         }
     };
+
+    // Manejo de errores para YITH Wishlist y Compare
+    $(document).ready(function() {
+        // Interceptar errores de AJAX
+        $(document).ajaxError(function(event, xhr, settings, thrownError) {
+            if (settings.url && settings.url.includes('admin-ajax.php')) {
+                console.log('Error AJAX detectado:', {
+                    url: settings.url,
+                    status: xhr.status,
+                    error: thrownError
+                });
+            }
+        });
+        
+        // Manejo de botones YITH con nonce correcto
+        $(document).on('click', '.add_to_wishlist', function(e) {
+            e.preventDefault();
+            var $button = $(this);
+            var productId = $button.data('product-id');
+            var nonce = $button.data('nonce');
+            
+            if (productId && nonce) {
+                // Enviar petición AJAX con nonce correcto
+                jQuery.ajax({
+                    url: kintaelectric03Countdown.ajax_url,
+                    type: 'POST',
+                    data: {
+                        action: 'add_to_wishlist',
+                        product_id: productId,
+                        nonce: nonce
+                    },
+                    dataType: 'json',
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                    }
+                })
+                .done(function(response) {
+                    console.log('Wishlist AJAX exitoso:', response);
+                    if (response.result) {
+                        $button.text('✓ Añadido').addClass('added');
+                    }
+                })
+                .fail(function(xhr, status, error) {
+                    console.error('Wishlist AJAX falló:', {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        responseText: xhr.responseText,
+                        error: error
+                    });
+                });
+            } else {
+                console.log('Botón Wishlist sin datos necesarios:', $button.attr('class'));
+            }
+        });
+        
+        // Manejo de botones Compare
+        $(document).on('click', '.compare', function(e) {
+            e.preventDefault();
+            var $button = $(this);
+            var productId = $button.data('product-id');
+            
+            if (productId) {
+                console.log('Botón Compare clickeado para producto:', productId);
+                // Aquí se puede implementar la lógica de compare si es necesaria
+            } else {
+                console.log('Botón Compare sin product-id:', $button.attr('class'));
+            }
+        });
+    });
 
 })(jQuery);

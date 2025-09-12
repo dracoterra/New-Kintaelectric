@@ -87,8 +87,18 @@ class KEE_Kintaelectric03_Deals_And_Tabs_Widget extends \Elementor\Widget_Base
             [
                 'label' => esc_html__('Texto de Ahorro', 'kinta-electric-elementor'),
                 'type' => \Elementor\Controls_Manager::TEXT,
-                'default' => esc_html__('Ahorra $19.00', 'kinta-electric-elementor'),
-                'placeholder' => esc_html__('Ingresa el texto de ahorro', 'kinta-electric-elementor'),
+                'default' => esc_html__('Ahorra', 'kinta-electric-elementor'),
+                'placeholder' => esc_html__('Ingresa el texto de ahorro (ej: Ahorra)', 'kinta-electric-elementor'),
+            ]
+        );
+
+        $this->add_control(
+            'savings_amount',
+            [
+                'label' => esc_html__('Cantidad de Ahorro', 'kinta-electric-elementor'),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'default' => esc_html__('$19.00', 'kinta-electric-elementor'),
+                'placeholder' => esc_html__('Ingresa la cantidad (ej: $19.00)', 'kinta-electric-elementor'),
             ]
         );
 
@@ -321,7 +331,12 @@ class KEE_Kintaelectric03_Deals_And_Tabs_Widget extends \Elementor\Widget_Base
                 <h2 class="h1"><?php echo esc_html($settings['special_offer_title']); ?></h2>
                 <div class="savings">
                     <span class="savings-text">
-                        <?php echo esc_html($settings['savings_text']); ?>
+                        <?php echo esc_html($settings['savings_text']); ?> 
+                        <span class="woocommerce-Price-amount amount">
+                            <bdi>
+                                <span class="woocommerce-Price-currencySymbol">$</span><?php echo esc_html(str_replace('$', '', $settings['savings_amount'])); ?>
+                            </bdi>
+                        </span>
                     </span>
                 </div>
             </header>
@@ -529,13 +544,42 @@ class KEE_Kintaelectric03_Deals_And_Tabs_Widget extends \Elementor\Widget_Base
 
                                     <div class="hover-area">
                                         <div class="action-buttons">
-                                            <?php if (defined('YITH_WCWL')) : ?>
-                                                <?php echo do_shortcode('[yith_wcwl_add_to_wishlist product_id="' . $product_id . '"]'); ?>
-                                            <?php endif; ?>
+                    <?php 
+                    // YITH Wishlist - Múltiples métodos de integración
+                    if (defined('YITH_WCWL')) : 
+                        // Método 1: Función directa si está disponible
+                        if (function_exists('yith_wcwl_add_to_wishlist_button')) {
+                            yith_wcwl_add_to_wishlist_button($product_id);
+                        }
+                        // Método 2: Shortcode como fallback
+                        elseif (shortcode_exists('yith_wcwl_add_to_wishlist')) {
+                            echo do_shortcode('[yith_wcwl_add_to_wishlist product_id="' . $product_id . '"]');
+                        }
+                        // Método 3: HTML manual con nonce correcto
+                        else {
+                            $wishlist_nonce = wp_create_nonce('add_to_wishlist');
+                            echo '<a href="#" class="add_to_wishlist" data-product-id="' . $product_id . '" data-nonce="' . $wishlist_nonce . '">' . __('Add to wishlist', 'kinta-electric-elementor') . '</a>';
+                        }
+                    endif; 
+                    ?>
 
-                                            <?php if (defined('YITH_WOOCOMPARE')) : ?>
-                                                <?php echo do_shortcode('[yith_compare_button product="' . $product_id . '"]'); ?>
-                                            <?php endif; ?>
+                    <?php 
+                    // YITH Compare - Múltiples métodos de integración
+                    if (defined('YITH_WOOCOMPARE')) : 
+                        // Método 1: Función directa si está disponible
+                        if (function_exists('yith_woocompare_add_compare_button')) {
+                            yith_woocompare_add_compare_button($product_id);
+                        }
+                        // Método 2: Shortcode como fallback
+                        elseif (shortcode_exists('yith_compare_button')) {
+                            echo do_shortcode('[yith_compare_button product="' . $product_id . '"]');
+                        }
+                        // Método 3: HTML manual como último recurso
+                        else {
+                            echo '<a href="#" class="compare" data-product-id="' . $product_id . '">' . __('Compare', 'kinta-electric-elementor') . '</a>';
+                        }
+                    endif; 
+                    ?>
                                         </div>
                                     </div>
                                 </div>
@@ -610,7 +654,14 @@ class KEE_Kintaelectric03_Deals_And_Tabs_Widget extends \Elementor\Widget_Base
                     <header>
                         <h2 class="h1">{{{ settings.special_offer_title }}}</h2>
                         <div class="savings">
-                            <span class="savings-text">{{{ settings.savings_text }}}</span>
+                            <span class="savings-text">
+                                {{{ settings.savings_text }}} 
+                                <span class="woocommerce-Price-amount amount">
+                                    <bdi>
+                                        <span class="woocommerce-Price-currencySymbol">$</span>{{{ settings.savings_amount.replace('$', '') }}}
+                                    </bdi>
+                                </span>
+                            </span>
                         </div>
                     </header>
                     <div class="onsale-products">
