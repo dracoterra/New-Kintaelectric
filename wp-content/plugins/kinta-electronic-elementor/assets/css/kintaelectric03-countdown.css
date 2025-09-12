@@ -1,0 +1,201 @@
+/**
+ * Kintaelectric03 Countdown Timer Styles
+ * 
+ * Estilos mejorados para el countdown timer del widget de ofertas
+ *
+ * @package kinta-electric-elementor
+ */
+
+/* Contenedor principal del countdown */
+.deal-countdown-timer {
+    margin-bottom: 1rem;
+}
+
+.deal-countdown-timer .marketing-text {
+    margin-bottom: 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: #666;
+}
+
+/* Grid del countdown */
+.deal-countdown {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Cada unidad de tiempo */
+.deal-countdown > span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* Efecto hover suave */
+.deal-countdown > span:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Valores numéricos */
+.deal-countdown .value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #dc3545;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+    transition: all 0.3s ease;
+    position: relative;
+    display: inline-block;
+    min-width: 1.2em;
+    text-align: center;
+}
+
+/* Animación suave para cambios de valor */
+.deal-countdown .value.countdown-changing {
+    animation: countdownFlip 0.3s ease-in-out;
+    transform: scale(1.1);
+    color: #ff6b6b;
+}
+
+/* Etiquetas de tiempo */
+.deal-countdown b {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+/* Ocultar elementos con valor 0 */
+.deal-countdown span[data-value="0"] {
+    display: none;
+}
+
+/* Animación de flip para cambios */
+@keyframes countdownFlip {
+    0% {
+        transform: rotateX(0deg) scale(1);
+    }
+    50% {
+        transform: rotateX(90deg) scale(1.1);
+    }
+    100% {
+        transform: rotateX(0deg) scale(1);
+    }
+}
+
+/* Animación alternativa más suave */
+@keyframes countdownPulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Aplicar animación alternativa si la primera no funciona bien */
+.deal-countdown .value.countdown-changing {
+    animation: countdownPulse 0.2s ease-in-out;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .deal-countdown {
+        gap: 0.25rem;
+    }
+    
+    .deal-countdown > span {
+        min-width: 40px;
+        padding: 0.375rem;
+    }
+    
+    .deal-countdown .value {
+        font-size: 1.25rem;
+    }
+    
+    .deal-countdown b {
+        font-size: 0.625rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .deal-countdown {
+        gap: 0.125rem;
+    }
+    
+    .deal-countdown > span {
+        min-width: 35px;
+        padding: 0.25rem;
+    }
+    
+    .deal-countdown .value {
+        font-size: 1rem;
+    }
+    
+    .deal-countdown b {
+        font-size: 0.5rem;
+    }
+}
+
+/* Estados especiales */
+.deal-countdown-timer.expired .deal-countdown {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.deal-countdown-timer.expired .deal-countdown .value {
+    color: #6c757d;
+    text-decoration: line-through;
+}
+
+/* Mejoras para el tema Electro */
+.home-v1-deals-and-tabs .deal-countdown-timer .marketing-text {
+    font-weight: 600;
+    color: #333;
+}
+
+.home-v1-deals-and-tabs .deal-countdown > span {
+    background: #fff;
+    border-color: #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.home-v1-deals-and-tabs .deal-countdown .value {
+    color: #e74c3c;
+}
+
+/* Efecto de parpadeo sutil para segundos */
+.deal-countdown .seconds .value {
+    animation: subtleBlink 2s infinite;
+}
+
+@keyframes subtleBlink {
+    0%, 90%, 100% {
+        opacity: 1;
+    }
+    95% {
+        opacity: 0.7;
+    }
+}

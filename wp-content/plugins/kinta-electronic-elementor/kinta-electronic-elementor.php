@@ -66,9 +66,11 @@ class KintaElectricElementor {
     public function register_widgets() {
         require_once KEE_PLUGIN_PATH . 'widgets/home-slider-kintaelectic-widget.php';
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric02-deals-widget.php';
-        
+        require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric03-deals-and-tabs-widget.php';
+
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Home_Slider_Kintaelectic_Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric02_Deals_Widget());
+        \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric03_Deals_And_Tabs_Widget());
     }
     
     /**
@@ -157,6 +159,33 @@ class KintaElectricElementor {
             self::VERSION,
             true
         );
+        
+        // Countdown script and styles for deals and tabs widget
+        wp_enqueue_style(
+            'kintaelectric03-countdown',
+            KEE_PLUGIN_URL . 'assets/css/kintaelectric03-countdown.css',
+            array(),
+            self::VERSION
+        );
+        
+        wp_enqueue_script(
+            'kintaelectric03-countdown',
+            KEE_PLUGIN_URL . 'assets/js/kintaelectric03-countdown.js',
+            array('jquery'),
+            self::VERSION,
+            true
+        );
+        
+        // Localize countdown script
+        wp_localize_script('kintaelectric03-countdown', 'kintaelectric03Countdown', array(
+            'texts' => array(
+                'days' => __('Días', 'kinta-electric-elementor'),
+                'hours' => __('Horas', 'kinta-electric-elementor'),
+                'mins' => __('Min', 'kinta-electric-elementor'),
+                'secs' => __('Seg', 'kinta-electric-elementor'),
+                'expired' => __('¡Oferta Expirada!', 'kinta-electric-elementor')
+            )
+        ));
     }
 }
 
