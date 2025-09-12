@@ -381,7 +381,8 @@ class WVP_Fiscal_Reports {
             $report_data['total_general'] += $order_total;
             
             // Agrupar por mes
-            $month = date('Y-m', strtotime($order_data->post_date));
+            $order_date = isset($order_data->post_date) ? $order_data->post_date : $order->get_date_created()->format('Y-m-d H:i:s');
+            $month = date('Y-m', strtotime($order_date));
             if (!isset($report_data['monthly_breakdown'][$month])) {
                 $report_data['monthly_breakdown'][$month] = array(
                     'orders' => 0,

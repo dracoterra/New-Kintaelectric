@@ -63,6 +63,10 @@ class WooCommerce_Venezuela_Pro {
     public $invoice_generator;
     public $whatsapp_notifications;
     
+    // Propiedades para evitar warnings de PHP 8.2+
+    public $display_settings;
+    public $error_monitor;
+    
     /**
      * Constructor privado (Singleton)
      */
@@ -85,6 +89,50 @@ class WooCommerce_Venezuela_Pro {
             self::$instance = new self();
         }
         return self::$instance;
+    }
+    
+    /**
+     * Crear tablas necesarias para el plugin
+     */
+    private function create_required_tables() {
+        global $wpdb;
+        
+        $charset_collate = $wpdb->get_charset_collate();
+        
+        // Tabla de logs de errores
+        $table_name = $wpdb->prefix . 'wvp_error_logs';
+        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            timestamp datetime DEFAULT CURRENT_TIMESTAMP,
+            level varchar(20) NOT NULL,
+            message text NOT NULL,
+            context text,
+            file varchar(255),
+            line int(11),
+            PRIMARY KEY (id),
+            KEY level (level),
+            KEY timestamp (timestamp)
+        ) $charset_collate;";
+        
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
+        
+        // Tabla de logs de seguridad
+        $table_name = $wpdb->prefix . 'wvp_security_logs';
+        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            timestamp datetime DEFAULT CURRENT_TIMESTAMP,
+            user_id int(11),
+            ip_address varchar(45),
+            action varchar(100) NOT NULL,
+            details text,
+            PRIMARY KEY (id),
+            KEY user_id (user_id),
+            KEY timestamp (timestamp),
+            KEY action (action)
+        ) $charset_collate;";
+        
+        dbDelta($sql);
     }
     
     /**
@@ -116,8 +164,10 @@ class WooCommerce_Venezuela_Pro {
         
         // Inicializar gestor de visualización de productos (se inicializa en init_components)
         
-        // Log de inicialización
-        error_log('WooCommerce Venezuela Pro: Plugin inicializado correctamente');
+        // Log de inicialización (solo en modo debug)
+        if (defined('WP_DEBUG') && WP_DEBUG && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+            error_log('WooCommerce Venezuela Pro: Plugin inicializado correctamente');
+        }
     }
     
     /**
@@ -340,8 +390,11 @@ class WooCommerce_Venezuela_Pro {
                 $this->seniat_reports = new WVP_SENIAT_Reports();
             }
             
-            // Inicializar componentes de administración (deshabilitado temporalmente)
-            if (is_admin() && false) { // Deshabilitado para usar la nueva administración
+        // Crear tablas necesarias
+        $this->create_required_tables();
+        
+        // Inicializar componentes de administración (deshabilitado temporalmente)
+        if (is_admin() && false) { // Deshabilitado para usar la nueva administración
                 if (class_exists('WVP_Order_Meta')) {
                     $this->order_meta = new WVP_Order_Meta();
                 }
