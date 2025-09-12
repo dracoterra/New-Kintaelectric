@@ -319,7 +319,7 @@ class WVP_SENIAT_Reports {
             
             <!-- Botones de Acción -->
             <div class="wvp-report-actions">
-                <button type="button" class="button button-primary" onclick="window.print()">
+                <button type="button" class="button button-primary" onclick="wvpPrintReport()">
                     <span class="dashicons dashicons-printer"></span>
                     <?php _e('Imprimir Reporte', 'wvp'); ?>
                 </button>
@@ -577,11 +577,19 @@ class WVP_SENIAT_Reports {
             
             $total_ves = $total_usd * $exchange_rate;
             
+            // Generar número de control si no existe
+            $control_number = $transaction->control_number;
+            if (empty($control_number)) {
+                $control_number = $this->generate_control_number($transaction->order_id, $transaction->order_date);
+                // Guardar el número de control generado
+                update_post_meta($transaction->order_id, '_seniat_control_number', $control_number);
+            }
+            
             $processed_transaction = array(
                 'date' => $transaction->order_date,
-                'control_number' => $transaction->control_number ?: 'Pendiente',
-                'customer_name' => $transaction->customer_name ?: 'Cliente',
-                'customer_id' => $transaction->customer_cedula ?: $transaction->customer_rif ?: 'N/A',
+                'control_number' => $control_number,
+                'customer_name' => $this->get_customer_name($transaction),
+                'customer_id' => $this->get_customer_id($transaction),
                 'subtotal_usd' => $subtotal_usd,
                 'iva_usd' => $iva_usd,
                 'igtf_usd' => $igtf_usd,
@@ -826,6 +834,68 @@ class WVP_SENIAT_Reports {
         
         echo '</table>';
         exit;
+    }
+    
+    /**
+     * Generar número de control para SENIAT
+     */
+    private function generate_control_number($order_id, $order_date) {
+        // Formato: YYYY-MM-DD-ORDERID (ej: 2025-09-12-1234)
+        $date = date('Y-m-d', strtotime($order_date));
+        $control_number = $date . '-' . str_pad($order_id, 4, '0', STR_PAD_LEFT);
+        
+        return $control_number;
+    }
+    
+    /**
+     * Obtener nombre del cliente con fallback
+     */
+    private function get_customer_name($transaction) {
+        if (!empty($transaction->customer_name)) {
+            return $transaction->customer_name;
+        }
+        
+        // Intentar obtener el nombre del pedido
+        $order = wc_get_order($transaction->order_id);
+        if ($order) {
+            $first_name = $order->get_billing_first_name();
+            $last_name = $order->get_billing_last_name();
+            if ($first_name || $last_name) {
+                return trim($first_name . ' ' . $last_name);
+            }
+        }
+        
+        return 'Cliente';
+    }
+    
+    /**
+     * Obtener ID del cliente (cédula o RIF) con fallback
+     */
+    private function get_customer_id($transaction) {
+        // Prioridad: Cédula primero, luego RIF
+        if (!empty($transaction->customer_cedula)) {
+            return $transaction->customer_cedula;
+        }
+        
+        if (!empty($transaction->customer_rif)) {
+            return $transaction->customer_rif;
+        }
+        
+        // Intentar obtener del pedido directamente
+        $order = wc_get_order($transaction->order_id);
+        if ($order) {
+            $cedula = $order->get_meta('_billing_cedula');
+            if (!empty($cedula)) {
+                return $cedula;
+            }
+            
+            $rif = $order->get_meta('_billing_rif');
+            if (!empty($rif)) {
+                return $rif;
+            }
+        }
+        
+        return 'N/A';
     }
     
     /**
