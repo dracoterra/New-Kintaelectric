@@ -14573,7 +14573,7 @@ textarea.input-text {
 
 .handheld-footer .handheld-widget-menu .widget-title:after {
     position: absolute;
-    content: "y";
+    content: "\79";
     font-family: font-electro;
     color: #333e48;
     right: 20px
@@ -14764,7 +14764,7 @@ textarea.input-text {
 }
 
 .footer-newsletter .newsletter-title::before {
-    content: "v";
+    content: "\76";
     font-family: font-electro;
     margin-right: 15px;
     font-size: 1.619em;
@@ -16012,7 +16012,7 @@ body.electro-dark footer.site-footer .site-dark-logo+.footer-logo {
     border-right: none;
     width: auto;
     height: auto;
-    content: "b";
+    content: "\62";
     color: #aeaeae;
     font-size: 1em;
     line-height: 1;
@@ -17391,7 +17391,7 @@ body.electro-dark footer.site-footer .site-dark-logo+.footer-logo {
 .mobile-header-v2 .site-search .widget.widget_product_search form button[type=submit]:after,
 .mobile-header-v2 .site-search .widget.widget_searchs form button[type=submit]:after {
     font-family: font-electro;
-    content: "m";
+    content: "\6d";
     font-size: 24px
 }
 
@@ -20221,7 +20221,7 @@ body:not(.electro-dark) .wc-search input[type=search] {
 }
 
 .wc-search .woocommerce-product-search button::after {
-    content: "m";
+    content: "\6d";
     font-size: 22px !important;
     font: normal normal normal 14px/1 font-electro
 }
@@ -20331,7 +20331,7 @@ section header .action-text:not(:hover):not(:focus) {
 }
 
 section header .action-text:after {
-    content: "y";
+    content: "\79";
     transform: rotate(-90deg);
     font-size: 1.214em;
     font-family: font-electro;
@@ -27954,7 +27954,7 @@ section.product-categories-menu-list {
     margin-left: 6px;
     font-size: 17px;
     color: #424242;
-    content: "y";
+    content: "\79";
     font-family: font-electro
 }
 
@@ -28041,7 +28041,7 @@ section.product-categories-menu-list {
 }
 
 .home-v13-hero-search .woocommerce-product-search button::after {
-    content: "m";
+    content: "\6d";
     display: inline-block;
     font: normal normal normal 14px/1 font-electro;
     font-size: inherit;
@@ -28268,11 +28268,21 @@ section.product-categories-menu-list {
 .owl-item>.product .hover-area .action-buttons,
 .products>.product .hover-area .action-buttons {
     width: 100%;
-    font-size: .929em;
+    font-size: .929rem !important;
     line-height: 1.385em;
     display: flex;
     justify-content: space-around;
     align-items: center
+    
+}
+.yith-wcwl-add-to-wishlist-button,
+span.yith-wcwl-add-to-wishlist-button__label {
+    width: auto !important;
+    font-size: .929rem !important;
+}
+
+a.yith-wcwl-add-to-wishlist-button.yith-wcwl-add-to-wishlist-button--anchor {
+    gap: 0 !important;
 }
 
 .owl-item>.product .hover-area .action-buttons .clear,
@@ -28313,7 +28323,7 @@ section.product-categories-menu-list {
 
 .owl-item>.product .button.add_to_cart_button::before,
 .products>.product .button.add_to_cart_button::before {
-    content: "a";
+    content: "\61";
     font-family: font-electro;
     padding: 8.94px 8px;
     font-weight: 400
@@ -33410,7 +33420,7 @@ div.quantity>label {
     font: normal normal normal 14px/1 font-electro;
     font-size: 1.357em;
     vertical-align: middle;
-    content: "a";
+    content: "\61";
     margin-right: .5em
 }
 
@@ -34726,7 +34736,7 @@ div.quantity>label {
 }
 
 .section-onsale-product-carousel-v9 .onsale-product .product-item__footer .button.add_to_cart_button::before {
-    content: "a";
+    content: "\61";
     font-family: font-electro;
     padding: 8.94px 8px;
     font-weight: 400
@@ -35841,7 +35851,7 @@ div.quantity>label {
 
 @media (min-width:1200px) {
     .product-main-2-1-2 .images .thumbnails {
-        padding-top: 79px
+        padding-top: 20px
     }
 }
 
@@ -45978,11 +45988,14 @@ div.wpforms-container-full.ec-newsletter-form .wpforms-form input[type=submit]:h
     border-radius: 0;
     font-weight: 400
 }
+.woocommerce.product.compare-button {
+width: auto !important;
+}
 
-.add-to-compare-link::before {
+.woocommerce.product.compare-button::before {
     font: normal normal normal 14px/1 font-electro;
     margin-right: 6px;
-    content: "d";
+    content: "\64";
     vertical-align: middle;
     display: inline-block;
     font-size: 16px
@@ -46209,7 +46222,7 @@ svg.yith-wcwl-icon-svg {
 
 .aws-search-form:not(.aws-form-active):not(.aws-processing) .aws-search-clear::after {
     font-family: font-electro;
-    content: "m";
+    content: "\6d";
     font-size: 1.714em
 }
 
