@@ -296,6 +296,38 @@ class BCV_Dolar_Tracker {
             ));
         }
     }
+    
+    /**
+     * Obtener la tasa actual del dólar
+     * 
+     * @return float|false Precio actual del dólar o false si no hay datos
+     */
+    public static function get_rate() {
+        // Verificar si la clase de base de datos está disponible
+        if (!class_exists('BCV_Database')) {
+            error_log('BCV Dólar Tracker: Clase BCV_Database no disponible');
+            return false;
+        }
+        
+        // Crear instancia de la base de datos
+        $database = new BCV_Database();
+        
+        // Obtener el precio más reciente
+        $latest_price = $database->get_latest_price();
+        
+        if ($latest_price && isset($latest_price->precio)) {
+            return floatval($latest_price->precio);
+        }
+        
+        // Si no hay datos en la base de datos, intentar obtener de las opciones de WordPress
+        $fallback_rate = get_option('wvp_bcv_rate', false);
+        if ($fallback_rate && $fallback_rate > 0) {
+            return floatval($fallback_rate);
+        }
+        
+        error_log('BCV Dólar Tracker: No se encontró tasa de dólar disponible');
+        return false;
+    }
 }
 
 // Inicializar el plugin
