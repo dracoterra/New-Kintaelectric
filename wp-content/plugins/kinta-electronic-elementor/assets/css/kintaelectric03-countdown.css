@@ -6,19 +6,114 @@
  * @package kinta-electric-elementor
  */
 
-/* Solo estilos básicos - el tema se encarga del resto */
-.deal-countdown-timer {
+/**
+ * Kintaelectric03 Countdown Timer Styles
+ * 
+ * Estilos específicos del plugin - no interfiere con el tema
+ *
+ * @package kinta-electric-elementor
+ */
+
+/* Contenedor del countdown timer del plugin */
+.kintaelectric-countdown-timer {
     margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.deal-countdown-timer .marketing-text {
+.kintaelectric-countdown-timer .kintaelectric-marketing-text {
     margin-bottom: 0.5rem;
     text-align: center;
     font-size: 0.875rem;
     color: #666;
+    font-weight: 500;
 }
 
-/* Dejar que el tema maneje el countdown */
-.deal-countdown {
-    /* Sin estilos personalizados - usar los del tema */
+/* Countdown principal del plugin */
+.kintaelectric-countdown {
+    display: flex;
+    color: #383838;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.kintaelectric-countdown > span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #e0e0e0;
+    background: #fff;
+    border-radius: 4px;
+    letter-spacing: -0.01em;
+    width: 61px;
+    height: 61px;
+    margin-right: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.kintaelectric-countdown > span:last-child {
+    margin-right: 0;
+}
+
+.kintaelectric-countdown > span .value {
+    font-size: 24px;
+    line-height: 24px;
+    margin-bottom: 5px;
+    font-weight: 700;
+    color: #333;
+}
+
+.kintaelectric-countdown > span b {
+    font-size: 10px;
+    line-height: 10px;
+    text-transform: uppercase;
+    font-weight: 400;
+    color: #666;
+}
+
+/* Responsive */
+@media (max-width: 991.98px) {
+    .kintaelectric-countdown > span {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .kintaelectric-countdown > span .value {
+        font-size: 20px;
+        line-height: 20px;
+    }
+    
+    .kintaelectric-countdown > span b {
+        font-size: 9px;
+        line-height: 9px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .kintaelectric-countdown-timer {
+        display: inline-block;
+    }
+    
+    .kintaelectric-countdown {
+        gap: 4px;
+    }
+    
+    .kintaelectric-countdown > span {
+        width: 45px;
+        height: 45px;
+        margin-right: 4px;
+    }
+    
+    .kintaelectric-countdown > span .value {
+        font-size: 18px;
+        line-height: 18px;
+    }
+    
+    .kintaelectric-countdown > span b {
+        font-size: 8px;
+        line-height: 8px;
+    }
 }

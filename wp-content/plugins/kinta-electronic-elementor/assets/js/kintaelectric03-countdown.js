@@ -20,7 +20,7 @@
     });
 
     function initCountdownTimers() {
-        $('.deal-countdown-timer .deal-countdown').each(function() {
+        $('.kintaelectric-countdown-timer .kintaelectric-countdown').each(function() {
             var $countdown = $(this);
             var days = parseInt($countdown.data('days')) || 7;
             
@@ -104,7 +104,7 @@
     // Función para reinicializar countdowns en elementos específicos
     window.kintaelectric03ReinitCountdown = function($container) {
         if ($container) {
-            $container.find('.deal-countdown-timer .deal-countdown').each(function() {
+            $container.find('.kintaelectric-countdown-timer .kintaelectric-countdown').each(function() {
                 var $countdown = $(this);
                 var days = parseInt($countdown.data('days')) || 7;
                 

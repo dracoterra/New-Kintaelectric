@@ -284,7 +284,7 @@ class KEE_Kintaelectric03_Deals_And_Tabs_Widget extends KEE_Base_Widget
 
         <div class="home-v1-deals-and-tabs deals-and-tabs row">
             <!-- Oferta Especial -->
-            <div class="deals-block col-md-6 col-lg-5 col-xl-4">
+            <div class="deals-block col-12 col-md-6 col-lg-5 col-xl-4">
                 <?php $this->render_special_offer($settings); ?>
             </div>
             
@@ -366,12 +366,11 @@ class KEE_Kintaelectric03_Deals_And_Tabs_Widget extends KEE_Base_Widget
                     <span class="price">
                         <span class="electro-price"><?php echo $product_price; ?></span>
                     </span>
-                    <div class="deal-countdown-timer">
-                        <div class="marketing-text text-xs-center">
+                    <div class="kintaelectric-countdown-timer">
+                        <div class="kintaelectric-marketing-text text-xs-center">
                             <?php esc_html_e('¡Apúrate! La oferta termina en:', 'kinta-electric-elementor'); ?>
                         </div>
-                        <span class="deal-time-diff" style="display:none;"><?php echo $countdown_days * 24 * 60 * 60; ?></span>
-                        <div class="deal-countdown countdown" data-days="<?php echo esc_attr($countdown_days); ?>"></div>
+                        <div class="kintaelectric-countdown" data-days="<?php echo esc_attr($countdown_days); ?>"></div>
                     </div>
                 </div>
             </div>
@@ -663,7 +662,7 @@ class KEE_Kintaelectric03_Deals_And_Tabs_Widget extends KEE_Base_Widget
     {
         ?>
         <div class="home-v1-deals-and-tabs deals-and-tabs row">
-            <div class="deals-block col-md-6 col-lg-5 col-xl-4">
+            <div class="deals-block col-12 col-md-6 col-lg-5 col-xl-4">
                 <section class="section-onsale-product">
                     <header>
                         <h2 class="h1">{{{ settings.special_offer_title }}}</h2>
@@ -687,11 +686,11 @@ class KEE_Kintaelectric03_Deals_And_Tabs_Widget extends KEE_Base_Widget
                             <span class="price">
                                 <span class="electro-price">$99.00</span>
                             </span>
-                            <div class="deal-countdown-timer">
-                                <div class="marketing-text text-xs-center">
+                            <div class="kintaelectric-countdown-timer">
+                                <div class="kintaelectric-marketing-text text-xs-center">
                                     <?php esc_html_e('¡Apúrate! La oferta termina en:', 'kinta-electric-elementor'); ?>
                                 </div>
-                                <div class="deal-countdown countdown" data-days="{{{ settings.countdown_days }}}"></div>
+                                <div class="kintaelectric-countdown" data-days="{{{ settings.countdown_days }}}"></div>
                             </div>
                         </div>
                     </div>
