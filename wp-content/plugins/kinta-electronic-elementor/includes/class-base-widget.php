@@ -101,7 +101,7 @@ abstract class KEE_Base_Widget extends \Elementor\Widget_Base {
     }
 
     /**
-     * Obtener productos en oferta para selectores
+     * Obtener productos en oferta para selectores (con cache)
      * 
      * @return array
      */
@@ -110,11 +110,17 @@ abstract class KEE_Base_Widget extends \Elementor\Widget_Base {
             return [];
         }
 
-        $products = wc_get_products([
-            'status' => 'publish',
-            'on_sale' => true,
-            'limit' => -1,
-        ]);
+        $cache_key = 'kee_products_on_sale';
+        $products = get_transient($cache_key);
+        
+        if (false === $products) {
+            $products = wc_get_products([
+                'status' => 'publish',
+                'on_sale' => true,
+                'limit' => -1,
+            ]);
+            set_transient($cache_key, $products, HOUR_IN_SECONDS);
+        }
 
         $options = [];
         foreach ($products as $product) {
@@ -125,7 +131,7 @@ abstract class KEE_Base_Widget extends \Elementor\Widget_Base {
     }
 
     /**
-     * Obtener categorías de productos para selectores
+     * Obtener categorías de productos para selectores (con cache)
      * 
      * @return array
      */
@@ -134,10 +140,16 @@ abstract class KEE_Base_Widget extends \Elementor\Widget_Base {
             return [];
         }
 
-        $categories = get_terms([
-            'taxonomy' => 'product_cat',
-            'hide_empty' => false,
-        ]);
+        $cache_key = 'kee_product_categories';
+        $categories = get_transient($cache_key);
+        
+        if (false === $categories) {
+            $categories = get_terms([
+                'taxonomy' => 'product_cat',
+                'hide_empty' => false,
+            ]);
+            set_transient($cache_key, $categories, HOUR_IN_SECONDS);
+        }
 
         $options = [];
         if (!is_wp_error($categories)) {
@@ -285,5 +297,77 @@ abstract class KEE_Base_Widget extends \Elementor\Widget_Base {
         }
 
         return $product->get_permalink();
+    }
+
+    /**
+     * Sanitizar configuración del widget
+     * 
+     * @param array $settings
+     * @return array
+     */
+    protected function sanitize_settings($settings) {
+        $sanitized = [];
+        
+        foreach ($settings as $key => $value) {
+            if (is_array($value)) {
+                $sanitized[$key] = $this->sanitize_settings($value);
+            } else {
+                $sanitized[$key] = sanitize_text_field($value);
+            }
+        }
+        
+        return $sanitized;
+    }
+
+    /**
+     * Verificar si el widget está siendo usado en la página actual
+     * 
+     * @return bool
+     */
+    protected function is_widget_used() {
+        global $post;
+        
+        if (!$post) {
+            return false;
+        }
+        
+        $widget_name = $this->get_name();
+        $content = $post->post_content;
+        
+        return strpos($content, 'kintaelectric') !== false || 
+               strpos($content, 'elementor') !== false;
+    }
+
+    /**
+     * Obtener configuración de carrusel por defecto
+     * 
+     * @return array
+     */
+    protected function get_default_carousel_options() {
+        return [
+            'items' => 4,
+            'nav' => false,
+            'slideSpeed' => 300,
+            'dots' => true,
+            'rtl' => is_rtl(),
+            'paginationSpeed' => 400,
+            'navText' => ['', ''],
+            'margin' => 0,
+            'touchDrag' => true,
+            'autoplay' => false,
+            'responsive' => [
+                '0' => ['items' => 1],
+                '768' => ['items' => 2],
+                '1200' => ['items' => 4],
+            ],
+        ];
+    }
+
+    /**
+     * Limpiar cache del plugin
+     */
+    public static function clear_cache() {
+        delete_transient('kee_products_on_sale');
+        delete_transient('kee_product_categories');
     }
 }

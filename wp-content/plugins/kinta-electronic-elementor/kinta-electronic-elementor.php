@@ -50,6 +50,16 @@ class KintaElectricElementor {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action('elementor/widgets/register', array($this, 'register_widgets'));
         add_action('elementor/elements/categories_registered', array($this, 'add_widget_categories'));
+        add_action('init', array($this, 'add_custom_capabilities'));
+        add_action('wp_ajax_kintaelectric03_countdown', array($this, 'handle_countdown_ajax'));
+        add_action('wp_ajax_nopriv_kintaelectric03_countdown', array($this, 'handle_countdown_ajax'));
+        
+        // Hooks para limpiar cache
+        add_action('save_post', array($this, 'clear_cache_on_product_update'));
+        add_action('delete_post', array($this, 'clear_cache_on_product_update'));
+        add_action('created_product_cat', array($this, 'clear_cache_on_category_update'));
+        add_action('edited_product_cat', array($this, 'clear_cache_on_category_update'));
+        add_action('delete_product_cat', array($this, 'clear_cache_on_category_update'));
     }
     
     /**
@@ -72,6 +82,7 @@ class KintaElectricElementor {
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric02-deals-widget.php';
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric03-deals-and-tabs-widget.php';
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric04-products-tabs-widget.php';
+        require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric05-dynamic-products-widget.php';
         
         // Debug files removed - system is now clean and optimized
 
@@ -79,6 +90,7 @@ class KintaElectricElementor {
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric02_Deals_Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric03_Deals_And_Tabs_Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric04_Products_Tabs_Widget());
+        \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric05_Dynamic_Products_Widget());
     }
     
     /**
@@ -188,6 +200,7 @@ class KintaElectricElementor {
         // Localize countdown script
         wp_localize_script('kintaelectric03-countdown', 'kintaelectric03Countdown', array(
             'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('kintaelectric03_nonce'),
             'texts' => array(
                 'days' => __('Días', 'kinta-electric-elementor'),
                 'hours' => __('Horas', 'kinta-electric-elementor'),
@@ -196,6 +209,92 @@ class KintaElectricElementor {
                 'expired' => __('¡Oferta Expirada!', 'kinta-electric-elementor')
             )
         ));
+    }
+    
+    /**
+     * Add custom capabilities for plugin management
+     */
+    public function add_custom_capabilities() {
+        $roles = ['administrator', 'editor', 'author'];
+        
+        foreach ($roles as $role_name) {
+            $role = get_role($role_name);
+            if ($role) {
+                $role->add_cap('manage_kinta_widgets');
+                $role->add_cap('edit_kinta_widgets');
+            }
+        }
+        
+        // Rol específico para diseñadores de Kinta Electric
+        add_role('kinta_designer', 'Kinta Designer', [
+            'read' => true,
+            'edit_kinta_widgets' => true,
+            'manage_kinta_widgets' => false,
+            'edit_posts' => true,
+            'edit_pages' => true,
+            'edit_published_posts' => true,
+            'edit_published_pages' => true,
+            'publish_posts' => true,
+            'publish_pages' => true,
+        ]);
+    }
+    
+    /**
+     * Handle countdown AJAX requests with security
+     */
+    public function handle_countdown_ajax() {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'kintaelectric03_nonce')) {
+            wp_die('Security check failed');
+        }
+        
+        // Check user capabilities
+        if (!current_user_can('read')) {
+            wp_die('Insufficient permissions');
+        }
+        
+        $product_id = intval($_POST['product_id']);
+        $end_time = sanitize_text_field($_POST['end_time']);
+        
+        // Validate and process countdown data
+        $response = array(
+            'success' => true,
+            'product_id' => $product_id,
+            'end_time' => $end_time,
+            'current_time' => current_time('timestamp')
+        );
+        
+        wp_send_json($response);
+    }
+    
+    /**
+     * Check if current user can manage widgets
+     */
+    public function can_manage_widgets() {
+        return current_user_can('manage_kinta_widgets');
+    }
+    
+    /**
+     * Check if current user can edit widgets
+     */
+    public function can_edit_widgets() {
+        return current_user_can('edit_kinta_widgets');
+    }
+    
+    /**
+     * Clear cache when products are updated
+     */
+    public function clear_cache_on_product_update($post_id) {
+        if (get_post_type($post_id) === 'product') {
+            KEE_Base_Widget::clear_cache();
+        }
+    }
+    
+    /**
+     * Clear cache when categories are updated
+     */
+    public function clear_cache_on_category_update() {
+        KEE_Base_Widget::clear_cache();
     }
 }
 
