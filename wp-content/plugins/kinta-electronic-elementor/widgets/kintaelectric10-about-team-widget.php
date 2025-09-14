@@ -110,44 +110,6 @@ class KEE_Kintaelectric10_About_Team_Widget extends KEE_Base_Widget {
             ]
         );
 
-        $repeater->add_control(
-            'is_hiring',
-            [
-                'label' => esc_html__('Es Contratación', 'kinta-electric-elementor'),
-                'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => esc_html__('Sí', 'kinta-electric-elementor'),
-                'label_off' => esc_html__('No', 'kinta-electric-elementor'),
-                'return_value' => 'yes',
-                'default' => 'no',
-            ]
-        );
-
-        $repeater->add_control(
-            'hiring_text',
-            [
-                'label' => esc_html__('Texto de Contratación', 'kinta-electric-elementor'),
-                'type' => \Elementor\Controls_Manager::TEXT,
-                'default' => esc_html__('See Details', 'kinta-electric-elementor'),
-                'condition' => [
-                    'is_hiring' => 'yes',
-                ],
-            ]
-        );
-
-        $repeater->add_control(
-            'hiring_url',
-            [
-                'label' => esc_html__('URL de Contratación', 'kinta-electric-elementor'),
-                'type' => \Elementor\Controls_Manager::URL,
-                'placeholder' => esc_html__('https://tu-sitio.com', 'kinta-electric-elementor'),
-                'default' => [
-                    'url' => '#',
-                ],
-                'condition' => [
-                    'is_hiring' => 'yes',
-                ],
-            ]
-        );
 
         $this->add_control(
             'team_members',
@@ -176,10 +138,6 @@ class KEE_Kintaelectric10_About_Team_Widget extends KEE_Base_Widget {
                         'name' => esc_html__('Susan McCain', 'kinta-electric-elementor'),
                         'position' => esc_html__('Packaging Girl', 'kinta-electric-elementor'),
                     ],
-                    [
-                        'is_hiring' => 'yes',
-                        'hiring_text' => esc_html__('See Details', 'kinta-electric-elementor'),
-                    ],
                 ],
                 'title_field' => '{{{ name }}}',
             ]
@@ -199,33 +157,17 @@ class KEE_Kintaelectric10_About_Team_Widget extends KEE_Base_Widget {
                 <?php foreach ($settings['team_members'] as $member) : ?>
                     <div class="col-lg-2 col-md-4 col-sm-6 mb-4">
                         <div class="team-member text-center">
-                            <?php if ($member['is_hiring'] === 'yes') : ?>
-                                <a href="<?php echo esc_url($member['hiring_url']['url']); ?>" class="text-decoration-none">
-                                    <div class="team-image mb-3">
-                                        <img loading="lazy" decoding="async" 
-                                             src="<?php echo esc_url($member['image']['url']); ?>" 
-                                             class="img-fluid rounded-circle" 
-                                             alt="<?php echo esc_attr($member['hiring_text']); ?>"
-                                             style="width: 150px; height: 150px; object-fit: cover;">
-                                    </div>
-                                    <div class="team-info">
-                                        <h5 class="mb-1"><?php echo esc_html($member['hiring_text']); ?></h5>
-                                        <small class="text-muted"></small>
-                                    </div>
-                                </a>
-                            <?php else : ?>
-                                <div class="team-image mb-3">
-                                    <img loading="lazy" decoding="async" 
-                                         src="<?php echo esc_url($member['image']['url']); ?>" 
-                                         class="img-fluid rounded-circle" 
-                                         alt="<?php echo esc_attr($member['name']); ?>"
-                                         style="width: 150px; height: 150px; object-fit: cover;">
-                                </div>
-                                <div class="team-info">
-                                    <h5 class="mb-1"><?php echo esc_html($member['name']); ?></h5>
-                                    <small class="text-muted"><?php echo esc_html($member['position']); ?></small>
-                                </div>
-                            <?php endif; ?>
+                            <div class="team-image mb-3 d-flex justify-content-center">
+                                <img loading="lazy" decoding="async" 
+                                     src="<?php echo esc_url($member['image']['url']); ?>" 
+                                     class="img-fluid rounded-circle" 
+                                     alt="<?php echo esc_attr($member['name']); ?>"
+                                     style="width: 150px; height: 150px; object-fit: cover;">
+                            </div>
+                            <div class="team-info">
+                                <h5 class="mb-1"><?php echo esc_html($member['name']); ?></h5>
+                                <small class="text-muted"><?php echo esc_html($member['position']); ?></small>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -244,33 +186,17 @@ class KEE_Kintaelectric10_About_Team_Widget extends KEE_Base_Widget {
                 <# _.each(settings.team_members, function(member) { #>
                     <div class="col-lg-2 col-md-4 col-sm-6 mb-4">
                         <div class="team-member text-center">
-                            <# if (member.is_hiring === 'yes') { #>
-                                <a href="{{{ member.hiring_url.url }}}" class="text-decoration-none">
-                                    <div class="team-image mb-3">
-                                        <img loading="lazy" decoding="async" 
-                                             src="{{{ member.image.url }}}" 
-                                             class="img-fluid rounded-circle" 
-                                             alt="{{{ member.hiring_text }}}"
-                                             style="width: 150px; height: 150px; object-fit: cover;">
-                                    </div>
-                                    <div class="team-info">
-                                        <h5 class="mb-1">{{{ member.hiring_text }}}</h5>
-                                        <small class="text-muted"></small>
-                                    </div>
-                                </a>
-                            <# } else { #>
-                                <div class="team-image mb-3">
-                                    <img loading="lazy" decoding="async" 
-                                         src="{{{ member.image.url }}}" 
-                                         class="img-fluid rounded-circle" 
-                                         alt="{{{ member.name }}}"
-                                         style="width: 150px; height: 150px; object-fit: cover;">
-                                </div>
-                                <div class="team-info">
-                                    <h5 class="mb-1">{{{ member.name }}}</h5>
-                                    <small class="text-muted">{{{ member.position }}}</small>
-                                </div>
-                            <# } #>
+                            <div class="team-image mb-3 d-flex justify-content-center">
+                                <img loading="lazy" decoding="async" 
+                                     src="{{{ member.image.url }}}" 
+                                     class="img-fluid rounded-circle" 
+                                     alt="{{{ member.name }}}"
+                                     style="width: 150px; height: 150px; object-fit: cover;">
+                            </div>
+                            <div class="team-info">
+                                <h5 class="mb-1">{{{ member.name }}}</h5>
+                                <small class="text-muted">{{{ member.position }}}</small>
+                            </div>
                         </div>
                     </div>
                 <# }); #>
