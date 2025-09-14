@@ -13,13 +13,13 @@ if (!defined('ABSPATH')) {
 /**
  * Widget Brands Carousel Kintaelectric
  */
-class KEE_Kintaelectric13_Brands_Carousel_Widget extends KEE_Base_Widget {
+class KEE_Kintaelectric11_Brands_Carousel_Widget extends KEE_Base_Widget {
 
     /**
      * Obtener nombre del widget
      */
     public function get_name() {
-        return 'kintaelectric13_brands_carousel';
+        return 'kintaelectric11_brands_carousel';
     }
 
     /**

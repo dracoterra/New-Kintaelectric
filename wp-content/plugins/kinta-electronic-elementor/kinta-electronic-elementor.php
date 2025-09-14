@@ -88,8 +88,8 @@ class KintaElectricElementor {
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric08-about-widget.php';
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric09-about-features-widget.php';
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric10-about-team-widget.php';
-        require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric13-brands-carousel-widget.php';
-        require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric14-about-text-accordion-widget.php';
+        require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric11-brands-carousel-widget.php';
+        require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric12-about-text-accordion-widget.php';
         
         // Debug files removed - system is now clean and optimized
 
@@ -103,8 +103,8 @@ class KintaElectricElementor {
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric08_About_Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric09_About_Features_Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric10_About_Team_Widget());
-        \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric13_Brands_Carousel_Widget());
-        \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric14_About_Text_Accordion_Widget());
+        \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric11_Brands_Carousel_Widget());
+        \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric12_About_Text_Accordion_Widget());
     }
     
     /**

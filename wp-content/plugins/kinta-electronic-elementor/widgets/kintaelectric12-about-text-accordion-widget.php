@@ -13,13 +13,13 @@ if (!defined('ABSPATH')) {
 /**
  * Widget About Text + Accordion Kintaelectric
  */
-class KEE_Kintaelectric14_About_Text_Accordion_Widget extends KEE_Base_Widget {
+class KEE_Kintaelectric12_About_Text_Accordion_Widget extends KEE_Base_Widget {
 
     /**
      * Obtener nombre del widget
      */
     public function get_name() {
-        return 'kintaelectric14_about_text_accordion';
+        return 'kintaelectric12_about_text_accordion';
     }
 
     /**
@@ -54,7 +54,7 @@ class KEE_Kintaelectric14_About_Text_Accordion_Widget extends KEE_Base_Widget {
      * Obtener dependencias de scripts
      */
     public function get_script_depends() {
-        return [];
+        return ['bootstrap-5'];
     }
 
     /**
@@ -259,24 +259,30 @@ class KEE_Kintaelectric14_About_Text_Accordion_Widget extends KEE_Base_Widget {
                                 $unique_id = 'accordion_' . $this->get_id() . '_' . $index;
                                 $show_class = $item['is_active'] === 'yes' ? 'show' : '';
                                 $expanded = $item['is_active'] === 'yes' ? 'true' : 'false';
+                                $collapsed_class = $item['is_active'] !== 'yes' ? 'collapsed' : '';
                                 ?>
-                                <div class="accordion-item">
+                                <div class="accordion-item border-0 mb-2">
                                     <h4 class="accordion-header" id="heading-<?php echo esc_attr($unique_id); ?>">
-                                        <button class="accordion-button <?php echo $item['is_active'] !== 'yes' ? 'collapsed' : ''; ?>"
+                                        <button class="accordion-button bg-transparent border-0 shadow-none p-0 d-flex align-items-center <?php echo esc_attr($collapsed_class); ?>"
                                                 type="button"
                                                 data-bs-toggle="collapse"
                                                 data-bs-target="#collapse-<?php echo esc_attr($unique_id); ?>"
                                                 aria-expanded="<?php echo esc_attr($expanded); ?>"
                                                 aria-controls="collapse-<?php echo esc_attr($unique_id); ?>">
-                                            <?php echo esc_html($item['accordion_title']); ?>
+                                            <div class="accordion-icon me-3 d-flex align-items-center justify-content-center <?php echo $item['is_active'] === 'yes' ? 'bg-warning' : 'bg-secondary'; ?>">
+                                                <i class="fas fa-<?php echo $item['is_active'] === 'yes' ? 'minus' : 'plus'; ?> text-white"></i>
+                                            </div>
+                                            <span class="fw-bold <?php echo $item['is_active'] === 'yes' ? 'text-dark' : 'text-muted'; ?>">
+                                                <?php echo esc_html($item['accordion_title']); ?>
+                                            </span>
                                         </button>
                                     </h4>
                                     <div id="collapse-<?php echo esc_attr($unique_id); ?>"
                                          class="accordion-collapse collapse <?php echo esc_attr($show_class); ?>"
                                          aria-labelledby="heading-<?php echo esc_attr($unique_id); ?>"
                                          data-bs-parent="#accordion-<?php echo esc_attr($this->get_id()); ?>">
-                                        <div class="accordion-body">
-                                            <p class="mb-0"><?php echo wp_kses_post(nl2br($item['accordion_content'])); ?></p>
+                                        <div class="accordion-body ps-5 pt-2">
+                                            <p class="text-muted mb-0"><?php echo wp_kses_post(nl2br($item['accordion_content'])); ?></p>
                                         </div>
                                     </div>
                                 </div>
@@ -286,6 +292,30 @@ class KEE_Kintaelectric14_About_Text_Accordion_Widget extends KEE_Base_Widget {
                 </div>
             </div>
         </div>
+        
+        <style>
+        .accordion-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .accordion-button:not(.collapsed) .accordion-icon {
+            background-color: #ffc107 !important;
+        }
+        .accordion-button.collapsed .accordion-icon {
+            background-color: #6c757d !important;
+        }
+        .accordion-button:focus {
+            box-shadow: none;
+        }
+        .accordion-button:not(.collapsed) {
+            color: #212529;
+        }
+        .accordion-button.collapsed {
+            color: #6c757d;
+        }
+        </style>
         <?php
     }
 
@@ -331,23 +361,29 @@ class KEE_Kintaelectric14_About_Text_Accordion_Widget extends KEE_Base_Widget {
                                 <# var uniqueId = 'accordion_' + view.getID() + '_' + index; #>
                                 <# var showClass = item.is_active === 'yes' ? 'show' : ''; #>
                                 <# var expanded = item.is_active === 'yes' ? 'true' : 'false'; #>
-                                <div class="accordion-item">
+                                <# var collapsedClass = item.is_active !== 'yes' ? 'collapsed' : ''; #>
+                                <div class="accordion-item border-0 mb-2">
                                     <h4 class="accordion-header" id="heading-{{{ uniqueId }}}">
-                                        <button class="accordion-button {{{ item.is_active !== 'yes' ? 'collapsed' : '' }}}"
+                                        <button class="accordion-button bg-transparent border-0 shadow-none p-0 d-flex align-items-center {{{ collapsedClass }}}"
                                                 type="button"
                                                 data-bs-toggle="collapse"
                                                 data-bs-target="#collapse-{{{ uniqueId }}}"
                                                 aria-expanded="{{{ expanded }}}"
                                                 aria-controls="collapse-{{{ uniqueId }}}">
-                                            {{{ item.accordion_title }}}
+                                            <div class="accordion-icon me-3 d-flex align-items-center justify-content-center {{{ item.is_active === 'yes' ? 'bg-warning' : 'bg-secondary' }}}">
+                                                <i class="fas fa-{{{ item.is_active === 'yes' ? 'minus' : 'plus' }}} text-white"></i>
+                                            </div>
+                                            <span class="fw-bold {{{ item.is_active === 'yes' ? 'text-dark' : 'text-muted' }}}">
+                                                {{{ item.accordion_title }}}
+                                            </span>
                                         </button>
                                     </h4>
                                     <div id="collapse-{{{ uniqueId }}}"
                                          class="accordion-collapse collapse {{{ showClass }}}"
                                          aria-labelledby="heading-{{{ uniqueId }}}"
                                          data-bs-parent="#accordion-{{{ view.getID() }}}">
-                                        <div class="accordion-body">
-                                            <p class="mb-0">{{{ item.accordion_content }}}</p>
+                                        <div class="accordion-body ps-5 pt-2">
+                                            <p class="text-muted mb-0">{{{ item.accordion_content }}}</p>
                                         </div>
                                     </div>
                                 </div>
