@@ -108,17 +108,39 @@ if ( ! defined( 'ABSPATH' ) ) {
 				</div>
 				<?php endif; ?>
 				
-				<?php if ( class_exists( 'YITH_WCWL' ) ) : ?>
 				<div class="header-icon" data-bs-toggle="tooltip" data-bs-placement="bottom"
-					data-bs-title="<?php esc_attr_e( 'Wishlist', 'kintaelectric' ); ?>">
-					<a href="<?php echo esc_url( YITH_WCWL()->get_wishlist_url() ); ?>">
-						<i class="ec ec-favorites"></i>
-						<?php if ( function_exists( 'yith_wcwl_count_all_products' ) ) : ?>
-						<span class="wishlist-count count header-icon-counter"><?php echo yith_wcwl_count_all_products(); ?></span>
-						<?php endif; ?>
-					</a>
+					data-bs-title="<?php esc_attr_e('Wishlist', 'kintaelectric'); ?>">
+					<?php
+					// Verificar si YITH Wishlist está activo
+					if (class_exists('YITH_WCWL') && function_exists('yith_wcwl_count_products')) {
+						$wishlist_url = YITH_WCWL()->get_wishlist_url();
+						$wishlist_count = yith_wcwl_count_products();
+						?>
+						<a href="<?php echo esc_url($wishlist_url); ?>" 
+						   class="yith-wcwl-wishlist-link" 
+						   id="header-wishlist-link">
+							<i class="ec ec-favorites"></i>
+							<?php if ($wishlist_count > 0): ?>
+								<span class="header-icon-counter" id="header-wishlist-count">
+									<?php echo esc_html($wishlist_count); ?>
+								</span>
+							<?php else: ?>
+								<span class="header-icon-counter" id="header-wishlist-count" style="display: none;">
+									0
+								</span>
+							<?php endif; ?>
+						</a>
+						<?php
+					} else {
+						// Fallback si el plugin no está activo
+						?>
+						<a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>">
+							<i class="ec ec-favorites"></i>
+						</a>
+						<?php
+					}
+					?>
 				</div>
-				<?php endif; ?>
 				
 				<div class="header-icon header-icon__user-account dropdown animate-dropdown"
 					data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="<?php esc_attr_e( 'My Account', 'kintaelectric' ); ?>">

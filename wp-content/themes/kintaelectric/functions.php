@@ -1572,3 +1572,108 @@ if (is_admin()) {
     require_once kintaelectric_PATH . '/test-template-compatibility.php';
 }
 
+/**
+ * Integración AJAX con YITH WooCommerce Wishlist - Versión Optimizada
+ */
+if (class_exists('YITH_WCWL')) {
+    add_action('wp_enqueue_scripts', 'kintaelectric_wishlist_ajax_script');
+    
+    function kintaelectric_wishlist_ajax_script() {
+        if (is_admin()) {
+            return;
+        }
+        
+        wp_enqueue_script('jquery');
+        
+        wp_add_inline_script('jquery', '
+            jQuery(document).ready(function($) {
+                var lastWishlistCount = 0;
+                var updateInterval;
+                
+                // Función para actualizar el contador del header
+                function updateWishlistHeaderCounter() {
+                    $.ajax({
+                        url: "' . admin_url('admin-ajax.php') . '",
+                        type: "POST",
+                        data: {
+                            action: "kintaelectric_get_wishlist_count",
+                            nonce: "' . wp_create_nonce('wishlist_count_nonce') . '"
+                        },
+                        success: function(response) {
+                            if (response.success && response.data.count !== undefined) {
+                                var counter = $("#header-wishlist-count");
+                                if (response.data.count > 0) {
+                                    counter.text(response.data.count).show();
+                                } else {
+                                    counter.hide();
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // Función para verificar cambios en la wishlist
+                function checkWishlistChanges() {
+                    $.ajax({
+                        url: "' . admin_url('admin-ajax.php') . '",
+                        type: "POST",
+                        data: {
+                            action: "kintaelectric_get_wishlist_count",
+                            nonce: "' . wp_create_nonce('wishlist_count_nonce') . '"
+                        },
+                        success: function(response) {
+                            if (response.success && response.data.count !== undefined) {
+                                var currentCount = response.data.count;
+                                if (currentCount !== lastWishlistCount) {
+                                    var counter = $("#header-wishlist-count");
+                                    if (currentCount > 0) {
+                                        counter.text(currentCount).show();
+                                    } else {
+                                        counter.hide();
+                                    }
+                                    lastWishlistCount = currentCount;
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // Escuchar eventos del plugin YITH Wishlist
+                $("body").on("added_to_wishlist removed_from_wishlist", function() {
+                    setTimeout(updateWishlistHeaderCounter, 500);
+                });
+                
+                // Escuchar clics en botones de wishlist
+                $(document).on("click", ".add_to_wishlist, .remove_from_wishlist", function() {
+                    setTimeout(updateWishlistHeaderCounter, 1000);
+                });
+                
+                // Verificación periódica cada 3 segundos (solo por 5 minutos)
+                updateInterval = setInterval(checkWishlistChanges, 3000);
+                setTimeout(function() {
+                    clearInterval(updateInterval);
+                }, 300000);
+                
+                // Actualizar contador al cargar la página
+                setTimeout(updateWishlistHeaderCounter, 1000);
+            });
+        ');
+    }
+    
+    // AJAX handler para obtener el conteo
+    add_action('wp_ajax_kintaelectric_get_wishlist_count', 'kintaelectric_get_wishlist_count');
+    add_action('wp_ajax_nopriv_kintaelectric_get_wishlist_count', 'kintaelectric_get_wishlist_count');
+    
+    function kintaelectric_get_wishlist_count() {
+        if (!wp_verify_nonce($_POST['nonce'], 'wishlist_count_nonce')) {
+            wp_die('Security check failed');
+        }
+        
+        $count = yith_wcwl_count_products();
+        
+        wp_send_json_success(array(
+            'count' => $count
+        ));
+    }
+}
+
