@@ -54,14 +54,14 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
      * Obtener dependencias de scripts
      */
     public function get_script_depends() {
-        return ['kinta-electric-elementor-script'];
+        return ['jquery', 'slick-carousel', 'kinta-home-slider-js'];
     }
 
     /**
      * Obtener dependencias de estilos
      */
     public function get_style_depends() {
-        return ['kinta-electric-elementor-style'];
+        return ['slick-carousel', 'slick-theme', 'animate-css', 'kinta-home-slider-css'];
     }
 
     /**
@@ -200,7 +200,7 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
         <div class="mb-5">
             <div class="bg-img-hero" style="background-image: url(<?php echo esc_url($settings['background_image']['url']); ?>);">
                 <div class="container min-height-420 overflow-hidden">
-                    <div class="js-slick-carousel u-slick owl-carousel" data-pagi-classes="text-center position-absolute right-0 bottom-0 left-0 u-slick__pagination u-slick__pagination--long justify-content-start mb-3 mb-md-4 offset-xl-3 pl-2 pb-1">
+                    <div class="js-slick-carousel u-slick" data-pagi-classes="text-center position-absolute right-0 bottom-0 left-0 u-slick__pagination u-slick__pagination--long justify-content-start mb-3 mb-md-4 offset-xl-3 pl-2 pb-1">
                         <?php if (!empty($settings['slides'])) : ?>
                             <?php foreach ($settings['slides'] as $slide) : ?>
                                 <div class="js-slide bg-img-hero-center">
@@ -228,7 +228,7 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
                                             </a>
                                         </div>
                                         <div class="col-xl-5 col-6 d-flex align-items-center" data-scs-animation-in="zoomIn" data-scs-animation-delay="500">
-                                            <img class="img-fluid" src="<?php echo esc_url($slide['slide_image']['url']); ?>" alt="Image Description" style="max-width: 416px;">
+                                            <img class="img-fluid" src="<?php echo esc_url($slide['slide_image']['url']); ?>" alt="Image Description">
                                         </div>
                                     </div>
                                 </div>
@@ -251,7 +251,7 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
         <div class="mb-5">
             <div class="bg-img-hero" style="background-image: url({{{ settings.background_image.url }}});">
                 <div class="container min-height-420 overflow-hidden">
-                    <div class="js-slick-carousel u-slick owl-carousel" data-pagi-classes="text-center position-absolute right-0 bottom-0 left-0 u-slick__pagination u-slick__pagination--long justify-content-start mb-3 mb-md-4 offset-xl-3 pl-2 pb-1">
+                    <div class="js-slick-carousel u-slick" data-pagi-classes="text-center position-absolute right-0 bottom-0 left-0 u-slick__pagination u-slick__pagination--long justify-content-start mb-3 mb-md-4 offset-xl-3 pl-2 pb-1">
                         <# if (settings.slides && settings.slides.length > 0) { #>
                             <# _.each(settings.slides, function(slide) { #>
                                 <div class="js-slide bg-img-hero-center">

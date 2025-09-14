@@ -119,20 +119,63 @@ class KintaElectricElementor {
     }
     
     /**
-     * Enqueue CSS files - Usar solo CSS del tema
+     * Enqueue CSS files
      */
     private function enqueue_styles() {
-        // Usar solo CSS del tema - no cargar CSS externos
-        // El tema ya incluye: Animate.css, Font Awesome, Owl Carousel
+        // Slick Carousel CSS
+        wp_enqueue_style(
+            'slick-carousel',
+            KEE_PLUGIN_URL . 'assets/css/slick.css',
+            array(),
+            '1.8.1'
+        );
+        
+        // Slick Theme CSS
+        wp_enqueue_style(
+            'slick-theme',
+            KEE_PLUGIN_URL . 'assets/css/slick-theme.css',
+            array('slick-carousel'),
+            '1.8.1'
+        );
+        
+        // Animate.css
+        wp_enqueue_style(
+            'animate-css',
+            KEE_PLUGIN_URL . 'assets/css/animate.min.css',
+            array(),
+            '3.7.2'
+        );
+        
+        // CSS específico del home slider
+        wp_enqueue_style(
+            'kinta-home-slider-css',
+            KEE_PLUGIN_URL . 'assets/css/home-slider.css',
+            array('slick-theme', 'animate-css'),
+            self::VERSION
+        );
     }
     
     /**
      * Enqueue JavaScript files
      */
     private function enqueue_scripts_js() {
-        // Usar solo JavaScript del tema - no cargar JS externos
-        // El tema ya incluye: jQuery, Owl Carousel, Animate.js
-
+        // Slick Carousel JS
+        wp_enqueue_script(
+            'slick-carousel',
+            KEE_PLUGIN_URL . 'assets/js/slick.min.js',
+            array('jquery'),
+            '1.8.1',
+            true
+        );
+        
+        // JavaScript específico del home slider
+        wp_enqueue_script(
+            'kinta-home-slider-js',
+            KEE_PLUGIN_URL . 'assets/js/home-slider.js',
+            array('jquery', 'slick-carousel'),
+            self::VERSION,
+            true
+        );
     }
     
     /**
