@@ -84,6 +84,7 @@ class KintaElectricElementor {
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric04-products-tabs-widget.php';
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric05-dynamic-products-widget.php';
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric06-banner-widget.php';
+        require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric07-recently-added-widget.php';
         
         // Debug files removed - system is now clean and optimized
 
@@ -93,6 +94,7 @@ class KintaElectricElementor {
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric04_Products_Tabs_Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric05_Dynamic_Products_Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric06_Banner_Widget());
+        \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric07_Recently_Added_Widget());
     }
     
     /**
