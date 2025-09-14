@@ -385,48 +385,74 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
                     <?php foreach ($product_groups as $group_index => $group_products): ?>
                     <ul data-view="grid" data-bs-toggle="regular-products" class="products products list-unstyled row g-0 row-cols-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-3 row-cols-xxl-4">
                         <?php foreach ($group_products as $product_index => $product): ?>
-                        <li class="col-wd-3 col-md-4 product-item product-item__card pb-2 mb-2 pb-md-0 mb-md-0 border-bottom border-md-bottom-0">
-                            <div class="product-item__outer h-100">
-                                <div class="product-item__inner p-md-3 row no-gutters">
-                                    <div class="col col-lg-auto product-media-left">
-                                        <a href="<?php echo esc_url($product['url']); ?>" class="max-width-150 d-block" tabindex="0">
-                                            <img class="img-fluid" src="<?php echo esc_url($product['image']); ?>" alt="<?php echo esc_attr($product['name']); ?>">
-                                        </a>
-                                    </div>
-                                    <div class="col product-item__body pl-2 pl-lg-3 mr-xl-2 mr-wd-1">
-                                        <div class="mb-4">
-                                            <div class="mb-2">
+                        <li class="product-card post-<?php echo $product['id']; ?> product type-product status-publish has-post-thumbnail <?php echo implode(' ', $product['classes']); ?>">
+                            <div class="product-outer product-item__outer">
+                                <div class="product-inner">
+                                    <a class="card-media-left" href="<?php echo esc_url($product['url']); ?>" title="<?php echo esc_attr($product['name']); ?>">
+                                        <img loading="lazy" width="300" height="300" src="<?php echo esc_url($product['image']); ?>" class="media-object attachment-woocommerce_thumbnail size-woocommerce_thumbnail" alt="<?php echo esc_attr($product['name']); ?>" decoding="async" srcset="<?php echo esc_attr($product['srcset']); ?>" sizes="(max-width: 300px) 100vw, 300px">
+                                    </a>
+
+                                    <div class="card-body">
+                                        <div class="card-body-inner">
+                                            <span class="loop-product-categories">
                                                 <?php if (!empty($product['categories'])): ?>
                                                     <?php echo implode(', ', $product['categories']); ?>
                                                 <?php endif; ?>
-                                            </div>
-                                            <h5 class="product-item__title">
-                                                <a href="<?php echo esc_url($product['url']); ?>" class="text-blue font-weight-bold" tabindex="0"><?php echo esc_html($product['name']); ?></a>
-                                            </h5>
+                                            </span>
+                                            <a href="<?php echo esc_url($product['url']); ?>" class="woocommerce-LoopProduct-link woocommerce-loop-product__link">
+                                                <h2 class="woocommerce-loop-product__title"><?php echo esc_html($product['name']); ?></h2>
+                                            </a>
+                                            <div class="price-add-to-cart">
+                                                <span class="price"><?php echo $product['price_html']; ?></span>
+                                                <div class="add-to-cart-wrap" data-bs-toggle="tooltip" data-bs-title="Add to cart">
+                                                    <a href="<?php echo esc_url($product['add_to_cart_url']); ?>" aria-describedby="woocommerce_loop_add_to_cart_link_describedby_<?php echo $product['id']; ?>" data-quantity="1" class="button product_type_simple add_to_cart_button ajax_add_to_cart" data-product_id="<?php echo $product['id']; ?>" data-product_sku="<?php echo esc_attr($product['sku']); ?>" aria-label="Add to cart: &ldquo;<?php echo esc_attr($product['name']); ?>&rdquo;" rel="nofollow" data-success_message="&ldquo;<?php echo esc_attr($product['name']); ?>&rdquo; has been added to your cart">Add to cart</a>
+                                                </div>
+                                                <span id="woocommerce_loop_add_to_cart_link_describedby_<?php echo $product['id']; ?>" class="screen-reader-text"></span>
+                                            </div><!-- /.price-add-to-cart -->
                                         </div>
-                                        <div class="flex-center-between mb-3">
-                                            <div class="prodcut-price">
-                                                <div class="text-gray-100"><?php echo $product['price_html']; ?></div>
-                                            </div>
-                                            <div class="d-none d-xl-block prodcut-add-cart">
-                                                <a href="<?php echo esc_url($product['add_to_cart_url']); ?>" class="btn-add-cart btn-primary transition-3d-hover" tabindex="0">
-                                                    <i class="ec ec-add-to-cart"></i>
-                                                </a>
-                                            </div>
-                                        </div>
-                                        <div class="product-item__footer">
-                                            <div class="border-top pt-2 flex-center-between flex-wrap">
-                                                <a href="<?php echo esc_url($product['compare_url']); ?>" class="text-gray-6 font-size-13" tabindex="0">
-                                                    <i class="ec ec-compare mr-1 font-size-15"></i> Compare
-                                                </a>
-                                                <a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" class="text-gray-6 font-size-13" tabindex="0">
-                                                    <i class="ec ec-favorites mr-1 font-size-15"></i> Wishlist
-                                                </a>
-                                            </div>
+                                    </div>
+                                    <div class="hover-area">
+                                        <div class="action-buttons">
+                                            <?php 
+                                            // YITH Wishlist - Múltiples métodos de integración
+                                            if (defined('YITH_WCWL')) : 
+                                                // Método 1: Función directa si está disponible
+                                                if (function_exists('yith_wcwl_add_to_wishlist_button')) {
+                                                    yith_wcwl_add_to_wishlist_button($product['id']);
+                                                }
+                                                // Método 2: Shortcode como fallback
+                                                elseif (shortcode_exists('yith_wcwl_add_to_wishlist')) {
+                                                    echo do_shortcode('[yith_wcwl_add_to_wishlist product_id="' . $product['id'] . '"]');
+                                                }
+                                                // Método 3: HTML manual con nonce correcto
+                                                else {
+                                                    $wishlist_nonce = wp_create_nonce('add_to_wishlist');
+                                                    echo '<a href="#" class="add_to_wishlist" data-product-id="' . $product['id'] . '" data-nonce="' . $wishlist_nonce . '">' . __('Add to wishlist', 'kinta-electric-elementor') . '</a>';
+                                                }
+                                            endif; 
+                                            ?>
+
+                                            <?php 
+                                            // YITH Compare - Múltiples métodos de integración
+                                            if (defined('YITH_WOOCOMPARE')) : 
+                                                // Método 1: Función directa si está disponible
+                                                if (function_exists('yith_woocompare_add_compare_button')) {
+                                                    yith_woocompare_add_compare_button($product['id']);
+                                                }
+                                                // Método 2: Shortcode como fallback
+                                                elseif (shortcode_exists('yith_compare_button')) {
+                                                    echo do_shortcode('[yith_compare_button product="' . $product['id'] . '"]');
+                                                }
+                                                // Método 3: HTML manual como último recurso
+                                                else {
+                                                    echo '<a href="' . esc_url($product['compare_url']) . '" class="compare link add-to-compare-link" data-product_id="' . $product['id'] . '" target="_self" rel="nofollow"><span class="label">Compare</span></a>';
+                                                }
+                                            endif; 
+                                            ?>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div><!-- /.product-outer -->
                         </li>
                         <?php endforeach; ?>
                     </ul>
