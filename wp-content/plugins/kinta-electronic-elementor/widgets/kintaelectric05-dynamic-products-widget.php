@@ -361,6 +361,61 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
         }
         
         ?>
+        <style>
+        .section-product-cards-carousel .products-carousel .owl-dots {
+            display: block !important;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .section-product-cards-carousel .products-carousel .owl-dots .owl-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #bcbcbc;
+            display: inline-block;
+            border-radius: 50%;
+            padding: 0;
+            border-width: 0;
+            margin: 0 5px;
+        }
+        .section-product-cards-carousel .products-carousel .owl-dots .owl-dot.active {
+            width: 30px;
+            height: 8px;
+            border-radius: 3px;
+            background-color: var(--bs-ec-primary, #fed700);
+        }
+        .section-product-cards-carousel .products-carousel .owl-nav {
+            display: block !important;
+        }
+        .section-product-cards-carousel .products-carousel .owl-nav .owl-prev,
+        .section-product-cards-carousel .products-carousel .owl-nav .owl-next {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #333;
+            text-decoration: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section-product-cards-carousel .products-carousel .owl-nav .owl-prev {
+            left: -20px;
+        }
+        .section-product-cards-carousel .products-carousel .owl-nav .owl-next {
+            right: -20px;
+        }
+        .section-product-cards-carousel .products-carousel .owl-nav .owl-prev:hover,
+        .section-product-cards-carousel .products-carousel .owl-nav .owl-next:hover {
+            background: var(--bs-ec-primary, #fed700);
+            color: #fff;
+        }
+        </style>
         <section class="section-product-cards-carousel home-v1-product-cards-carousel animate-in-view" data-animation="fadeIn">
             <header class="show-nav">
                 <h2 class="h1"><?php echo esc_html($settings['section_title']); ?></h2>
@@ -380,8 +435,8 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
                 </ul>
             </header>
 
-            <div id="<?php echo esc_attr(uniqid()); ?>" data-ride="owl-carousel" data-carousel-selector=".product-cards-carousel" data-carousel-options='{"items":1,"nav":false,"slideSpeed":300,"dots":true,"rtl":false,"paginationSpeed":400,"navText":["",""],"margin":0,"touchDrag":true,"autoplay":false}'>
-                <div class="woocommerce columns-3 product-cards-carousel owl-carousel">
+            <div id="<?php echo esc_attr(uniqid()); ?>" data-ride="owl-carousel" data-carousel-selector=".products-carousel" data-carousel-options='{"items":1,"nav":true,"slideSpeed":300,"dots":true,"rtl":false,"paginationSpeed":400,"navText":["<i class=\"ec ec-chevron-left\"></i>","<i class=\"ec ec-chevron-right\"></i>"],"margin":0,"touchDrag":true,"autoplay":false}'>
+                <div class="woocommerce columns-3 products-carousel owl-carousel">
                     <?php foreach ($product_groups as $group_index => $group_products): ?>
                     <ul data-view="grid" data-bs-toggle="regular-products" class="products products list-unstyled row g-0 row-cols-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-3 row-cols-xxl-4">
                         <?php foreach ($group_products as $product_index => $product): ?>
