@@ -170,6 +170,14 @@ class KintaElectricElementor {
             array('slick-theme', 'animate-css'),
             self::VERSION
         );
+        
+        // CSS del countdown timer
+        wp_enqueue_style(
+            'kintaelectric03-countdown',
+            KEE_PLUGIN_URL . 'assets/css/kintaelectric03-countdown.css',
+            array(),
+            self::VERSION
+        );
     }
     
     /**
@@ -193,6 +201,28 @@ class KintaElectricElementor {
             self::VERSION,
             true
         );
+        
+        // JavaScript del countdown timer
+        wp_enqueue_script(
+            'kintaelectric03-countdown',
+            KEE_PLUGIN_URL . 'assets/js/kintaelectric03-countdown.js',
+            array('jquery'),
+            self::VERSION,
+            true
+        );
+        
+        // Localizar script del countdown
+        wp_localize_script('kintaelectric03-countdown', 'kintaelectric03Countdown', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('kintaelectric03_nonce'),
+            'texts' => array(
+                'days' => __('Días', 'kinta-electric-elementor'),
+                'hours' => __('Horas', 'kinta-electric-elementor'),
+                'mins' => __('Min', 'kinta-electric-elementor'),
+                'secs' => __('Seg', 'kinta-electric-elementor'),
+                'expired' => __('¡Oferta terminada!', 'kinta-electric-elementor')
+            )
+        ));
     }
     
     /**
