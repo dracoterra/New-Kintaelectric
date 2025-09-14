@@ -33,7 +33,7 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
 
     public function get_categories()
     {
-        return ['kinta-electronic'];
+        return ['kinta-electric'];
     }
 
     public function get_keywords()
