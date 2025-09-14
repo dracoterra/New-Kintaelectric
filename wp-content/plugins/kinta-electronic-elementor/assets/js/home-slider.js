@@ -5,11 +5,11 @@ jQuery(document).ready(function($) {
     $('.js-slick-carousel').slick({
         dots: true,
         infinite: true,
-        speed: 500,
+        speed: 1000,
         slidesToShow: 1,
         slidesToScroll: 1,
         autoplay: true,
-        autoplaySpeed: 4000,
+        autoplaySpeed: 6000,
         arrows: false,
         // Usar las clases exactas del data-pagi-classes
         dotsClass: pagiClasses || 'slick-dots u-slick__pagination u-slick__pagination--long',

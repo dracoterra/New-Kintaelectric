@@ -143,3 +143,7 @@
     .mb-md-4 { margin-bottom: 1.5rem !important; }
     .px-md-7 { padding-left: 4.5rem !important; padding-right: 4.5rem !important; }
 }
+
+.slick-dotted.slick-slider {
+    margin-bottom: 0px !important;
+}
