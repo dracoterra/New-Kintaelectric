@@ -391,7 +391,7 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
         ?>
         <style>
         .section-product-cards-carousel .products-carousel .owl-dots {
-            display: block !important;
+            display: block;
             text-align: center;
             margin-top: 20px;
         }
@@ -412,7 +412,7 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
             background-color: var(--bs-ec-primary, #fed700);
         }
         .section-product-cards-carousel .products-carousel .owl-nav {
-            display: block !important;
+            display: block;
         }
         .section-product-cards-carousel .products-carousel .owl-nav .owl-prev,
         .section-product-cards-carousel .products-carousel .owl-nav .owl-next {
@@ -446,6 +446,29 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
         </style>
         <script>
         jQuery(document).ready(function($) {
+            // Inicializar Owl Carousel manualmente
+            var carousel = $('.section-product-cards-carousel .owl-carousel');
+            if (carousel.length && typeof $.fn.owlCarousel !== 'undefined') {
+                carousel.owlCarousel({
+                    items: 1,
+                    nav: true,
+                    slideSpeed: 300,
+                    dots: true,
+                    rtl: false,
+                    paginationSpeed: 400,
+                    navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+                    margin: 0,
+                    touchDrag: true,
+                    autoplay: false,
+                    loop: false,
+                    responsive: {
+                        0: { items: 1 },
+                        768: { items: 1 },
+                        1024: { items: 1 }
+                    }
+                });
+            }
+            
             // Navegación del carousel
             $('.section-product-cards-carousel .nav-link[data-slider]').on('click', function(e) {
                 e.preventDefault();
@@ -458,14 +481,13 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
                 $(this).addClass('active');
                 
                 // Ir al slide correspondiente
-                var carousel = $('.section-product-cards-carousel .owl-carousel');
                 if (carousel.length) {
                     carousel.trigger('to.owl.carousel', sliderIndex);
                 }
             });
             
             // Actualizar navegación cuando cambia el carousel
-            $('.section-product-cards-carousel .owl-carousel').on('changed.owl.carousel', function(event) {
+            carousel.on('changed.owl.carousel', function(event) {
                 var currentIndex = event.item.index;
                 $('.section-product-cards-carousel .nav-item').removeClass('active');
                 $('.section-product-cards-carousel .nav-link').removeClass('active');

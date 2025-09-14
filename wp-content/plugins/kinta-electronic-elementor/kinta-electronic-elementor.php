@@ -119,100 +119,20 @@ class KintaElectricElementor {
     }
     
     /**
-     * Enqueue CSS files
+     * Enqueue CSS files - Usar solo CSS del tema
      */
     private function enqueue_styles() {
-        // Animate.css
-        wp_enqueue_style(
-            'animate-css',
-            'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css',
-            array(),
-            '4.1.1'
-        );
-        
-        // Font Awesome
-        wp_enqueue_style(
-            'font-awesome',
-            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
-            array(),
-            '6.0.0'
-        );
-        
-        // Owl Carousel CSS
-        wp_enqueue_style(
-            'owl-carousel-css',
-            'https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css',
-            array(),
-            '2.3.4'
-        );
-        
-        wp_enqueue_style(
-            'owl-carousel-theme-css',
-            'https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.min.css',
-            array('owl-carousel-css'),
-            '2.3.4'
-        );
-        
-        // Main plugin CSS
-        wp_enqueue_style(
-            'kinta-electronic-elementor-style',
-            KEE_PLUGIN_URL . 'assets/css/kinta-electronic-elementor.css',
-            array('owl-carousel-css', 'animate-css', 'font-awesome'),
-            self::VERSION
-        );
+        // Usar solo CSS del tema - no cargar CSS externos
+        // El tema ya incluye: Animate.css, Font Awesome, Owl Carousel
     }
     
     /**
      * Enqueue JavaScript files
      */
     private function enqueue_scripts_js() {
-        // Owl Carousel JS
-        wp_enqueue_script(
-            'owl-carousel-js',
-            'https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js',
-            array('jquery'),
-            '2.3.4',
-            true
-        );
-        
-        // Main plugin JS
-        wp_enqueue_script(
-            'kinta-electronic-elementor-script',
-            KEE_PLUGIN_URL . 'assets/js/kinta-electronic-elementor.js',
-            array('jquery', 'owl-carousel-js'),
-            self::VERSION,
-            true
-        );
-        
-        // Countdown script and styles for deals and tabs widget
-        wp_enqueue_style(
-            'kintaelectric03-countdown',
-            KEE_PLUGIN_URL . 'assets/css/kintaelectric03-countdown.css',
-            array(),
-            self::VERSION
-        );
-        
-        wp_enqueue_script(
-            'kintaelectric03-countdown',
-            KEE_PLUGIN_URL . 'assets/js/kintaelectric03-countdown.js',
-            array('jquery'),
-            self::VERSION,
-            true
-        );
+        // Usar solo JavaScript del tema - no cargar JS externos
+        // El tema ya incluye: jQuery, Owl Carousel, Animate.js
 
-        
-        // Localize countdown script
-        wp_localize_script('kintaelectric03-countdown', 'kintaelectric03Countdown', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('kintaelectric03_nonce'),
-            'texts' => array(
-                'days' => __('Días', 'kinta-electric-elementor'),
-                'hours' => __('Horas', 'kinta-electric-elementor'),
-                'mins' => __('Min', 'kinta-electric-elementor'),
-                'secs' => __('Seg', 'kinta-electric-elementor'),
-                'expired' => __('¡Oferta Expirada!', 'kinta-electric-elementor')
-            )
-        ));
     }
     
     /**
