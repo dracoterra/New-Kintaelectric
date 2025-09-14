@@ -30,8 +30,7 @@ kinta-electronic-elementor/
 │   ├── home-slider-kintaelectic-widget.php
 │   ├── kintaelectric02-deals-widget.php
 │   ├── kintaelectric03-deals-and-tabs-widget.php
-│   ├── kintaelectric04-products-tabs-widget.php
-│   └── kintaelectric05-dynamic-products-widget.php
+│   └── kintaelectric04-products-tabs-widget.php
 ├── assets/
 │   ├── css/
 │   │   ├── kinta-electronic-elementor.css
@@ -43,7 +42,6 @@ kinta-electronic-elementor/
 │       └── slick/
 └── docs/
     ├── README.md
-    ├── WIDGET-KINTAELECTRIC05-DYNAMIC-PRODUCTS.md
     ├── ELEMENTOR-WIDGET-USAGE.md
     ├── IMPROVEMENTS-SUMMARY.md
     ├── IMPLEMENTATION-COMPLETE.md

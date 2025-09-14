@@ -6,7 +6,6 @@
 1. **Kintaelectric02 Deals** - `kintaelectric02_deals`
 2. **Kintaelectric03 Deals and Tabs** - `kintaelectric03-deals-and-tabs`
 3. **Kintaelectric04 Products Tabs** - `kintaelectric04-products-tabs`
-4. **Kintaelectric05 Dynamic Products** - `kintaelectric05_dynamic_products`
 
 ### **🔧 Problema Identificado y Solucionado:**
 
@@ -50,14 +49,12 @@ public function register_widgets() {
     require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric02-deals-widget.php';
     require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric03-deals-and-tabs-widget.php';
     require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric04-products-tabs-widget.php';
-    require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric05-dynamic-products-widget.php';
     
     // 3. Registrar en Elementor
     \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Home_Slider_Kintaelectic_Widget());
     \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric02_Deals_Widget());
     \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric03_Deals_And_Tabs_Widget());
     \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric04_Products_Tabs_Widget());
-    \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric05_Dynamic_Products_Widget());
 }
 ```
 
