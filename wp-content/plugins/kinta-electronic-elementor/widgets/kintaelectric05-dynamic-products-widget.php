@@ -1,7 +1,18 @@
 <?php
+/**
+ * Kinta Electric 05 - Dynamic Products Widget
+ * 
+ * Widget dinámico que replica exactamente la estructura HTML del carousel original
+ * con 24 productos divididos en 3 grupos de 8 productos cada uno.
+ */
+
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
+
+use Elementor\Widget_Base;
+use Elementor\Controls_Manager;
+use Elementor\Group_Control_Typography;
 
 class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
 {
@@ -12,7 +23,7 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
 
     public function get_title()
     {
-        return esc_html__('Kinta Electric 05 - Dynamic Products Carousel', 'kinta-electronic-elementor');
+        return esc_html__('Kinta Electric 05 - Dynamic Products', 'kinta-electronic-elementor');
     }
 
     public function get_icon()
@@ -22,33 +33,407 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
 
     public function get_categories()
     {
-        return ['kinta-electric'];
+        return ['kinta-electronic'];
     }
 
     public function get_keywords()
     {
-        return ['products', 'carousel', 'woocommerce', 'kinta', 'slider', 'best sellers'];
+        return ['products', 'carousel', 'woocommerce', 'dynamic', 'kinta'];
     }
 
     protected function register_controls()
     {
-        // Widget deshabilitado - sin controles
+        // Sección de configuración general
+        $this->start_controls_section(
+            'content_section',
+            [
+                'label' => esc_html__('Configuración General', 'kinta-electronic-elementor'),
+                'tab' => Controls_Manager::TAB_CONTENT,
+            ]
+        );
+
+        $this->add_control(
+            'section_title',
+            [
+                'label' => esc_html__('Título de la Sección', 'kinta-electronic-elementor'),
+                'type' => Controls_Manager::TEXT,
+                'default' => 'Best Sellers',
+                'placeholder' => 'Best Sellers',
+            ]
+        );
+
+        $this->add_control(
+            'nav_item_1',
+            [
+                'label' => esc_html__('Nav Item 1', 'kinta-electronic-elementor'),
+                'type' => Controls_Manager::TEXT,
+                'default' => 'Top 20',
+                'placeholder' => 'Top 20',
+            ]
+        );
+
+        $this->add_control(
+            'nav_item_2',
+            [
+                'label' => esc_html__('Nav Item 2', 'kinta-electronic-elementor'),
+                'type' => Controls_Manager::TEXT,
+                'default' => 'Smart Phones & Tablets',
+                'placeholder' => 'Smart Phones & Tablets',
+            ]
+        );
+
+        $this->add_control(
+            'nav_item_2_url',
+            [
+                'label' => esc_html__('Nav Item 2 URL', 'kinta-electronic-elementor'),
+                'type' => Controls_Manager::URL,
+                'placeholder' => 'https://example.com',
+            ]
+        );
+
+        $this->add_control(
+            'nav_item_3',
+            [
+                'label' => esc_html__('Nav Item 3', 'kinta-electronic-elementor'),
+                'type' => Controls_Manager::TEXT,
+                'default' => 'Laptops & Computers',
+                'placeholder' => 'Laptops & Computers',
+            ]
+        );
+
+        $this->add_control(
+            'nav_item_3_url',
+            [
+                'label' => esc_html__('Nav Item 3 URL', 'kinta-electronic-elementor'),
+                'type' => Controls_Manager::URL,
+                'placeholder' => 'https://example.com',
+            ]
+        );
+
+        $this->add_control(
+            'nav_item_4',
+            [
+                'label' => esc_html__('Nav Item 4', 'kinta-electronic-elementor'),
+                'type' => Controls_Manager::TEXT,
+                'default' => 'Video Cameras',
+                'placeholder' => 'Video Cameras',
+            ]
+        );
+
+        $this->add_control(
+            'nav_item_4_url',
+            [
+                'label' => esc_html__('Nav Item 4 URL', 'kinta-electronic-elementor'),
+                'type' => Controls_Manager::URL,
+                'placeholder' => 'https://example.com',
+            ]
+        );
+
+        $this->end_controls_section();
+
+        // Sección de productos
+        $this->start_controls_section(
+            'products_section',
+            [
+                'label' => esc_html__('Configuración de Productos', 'kinta-electronic-elementor'),
+                'tab' => Controls_Manager::TAB_CONTENT,
+            ]
+        );
+
+        $this->add_control(
+            'product_source',
+            [
+                'label' => esc_html__('Fuente de Productos', 'kinta-electronic-elementor'),
+                'type' => Controls_Manager::SELECT,
+                'default' => 'recent',
+                'options' => [
+                    'recent' => esc_html__('Recientes', 'kinta-electronic-elementor'),
+                    'featured' => esc_html__('Destacados', 'kinta-electronic-elementor'),
+                    'sale' => esc_html__('En Oferta', 'kinta-electronic-elementor'),
+                    'best_selling' => esc_html__('Más Vendidos', 'kinta-electronic-elementor'),
+                    'category' => esc_html__('Por Categoría', 'kinta-electronic-elementor'),
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'product_category',
+            [
+                'label' => esc_html__('Categoría de Productos', 'kinta-electronic-elementor'),
+                'type' => Controls_Manager::SELECT,
+                'options' => $this->get_product_categories(),
+                'condition' => [
+                    'product_source' => 'category',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'products_per_page',
+            [
+                'label' => esc_html__('Número de Productos', 'kinta-electronic-elementor'),
+                'type' => Controls_Manager::NUMBER,
+                'default' => 24,
+                'min' => 1,
+                'max' => 100,
+                'description' => 'Se mostrarán 24 productos en 3 grupos de 8',
+            ]
+        );
+
+        $this->end_controls_section();
     }
 
-    protected function get_widget_script_depends()
+    /**
+     * Obtener categorías de productos
+     */
+    protected function get_product_categories()
     {
-        return [];
+        $categories = [];
+        
+        if (function_exists('get_terms')) {
+            $terms = get_terms([
+                'taxonomy' => 'product_cat',
+                'hide_empty' => true,
+            ]);
+            
+            if (!is_wp_error($terms)) {
+                foreach ($terms as $term) {
+                    $categories[$term->slug] = $term->name;
+                }
+            }
+        }
+        
+        return $categories;
     }
 
-    protected function get_widget_style_depends()
+    /**
+     * Obtener productos según la configuración
+     */
+    protected function get_products($settings)
     {
+        $args = [
+            'limit' => $settings['products_per_page'],
+            'status' => 'publish',
+            'visibility' => 'visible',
+        ];
+
+        switch ($settings['product_source']) {
+            case 'featured':
+                $args['featured'] = true;
+                break;
+            case 'sale':
+                $args['on_sale'] = true;
+                break;
+            case 'best_selling':
+                $args['orderby'] = 'popularity';
+                break;
+            case 'recent':
+                $args['orderby'] = 'date';
+                $args['order'] = 'DESC';
+                break;
+            case 'category':
+                if (!empty($settings['product_category'])) {
+                    $args['category'] = [$settings['product_category']];
+                }
+                break;
+        }
+
+        if (function_exists('wc_get_products')) {
+            return wc_get_products($args);
+        }
+
         return [];
     }
 
     protected function render()
     {
-        echo '<div class="elementor-alert elementor-alert-info">' . 
-             esc_html__('Este widget ha sido deshabilitado temporalmente.', 'kinta-electronic-elementor') . 
-             '</div>';
+        $settings = $this->get_settings_for_display();
+        $wc_products = $this->get_products($settings);
+        
+        if (empty($wc_products)) {
+            echo '<p>No se encontraron productos.</p>';
+            return;
+        }
+
+        // Convertir productos de WooCommerce al formato necesario
+        $products = [];
+        foreach ($wc_products as $wc_product) {
+            $product_id = $wc_product->get_id();
+            $product_name = $wc_product->get_name();
+            $product_url = get_permalink($product_id);
+            $product_sku = $wc_product->get_sku();
+            
+            // Imagen del producto
+            $image_id = $wc_product->get_image_id();
+            if ($image_id) {
+                $image_src = wp_get_attachment_image_src($image_id, 'woocommerce_thumbnail');
+                $image_url = $image_src ? $image_src[0] : wc_placeholder_img_src();
+                
+                // Generar srcset
+                $image_srcset = wp_get_attachment_image_srcset($image_id, 'woocommerce_thumbnail');
+                $srcset = $image_srcset ? $image_srcset : $image_url . ' 300w';
+            } else {
+                $image_url = wc_placeholder_img_src();
+                $srcset = $image_url . ' 300w';
+            }
+            
+            // Categorías del producto
+            $product_categories = wp_get_post_terms($product_id, 'product_cat', ['fields' => 'all']);
+            $category_links = [];
+            $product_classes = ['product_cat-' . sanitize_title($product_name)];
+            
+            if (!empty($product_categories) && !is_wp_error($product_categories)) {
+                foreach ($product_categories as $category) {
+                    $term_link = get_term_link($category);
+                    if (!is_wp_error($term_link)) {
+                        $category_links[] = '<a href="' . esc_url($term_link) . '" rel="tag">' . esc_html($category->name) . '</a>';
+                        $product_classes[] = 'product_cat-' . sanitize_title($category->name);
+                    }
+                }
+            }
+            
+            // Clases adicionales
+            $product_classes[] = 'product-card';
+            $product_classes[] = 'post-' . $product_id;
+            $product_classes[] = 'type-product';
+            $product_classes[] = 'status-publish';
+            $product_classes[] = 'has-post-thumbnail';
+            
+            if ($wc_product->is_in_stock()) {
+                $product_classes[] = 'instock';
+            } else {
+                $product_classes[] = 'outofstock';
+            }
+            
+            if ($wc_product->is_on_sale()) {
+                $product_classes[] = 'sale';
+            }
+            
+            if ($wc_product->is_featured()) {
+                $product_classes[] = 'featured';
+            }
+            
+            $product_classes[] = 'shipping-taxable';
+            $product_classes[] = 'purchasable';
+            $product_classes[] = 'product-type-' . $wc_product->get_type();
+            
+            // URL de añadir al carrito
+            $add_to_cart_url = $wc_product->add_to_cart_url();
+            
+            // URL de comparar
+            $compare_url = '';
+            if (function_exists('yith_woocompare_add_product_url')) {
+                $compare_url = yith_woocompare_add_product_url($product_id);
+            }
+            
+            $products[] = [
+                'id' => $product_id,
+                'name' => $product_name,
+                'url' => $product_url,
+                'image' => $image_url,
+                'srcset' => $srcset,
+                'categories' => $category_links,
+                'classes' => $product_classes,
+                'sku' => $product_sku,
+                'price_html' => $wc_product->get_price_html(),
+                'add_to_cart_url' => $add_to_cart_url,
+                'compare_url' => $compare_url,
+            ];
+        }
+
+        // Dividir productos en grupos de 8: 8, 8, 8 (24 productos total)
+        $product_groups = [];
+        $total_products = count($products);
+        
+        if ($total_products > 0) {
+            // Primer grupo: 8 productos
+            $product_groups[] = array_slice($products, 0, 8);
+            
+            if ($total_products > 8) {
+                // Segundo grupo: 8 productos
+                $product_groups[] = array_slice($products, 8, 8);
+            }
+            
+            if ($total_products > 16) {
+                // Tercer grupo: 8 productos
+                $product_groups[] = array_slice($products, 16, 8);
+            }
+        }
+        
+        ?>
+        <section class="section-product-cards-carousel home-v1-product-cards-carousel animate-in-view" data-animation="fadeIn">
+            <header class="show-nav">
+                <h2 class="h1"><?php echo esc_html($settings['section_title']); ?></h2>
+                <ul class="nav nav-inline">
+                    <li class="nav-item active">
+                        <span class="nav-link"><?php echo esc_html($settings['nav_item_1']); ?></span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo esc_url($settings['nav_item_2_url']['url']); ?>"><?php echo esc_html($settings['nav_item_2']); ?></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo esc_url($settings['nav_item_3_url']['url']); ?>"><?php echo esc_html($settings['nav_item_3']); ?></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo esc_url($settings['nav_item_4_url']['url']); ?>"><?php echo esc_html($settings['nav_item_4']); ?></a>
+                    </li>
+                </ul>
+            </header>
+
+            <div id="<?php echo esc_attr(uniqid()); ?>" data-ride="owl-carousel" data-carousel-selector=".product-cards-carousel" data-carousel-options='{"items":1,"nav":false,"slideSpeed":300,"dots":true,"rtl":false,"paginationSpeed":400,"navText":["",""],"margin":0,"touchDrag":true,"autoplay":false}'>
+                <div class="woocommerce columns-3 product-cards-carousel owl-carousel">
+                    <?php foreach ($product_groups as $group_index => $group_products): ?>
+                    <ul data-view="grid" data-bs-toggle="regular-products" class="products products list-unstyled row g-0 row-cols-2 row-cols-md-3 row-cols-lg-3 row-cols-xl-3 row-cols-xxl-4">
+                        <?php foreach ($group_products as $product_index => $product): ?>
+                        <li class="col-wd-3 col-md-4 product-item product-item__card pb-2 mb-2 pb-md-0 mb-md-0 border-bottom border-md-bottom-0">
+                            <div class="product-item__outer h-100">
+                                <div class="product-item__inner p-md-3 row no-gutters">
+                                    <div class="col col-lg-auto product-media-left">
+                                        <a href="<?php echo esc_url($product['url']); ?>" class="max-width-150 d-block" tabindex="0">
+                                            <img class="img-fluid" src="<?php echo esc_url($product['image']); ?>" alt="<?php echo esc_attr($product['name']); ?>">
+                                        </a>
+                                    </div>
+                                    <div class="col product-item__body pl-2 pl-lg-3 mr-xl-2 mr-wd-1">
+                                        <div class="mb-4">
+                                            <div class="mb-2">
+                                                <?php if (!empty($product['categories'])): ?>
+                                                    <?php echo implode(', ', $product['categories']); ?>
+                                                <?php endif; ?>
+                                            </div>
+                                            <h5 class="product-item__title">
+                                                <a href="<?php echo esc_url($product['url']); ?>" class="text-blue font-weight-bold" tabindex="0"><?php echo esc_html($product['name']); ?></a>
+                                            </h5>
+                                        </div>
+                                        <div class="flex-center-between mb-3">
+                                            <div class="prodcut-price">
+                                                <div class="text-gray-100"><?php echo $product['price_html']; ?></div>
+                                            </div>
+                                            <div class="d-none d-xl-block prodcut-add-cart">
+                                                <a href="<?php echo esc_url($product['add_to_cart_url']); ?>" class="btn-add-cart btn-primary transition-3d-hover" tabindex="0">
+                                                    <i class="ec ec-add-to-cart"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="product-item__footer">
+                                            <div class="border-top pt-2 flex-center-between flex-wrap">
+                                                <a href="<?php echo esc_url($product['compare_url']); ?>" class="text-gray-6 font-size-13" tabindex="0">
+                                                    <i class="ec ec-compare mr-1 font-size-15"></i> Compare
+                                                </a>
+                                                <a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" class="text-gray-6 font-size-13" tabindex="0">
+                                                    <i class="ec ec-favorites mr-1 font-size-15"></i> Wishlist
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </section>
+        <?php
     }
 }

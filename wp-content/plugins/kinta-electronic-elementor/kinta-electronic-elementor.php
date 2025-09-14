@@ -82,6 +82,7 @@ class KintaElectricElementor {
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric02-deals-widget.php';
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric03-deals-and-tabs-widget.php';
         require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric04-products-tabs-widget.php';
+        require_once KEE_PLUGIN_PATH . 'widgets/kintaelectric05-dynamic-products-widget.php';
         
         // Debug files removed - system is now clean and optimized
 
@@ -89,6 +90,7 @@ class KintaElectricElementor {
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric02_Deals_Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric03_Deals_And_Tabs_Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric04_Products_Tabs_Widget());
+        \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric05_Dynamic_Products_Widget());
     }
     
     /**
