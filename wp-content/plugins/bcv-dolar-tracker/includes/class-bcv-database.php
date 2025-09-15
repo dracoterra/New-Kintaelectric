@@ -97,15 +97,7 @@ class BCV_Database {
     public function table_exists() {
         global $wpdb;
         
-        // Sanitizar nombre de tabla
-        $table_name = sanitize_key($this->table_name);
-        
-        // Verificar que el nombre de tabla es válido
-        if (empty($table_name) || !preg_match('/^[a-zA-Z0-9_]+$/', $table_name)) {
-            error_log('BCV Dólar Tracker: Nombre de tabla inválido: ' . $this->table_name);
-            return false;
-        }
-        
+        $table_name = $this->table_name;
         $result = $wpdb->get_var(
             $wpdb->prepare(
                 "SHOW TABLES LIKE %s",
@@ -231,56 +223,40 @@ class BCV_Database {
     public function insert_price($precio, $datatime = null) {
         global $wpdb;
         
-        // Validar y sanitizar precio
+        // Validar precio
         if (!is_numeric($precio) || $precio <= 0) {
             error_log('BCV Dólar Tracker: Precio inválido para insertar: ' . $precio);
-            return false;
-        }
-        
-        // Sanitizar precio y validar rango
-        $precio = floatval($precio);
-        if ($precio <= 0 || $precio > 1000000) { // Límite máximo razonable
-            error_log('BCV Dólar Tracker: Precio fuera de rango válido: ' . $precio);
             return false;
         }
         
         // Usar fecha actual si no se proporciona
         if ($datatime === null) {
             $datatime = current_time('mysql');
-        } else {
-            // Validar formato de fecha
-            if (!preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $datatime)) {
-                error_log('BCV Dólar Tracker: Formato de fecha inválido: ' . $datatime);
-                $datatime = current_time('mysql');
-            }
         }
         
         // Preparar datos para inserción
         $data = array(
-            'datatime' => sanitize_text_field($datatime),
-            'precio' => $precio
+            'datatime' => $datatime,
+            'precio' => floatval($precio)
         );
         
         // Formato de datos para wpdb
         $format = array('%s', '%f');
         
-        // Log de inserción (solo en modo debug)
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log("BCV Dólar Tracker: Insertando precio: {$precio} en fecha: {$datatime}");
-        }
+        // Log de inserción
+        error_log("BCV Dólar Tracker: Insertando precio: {$precio} en fecha: {$datatime}");
         
         // Insertar en la base de datos
         $result = $wpdb->insert($this->table_name, $data, $format);
         
         if ($result === false) {
             error_log('BCV Dólar Tracker: Error al insertar precio: ' . $wpdb->last_error);
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('BCV Dólar Tracker: Datos que se intentaron insertar: ' . print_r($data, true));
-            }
+            error_log('BCV Dólar Tracker: Datos que se intentaron insertar: ' . print_r($data, true));
             return false;
         }
         
         $insert_id = $wpdb->insert_id;
+        error_log("BCV Dólar Tracker: Precio insertado exitosamente con ID: {$insert_id}");
         
         // Verificar que realmente se insertó
         $verification = $wpdb->get_row($wpdb->prepare(
@@ -289,10 +265,8 @@ class BCV_Database {
         ));
         
         if ($verification) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log("BCV Dólar Tracker: Verificación exitosa - Registro encontrado en BD");
-                error_log("BCV Dólar Tracker: Datos guardados - ID: {$verification->id}, Precio: {$verification->precio}, Fecha: {$verification->datatime}");
-            }
+            error_log("BCV Dólar Tracker: Verificación exitosa - Registro encontrado en BD");
+            error_log("BCV Dólar Tracker: Datos guardados - ID: {$verification->id}, Precio: {$verification->precio}, Fecha: {$verification->datatime}");
         } else {
             error_log("BCV Dólar Tracker: ADVERTENCIA - Registro no encontrado después de inserción");
         }

@@ -281,43 +281,13 @@ class BCV_Dev_Tools {
      * Manejar pruebas de desarrollo
      */
     public static function handle_dev_test() {
-        // Verificación de seguridad mejorada
-        if (!check_ajax_referer('bcv_dev_test', 'nonce', false)) {
-            wp_send_json_error('Acceso denegado - Verificación de seguridad fallida');
-        }
+        check_ajax_referer('bcv_dev_test', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error('Permisos insuficientes');
+            wp_die('Acceso denegado');
         }
         
-        // Solo permitir en modo debug
-        if (!defined('WP_DEBUG') || !WP_DEBUG) {
-            wp_send_json_error('Herramientas de desarrollo solo disponibles en modo debug');
-        }
-        
-        // Sanitizar y validar tipo de prueba
-        $test_type = isset($_POST['test_type']) ? sanitize_text_field($_POST['test_type']) : '';
-        
-        // Whitelist de tipos de prueba permitidos
-        $allowed_tests = array(
-            'database', 'cron', 'scraper', 'clear_cache', 
-            'reset_cron', 'toggle_debug', 'test_email'
-        );
-        
-        if (!in_array($test_type, $allowed_tests)) {
-            wp_send_json_error('Tipo de prueba no válido');
-        }
-        
-        // Rate limiting para herramientas de desarrollo
-        $user_id = get_current_user_id();
-        $last_test = get_transient('bcv_dev_test_' . $user_id);
-        
-        if ($last_test && (time() - $last_test) < 30) {
-            wp_send_json_error('Espera 30 segundos antes de realizar otra prueba');
-        }
-        
-        // Marcar tiempo de prueba
-        set_transient('bcv_dev_test_' . $user_id, time(), 30);
+        $test_type = sanitize_text_field($_POST['test_type']);
         
         switch ($test_type) {
             case 'database':
@@ -336,7 +306,7 @@ class BCV_Dev_Tools {
                 $result = self::reset_cron();
                 break;
             case 'toggle_debug':
-                $enable = isset($_POST['enable']) && $_POST['enable'] === 'true';
+                $enable = $_POST['enable'] === 'true';
                 $result = self::toggle_debug($enable);
                 break;
             case 'test_email':
