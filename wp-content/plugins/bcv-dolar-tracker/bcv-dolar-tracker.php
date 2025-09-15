@@ -139,7 +139,11 @@ class BCV_Dolar_Tracker {
      * Cargar dependencias
      */
     private function load_dependencies() {
+        // Cargar configuración de seguridad
+        require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'security-config.php';
+        
         // Cargar archivos de funcionalidad principal
+        require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/class-bcv-security.php';
         require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/class-bcv-database.php';
         require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/class-bcv-cron.php';
         require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/class-bcv-scraper.php';

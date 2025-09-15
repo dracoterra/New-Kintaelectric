@@ -85,6 +85,15 @@ class BCV_Scraper {
      * @return array|WP_Error Response o error
      */
     private function make_request() {
+        // Rate limiting: máximo 1 request por 10 segundos
+        $last_request = get_transient('bcv_last_request');
+        if ($last_request && (time() - $last_request) < 10) {
+            return new WP_Error('rate_limit', 'Demasiadas solicitudes. Espera 10 segundos.');
+        }
+        
+        // Marcar tiempo de request
+        set_transient('bcv_last_request', time(), 10);
+        
         $args = array(
             'timeout' => 30,
             'user-agent' => $this->user_agent,
@@ -94,8 +103,11 @@ class BCV_Scraper {
                 'Accept-Encoding' => 'gzip, deflate',
                 'Connection' => 'keep-alive',
                 'Upgrade-Insecure-Requests' => '1',
+                'Cache-Control' => 'no-cache',
             ),
-            'sslverify' => false, // Para evitar problemas de certificados
+            'sslverify' => true, // Habilitar verificación SSL para seguridad
+            'redirection' => 3, // Máximo 3 redirecciones
+            'httpversion' => '1.1',
         );
         
         return wp_remote_get($this->bcv_url, $args);

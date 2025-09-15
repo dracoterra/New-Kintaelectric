@@ -416,9 +416,9 @@ class BCV_Admin {
      * Guardar configuración del cron (AJAX)
      */
     public function save_cron_settings() {
-        // Verificar nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'bcv_admin_nonce')) {
-            wp_send_json_error('Nonce inválido');
+        // Verificar nonce y referer
+        if (!wp_verify_nonce($_POST['nonce'], 'bcv_admin_nonce') || !check_ajax_referer('bcv_admin_nonce', 'nonce', false)) {
+            wp_send_json_error('Acceso denegado - Verificación de seguridad fallida');
         }
         
         // Verificar permisos
@@ -426,32 +426,42 @@ class BCV_Admin {
             wp_send_json_error('Permisos insuficientes');
         }
         
-        // Procesar datos
+        // Sanitizar y validar datos de entrada
+        $enabled = isset($_POST['enabled']) && $_POST['enabled'] === 'true';
+        $hours = isset($_POST['hours']) ? intval($_POST['hours']) : 1;
+        $minutes = isset($_POST['minutes']) ? intval($_POST['minutes']) : 0;
+        $seconds = isset($_POST['seconds']) ? intval($_POST['seconds']) : 0;
+        
+        // Validaciones estrictas
+        if ($hours < 0 || $hours > 24) {
+            wp_send_json_error('Horas inválidas. Debe estar entre 0 y 24');
+        }
+        if ($minutes < 0 || $minutes > 59) {
+            wp_send_json_error('Minutos inválidos. Debe estar entre 0 y 59');
+        }
+        if ($seconds < 0 || $seconds > 59) {
+            wp_send_json_error('Segundos inválidos. Debe estar entre 0 y 59');
+        }
+        
+        // Mínimo 1 minuto para evitar sobrecarga del servidor
+        if ($hours == 0 && $minutes == 0 && $seconds < 60) {
+            $seconds = 60;
+        }
+        
+        // Procesar datos sanitizados
         $settings = array(
-            'enabled' => isset($_POST['enabled']) ? true : false,
-            'hours' => intval($_POST['hours']),
-            'minutes' => intval($_POST['minutes']),
-            'seconds' => intval($_POST['seconds'])
+            'enabled' => (bool) $enabled,
+            'hours' => (int) $hours,
+            'minutes' => (int) $minutes,
+            'seconds' => (int) $seconds
         );
         
-        // Validaciones
-        if ($settings['hours'] < 0 || $settings['hours'] > 24) {
-            wp_send_json_error('Horas inválidas');
-        }
-        if ($settings['minutes'] < 0 || $settings['minutes'] > 59) {
-            wp_send_json_error('Minutos inválidos');
-        }
-        if ($settings['seconds'] < 0 || $settings['seconds'] > 59) {
-            wp_send_json_error('Segundos inválidos');
-        }
+        // Guardar configuración con validación adicional
+        $saved = update_option('bcv_cron_settings', $settings);
         
-        // Mínimo 1 minuto
-        if ($settings['hours'] == 0 && $settings['minutes'] == 0 && $settings['seconds'] < 60) {
-            $settings['seconds'] = 60;
+        if (!$saved) {
+            wp_send_json_error('Error al guardar la configuración');
         }
-        
-        // Guardar configuración
-        update_option('bcv_cron_settings', $settings);
         
         // Configurar cron
         $cron = new BCV_Cron();
@@ -468,15 +478,26 @@ class BCV_Admin {
      * Probar scraping (AJAX)
      */
     public function test_scraping() {
-        // Verificar nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'bcv_admin_nonce')) {
-            wp_send_json_error('Nonce inválido');
+        // Verificar nonce y referer
+        if (!wp_verify_nonce($_POST['nonce'], 'bcv_admin_nonce') || !check_ajax_referer('bcv_admin_nonce', 'nonce', false)) {
+            wp_send_json_error('Acceso denegado - Verificación de seguridad fallida');
         }
         
         // Verificar permisos
         if (!current_user_can('manage_options')) {
             wp_send_json_error('Permisos insuficientes');
         }
+        
+        // Rate limiting: máximo 1 prueba por minuto por usuario
+        $user_id = get_current_user_id();
+        $last_test = get_transient('bcv_test_scraping_' . $user_id);
+        
+        if ($last_test && (time() - $last_test) < 60) {
+            wp_send_json_error('Espera 60 segundos antes de realizar otra prueba');
+        }
+        
+        // Marcar tiempo de prueba
+        set_transient('bcv_test_scraping_' . $user_id, time(), 60);
         
         // Ejecutar scraping manual
         $cron = new BCV_Cron();
