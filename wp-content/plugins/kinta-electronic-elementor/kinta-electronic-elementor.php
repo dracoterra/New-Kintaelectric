@@ -103,13 +103,6 @@ class KintaElectricElementor {
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric08_About_Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric09_About_Features_Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric10_About_Team_Widget());
-        
-        // Debug: Verificar que el widget se carga
-        if (class_exists('KEE_Kintaelectric10_About_Team_Widget')) {
-            error_log('KEE_Kintaelectric10_About_Team_Widget class loaded successfully');
-        } else {
-            error_log('ERROR: KEE_Kintaelectric10_About_Team_Widget class NOT loaded');
-        }
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric11_Brands_Carousel_Widget());
         \Elementor\Plugin::instance()->widgets_manager->register(new KEE_Kintaelectric12_About_Text_Accordion_Widget());
     }
