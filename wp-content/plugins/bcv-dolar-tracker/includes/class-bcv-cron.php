@@ -267,7 +267,8 @@ class BCV_Cron {
      * Ejecutar tarea de scraping
      */
     public function execute_scraping_task() {
-        error_log('BCV Dólar Tracker: Ejecutando tarea cron de scraping');
+        BCV_Performance_Monitor::start_timer('cron_scraping_task');
+        BCV_Logger::info('Ejecutando tarea cron de scraping');
         
         // Verificar si ya se ejecutó recientemente (evitar duplicados)
         $last_execution = get_transient('bcv_cron_last_execution');
@@ -289,8 +290,8 @@ class BCV_Cron {
         if ($result !== false) {
             error_log("BCV Dólar Tracker: Scraping exitoso, precio obtenido: {$result}");
             
-            // Guardar en base de datos
-            $database = new BCV_Database();
+            // Guardar en base de datos usando singleton
+            $database = BCV_Database::get_instance();
             $inserted = $database->insert_price($result);
             
             if ($inserted) {
@@ -310,6 +311,12 @@ class BCV_Cron {
         
         // Reprogramar próximo ejecución
         $this->reschedule_cron();
+        
+        // Finalizar monitoreo de performance
+        BCV_Performance_Monitor::end_timer('cron_scraping_task', array(
+            'success' => $operation_success,
+            'price_obtained' => $result !== false ? $result : null
+        ));
     }
     
     /**
@@ -354,8 +361,8 @@ class BCV_Cron {
             $response['price'] = $result;
             $response['message'] = "Precio obtenido exitosamente: {$result}";
             
-            // Guardar en base de datos
-            $database = new BCV_Database();
+            // Guardar en base de datos usando singleton
+            $database = BCV_Database::get_instance();
             $inserted = $database->insert_price($result);
             
             if ($inserted) {

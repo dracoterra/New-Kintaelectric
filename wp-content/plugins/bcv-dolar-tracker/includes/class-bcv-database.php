@@ -14,6 +14,13 @@ if (!defined('ABSPATH')) {
 class BCV_Database {
     
     /**
+     * Instancia singleton
+     * 
+     * @var BCV_Database
+     */
+    private static $instance = null;
+    
+    /**
      * Nombre de la tabla de precios del dólar
      * 
      * @var string
@@ -39,6 +46,18 @@ class BCV_Database {
     }
     
     /**
+     * Obtener instancia singleton
+     * 
+     * @return BCV_Database
+     */
+    public static function get_instance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    /**
      * Crear tabla de precios del dólar
      * 
      * @return bool True si se creó correctamente, False en caso contrario
@@ -58,7 +77,10 @@ class BCV_Database {
             PRIMARY KEY (id),
             KEY idx_datatime (datatime),
             KEY idx_precio (precio),
-            KEY idx_created_at (created_at)
+            KEY idx_created_at (created_at),
+            KEY idx_datatime_precio (datatime, precio),
+            KEY idx_precio_datatime (precio, datatime),
+            KEY idx_latest_prices (datatime DESC, id DESC)
         ) {$charset_collate};";
         
         // Usar dbDelta para crear la tabla
@@ -225,13 +247,13 @@ class BCV_Database {
         
         // Validar precio
         if (!is_numeric($precio) || $precio <= 0) {
-            error_log('BCV Dólar Tracker: Precio inválido para insertar: ' . $precio);
+            BCV_Logger::error('Precio inválido para insertar', array('precio' => $precio));
             return false;
         }
         
         // Validar rango de precio (máximo 1000 USD por razones de seguridad)
         if ($precio > 1000) {
-            error_log('BCV Dólar Tracker: Precio fuera de rango válido: ' . $precio);
+            BCV_Logger::warning('Precio fuera de rango válido', array('precio' => $precio, 'max_allowed' => 1000));
             return false;
         }
         
@@ -269,6 +291,9 @@ class BCV_Database {
         
         $insert_id = $wpdb->insert_id;
         error_log("BCV Dólar Tracker: Precio insertado exitosamente con ID: {$insert_id}");
+        
+        // Invalidar caché de estadísticas
+        delete_transient('bcv_price_stats');
         
         // Verificar que realmente se insertó
         $verification = $wpdb->get_row($wpdb->prepare(
@@ -375,9 +400,10 @@ class BCV_Database {
     /**
      * Obtener estadísticas básicas de precios
      * 
+     * @param bool $force_refresh Forzar recálculo de estadísticas
      * @return array Array con estadísticas
      */
-    public function get_price_stats() {
+    public function get_price_stats($force_refresh = false) {
         global $wpdb;
         
         // Verificar si la tabla existe
@@ -393,23 +419,30 @@ class BCV_Database {
             );
         }
         
+        // Intentar obtener desde caché (válido por 15 minutos)
+        $cache_key = 'bcv_price_stats';
+        if (!$force_refresh) {
+            $cached_stats = get_transient($cache_key);
+            if ($cached_stats !== false) {
+                return $cached_stats;
+            }
+        }
+        
+        // Consulta optimizada que obtiene todo en una sola query
         $sql = "SELECT 
                     COUNT(*) as total_records,
                     MIN(precio) as min_price,
                     MAX(precio) as max_price,
                     AVG(precio) as avg_price,
                     MIN(datatime) as first_date,
-                    MAX(datatime) as last_date
+                    MAX(datatime) as last_date,
+                    (SELECT precio FROM {$this->table_name} ORDER BY datatime DESC LIMIT 1) as last_price
                 FROM {$this->table_name}";
         
         $stats = $wpdb->get_row($sql, ARRAY_A);
         
         if ($stats && $stats['total_records'] > 0) {
-            // Obtener el último precio
-            $last_price_sql = "SELECT precio FROM {$this->table_name} ORDER BY datatime DESC LIMIT 1";
-            $last_price_result = $wpdb->get_var($last_price_sql);
-            
-            $stats['last_price'] = $last_price_result ? floatval($last_price_result) : 0;
+            $stats['last_price'] = $stats['last_price'] ? floatval($stats['last_price']) : 0;
             $stats['min_price'] = floatval($stats['min_price']);
             $stats['max_price'] = floatval($stats['max_price']);
             $stats['avg_price'] = floatval($stats['avg_price']);
@@ -425,6 +458,9 @@ class BCV_Database {
                 'last_price' => 0
             );
         }
+        
+        // Guardar en caché por 15 minutos
+        set_transient($cache_key, $stats, 900);
         
         return $stats;
     }

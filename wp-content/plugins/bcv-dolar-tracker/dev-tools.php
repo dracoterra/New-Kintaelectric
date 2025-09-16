@@ -53,6 +53,8 @@ class BCV_Dev_Tools {
                     <button id="run-database-test" class="button button-primary">Probar Base de Datos</button>
                     <button id="run-cron-test" class="button button-secondary">Probar Sistema Cron</button>
                     <button id="run-scraper-test" class="button button-secondary">Probar Scraper</button>
+                    <button id="run-automated-tests" class="button button-primary">🚀 Suite de Pruebas Automatizadas</button>
+                    <button id="run-load-tests" class="button button-secondary">⚡ Pruebas de Carga</button>
                 </div>
                 
                 <div class="dev-section">
@@ -311,6 +313,12 @@ class BCV_Dev_Tools {
                 break;
             case 'test_email':
                 $result = self::test_email();
+                break;
+            case 'run_automated_tests':
+                $result = self::run_automated_tests();
+                break;
+            case 'run_load_tests':
+                $result = self::run_load_tests();
                 break;
             default:
                 $result = array('success' => false, 'message' => 'Tipo de prueba no válido');
@@ -606,6 +614,59 @@ class BCV_Dev_Tools {
         }
         
         return $html;
+    }
+    
+    /**
+     * Ejecutar suite de pruebas automatizadas
+     */
+    private static function run_automated_tests() {
+        // Cargar clase de pruebas si no está cargada
+        if (!class_exists('BCV_Test_Suite')) {
+            require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/class-bcv-test-suite.php';
+        }
+        
+        $test_suite = new BCV_Test_Suite();
+        $results = $test_suite->run_all_tests();
+        
+        $message = sprintf(
+            'Suite de pruebas completada: %d/%d pruebas exitosas (%.1f%%)',
+            $results['passed'],
+            $results['total_tests'],
+            $results['success_rate']
+        );
+        
+        return array(
+            'success' => $results['success_rate'] >= 80, // 80% mínimo para considerar exitoso
+            'message' => $message,
+            'data' => $results
+        );
+    }
+    
+    /**
+     * Ejecutar pruebas de carga
+     */
+    private static function run_load_tests() {
+        // Cargar clase de pruebas si no está cargada
+        if (!class_exists('BCV_Test_Suite')) {
+            require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/class-bcv-test-suite.php';
+        }
+        
+        $test_suite = new BCV_Test_Suite();
+        $iterations = isset($_POST['iterations']) ? intval($_POST['iterations']) : 10;
+        $results = $test_suite->run_load_tests($iterations);
+        
+        $message = sprintf(
+            'Pruebas de carga completadas: %d iteraciones, tiempo promedio inserción: %.4fs, memoria promedio: %s',
+            $iterations,
+            $results['summary']['avg_insert_time'],
+            size_format($results['summary']['avg_memory_usage'])
+        );
+        
+        return array(
+            'success' => $results['summary']['avg_insert_time'] < 0.1, // Menos de 100ms por inserción
+            'message' => $message,
+            'data' => $results
+        );
     }
 }
 
