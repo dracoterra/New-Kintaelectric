@@ -37,7 +37,7 @@ class BCV_Prices_Table extends WP_List_Table {
             'cb' => '<input type="checkbox" />',
             'id' => 'ID',
             'datatime' => 'Fecha y Hora',
-            'precio' => 'Precio (USD)',
+            'precio' => 'Tipo de Cambio (1 USD)',
             'created_at' => 'Creado',
             'updated_at' => 'Actualizado'
         );
@@ -215,11 +215,12 @@ class BCV_Prices_Table extends WP_List_Table {
      * Renderizar columna precio
      */
     public function column_precio($item) {
+        // Formatear el tipo de cambio (1 USD = X Bs.) - Sin redondear
         $formatted_price = number_format($item->precio, 4, ',', '.');
         $price_class = $this->get_price_change_class($item->id);
         
         return sprintf(
-            '<span class="price-value %s">$ %s</span>',
+            '<span class="price-value %s">1 USD = %s Bs.</span>',
             esc_attr($price_class),
             esc_html($formatted_price)
         );

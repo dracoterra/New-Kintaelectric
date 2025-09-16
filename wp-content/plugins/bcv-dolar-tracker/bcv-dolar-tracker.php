@@ -165,7 +165,7 @@ class BCV_Dolar_Tracker {
         $this->scraper = new BCV_Scraper();
         
         if (is_admin()) {
-            $this->admin = new BCV_Admin();
+            $this->admin = new BCV_Admin_Clean();
         }
     }
     

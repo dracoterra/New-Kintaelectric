@@ -363,7 +363,7 @@ class BCV_Database {
         // Paso 3: Guardar el nuevo registro
         $data = array(
             'datatime' => $datatime,
-            'precio' => floatval($precio)
+            'precio' => $precio  // Mantener el valor exacto sin redondear
         );
         
         // Formato de datos para wpdb

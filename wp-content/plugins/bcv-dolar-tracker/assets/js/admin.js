@@ -92,12 +92,13 @@ jQuery(document).ready(function($) {
         return true;
     });
     
-    // ===== PRUEBA DE SCRAPING =====
+    // ===== PRUEBA DE SCRAPING DETALLADA =====
     $('#test-scraping').on('click', function() {
         var $button = $(this);
         var $result = $('#test-result');
         
-        $button.prop('disabled', true).text('Probando...');
+        $button.prop('disabled', true).text('🔍 Probando...');
+        $result.show().html('<div style="color: #666;">🔄 Conectando con el BCV...</div>');
         
         $.post(bcv_ajax.ajax_url, {
             action: 'bcv_test_scraping',
@@ -105,16 +106,49 @@ jQuery(document).ready(function($) {
         })
         .done(function(response) {
             if (response.success) {
-                $result.html('<span class="bcv-result success">✓ ' + response.message + '</span>');
+                var resultHtml = '<div style="color: #28a745; font-weight: bold;">✅ Scraping Exitoso</div>';
+                resultHtml += '<div style="margin-top: 10px; font-size: 14px;">';
+                resultHtml += '<strong>Tipo de cambio:</strong> ' + response.data.price + '<br>';
+                resultHtml += '<strong>Estado:</strong> ' + response.data.status + '<br>';
+                resultHtml += '<strong>Mensaje:</strong> ' + response.data.message;
+                resultHtml += '</div>';
+                $result.html(resultHtml);
             } else {
-                $result.html('<span class="bcv-result error">✗ ' + response.message + '</span>');
+                $result.html('<div style="color: #dc3545; font-weight: bold;">❌ Error en Scraping</div><div style="margin-top: 10px;">' + response.data + '</div>');
             }
         })
         .fail(function() {
-            $result.html('<span class="bcv-result error">✗ Error de conexión</span>');
+            $result.html('<div style="color: #dc3545; font-weight: bold;">❌ Error de Conexión</div><div style="margin-top: 10px;">No se pudo conectar con el servidor</div>');
         })
         .always(function() {
-            $button.prop('disabled', false).text('Probar Scraping');
+            $button.prop('disabled', false).text('🔍 Probar Scraping Detallado');
+        });
+    });
+    
+    // ===== LIMPIAR CACHÉ =====
+    $('#clear-cache').on('click', function() {
+        var $button = $(this);
+        var $result = $('#test-result');
+        
+        $button.prop('disabled', true).text('🗑️ Limpiando...');
+        $result.show().html('<div style="color: #666;">🔄 Limpiando caché...</div>');
+        
+        $.post(bcv_ajax.ajax_url, {
+            action: 'bcv_clear_cache',
+            nonce: bcv_ajax.nonce
+        })
+        .done(function(response) {
+            if (response.success) {
+                $result.html('<div style="color: #28a745; font-weight: bold;">✅ Caché Limpiado</div><div style="margin-top: 10px;">' + response.data.message + '</div>');
+            } else {
+                $result.html('<div style="color: #dc3545; font-weight: bold;">❌ Error</div><div style="margin-top: 10px;">' + response.data + '</div>');
+            }
+        })
+        .fail(function() {
+            $result.html('<div style="color: #dc3545; font-weight: bold;">❌ Error de Conexión</div>');
+        })
+        .always(function() {
+            $button.prop('disabled', false).text('🗑️ Limpiar Caché');
         });
     });
     

@@ -70,6 +70,9 @@ class BCV_Scraper {
         
         $html = wp_remote_retrieve_body($response);
         
+        // Log del HTML recibido para debugging
+        error_log("BCV Dólar Tracker: HTML recibido del BCV (primeros 500 caracteres): " . substr($html, 0, 500));
+        
         // 3. Analiza el HTML para encontrar el dato
         $rate = $this->parse_html($html);
         
@@ -167,39 +170,72 @@ class BCV_Scraper {
         // Crear XPath
         $xpath = new DOMXPath($dom);
         
-        // Buscar el precio del dólar usando el selector correcto
-        $query = "//div[@id='dolar']//strong";
-        $elements = $xpath->query($query);
+        // Buscar el precio del dólar usando selectores actualizados del BCV
+        $selectors = array(
+            // Selectores principales del BCV actual
+            "//div[@id='dolar']//strong",
+            "//div[@id='dolar']//span",
+            "//div[contains(@class, 'dolar')]//strong",
+            "//div[contains(@class, 'dolar')]//span",
+            "//div[contains(@class, 'tasa')]//strong",
+            "//div[contains(@class, 'tasa')]//span",
+            "//span[contains(@class, 'dolar')]",
+            "//td[contains(text(), 'USD')]/following-sibling::td",
+            "//td[contains(text(), 'Dólar')]/following-sibling::td",
+            "//td[contains(text(), 'DOLAR')]/following-sibling::td",
+            // Selectores adicionales para la nueva estructura del BCV
+            "//div[contains(@class, 'view-tipo-de-cambio')]//div[contains(@class, 'field-content')]",
+            "//div[contains(@class, 'tipo-cambio')]//div[contains(@class, 'valor')]",
+            "//div[contains(@class, 'bcv-tasa')]//span",
+            "//div[contains(@class, 'bcv-tasa')]//strong"
+        );
         
-        if ($elements && $elements->length > 0) {
-            // Obtenemos el texto del primer elemento encontrado
-            $rate_text = $elements[0]->nodeValue;
+        foreach ($selectors as $query) {
+            $elements = $xpath->query($query);
             
-            // Limpiamos el texto para convertirlo en un número utilizable
-            $rate = $this->clean_rate_text($rate_text);
-            
-            if ($rate > 0) {
-                return $rate;
+            if ($elements && $elements->length > 0) {
+                // Probar todos los elementos encontrados
+                for ($i = 0; $i < $elements->length; $i++) {
+                    $rate_text = $elements[$i]->nodeValue;
+                    
+                    // Limpiamos el texto para convertirlo en un número utilizable
+                    $rate = $this->clean_rate_text($rate_text);
+                    
+                    if ($rate > 0 && $rate < 1000000) { // Validar rango realista para bolívares
+                        error_log("BCV Dólar Tracker: Precio encontrado con selector '{$query}': {$rate_text} -> {$rate}");
+                        return $rate;
+                    }
+                }
             }
         }
         
-        // Si no se encuentra con el selector principal, intentar alternativos
-        $alternative_selectors = array(
-            "//div[contains(@class, 'dolar')]//strong",
-            "//div[contains(@class, 'tasa')]//strong",
-            "//span[contains(@class, 'dolar')]",
-            "//td[contains(text(), 'USD')]/following-sibling::td"
+        // Si no se encontró con los selectores principales, intentar búsqueda por texto
+        $text_search_patterns = array(
+            'USD',
+            'Dólar',
+            'DOLAR',
+            'Dollar',
+            'US$',
+            '$'
         );
         
-        foreach ($alternative_selectors as $selector) {
-            $elements = $xpath->query($selector);
+        foreach ($text_search_patterns as $pattern) {
+            $query = "//*[contains(text(), '{$pattern}')]";
+            $elements = $xpath->query($query);
+            
             if ($elements && $elements->length > 0) {
-                $rate_text = $elements[0]->nodeValue;
-                $rate = $this->clean_rate_text($rate_text);
-                
-                if ($rate > 0) {
-                    error_log('BCV Dólar Tracker: Precio encontrado con selector alternativo: ' . $selector);
-                    return $rate;
+                for ($i = 0; $i < $elements->length; $i++) {
+                    $rate_text = $elements[$i]->nodeValue;
+                    
+                    // Buscar números en el texto
+                    if (preg_match('/[\d.,]+/', $rate_text, $matches)) {
+                        $rate = $this->clean_rate_text($matches[0]);
+                        
+                        if ($rate > 0 && $rate < 1000000) {
+                            error_log("BCV Dólar Tracker: Precio encontrado con búsqueda de texto '{$pattern}': {$rate_text} -> {$rate}");
+                            return $rate;
+                        }
+                    }
                 }
             }
         }
@@ -238,8 +274,11 @@ class BCV_Scraper {
         // Convierte a float
         $rate = (float) $text;
         
-        // Verificar que sea un número válido y esté en rango seguro
-        if (is_numeric($rate) && $rate > 0 && $rate < 1000000) {
+        // Verificar que sea un número válido y esté en rango realista para bolívares venezolanos
+        // El dólar en Venezuela suele estar entre 1,000 y 50,000,000 bolívares
+        if (is_numeric($rate) && $rate > 0 && $rate < 100000000) {
+            // Log del precio encontrado para debugging
+            error_log("BCV Dólar Tracker: Precio validado: {$rate} Bs. (texto original: {$text})");
             return $rate;
         }
         

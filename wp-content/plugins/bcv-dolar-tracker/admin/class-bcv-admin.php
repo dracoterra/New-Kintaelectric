@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class BCV_Admin {
+class BCV_Admin_Clean {
     
     /**
      * Constructor de la clase
@@ -22,6 +22,7 @@ class BCV_Admin {
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         add_action('wp_ajax_bcv_save_cron_settings', array($this, 'save_cron_settings'));
         add_action('wp_ajax_bcv_test_scraping', array($this, 'test_scraping'));
+        add_action('wp_ajax_bcv_clear_cache', array($this, 'clear_cache'));
         add_action('wp_ajax_bcv_get_prices_data', array($this, 'get_prices_data'));
         add_action('wp_ajax_bcv_toggle_cron', array($this, 'toggle_cron'));
     }
@@ -124,48 +125,25 @@ class BCV_Admin {
      * Renderizar página principal de administración
      */
     public function render_main_page() {
-        error_log('BCV Dólar Tracker: Renderizando página principal');
-        error_log('BCV Dólar Tracker: POST data: ' . print_r($_POST, true));
+        // Verificar permisos
+        if (!current_user_can('manage_options')) {
+            wp_die('Lo siento, no tienes permiso para acceder a esta página.');
+        }
         
         // Procesar formulario de configuración del cron
         if (isset($_POST['cron_interval_preset']) || isset($_POST['cron_hours']) || isset($_POST['cron_minutes']) || isset($_POST['cron_seconds'])) {
-            error_log('BCV Dólar Tracker: Procesando formulario de cron - Campos de cron detectados');
             $this->process_cron_settings();
         }
         
         // Procesar formulario de configuración de depuración
         if (isset($_POST['save_debug_settings'])) {
-            error_log('BCV Dólar Tracker: Procesando formulario de debug');
             $this->process_debug_settings();
         }
         
         // Recrear tabla de logs si es necesario
         if (isset($_POST['recreate_logs_table'])) {
-            error_log('BCV Dólar Tracker: Procesando recreación de tabla de logs');
             if (wp_verify_nonce($_POST['_wpnonce'], 'bcv_recreate_logs_table')) {
                 $this->recreate_logs_table();
-            } else {
-                error_log('BCV Dólar Tracker: Error de nonce en recreación de tabla');
-            }
-        }
-        
-        // Prueba simple de formulario
-        if (isset($_POST['test_form'])) {
-            error_log('BCV Dólar Tracker: Formulario de prueba recibido');
-            echo '<div class="notice notice-success is-dismissible"><p>✅ Formulario de prueba funcionando correctamente</p></div>';
-        }
-        
-        // Verificar si se solicitó crear tabla de emergencia
-        if (isset($_POST['bcv_create_table_emergency'])) {
-            if (wp_verify_nonce($_POST['_wpnonce'], 'bcv_create_table_emergency')) {
-                $this->handle_emergency_table_creation();
-            }
-        }
-        
-        // Forzar programación del cron
-        if (isset($_POST['bcv_force_cron_schedule'])) {
-            if (wp_verify_nonce($_POST['_wpnonce'], 'bcv_force_cron_schedule')) {
-                $this->handle_force_cron_schedule();
             }
         }
         
@@ -201,83 +179,7 @@ class BCV_Admin {
         // Mostrar configuración de depuración
         $this->render_debug_settings();
         
-        // Botón de emergencia para crear tabla
-        echo '<div class="bcv-panel">';
-        echo '<h3>🆘 Acciones de Emergencia</h3>';
-        echo '<p>Si la tabla de base de datos no existe, usa este botón para crearla:</p>';
-        echo '<form method="post">';
-        wp_nonce_field('bcv_create_table_emergency');
-        echo '<input type="submit" name="bcv_create_table_emergency" class="button button-primary" value="Crear Tabla de Base de Datos">';
-        echo '</form>';
         echo '</div>';
-        
-        echo '</div>';
-    }
-    
-    /**
-     * Manejar creación de tabla de emergencia
-     */
-    private function handle_emergency_table_creation() {
-        if (!class_exists('BCV_Database')) {
-            echo '<div class="notice notice-error"><p>❌ Error: Clase BCV_Database no disponible</p></div>';
-            return;
-        }
-        
-        $database = new BCV_Database();
-        
-        if ($database->table_exists()) {
-            echo '<div class="notice notice-warning"><p>⚠️ La tabla ya existe</p></div>';
-            return;
-        }
-        
-        $result = $database->create_price_table();
-        
-        if ($result) {
-            echo '<div class="notice notice-success"><p>✅ Tabla creada exitosamente</p></div>';
-            echo '<script>location.reload();</script>';
-        } else {
-            echo '<div class="notice notice-error"><p>❌ Error al crear la tabla</p></div>';
-        }
-    }
-    
-    /**
-     * Manejar forzar programación del cron
-     */
-    private function handle_force_cron_schedule() {
-        if (!class_exists('BCV_Cron')) {
-            echo '<div class="notice notice-error"><p>❌ Error: Clase BCV_Cron no disponible</p></div>';
-            return;
-        }
-        
-        $cron = new BCV_Cron();
-        $result = $cron->force_schedule_cron();
-        
-        if ($result) {
-            echo '<div class="notice notice-success"><p>✅ Cron forzado exitosamente</p></div>';
-            echo '<script>location.reload();</script>';
-        } else {
-            echo '<div class="notice notice-error"><p>❌ Error al forzar el cron</p></div>';
-        }
-    }
-    
-    /**
-     * Manejar reset de estadísticas del cron
-     */
-    private function handle_reset_cron_stats() {
-        if (!class_exists('BCV_Cron')) {
-            echo '<div class="notice notice-error"><p>❌ Error: Clase BCV_Cron no disponible</p></div>';
-            return;
-        }
-        
-        $cron = new BCV_Cron();
-        $result = $cron->reset_cron_stats();
-        
-        if ($result) {
-            echo '<div class="notice notice-success"><p>✅ Estadísticas del cron reseteadas exitosamente</p></div>';
-            echo '<script>location.reload();</script>';
-        } else {
-            echo '<div class="notice notice-error"><p>❌ Error al resetear las estadísticas del cron</p></div>';
-        }
     }
     
     /**
@@ -302,7 +204,7 @@ class BCV_Admin {
             $stats = $database->get_price_stats();
             if ($stats && is_array($stats)) {
                 echo '<p>Total de registros: <strong>' . esc_html($stats['total_records'] ?? '0') . '</strong></p>';
-                echo '<p>Último precio: <strong>$' . esc_html($stats['last_price'] ?? 'N/A') . '</strong></p>';
+                echo '<p>Último precio: <strong>1 USD = ' . esc_html(number_format($stats['last_price'] ?? 0, 4, ',', '.')) . ' Bs.</strong></p>';
                 echo '<p>Fecha del último precio: <strong>' . esc_html($stats['last_date'] ?? 'N/A') . '</strong></p>';
             } else {
                 echo '<p>No hay estadísticas disponibles</p>';
@@ -321,7 +223,7 @@ class BCV_Admin {
     public function render_prices_page() {
         // Verificar permisos
         if (!current_user_can('manage_options')) {
-            wp_die('Acceso denegado');
+            wp_die('Lo siento, no tienes permiso para acceder a esta página.');
         }
         
         // Crear instancia de la tabla de precios
@@ -348,461 +250,11 @@ class BCV_Admin {
      * Renderizar página de estadísticas
      */
     public function render_statistics_page() {
-        // Verificar permisos
-        if (!current_user_can('manage_options')) {
-            wp_die('Acceso denegado');
-        }
-        
-        // Procesar reset de estadísticas del cron
-        if (isset($_POST['bcv_reset_cron_stats'])) {
-            if (wp_verify_nonce($_POST['_wpnonce'], 'bcv_reset_cron_stats')) {
-                $this->handle_reset_cron_stats();
-            }
-        }
-        
-        // Obtener estadísticas
-        $database = new BCV_Database();
-        $price_stats = $database->get_price_stats();
-        
-        $cron = new BCV_Cron();
-        $cron_stats = $cron->get_cron_stats();
-        
-        $scraper = new BCV_Scraper();
-        $scraping_info = $scraper->get_scraping_info();
-        
-        echo '<div class="wrap">';
-        echo '<h1>📊 Resumen del Plugin</h1>';
-        echo '<p style="color: #666; font-size: 14px; margin-bottom: 30px;">Aquí puedes ver cómo está funcionando el plugin y el estado de tu sistema.</p>';
-        
-        echo '<div class="bcv-admin-container">';
-        
-        // Resumen ejecutivo
-        echo '<div class="bcv-panel" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 30px;">';
-        echo '<h2 style="color: white; margin-top: 0;">🎯 Estado General</h2>';
-        
-        $current_price = $price_stats['last_price'] ?: 'No disponible';
-        $price_trend = $this->get_price_trend($price_stats);
-        $system_health = $this->get_system_health($cron_stats, $scraping_info);
-        
-        echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">';
-        
-        // Precio actual
-        echo '<div style="text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px;">';
-        echo '<div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">💰 Precio Actual</div>';
-        echo '<div style="font-size: 32px; font-weight: bold;">$' . esc_html($current_price) . '</div>';
-        echo '<div style="font-size: 14px; opacity: 0.8;">' . $price_trend . '</div>';
-        echo '</div>';
-        
-        // Estado del sistema
-        echo '<div style="text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px;">';
-        echo '<div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">🔧 Estado</div>';
-        echo '<div style="font-size: 32px; font-weight: bold;">' . $system_health['icon'] . '</div>';
-        echo '<div style="font-size: 14px; opacity: 0.8;">' . $system_health['text'] . '</div>';
-        echo '</div>';
-        
-        // Tareas automáticas
-        $cron_status = wp_next_scheduled('bcv_scrape_dollar_rate') !== false ? '✅ Activo' : '❌ Inactivo';
-        echo '<div style="text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px;">';
-        echo '<div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">⏰ Automático</div>';
-        echo '<div style="font-size: 32px; font-weight: bold;">' . $cron_status . '</div>';
-        echo '<div style="font-size: 14px; opacity: 0.8;">Actualización automática</div>';
-        echo '</div>';
-        
-        echo '</div>';
-        echo '</div>';
-        
-        // Información de precios - Rediseñada
-        echo '<div class="bcv-panel">';
-        echo '<h2>💰 Historial de Precios del Dólar</h2>';
-        echo '<p style="color: #666; margin-bottom: 20px;">Resumen de todos los precios que hemos registrado del Banco Central de Venezuela.</p>';
-        
-        echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">';
-        
-        // Total de registros
-        echo '<div style="text-align: center; background: #e3f2fd; padding: 20px; border-radius: 12px; border-left: 4px solid #2196f3;">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">📊</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: #1976d2;">' . esc_html($price_stats['total_records']) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Registros guardados</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Desde que empezamos a rastrear</div>';
-        echo '</div>';
-        
-        // Precio más alto
-        echo '<div style="text-align: center; background: #fff3e0; padding: 20px; border-radius: 12px; border-left: 4px solid #ff9800;">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">📈</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: #f57c00;">$' . esc_html($price_stats['max_price']) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Precio más alto</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">El valor máximo registrado</div>';
-        echo '</div>';
-        
-        // Precio más bajo
-        echo '<div style="text-align: center; background: #e8f5e8; padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">📉</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: #388e3c;">$' . esc_html($price_stats['min_price']) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Precio más bajo</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">El valor mínimo registrado</div>';
-        echo '</div>';
-        
-        // Precio promedio
-        echo '<div style="text-align: center; background: #f3e5f5; padding: 20px; border-radius: 12px; border-left: 4px solid #9c27b0;">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">📊</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: #7b1fa2;">$' . esc_html(round($price_stats['avg_price'], 2)) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Precio promedio</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Promedio de todos los registros</div>';
-        echo '</div>';
-        
-        echo '</div>';
-        
-        // Información de fechas
-        echo '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #6c757d;">';
-        echo '<h4 style="margin: 0 0 10px 0; color: #495057;">📅 Período de Registro</h4>';
-        echo '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">';
-        echo '<div><strong>Primer precio registrado:</strong><br><span style="color: #666;">' . esc_html($price_stats['first_date']) . '</span></div>';
-        echo '<div><strong>Último precio registrado:</strong><br><span style="color: #666;">' . esc_html($price_stats['last_date']) . '</span></div>';
-        echo '</div>';
-        echo '</div>';
-        
-        echo '</div>';
-        
-        // Tareas automáticas - Rediseñadas
-        echo '<div class="bcv-panel">';
-        echo '<h2>⏰ Tareas Automáticas</h2>';
-        echo '<p style="color: #666; margin-bottom: 20px;">El plugin actualiza automáticamente el precio del dólar cada cierto tiempo. Aquí puedes ver cómo está funcionando.</p>';
-        
-        // Calcular porcentaje de éxito
-        $success_rate = $cron_stats['total_executions'] > 0 ? round(($cron_stats['successful_executions'] / $cron_stats['total_executions']) * 100, 1) : 0;
-        
-        echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">';
-        
-        // Total de actualizaciones
-        echo '<div style="text-align: center; background: #e3f2fd; padding: 20px; border-radius: 12px; border-left: 4px solid #2196f3;">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">🔄</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: #1976d2;">' . esc_html($cron_stats['total_executions']) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Actualizaciones realizadas</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Intentos de obtener precio</div>';
-        echo '</div>';
-        
-        // Actualizaciones exitosas
-        echo '<div style="text-align: center; background: #e8f5e8; padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">✅</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: #388e3c;">' . esc_html($cron_stats['successful_executions']) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Actualizaciones exitosas</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Precios obtenidos correctamente</div>';
-        echo '</div>';
-        
-        // Actualizaciones fallidas
-        $failed_color = $cron_stats['failed_executions'] > 0 ? '#ffebee' : '#f8f9fa';
-        $failed_border = $cron_stats['failed_executions'] > 0 ? '#f44336' : '#6c757d';
-        $failed_text = $cron_stats['failed_executions'] > 0 ? '#d32f2f' : '#666';
-        
-        echo '<div style="text-align: center; background: ' . $failed_color . '; padding: 20px; border-radius: 12px; border-left: 4px solid ' . $failed_border . ';">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">' . ($cron_stats['failed_executions'] > 0 ? '❌' : '✅') . '</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: ' . $failed_text . ';">' . esc_html($cron_stats['failed_executions']) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Actualizaciones fallidas</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">' . ($cron_stats['failed_executions'] > 0 ? 'Hubo problemas al obtener precio' : '¡Todo funcionando bien!') . '</div>';
-        echo '</div>';
-        
-        // Porcentaje de éxito
-        $success_color = $success_rate >= 80 ? '#4caf50' : ($success_rate >= 60 ? '#ff9800' : '#f44336');
-        echo '<div style="text-align: center; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid ' . $success_color . ';">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">📊</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: ' . $success_color . ';">' . $success_rate . '%</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Tasa de éxito</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Porcentaje de actualizaciones exitosas</div>';
-        echo '</div>';
-        
-        echo '</div>';
-        
-        // Información de horarios
-        echo '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #6c757d;">';
-        echo '<h4 style="margin: 0 0 10px 0; color: #495057;">🕒 Horarios de Actualización</h4>';
-        echo '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">';
-        echo '<div><strong>Última actualización:</strong><br><span style="color: #666;">' . esc_html($cron_stats['last_execution']) . '</span></div>';
-        echo '<div><strong>Próxima actualización:</strong><br><span style="color: #666;">' . esc_html($cron_stats['next_execution']) . '</span></div>';
-        echo '</div>';
-        echo '</div>';
-        
-        // Botón para resetear estadísticas
-        echo '<div style="margin-top: 20px; text-align: center;">';
-        echo '<form method="post" style="display: inline-block;">';
-        wp_nonce_field('bcv_reset_cron_stats');
-        echo '<button type="submit" name="bcv_reset_cron_stats" class="button button-secondary" style="background: #6c757d; border-color: #6c757d; color: white; padding: 8px 16px; border-radius: 6px;">🔄 Reiniciar Contadores</button>';
-        echo '</form>';
-        echo '<p style="font-size: 12px; color: #999; margin-top: 8px;">Esto reiniciará todos los contadores a cero</p>';
-        echo '</div>';
-        
-        echo '</div>';
-        
-        // Conexión con el Banco Central - Rediseñada
-        echo '<div class="bcv-panel">';
-        echo '<h2>🌐 Conexión con el Banco Central</h2>';
-        echo '<p style="color: #666; margin-bottom: 20px;">El plugin se conecta con el sitio web del Banco Central de Venezuela para obtener el precio del dólar. Aquí puedes ver el estado de esa conexión.</p>';
-        
-        // Determinar estado general de la conexión
-        $connection_health = 'good';
-        $connection_message = 'Conexión funcionando correctamente';
-        
-        if ($scraping_info['failed_scrapings'] > $scraping_info['successful_scrapings']) {
-            $connection_health = 'bad';
-            $connection_message = 'Hay problemas con la conexión';
-        } elseif ($scraping_info['failed_scrapings'] > 0) {
-            $connection_health = 'warning';
-            $connection_message = 'Conexión con algunos problemas';
-        }
-        
-        $health_colors = array(
-            'good' => array('bg' => '#e8f5e8', 'border' => '#4caf50', 'text' => '#388e3c'),
-            'warning' => array('bg' => '#fff3e0', 'border' => '#ff9800', 'text' => '#f57c00'),
-            'bad' => array('bg' => '#ffebee', 'border' => '#f44336', 'text' => '#d32f2f')
-        );
-        
-        $health_icons = array(
-            'good' => '✅',
-            'warning' => '⚠️',
-            'bad' => '❌'
-        );
-        
-        echo '<div style="background: ' . $health_colors[$connection_health]['bg'] . '; padding: 20px; border-radius: 12px; border-left: 4px solid ' . $health_colors[$connection_health]['border'] . '; margin-bottom: 20px;">';
-        echo '<div style="display: flex; align-items: center; gap: 15px;">';
-        echo '<div style="font-size: 48px;">' . $health_icons[$connection_health] . '</div>';
-        echo '<div>';
-        echo '<h3 style="margin: 0 0 5px 0; color: ' . $health_colors[$connection_health]['text'] . ';">Estado de la Conexión</h3>';
-        echo '<p style="margin: 0; color: #666; font-size: 16px;">' . $connection_message . '</p>';
-        echo '</div>';
-        echo '</div>';
-        echo '</div>';
-        
-        echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">';
-        
-        // Precio actual en caché
-        echo '<div style="text-align: center; background: #e3f2fd; padding: 20px; border-radius: 12px; border-left: 4px solid #2196f3;">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">💰</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: #1976d2;">$' . esc_html($scraping_info['cached_price'] ?: 'N/A') . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Precio actual guardado</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Último precio obtenido</div>';
-        echo '</div>';
-        
-        // Estado del caché
-        $cache_status = $scraping_info['cache_valid'] ? 'Válido' : 'Expirado';
-        $cache_color = $scraping_info['cache_valid'] ? '#4caf50' : '#f44336';
-        $cache_bg = $scraping_info['cache_valid'] ? '#e8f5e8' : '#ffebee';
-        $cache_icon = $scraping_info['cache_valid'] ? '✅' : '❌';
-        
-        echo '<div style="text-align: center; background: ' . $cache_bg . '; padding: 20px; border-radius: 12px; border-left: 4px solid ' . $cache_color . ';">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">' . $cache_icon . '</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: ' . $cache_color . ';">' . $cache_status . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Estado del precio guardado</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">' . ($scraping_info['cache_valid'] ? 'Precio actualizado recientemente' : 'Precio necesita actualización') . '</div>';
-        echo '</div>';
-        
-        // Intentos de conexión
-        echo '<div style="text-align: center; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #6c757d;">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">🔄</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: #495057;">' . esc_html($scraping_info['scraping_attempts']) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Intentos de conexión</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Veces que intentó obtener precio</div>';
-        echo '</div>';
-        
-        // Conexiones exitosas
-        echo '<div style="text-align: center; background: #e8f5e8; padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">✅</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: #388e3c;">' . esc_html($scraping_info['successful_scrapings']) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Conexiones exitosas</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Precios obtenidos correctamente</div>';
-        echo '</div>';
-        
-        // Conexiones fallidas
-        $failed_color = $scraping_info['failed_scrapings'] > 0 ? '#f44336' : '#6c757d';
-        $failed_bg = $scraping_info['failed_scrapings'] > 0 ? '#ffebee' : '#f8f9fa';
-        
-        echo '<div style="text-align: center; background: ' . $failed_bg . '; padding: 20px; border-radius: 12px; border-left: 4px solid ' . $failed_color . ';">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">' . ($scraping_info['failed_scrapings'] > 0 ? '❌' : '✅') . '</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: ' . $failed_color . ';">' . esc_html($scraping_info['failed_scrapings']) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Conexiones fallidas</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">' . ($scraping_info['failed_scrapings'] > 0 ? 'Problemas al conectar' : '¡Todo funcionando!') . '</div>';
-        echo '</div>';
-        
-        echo '</div>';
-        
-        // Información de fechas
-        echo '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #6c757d;">';
-        echo '<h4 style="margin: 0 0 10px 0; color: #495057;">🕒 Última Actividad</h4>';
-        echo '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">';
-        echo '<div><strong>Última conexión exitosa:</strong><br><span style="color: #666;">' . esc_html($scraping_info['last_scraping']) . '</span></div>';
-        echo '<div><strong>Precio expira:</strong><br><span style="color: #666;">' . esc_html($scraping_info['cache_expiry']) . '</span></div>';
-        echo '</div>';
-        echo '</div>';
-        
-        echo '</div>';
-        
-        // Resumen de actividad - Rediseñado
-        echo '<div class="bcv-panel">';
-        echo '<h2>📈 Actividad de Hoy</h2>';
-        echo '<p style="color: #666; margin-bottom: 20px;">Resumen de lo que ha pasado hoy con el plugin.</p>';
-        
-        // Obtener estadísticas de logs simplificadas
-        global $wpdb;
-        $logs_table = $wpdb->prefix . 'bcv_logs';
-        
-        $recent_activity = array(
-            'total_events' => $wpdb->get_var("SELECT COUNT(*) FROM {$logs_table}"),
-            'events_today' => $wpdb->get_var("SELECT COUNT(*) FROM {$logs_table} WHERE DATE(created_at) = CURDATE()"),
-            'errors_today' => $wpdb->get_var("SELECT COUNT(*) FROM {$logs_table} WHERE log_level = 'ERROR' AND DATE(created_at) = CURDATE()"),
-            'success_today' => $wpdb->get_var("SELECT COUNT(*) FROM {$logs_table} WHERE log_level = 'SUCCESS' AND DATE(created_at) = CURDATE()"),
-            'last_activity' => $wpdb->get_var("SELECT created_at FROM {$logs_table} ORDER BY created_at DESC LIMIT 1")
-        );
-        
-        echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-top: 20px;">';
-        
-        // Eventos de hoy
-        echo '<div style="text-align: center; background: #e3f2fd; padding: 20px; border-radius: 12px; border-left: 4px solid #2196f3;">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">📊</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: #1976d2;">' . esc_html($recent_activity['events_today']) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Eventos de hoy</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Actividades registradas hoy</div>';
-        echo '</div>';
-        
-        // Errores de hoy
-        $error_color = $recent_activity['errors_today'] > 0 ? '#f44336' : '#6c757d';
-        $error_bg = $recent_activity['errors_today'] > 0 ? '#ffebee' : '#f8f9fa';
-        
-        echo '<div style="text-align: center; background: ' . $error_bg . '; padding: 20px; border-radius: 12px; border-left: 4px solid ' . $error_color . ';">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">' . ($recent_activity['errors_today'] > 0 ? '❌' : '✅') . '</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: ' . $error_color . ';">' . esc_html($recent_activity['errors_today']) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Errores de hoy</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">' . ($recent_activity['errors_today'] > 0 ? 'Problemas detectados' : '¡Todo funcionando!') . '</div>';
-        echo '</div>';
-        
-        // Éxitos de hoy
-        echo '<div style="text-align: center; background: #e8f5e8; padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">✅</div>';
-        echo '<div style="font-size: 28px; font-weight: bold; color: #388e3c;">' . esc_html($recent_activity['success_today']) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Éxitos de hoy</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Operaciones exitosas</div>';
-        echo '</div>';
-        
-        // Última actividad
-        $last_activity_time = $recent_activity['last_activity'] ? date('H:i', strtotime($recent_activity['last_activity'])) : 'N/A';
-        echo '<div style="text-align: center; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #6c757d;">';
-        echo '<div style="font-size: 32px; margin-bottom: 10px;">🕒</div>';
-        echo '<div style="font-size: 24px; font-weight: bold; color: #495057;">' . esc_html($last_activity_time) . '</div>';
-        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Última actividad</div>';
-        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Hora de la última acción</div>';
-        echo '</div>';
-        
-        echo '</div>';
-        
-        // Información adicional
-        if ($recent_activity['total_events'] > 0) {
-            echo '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #6c757d;">';
-            echo '<h4 style="margin: 0 0 10px 0; color: #495057;">📋 Resumen Total</h4>';
-            echo '<p style="margin: 0; color: #666; font-size: 14px;">Desde que se instaló el plugin, se han registrado <strong>' . esc_html($recent_activity['total_events']) . ' eventos</strong> en total.</p>';
-            echo '</div>';
-        }
-        
-        echo '</div>';
-        
-        echo '</div>'; // .bcv-admin-container
-        
-        echo '</div>'; // .wrap
-    }
-    
-    /**
-     * Obtener tendencia del precio
-     */
-    private function get_price_trend($price_stats) {
-        if ($price_stats['total_records'] < 2) {
-            return '📊 Datos insuficientes';
-        }
-        
-        // Simular tendencia basada en precio promedio vs último precio
-        $avg = $price_stats['avg_price'];
-        $last = $price_stats['last_price'];
-        
-        if ($last > $avg * 1.05) {
-            return '📈 Subiendo';
-        } elseif ($last < $avg * 0.95) {
-            return '📉 Bajando';
-        } else {
-            return '➡️ Estable';
-        }
-    }
-    
-    /**
-     * Obtener estado de salud del sistema
-     */
-    private function get_system_health($cron_stats, $scraping_info) {
-        $errors = 0;
-        $warnings = 0;
-        
-        // Verificar scraping
-        if ($scraping_info['failed_scrapings'] > $scraping_info['successful_scrapings']) {
-            $errors++;
-        }
-        
-        // Verificar cron
-        if ($cron_stats['failed_executions'] > 0) {
-            $warnings++;
-        }
-        
-        // Verificar caché
-        if (!$scraping_info['cache_valid']) {
-            $warnings++;
-        }
-        
-        if ($errors > 0) {
-            return array('icon' => '❌', 'text' => 'Necesita atención');
-        } elseif ($warnings > 0) {
-            return array('icon' => '⚠️', 'text' => 'Funcionando con advertencias');
-        } else {
-            return array('icon' => '✅', 'text' => 'Todo funcionando bien');
-        }
-    }
-    
-    /**
-     * Renderizar configuración de depuración
-     */
-    private function render_debug_settings() {
-        $debug_mode = BCV_Logger::is_debug_mode_enabled();
-        
-        echo '<div class="bcv-simple-panel">';
-        echo '<h3>🐛 Modo de Depuración</h3>';
-        
-        echo '<form method="post" class="bcv-simple-form">';
-        wp_nonce_field('bcv_debug_settings');
-        
-        echo '<div class="bcv-checkbox-group">';
-        echo '<label class="bcv-checkbox-label">';
-        echo '<input type="checkbox" name="debug_mode" value="1" ' . checked($debug_mode, true, false) . ' />';
-        echo '<span class="bcv-checkbox-text">Habilitar registro de eventos internos</span>';
-        echo '</label>';
-        echo '<p class="bcv-help-text">Cuando está habilitado, el plugin registrará todas las operaciones importantes en la base de datos.</p>';
-        echo '</div>';
-        
-        echo '<div class="bcv-form-buttons">';
-        echo '<button type="submit" name="save_debug_settings" class="bcv-save-btn">Guardar</button>';
-        
-        if ($debug_mode) {
-            echo '<a href="' . admin_url('admin.php?page=bcv-logs') . '" class="bcv-link-btn">Ver Logs</a>';
-        }
-        echo '</div>';
-        
-        echo '</form>';
-        
-        // Botón para recrear tabla de logs (formulario separado)
-        echo '<div class="bcv-debug-tools">';
-        echo '<h4>🔧 Herramientas de Debug</h4>';
-        echo '<form method="post" style="display: inline; margin-right: 10px;">';
-        wp_nonce_field('bcv_recreate_logs_table');
-        echo '<button type="submit" name="recreate_logs_table" class="bcv-action-btn" onclick="return confirm(\'¿Estás seguro? Esto eliminará todos los logs existentes.\');">Recrear Tabla de Logs</button>';
-        echo '</form>';
-        
-        // Botón de prueba
-        echo '<form method="post" style="display: inline;">';
-        echo '<button type="submit" name="test_form" class="bcv-test-btn">Probar Formulario</button>';
-        echo '</form>';
-        echo '</div>';
-        
-        echo '</div>';
+        // Incluir la clase de estadísticas
+        require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'admin/class-bcv-admin-stats.php';
+        
+        // Usar la nueva clase para renderizar
+        BCV_Admin_Stats::render_statistics_page();
     }
     
     /**
@@ -811,7 +263,7 @@ class BCV_Admin {
     public function render_logs_page() {
         // Verificar permisos
         if (!current_user_can('manage_options')) {
-            wp_die('Acceso denegado');
+            wp_die('Lo siento, no tienes permiso para acceder a esta página.');
         }
         
         // Procesar acciones de limpieza
@@ -857,39 +309,6 @@ class BCV_Admin {
         if (!$debug_mode) {
             echo '<p><a href="' . admin_url('admin.php?page=bcv-dolar-tracker') . '" class="button button-primary">⚙️ Ir a Configuración</a></p>';
         }
-        echo '</div>';
-        
-        // Explicación de la tabla
-        echo '<div class="bcv-panel" style="background: #f8f9fa; border: 1px solid #e9ecef;">';
-        echo '<h3 style="margin-top: 0;">📖 Cómo leer esta tabla</h3>';
-        echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">';
-        
-        echo '<div>';
-        echo '<strong>📅 Cuándo:</strong><br>';
-        echo '<small>Fecha y hora del evento</small>';
-        echo '</div>';
-        
-        echo '<div>';
-        echo '<strong>🔍 Tipo:</strong><br>';
-        echo '<small>❌ Error, ⚠️ Advertencia, ✅ Éxito, ℹ️ Info, 🐛 Debug</small>';
-        echo '</div>';
-        
-        echo '<div>';
-        echo '<strong>📝 Qué pasó:</strong><br>';
-        echo '<small>Descripción del evento en lenguaje simple</small>';
-        echo '</div>';
-        
-        echo '<div>';
-        echo '<strong>📍 Dónde:</strong><br>';
-        echo '<small>Parte del sistema donde ocurrió</small>';
-        echo '</div>';
-        
-        echo '<div>';
-        echo '<strong>👤 Quién:</strong><br>';
-        echo '<small>Usuario que realizó la acción</small>';
-        echo '</div>';
-        
-        echo '</div>';
         echo '</div>';
         
         // Formulario de limpieza
@@ -943,18 +362,13 @@ class BCV_Admin {
      * Procesar configuración del cron
      */
     private function process_cron_settings() {
-        error_log('BCV Dólar Tracker: Procesando configuración de cron');
-        error_log('BCV Dólar Tracker: POST data para cron: ' . print_r($_POST, true));
-        
         // Verificar nonce
         if (!wp_verify_nonce($_POST['_wpnonce'], 'bcv_cron_settings')) {
-            error_log('BCV Dólar Tracker: Error de nonce en configuración de cron');
             wp_die('Acceso denegado - Error de nonce en cron');
         }
         
         // Verificar permisos
         if (!current_user_can('manage_options')) {
-            error_log('BCV Dólar Tracker: Permisos insuficientes para configuración de cron');
             wp_die('Permisos insuficientes');
         }
         
@@ -972,13 +386,11 @@ class BCV_Admin {
             $hours = floor($total_seconds / 3600);
             $minutes = floor(($total_seconds % 3600) / 60);
             $seconds = $total_seconds % 60;
-            error_log('BCV Dólar Tracker: Usando intervalo predefinido - Total segundos: ' . $total_seconds . ', Horas: ' . $hours . ', Minutos: ' . $minutes . ', Segundos: ' . $seconds);
         } else {
             // Usar valores personalizados
             $hours = intval($_POST['cron_hours']);
             $minutes = intval($_POST['cron_minutes']);
             $seconds = intval($_POST['cron_seconds']);
-            error_log('BCV Dólar Tracker: Usando valores personalizados - Horas: ' . $hours . ', Minutos: ' . $minutes . ', Segundos: ' . $seconds);
         }
         
         // Validaciones robustas
@@ -998,29 +410,17 @@ class BCV_Admin {
         
         // Guardar configuración
         $settings = array(
-            'enabled' => !empty($current_settings['enabled']) ? $current_settings['enabled'] : true, // Mantener estado actual o true por defecto
+            'enabled' => !empty($current_settings['enabled']) ? $current_settings['enabled'] : true,
             'hours' => $hours,
             'minutes' => $minutes,
             'seconds' => $seconds
         );
         
-        error_log('BCV Dólar Tracker: Configuración a guardar: ' . print_r($settings, true));
-        
-        // Verificar configuración actual
-        $current_cron_settings = get_option('bcv_cron_settings', array());
-        error_log('BCV Dólar Tracker: Configuración actual de cron: ' . print_r($current_cron_settings, true));
-        
         $saved = update_option('bcv_cron_settings', $settings);
-        error_log('BCV Dólar Tracker: update_option resultado: ' . ($saved ? 'OK' : 'Error'));
-        
-        // Verificar si realmente se guardó
-        $new_cron_settings = get_option('bcv_cron_settings', array());
-        error_log('BCV Dólar Tracker: Configuración después de guardar: ' . print_r($new_cron_settings, true));
         
         // Configurar cron
         $cron = new BCV_Cron();
         $result = $cron->setup_cron($settings);
-        error_log('BCV Dólar Tracker: Cron configurado: ' . ($result ? 'OK' : 'Error'));
         
         // Redirigir con mensaje de éxito o error
         if ($result) {
@@ -1035,33 +435,23 @@ class BCV_Admin {
      * Procesar configuración de depuración
      */
     private function process_debug_settings() {
-        error_log('BCV Dólar Tracker: Iniciando procesamiento de debug settings');
-        
         // Verificar nonce
         if (!wp_verify_nonce($_POST['_wpnonce'], 'bcv_debug_settings')) {
-            error_log('BCV Dólar Tracker: Error de nonce en debug settings');
             wp_die('Acceso denegado - Error de nonce');
         }
         
         // Verificar permisos
         if (!current_user_can('manage_options')) {
-            error_log('BCV Dólar Tracker: Permisos insuficientes en debug settings');
             wp_die('Permisos insuficientes');
         }
         
         // Procesar toggle de modo de depuración
         $debug_mode = isset($_POST['debug_mode']) ? true : false;
-        error_log('BCV Dólar Tracker: Debug mode checkbox presente: ' . (isset($_POST['debug_mode']) ? 'Sí' : 'No'));
-        error_log('BCV Dólar Tracker: Debug mode valor: ' . ($debug_mode ? 'true' : 'false'));
         
         if ($debug_mode) {
-            error_log('BCV Dólar Tracker: Intentando habilitar debug mode');
             $result = BCV_Logger::enable_debug_mode();
-            error_log('BCV Dólar Tracker: Debug mode habilitado: ' . ($result ? 'OK' : 'Error'));
         } else {
-            error_log('BCV Dólar Tracker: Intentando deshabilitar debug mode');
             $result = BCV_Logger::disable_debug_mode();
-            error_log('BCV Dólar Tracker: Debug mode deshabilitado: ' . ($result ? 'OK' : 'Error'));
         }
         
         // Redirigir con mensaje de éxito
@@ -1073,34 +463,17 @@ class BCV_Admin {
      * Guardar configuración del cron (AJAX)
      */
     public function save_cron_settings() {
-        // Verificar nonce y permisos usando la clase de seguridad
-        BCV_Security::verify_ajax_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce');
-        BCV_Security::check_capability('manage_options');
-        
-        // Log del evento
-        BCV_Security::log_security_event('Cron settings save attempt', 'User: ' . get_current_user_id());
-        
-        // Definir reglas de validación
-        $validation_rules = array(
-            'enabled' => array('type' => 'checkbox'),
-            'hours' => array('type' => 'number', 'min' => 0, 'max' => 24, 'required' => true, 'label' => 'Horas'),
-            'minutes' => array('type' => 'number', 'min' => 0, 'max' => 59, 'required' => true, 'label' => 'Minutos'),
-            'seconds' => array('type' => 'number', 'min' => 0, 'max' => 59, 'required' => true, 'label' => 'Segundos')
-        );
-        
-        // Validar y sanitizar datos
-        $validation_result = BCV_Security::validate_form_data($_POST, $validation_rules);
-        
-        if (!empty($validation_result['errors'])) {
-            wp_send_json_error('Datos inválidos: ' . implode(', ', $validation_result['errors']));
+        // Verificar nonce y permisos
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce') || !current_user_can('manage_options')) {
+            wp_send_json_error('Acceso denegado');
         }
         
-        // Procesar datos validados
+        // Procesar datos
         $settings = array(
             'enabled' => isset($_POST['enabled']) ? true : false,
-            'hours' => $validation_result['data']['hours'],
-            'minutes' => $validation_result['data']['minutes'],
-            'seconds' => $validation_result['data']['seconds']
+            'hours' => intval($_POST['hours'] ?? 1),
+            'minutes' => intval($_POST['minutes'] ?? 0),
+            'seconds' => intval($_POST['seconds'] ?? 0)
         );
         
         // Mínimo 1 minuto
@@ -1126,52 +499,76 @@ class BCV_Admin {
      * Probar scraping (AJAX)
      */
     public function test_scraping() {
-        // Verificar nonce y permisos usando la clase de seguridad
-        BCV_Security::verify_ajax_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce');
-        BCV_Security::check_capability('manage_options');
-        
-        // Log del evento
-        BCV_Security::log_security_event('Manual scraping test attempt', 'User: ' . get_current_user_id());
-        
-        // Ejecutar scraping manual
-        $cron = new BCV_Cron();
-        $result = $cron->execute_manual_scraping();
-        
-        // Log del resultado
-        if ($result['success']) {
-            BCV_Security::log_security_event('Manual scraping test successful', 'Price: ' . ($result['price'] ?? 'N/A'));
-        } else {
-            BCV_Security::log_security_event('Manual scraping test failed', 'Error: ' . ($result['message'] ?? 'Unknown error'));
+        // Verificar nonce y permisos
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce') || !current_user_can('manage_options')) {
+            wp_send_json_error('Acceso denegado');
         }
         
-        wp_send_json($result);
+        try {
+            // Crear instancia del scraper
+            $scraper = new BCV_Scraper();
+            
+            // Limpiar caché antes del test
+            $scraper->clear_cache();
+            
+            // Ejecutar scraping
+            $rate = $scraper->scrape_bcv_rate();
+            
+            if ($rate !== false) {
+                wp_send_json_success(array(
+                    'message' => "Scraping exitoso. Tipo de cambio obtenido: 1 USD = {$rate} Bs.",
+                    'price' => '1 USD = ' . number_format($rate, 4, ',', '.') . ' Bs.',
+                    'status' => 'Exitoso',
+                    'raw_price' => $rate
+                ));
+            } else {
+                wp_send_json_error('No se pudo obtener el precio del BCV. Revisa el debug.log para más detalles.');
+            }
+            
+        } catch (Exception $e) {
+            wp_send_json_error('Error interno: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Limpiar caché (AJAX)
+     */
+    public function clear_cache() {
+        // Verificar nonce y permisos
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce') || !current_user_can('manage_options')) {
+            wp_send_json_error('Acceso denegado');
+        }
+        
+        try {
+            // Crear instancia del scraper
+            $scraper = new BCV_Scraper();
+            
+            // Limpiar caché
+            $scraper->clear_cache();
+            
+            wp_send_json_success(array(
+                'message' => 'Caché limpiado correctamente',
+                'status' => 'Exitoso'
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error('Error interno: ' . $e->getMessage());
+        }
     }
     
     /**
      * Obtener datos de precios (AJAX)
      */
     public function get_prices_data() {
-        // Verificar nonce y permisos usando la clase de seguridad
-        BCV_Security::verify_ajax_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce');
-        BCV_Security::check_capability('manage_options');
+        // Verificar nonce y permisos
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce') || !current_user_can('manage_options')) {
+            wp_send_json_error('Acceso denegado');
+        }
         
-        // Log del evento
-        BCV_Security::log_security_event('Prices data request', 'User: ' . get_current_user_id());
-        
-        // Definir reglas de validación para parámetros
-        $validation_rules = array(
-            'page' => array('type' => 'number', 'min' => 1, 'max' => 1000),
-            'per_page' => array('type' => 'number', 'min' => 1, 'max' => 100),
-            'search' => array('type' => 'text')
-        );
-        
-        // Validar y sanitizar parámetros
-        $validation_result = BCV_Security::validate_form_data($_POST, $validation_rules);
-        
-        // Obtener parámetros validados con valores por defecto
-        $page = $validation_result['data']['page'] ?: 1;
-        $per_page = $validation_result['data']['per_page'] ?: 20;
-        $search = $validation_result['data']['search'] ?: '';
+        // Obtener parámetros
+        $page = intval($_POST['page'] ?? 1);
+        $per_page = intval($_POST['per_page'] ?? 20);
+        $search = sanitize_text_field($_POST['search'] ?? '');
         
         // Obtener datos
         $database = new BCV_Database();
@@ -1188,12 +585,10 @@ class BCV_Admin {
      * Toggle del cron (AJAX)
      */
     public function toggle_cron() {
-        // Verificar nonce y permisos usando la clase de seguridad
-        BCV_Security::verify_ajax_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce');
-        BCV_Security::check_capability('manage_options');
-        
-        // Log del evento
-        BCV_Security::log_security_event('Cron toggle attempt', 'User: ' . get_current_user_id());
+        // Verificar nonce y permisos
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce') || !current_user_can('manage_options')) {
+            wp_send_json_error('Acceso denegado');
+        }
         
         if (!class_exists('BCV_Cron')) {
             wp_send_json_error('Clase BCV_Cron no disponible');
@@ -1206,14 +601,12 @@ class BCV_Admin {
             $settings = $cron->get_cron_settings();
             $status = $settings['enabled'] ? 'activado' : 'desactivado';
             
-            BCV_Security::log_security_event('Cron toggle successful', 'Status: ' . $status);
             wp_send_json_success(array(
                 'message' => 'Cron ' . $status . ' exitosamente',
                 'enabled' => $settings['enabled'],
                 'status_text' => $settings['enabled'] ? 'Activo' : 'Inactivo'
             ));
         } else {
-            BCV_Security::log_security_event('Cron toggle failed', 'Error: Unknown error');
             wp_send_json_error('Error al cambiar el estado del cron');
         }
     }
@@ -1230,7 +623,7 @@ class BCV_Admin {
             'enabled' => true
         ));
         
-        echo '<div class="bcv-simple-panel">';
+        echo '<div class="bcv-panel">';
         echo '<h3>⚙️ Configuración del Cron</h3>';
         
         // Estado del cron
@@ -1241,7 +634,7 @@ class BCV_Admin {
         echo '</div>';
         
         // Formulario de configuración
-        echo '<form method="post" class="bcv-simple-form">';
+        echo '<form method="post" class="bcv-form">';
         wp_nonce_field('bcv_cron_settings');
         
         echo '<div class="bcv-input-group">';
@@ -1314,13 +707,14 @@ class BCV_Admin {
      * Renderizar botón de prueba de scraping
      */
     private function render_test_scraping() {
-        echo '<div class="bcv-simple-panel">';
-        echo '<h3>🧪 Prueba de Scraping</h3>';
-        echo '<p>Haz clic en el botón para probar la conexión con el BCV y obtener el precio actual del dólar.</p>';
+        echo '<div class="bcv-panel">';
+        echo '<h3>🧪 Prueba de Scraping Detallada</h3>';
+        echo '<p>Haz clic en el botón para probar la conexión con el BCV y obtener el precio actual del dólar en bolívares.</p>';
         
         echo '<div class="bcv-test-section">';
-        echo '<button type="button" id="test-scraping" class="bcv-test-btn">Probar Scraping</button>';
-        echo '<span id="test-result" class="bcv-result"></span>';
+        echo '<button type="button" id="test-scraping" class="bcv-test-btn">🔍 Probar Scraping Detallado</button>';
+        echo '<button type="button" id="clear-cache" class="bcv-test-btn" style="background: #ffc107; color: #000; margin-left: 10px;">🗑️ Limpiar Caché</button>';
+        echo '<div id="test-result" class="bcv-result" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px; display: none;"></div>';
         echo '</div>';
         echo '</div>';
     }
@@ -1329,7 +723,7 @@ class BCV_Admin {
      * Renderizar información del cron
      */
     private function render_cron_info() {
-        echo '<div class="bcv-simple-panel">';
+        echo '<div class="bcv-panel">';
         echo '<h3>⏰ Estado del Cron</h3>';
         
         if (!class_exists('BCV_Cron')) {
@@ -1369,17 +763,51 @@ class BCV_Admin {
             }
             
             echo '</div>';
-            
-            // Botón para forzar programación del cron
-            if (!$cron_info['is_scheduled']) {
-                echo '<form method="post" class="bcv-inline-form">';
-                wp_nonce_field('bcv_force_cron_schedule');
-                echo '<button type="submit" name="bcv_force_cron_schedule" class="bcv-action-btn">Forzar Programación</button>';
-                echo '</form>';
-            }
         } else {
             echo '<p class="bcv-error">❌ No se pudo obtener información del cron</p>';
         }
+        
+        echo '</div>';
+    }
+    
+    /**
+     * Renderizar configuración de depuración
+     */
+    private function render_debug_settings() {
+        $debug_mode = BCV_Logger::is_debug_mode_enabled();
+        
+        echo '<div class="bcv-panel">';
+        echo '<h3>🐛 Modo de Depuración</h3>';
+        
+        echo '<form method="post" class="bcv-form">';
+        wp_nonce_field('bcv_debug_settings');
+        
+        echo '<div class="bcv-checkbox-group">';
+        echo '<label class="bcv-checkbox-label">';
+        echo '<input type="checkbox" name="debug_mode" value="1" ' . checked($debug_mode, true, false) . ' />';
+        echo '<span class="bcv-checkbox-text">Habilitar registro de eventos internos</span>';
+        echo '</label>';
+        echo '<p class="bcv-help-text">Cuando está habilitado, el plugin registrará todas las operaciones importantes en la base de datos.</p>';
+        echo '</div>';
+        
+        echo '<div class="bcv-form-buttons">';
+        echo '<button type="submit" name="save_debug_settings" class="bcv-save-btn">Guardar</button>';
+        
+        if ($debug_mode) {
+            echo '<a href="' . admin_url('admin.php?page=bcv-logs') . '" class="bcv-link-btn">Ver Logs</a>';
+        }
+        echo '</div>';
+        
+        echo '</form>';
+        
+        // Botón para recrear tabla de logs (formulario separado)
+        echo '<div class="bcv-debug-tools">';
+        echo '<h4>🔧 Herramientas de Debug</h4>';
+        echo '<form method="post" style="display: inline; margin-right: 10px;">';
+        wp_nonce_field('bcv_recreate_logs_table');
+        echo '<button type="submit" name="recreate_logs_table" class="bcv-action-btn" onclick="return confirm(\'¿Estás seguro? Esto eliminará todos los logs existentes.\');">Recrear Tabla de Logs</button>';
+        echo '</form>';
+        echo '</div>';
         
         echo '</div>';
     }
@@ -1416,9 +844,28 @@ class BCV_Admin {
         $result = dbDelta($sql);
         
         if (empty($wpdb->last_error)) {
-            echo '<div class="notice notice-success is-dismissible"><p>✅ Tabla de logs recreada correctamente</p></div>';
+            error_log('BCV Dólar Tracker: Tabla de logs recreada correctamente');
+            
+            // Insertar un log de prueba para verificar que funciona
+            $test_log = $wpdb->insert(
+                $logs_table_name,
+                array(
+                    'log_level' => 'INFO',
+                    'context' => 'Sistema',
+                    'message' => 'Tabla de logs recreada exitosamente',
+                    'user_id' => get_current_user_id(),
+                    'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'
+                ),
+                array('%s', '%s', '%s', '%d', '%s')
+            );
+            
+            if ($test_log !== false) {
+                error_log('BCV Dólar Tracker: Log de prueba insertado correctamente');
+            } else {
+                error_log('BCV Dólar Tracker: Error al insertar log de prueba: ' . $wpdb->last_error);
+            }
         } else {
-            echo '<div class="notice notice-error is-dismissible"><p>❌ Error al recrear tabla de logs: ' . $wpdb->last_error . '</p></div>';
+            error_log('BCV Dólar Tracker: Error al recrear tabla de logs: ' . $wpdb->last_error);
         }
     }
 }
