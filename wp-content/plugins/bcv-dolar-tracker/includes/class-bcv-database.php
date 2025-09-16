@@ -304,6 +304,9 @@ class BCV_Database {
         // Invalidar caché de estadísticas
         delete_transient('bcv_price_stats');
         
+        // Actualizar opción para integración con WooCommerce Venezuela Pro
+        $this->update_wvp_integration($precio);
+        
         // Verificar que realmente se insertó
         $verification = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$this->table_name} WHERE id = %d",
@@ -719,5 +722,26 @@ class BCV_Database {
         }
         
         return false;
+    }
+    
+    /**
+     * Actualizar integración con WooCommerce Venezuela Pro
+     * 
+     * @param float $precio Precio del dólar a actualizar
+     */
+    private function update_wvp_integration($precio) {
+        // Actualizar la opción que usa WooCommerce Venezuela Pro
+        $old_rate = get_option('wvp_bcv_rate', 0);
+        update_option('wvp_bcv_rate', $precio);
+        
+        // Log del cambio de precio
+        if ($old_rate != $precio) {
+            error_log("BCV Dólar Tracker: Precio actualizado en WVP - Anterior: {$old_rate}, Nuevo: {$precio}");
+        }
+        
+        // Disparar hook para notificar a WooCommerce Venezuela Pro
+        do_action('wvp_bcv_rate_updated', $precio, $old_rate);
+        
+        error_log("BCV Dólar Tracker: Hook wvp_bcv_rate_updated disparado con precio: {$precio}");
     }
 }

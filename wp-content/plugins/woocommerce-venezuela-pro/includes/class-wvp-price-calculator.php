@@ -333,7 +333,28 @@ class WVP_Price_Calculator {
         
         // Limpiar transientes expirados
         $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wvp_%' AND option_value < " . time());
-        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wvp_%' AND option_name NOT IN (SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wvp_%')");
+        
+        // Obtener los nombres de transientes que tienen timeout válido
+        $valid_transients = $wpdb->get_col("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wvp_%'");
+        
+        // Convertir a formato de transiente normal
+        $valid_transient_names = array();
+        foreach ($valid_transients as $timeout_name) {
+            $transient_name = str_replace('_transient_timeout_', '_transient_', $timeout_name);
+            $valid_transient_names[] = $transient_name;
+        }
+        
+        // Si hay transientes válidos, excluirlos de la eliminación
+        if (!empty($valid_transient_names)) {
+            $placeholders = implode(',', array_fill(0, count($valid_transient_names), '%s'));
+            $wpdb->query($wpdb->prepare(
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wvp_%' AND option_name NOT IN ($placeholders)",
+                $valid_transient_names
+            ));
+        } else {
+            // Si no hay transientes válidos, eliminar todos los transientes wvp
+            $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wvp_%'");
+        }
     }
     
     /**

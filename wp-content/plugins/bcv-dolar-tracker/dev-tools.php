@@ -60,6 +60,7 @@ class BCV_Dev_Tools {
                 <div class="dev-section">
                     <h2>🔄 Operaciones Manuales</h2>
                     <button id="manual-scrape" class="button button-primary">Scraping Manual</button>
+                    <button id="sync-wvp" class="button button-primary">Sincronizar con WVP</button>
                     <button id="clear-cache" class="button button-secondary">Limpiar Caché</button>
                     <button id="reset-cron" class="button button-secondary">Reiniciar Cron</button>
                 </div>
@@ -161,6 +162,10 @@ class BCV_Dev_Tools {
                 manualScrape();
             });
             
+            $('#sync-wvp').click(function() {
+                syncWVP();
+            });
+            
             $('#clear-cache').click(function() {
                 clearCache();
             });
@@ -207,6 +212,16 @@ class BCV_Dev_Tools {
                     nonce: '<?php echo wp_create_nonce('bcv_dev_scrape'); ?>'
                 }, function(response) {
                     alert('Scraping manual: ' + response.message);
+                });
+            }
+            
+            function syncWVP() {
+                $.post(ajaxurl, {
+                    action: 'bcv_dev_test',
+                    test_type: 'sync_wvp',
+                    nonce: '<?php echo wp_create_nonce('bcv_dev_test'); ?>'
+                }, function(response) {
+                    alert('Sincronización WVP: ' + response.message);
                 });
             }
             
@@ -313,6 +328,9 @@ class BCV_Dev_Tools {
                 break;
             case 'test_email':
                 $result = self::test_email();
+                break;
+            case 'sync_wvp':
+                $result = self::sync_with_wvp();
                 break;
             case 'run_automated_tests':
                 $result = self::run_automated_tests();
@@ -531,6 +549,32 @@ class BCV_Dev_Tools {
             return array(
                 'success' => false,
                 'message' => 'Error al enviar email'
+            );
+        }
+    }
+    
+    /**
+     * Sincronizar con WooCommerce Venezuela Pro
+     */
+    private static function sync_with_wvp() {
+        if (class_exists('BCV_Dolar_Tracker')) {
+            $result = BCV_Dolar_Tracker::sync_with_wvp();
+            
+            if ($result) {
+                return array(
+                    'success' => true,
+                    'message' => 'Sincronización con WVP completada exitosamente'
+                );
+            } else {
+                return array(
+                    'success' => false,
+                    'message' => 'No se pudo sincronizar con WVP - No hay datos disponibles'
+                );
+            }
+        } else {
+            return array(
+                'success' => false,
+                'message' => 'Clase BCV_Dolar_Tracker no disponible'
             );
         }
     }

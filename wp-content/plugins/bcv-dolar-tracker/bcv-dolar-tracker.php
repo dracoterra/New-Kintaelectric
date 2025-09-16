@@ -182,6 +182,11 @@ class BCV_Dolar_Tracker {
         // Limpiar caché de rewrite rules
         flush_rewrite_rules();
         
+        // Sincronizar con WooCommerce Venezuela Pro si está disponible
+        if (class_exists('WVP_Price_Calculator')) {
+            self::sync_with_wvp();
+        }
+        
         // Log de activación
         error_log('BCV Dólar Tracker: Plugin activado correctamente');
     }
@@ -329,6 +334,39 @@ class BCV_Dolar_Tracker {
         }
         
         error_log('BCV Dólar Tracker: No se encontró tasa de dólar disponible');
+        return false;
+    }
+    
+    /**
+     * Sincronizar datos con WooCommerce Venezuela Pro
+     * 
+     * @return bool True si se sincronizó correctamente, False en caso contrario
+     */
+    public static function sync_with_wvp() {
+        // Obtener el precio más reciente de la base de datos
+        if (!class_exists('BCV_Database')) {
+            error_log('BCV Dólar Tracker: Clase BCV_Database no disponible para sincronización');
+            return false;
+        }
+        
+        $database = new BCV_Database();
+        $latest_price = $database->get_latest_price();
+        
+        if ($latest_price && isset($latest_price->precio)) {
+            $precio = floatval($latest_price->precio);
+            
+            // Actualizar opción WVP
+            $old_rate = get_option('wvp_bcv_rate', 0);
+            update_option('wvp_bcv_rate', $precio);
+            
+            // Disparar hook
+            do_action('wvp_bcv_rate_updated', $precio, $old_rate);
+            
+            error_log("BCV Dólar Tracker: Sincronización con WVP completada - Precio: {$precio}");
+            return true;
+        }
+        
+        error_log('BCV Dólar Tracker: No hay datos para sincronizar con WVP');
         return false;
     }
 }
