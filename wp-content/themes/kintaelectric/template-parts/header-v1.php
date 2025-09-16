@@ -96,8 +96,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 						</form>
 						<div class="header-icons col-auto d-flex justify-content-end align-items-center">
 							<?php if ( class_exists( 'YITH_Woocompare' ) ) : ?>
-							<div style="position: relative;" class="header-icon" data-bs-toggle="tooltip"
-								data-bs-placement="bottom" data-bs-title="<?php esc_attr_e( 'Compare', 'kintaelectric' ); ?>">
+							<div style="position: relative;" class="header-icon">
 								<a href="<?php echo esc_url( add_query_arg( array( 'action' => 'yith-woocompare-view-table', 'iframe' => 'yes' ), site_url() ) ); ?>"
 									class="yith-woocompare-open">
 									<i class="ec ec-compare"></i>
@@ -106,8 +105,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 								</a>
 							</div>
 							<?php endif; ?>
-							<div class="header-icon" data-bs-toggle="tooltip" data-bs-placement="bottom"
-								data-bs-title="<?php esc_attr_e('Wishlist', 'kintaelectric'); ?>">
+							<div class="header-icon">
 								<?php
 								// Verificar si YITH Wishlist está activo
 								if (class_exists('YITH_WCWL') && function_exists('yith_wcwl_count_products')) {
@@ -139,8 +137,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 								}
 								?>
 							</div>
-							<div class="header-icon header-icon__user-account dropdown animate-dropdown"
-								data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Mi Cuenta">
+							<div class="header-icon header-icon__user-account dropdown animate-dropdown">
 								<a class="dropdown-toggle" href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" data-bs-toggle="dropdown"><i
 										class="ec ec-user"></i></a>
 								<ul class="dropdown-menu dropdown-menu-user-account">
@@ -187,7 +184,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									</li>
 								</ul>
 							</div>
-							<div class="header-icon header-icon__cart animate-dropdown dropdown" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="<?php esc_attr_e('Cart', 'kintaelectric'); ?>">
+							<div class="header-icon header-icon__cart animate-dropdown dropdown">
 								<a class="dropdown-toggle" href="<?php echo esc_url(wc_get_cart_url()); ?>" data-bs-toggle="dropdown">
 									<i class="ec ec-shopping-bag"></i>
 									<span class="cart-items-count count header-icon-counter"><?php echo class_exists('WooCommerce') ? WC()->cart->get_cart_contents_count() : '0'; ?></span>

@@ -48,7 +48,7 @@ if ( empty( $product ) || ! $product->is_visible() ) {
 			<div class="product-loop-footer product-item__footer">
 				<div class="price-add-to-cart">
 					<?php woocommerce_template_loop_price(); ?>
-					<div class="add-to-cart-wrap" data-bs-toggle="tooltip" data-bs-title="Add to cart">
+					<div class="add-to-cart-wrap">
 						<?php woocommerce_template_loop_add_to_cart(); ?>
 					</div>
 				</div><!-- /.price-add-to-cart -->

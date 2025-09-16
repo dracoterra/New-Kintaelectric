@@ -71,7 +71,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div class="header-icons col-auto d-flex justify-content-end align-items-center">
 				<?php if ( class_exists( 'WooCommerce' ) ) : ?>
 					<!-- Compare -->
-					<div class="header-icon" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="<?php esc_attr_e( 'Compare', 'kintaelectric' ); ?>">
+					<div class="header-icon">
 						<a href="#" class="navbar-compare-count">
 							<i class="ec ec-compare"></i>
 							<span class="navbar-compare-count count header-icon-counter">0</span>
@@ -79,7 +79,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</div>
 					
 					<!-- Wishlist -->
-					<div class="header-icon" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="<?php esc_attr_e( 'Wishlist', 'kintaelectric' ); ?>">
+					<div class="header-icon">
 						<a href="#" class="navbar-wishlist-count">
 							<i class="ec ec-favorites"></i>
 							<span class="navbar-wishlist-count count header-icon-counter">0</span>
@@ -87,7 +87,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</div>
 					
 					<!-- User Account -->
-					<div class="header-icon header-icon__user-account dropdown animate-dropdown" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="<?php esc_attr_e( 'My Account', 'kintaelectric' ); ?>">
+					<div class="header-icon header-icon__user-account dropdown animate-dropdown">
 						<a href="#" class="dropdown-toggle" data-bs-toggle="dropdown">
 							<i class="ec ec-user"></i>
 						</a>
@@ -103,7 +103,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 					</div>
 					
 					<!-- Shopping Cart -->
-					<div class="header-icon header-icon__cart animate-dropdown dropdown" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="<?php esc_attr_e( 'Cart', 'kintaelectric' ); ?>">
+					<div class="header-icon header-icon__cart animate-dropdown dropdown">
 						<a href="<?php echo esc_url( wc_get_cart_url() ); ?>" class="dropdown-toggle" data-bs-toggle="dropdown">
 							<i class="ec ec-shopping-bag"></i>
 							<span class="cart-items-count count header-icon-counter"><?php echo WC()->cart->get_cart_contents_count(); ?></span>
