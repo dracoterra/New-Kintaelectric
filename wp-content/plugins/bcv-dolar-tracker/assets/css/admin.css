@@ -410,3 +410,111 @@
     border-bottom: 1px solid #f1f3f4;
     padding-bottom: 12px;
 }
+
+/* ===== ESTILOS PARA LOGS ===== */
+.bcv-log-level {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.bcv-log-error {
+    background: #fee;
+    color: #c33;
+    border: 1px solid #fcc;
+}
+
+.bcv-log-warning {
+    background: #ffd;
+    color: #c90;
+    border: 1px solid #fc9;
+}
+
+.bcv-log-success {
+    background: #efe;
+    color: #393;
+    border: 1px solid #cfc;
+}
+
+.bcv-log-info {
+    background: #eef;
+    color: #339;
+    border: 1px solid #ccf;
+}
+
+.bcv-log-debug {
+    background: #f0f0f0;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+.bcv-log-context-json {
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 4px;
+    border-left: 3px solid #007cba;
+}
+
+.bcv-log-context-json strong {
+    color: #007cba;
+    font-weight: 600;
+}
+
+.bcv-log-context-simple {
+    font-size: 13px;
+    color: #666;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+.bcv-log-message {
+    font-size: 14px;
+    line-height: 1.4;
+    color: #333;
+}
+
+/* Mejorar la tabla de logs */
+.wp-list-table .bcv-log-message {
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.wp-list-table .bcv-log-context-simple {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+/* Tabla de logs mejorada */
+.wp-list-table .column-timestamp {
+    width: 120px;
+}
+
+.wp-list-table .column-log_level {
+    width: 100px;
+}
+
+.wp-list-table .column-context {
+    width: 200px;
+}
+
+.wp-list-table .column-message {
+    width: auto;
+}
+
+.wp-list-table .column-user_id {
+    width: 100px;
+}
+
+.wp-list-table .column-ip_address {
+    width: 120px;
+}

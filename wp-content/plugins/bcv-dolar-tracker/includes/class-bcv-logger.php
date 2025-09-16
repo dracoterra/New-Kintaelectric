@@ -353,6 +353,18 @@ class BCV_Logger {
     }
     
     /**
+     * Log de rendimiento (alias para debug)
+     * 
+     * @param string $context Contexto del log
+     * @param string $message Mensaje del log
+     * @param array $data Datos adicionales
+     * @return bool True si se guardó correctamente, False en caso contrario
+     */
+    public static function performance($context, $message, $data = array()) {
+        return self::debug($context, $message, $data);
+    }
+    
+    /**
      * Verificar si un nivel de log es válido
      * 
      * @param string $level Nivel a verificar

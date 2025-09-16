@@ -371,57 +371,391 @@ class BCV_Admin {
         $scraping_info = $scraper->get_scraping_info();
         
         echo '<div class="wrap">';
-        echo '<h1>Estadísticas del Plugin</h1>';
+        echo '<h1>📊 Resumen del Plugin</h1>';
+        echo '<p style="color: #666; font-size: 14px; margin-bottom: 30px;">Aquí puedes ver cómo está funcionando el plugin y el estado de tu sistema.</p>';
         
         echo '<div class="bcv-admin-container">';
         
-        // Estadísticas de precios
-        echo '<div class="bcv-panel">';
-        echo '<h2>Estadísticas de Precios</h2>';
-        echo '<table class="form-table">';
-        echo '<tr><th scope="row">Total de registros</th><td>' . esc_html($price_stats['total_records']) . '</td></tr>';
-        echo '<tr><th scope="row">Precio mínimo</th><td>' . esc_html($price_stats['min_price']) . '</td></tr>';
-        echo '<tr><th scope="row">Precio máximo</th><td>' . esc_html($price_stats['max_price']) . '</td></tr>';
-        echo '<tr><th scope="row">Precio promedio</th><td>' . esc_html(round($price_stats['avg_price'], 4)) . '</td></tr>';
-        echo '<tr><th scope="row">Primer registro</th><td>' . esc_html($price_stats['first_date']) . '</td></tr>';
-        echo '<tr><th scope="row">Último registro</th><td>' . esc_html($price_stats['last_date']) . '</td></tr>';
-        echo '</table>';
+        // Resumen ejecutivo
+        echo '<div class="bcv-panel" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 30px;">';
+        echo '<h2 style="color: white; margin-top: 0;">🎯 Estado General</h2>';
+        
+        $current_price = $price_stats['last_price'] ?: 'No disponible';
+        $price_trend = $this->get_price_trend($price_stats);
+        $system_health = $this->get_system_health($cron_stats, $scraping_info);
+        
+        echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">';
+        
+        // Precio actual
+        echo '<div style="text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px;">';
+        echo '<div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">💰 Precio Actual</div>';
+        echo '<div style="font-size: 32px; font-weight: bold;">$' . esc_html($current_price) . '</div>';
+        echo '<div style="font-size: 14px; opacity: 0.8;">' . $price_trend . '</div>';
         echo '</div>';
         
-        // Estadísticas del cron
+        // Estado del sistema
+        echo '<div style="text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px;">';
+        echo '<div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">🔧 Estado</div>';
+        echo '<div style="font-size: 32px; font-weight: bold;">' . $system_health['icon'] . '</div>';
+        echo '<div style="font-size: 14px; opacity: 0.8;">' . $system_health['text'] . '</div>';
+        echo '</div>';
+        
+        // Tareas automáticas
+        $cron_status = wp_next_scheduled('bcv_scrape_dollar_rate') !== false ? '✅ Activo' : '❌ Inactivo';
+        echo '<div style="text-align: center; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px;">';
+        echo '<div style="font-size: 24px; font-weight: bold; margin-bottom: 5px;">⏰ Automático</div>';
+        echo '<div style="font-size: 32px; font-weight: bold;">' . $cron_status . '</div>';
+        echo '<div style="font-size: 14px; opacity: 0.8;">Actualización automática</div>';
+        echo '</div>';
+        
+        echo '</div>';
+        echo '</div>';
+        
+        // Información de precios - Rediseñada
         echo '<div class="bcv-panel">';
-        echo '<h2>Estadísticas del Cron</h2>';
-        echo '<table class="form-table">';
-        echo '<tr><th scope="row">Total de ejecuciones</th><td>' . esc_html($cron_stats['total_executions']) . '</td></tr>';
-        echo '<tr><th scope="row">Ejecuciones exitosas</th><td>' . esc_html($cron_stats['successful_executions']) . '</td></tr>';
-        echo '<tr><th scope="row">Ejecuciones fallidas</th><td>' . esc_html($cron_stats['failed_executions']) . '</td></tr>';
-        echo '<tr><th scope="row">Última ejecución</th><td>' . esc_html($cron_stats['last_execution']) . '</td></tr>';
-        echo '<tr><th scope="row">Próxima ejecución</th><td>' . esc_html($cron_stats['next_execution']) . '</td></tr>';
-        echo '</table>';
+        echo '<h2>💰 Historial de Precios del Dólar</h2>';
+        echo '<p style="color: #666; margin-bottom: 20px;">Resumen de todos los precios que hemos registrado del Banco Central de Venezuela.</p>';
+        
+        echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">';
+        
+        // Total de registros
+        echo '<div style="text-align: center; background: #e3f2fd; padding: 20px; border-radius: 12px; border-left: 4px solid #2196f3;">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">📊</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: #1976d2;">' . esc_html($price_stats['total_records']) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Registros guardados</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Desde que empezamos a rastrear</div>';
+        echo '</div>';
+        
+        // Precio más alto
+        echo '<div style="text-align: center; background: #fff3e0; padding: 20px; border-radius: 12px; border-left: 4px solid #ff9800;">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">📈</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: #f57c00;">$' . esc_html($price_stats['max_price']) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Precio más alto</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">El valor máximo registrado</div>';
+        echo '</div>';
+        
+        // Precio más bajo
+        echo '<div style="text-align: center; background: #e8f5e8; padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">📉</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: #388e3c;">$' . esc_html($price_stats['min_price']) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Precio más bajo</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">El valor mínimo registrado</div>';
+        echo '</div>';
+        
+        // Precio promedio
+        echo '<div style="text-align: center; background: #f3e5f5; padding: 20px; border-radius: 12px; border-left: 4px solid #9c27b0;">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">📊</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: #7b1fa2;">$' . esc_html(round($price_stats['avg_price'], 2)) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Precio promedio</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Promedio de todos los registros</div>';
+        echo '</div>';
+        
+        echo '</div>';
+        
+        // Información de fechas
+        echo '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #6c757d;">';
+        echo '<h4 style="margin: 0 0 10px 0; color: #495057;">📅 Período de Registro</h4>';
+        echo '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">';
+        echo '<div><strong>Primer precio registrado:</strong><br><span style="color: #666;">' . esc_html($price_stats['first_date']) . '</span></div>';
+        echo '<div><strong>Último precio registrado:</strong><br><span style="color: #666;">' . esc_html($price_stats['last_date']) . '</span></div>';
+        echo '</div>';
+        echo '</div>';
+        
+        echo '</div>';
+        
+        // Tareas automáticas - Rediseñadas
+        echo '<div class="bcv-panel">';
+        echo '<h2>⏰ Tareas Automáticas</h2>';
+        echo '<p style="color: #666; margin-bottom: 20px;">El plugin actualiza automáticamente el precio del dólar cada cierto tiempo. Aquí puedes ver cómo está funcionando.</p>';
+        
+        // Calcular porcentaje de éxito
+        $success_rate = $cron_stats['total_executions'] > 0 ? round(($cron_stats['successful_executions'] / $cron_stats['total_executions']) * 100, 1) : 0;
+        
+        echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">';
+        
+        // Total de actualizaciones
+        echo '<div style="text-align: center; background: #e3f2fd; padding: 20px; border-radius: 12px; border-left: 4px solid #2196f3;">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">🔄</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: #1976d2;">' . esc_html($cron_stats['total_executions']) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Actualizaciones realizadas</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Intentos de obtener precio</div>';
+        echo '</div>';
+        
+        // Actualizaciones exitosas
+        echo '<div style="text-align: center; background: #e8f5e8; padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">✅</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: #388e3c;">' . esc_html($cron_stats['successful_executions']) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Actualizaciones exitosas</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Precios obtenidos correctamente</div>';
+        echo '</div>';
+        
+        // Actualizaciones fallidas
+        $failed_color = $cron_stats['failed_executions'] > 0 ? '#ffebee' : '#f8f9fa';
+        $failed_border = $cron_stats['failed_executions'] > 0 ? '#f44336' : '#6c757d';
+        $failed_text = $cron_stats['failed_executions'] > 0 ? '#d32f2f' : '#666';
+        
+        echo '<div style="text-align: center; background: ' . $failed_color . '; padding: 20px; border-radius: 12px; border-left: 4px solid ' . $failed_border . ';">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">' . ($cron_stats['failed_executions'] > 0 ? '❌' : '✅') . '</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: ' . $failed_text . ';">' . esc_html($cron_stats['failed_executions']) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Actualizaciones fallidas</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">' . ($cron_stats['failed_executions'] > 0 ? 'Hubo problemas al obtener precio' : '¡Todo funcionando bien!') . '</div>';
+        echo '</div>';
+        
+        // Porcentaje de éxito
+        $success_color = $success_rate >= 80 ? '#4caf50' : ($success_rate >= 60 ? '#ff9800' : '#f44336');
+        echo '<div style="text-align: center; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid ' . $success_color . ';">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">📊</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: ' . $success_color . ';">' . $success_rate . '%</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Tasa de éxito</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Porcentaje de actualizaciones exitosas</div>';
+        echo '</div>';
+        
+        echo '</div>';
+        
+        // Información de horarios
+        echo '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #6c757d;">';
+        echo '<h4 style="margin: 0 0 10px 0; color: #495057;">🕒 Horarios de Actualización</h4>';
+        echo '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">';
+        echo '<div><strong>Última actualización:</strong><br><span style="color: #666;">' . esc_html($cron_stats['last_execution']) . '</span></div>';
+        echo '<div><strong>Próxima actualización:</strong><br><span style="color: #666;">' . esc_html($cron_stats['next_execution']) . '</span></div>';
+        echo '</div>';
+        echo '</div>';
         
         // Botón para resetear estadísticas
-        echo '<form method="post" style="margin-top: 15px;">';
+        echo '<div style="margin-top: 20px; text-align: center;">';
+        echo '<form method="post" style="display: inline-block;">';
         wp_nonce_field('bcv_reset_cron_stats');
-        echo '<input type="submit" name="bcv_reset_cron_stats" class="button button-secondary" value="🔄 Resetear Estadísticas del Cron">';
+        echo '<button type="submit" name="bcv_reset_cron_stats" class="button button-secondary" style="background: #6c757d; border-color: #6c757d; color: white; padding: 8px 16px; border-radius: 6px;">🔄 Reiniciar Contadores</button>';
         echo '</form>';
+        echo '<p style="font-size: 12px; color: #999; margin-top: 8px;">Esto reiniciará todos los contadores a cero</p>';
+        echo '</div>';
         
-        // Estadísticas del scraping
+        echo '</div>';
+        
+        // Conexión con el Banco Central - Rediseñada
         echo '<div class="bcv-panel">';
-        echo '<h2>Estadísticas del Scraping</h2>';
-        echo '<table class="form-table">';
-        echo '<tr><th scope="row">Precio en caché</th><td>' . esc_html($scraping_info['cached_price'] ?: 'No disponible') . '</td></tr>';
-        echo '<tr><th scope="row">Caché válido</th><td>' . ($scraping_info['cache_valid'] ? '✅ Sí' : '❌ No') . '</td></tr>';
-        echo '<tr><th scope="row">Expiración del caché</th><td>' . esc_html($scraping_info['cache_expiry']) . '</td></tr>';
-        echo '<tr><th scope="row">Último scraping</th><td>' . esc_html($scraping_info['last_scraping']) . '</td></tr>';
-        echo '<tr><th scope="row">Intentos de scraping</th><td>' . esc_html($scraping_info['scraping_attempts']) . '</td></tr>';
-        echo '<tr><th scope="row">Scrapings exitosos</th><td>' . esc_html($scraping_info['successful_scrapings']) . '</td></tr>';
-        echo '<tr><th scope="row">Scrapings fallidos</th><td>' . esc_html($scraping_info['failed_scrapings']) . '</td></tr>';
-        echo '</table>';
+        echo '<h2>🌐 Conexión con el Banco Central</h2>';
+        echo '<p style="color: #666; margin-bottom: 20px;">El plugin se conecta con el sitio web del Banco Central de Venezuela para obtener el precio del dólar. Aquí puedes ver el estado de esa conexión.</p>';
+        
+        // Determinar estado general de la conexión
+        $connection_health = 'good';
+        $connection_message = 'Conexión funcionando correctamente';
+        
+        if ($scraping_info['failed_scrapings'] > $scraping_info['successful_scrapings']) {
+            $connection_health = 'bad';
+            $connection_message = 'Hay problemas con la conexión';
+        } elseif ($scraping_info['failed_scrapings'] > 0) {
+            $connection_health = 'warning';
+            $connection_message = 'Conexión con algunos problemas';
+        }
+        
+        $health_colors = array(
+            'good' => array('bg' => '#e8f5e8', 'border' => '#4caf50', 'text' => '#388e3c'),
+            'warning' => array('bg' => '#fff3e0', 'border' => '#ff9800', 'text' => '#f57c00'),
+            'bad' => array('bg' => '#ffebee', 'border' => '#f44336', 'text' => '#d32f2f')
+        );
+        
+        $health_icons = array(
+            'good' => '✅',
+            'warning' => '⚠️',
+            'bad' => '❌'
+        );
+        
+        echo '<div style="background: ' . $health_colors[$connection_health]['bg'] . '; padding: 20px; border-radius: 12px; border-left: 4px solid ' . $health_colors[$connection_health]['border'] . '; margin-bottom: 20px;">';
+        echo '<div style="display: flex; align-items: center; gap: 15px;">';
+        echo '<div style="font-size: 48px;">' . $health_icons[$connection_health] . '</div>';
+        echo '<div>';
+        echo '<h3 style="margin: 0 0 5px 0; color: ' . $health_colors[$connection_health]['text'] . ';">Estado de la Conexión</h3>';
+        echo '<p style="margin: 0; color: #666; font-size: 16px;">' . $connection_message . '</p>';
+        echo '</div>';
+        echo '</div>';
+        echo '</div>';
+        
+        echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">';
+        
+        // Precio actual en caché
+        echo '<div style="text-align: center; background: #e3f2fd; padding: 20px; border-radius: 12px; border-left: 4px solid #2196f3;">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">💰</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: #1976d2;">$' . esc_html($scraping_info['cached_price'] ?: 'N/A') . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Precio actual guardado</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Último precio obtenido</div>';
+        echo '</div>';
+        
+        // Estado del caché
+        $cache_status = $scraping_info['cache_valid'] ? 'Válido' : 'Expirado';
+        $cache_color = $scraping_info['cache_valid'] ? '#4caf50' : '#f44336';
+        $cache_bg = $scraping_info['cache_valid'] ? '#e8f5e8' : '#ffebee';
+        $cache_icon = $scraping_info['cache_valid'] ? '✅' : '❌';
+        
+        echo '<div style="text-align: center; background: ' . $cache_bg . '; padding: 20px; border-radius: 12px; border-left: 4px solid ' . $cache_color . ';">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">' . $cache_icon . '</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: ' . $cache_color . ';">' . $cache_status . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Estado del precio guardado</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">' . ($scraping_info['cache_valid'] ? 'Precio actualizado recientemente' : 'Precio necesita actualización') . '</div>';
+        echo '</div>';
+        
+        // Intentos de conexión
+        echo '<div style="text-align: center; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #6c757d;">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">🔄</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: #495057;">' . esc_html($scraping_info['scraping_attempts']) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Intentos de conexión</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Veces que intentó obtener precio</div>';
+        echo '</div>';
+        
+        // Conexiones exitosas
+        echo '<div style="text-align: center; background: #e8f5e8; padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">✅</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: #388e3c;">' . esc_html($scraping_info['successful_scrapings']) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Conexiones exitosas</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Precios obtenidos correctamente</div>';
+        echo '</div>';
+        
+        // Conexiones fallidas
+        $failed_color = $scraping_info['failed_scrapings'] > 0 ? '#f44336' : '#6c757d';
+        $failed_bg = $scraping_info['failed_scrapings'] > 0 ? '#ffebee' : '#f8f9fa';
+        
+        echo '<div style="text-align: center; background: ' . $failed_bg . '; padding: 20px; border-radius: 12px; border-left: 4px solid ' . $failed_color . ';">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">' . ($scraping_info['failed_scrapings'] > 0 ? '❌' : '✅') . '</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: ' . $failed_color . ';">' . esc_html($scraping_info['failed_scrapings']) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Conexiones fallidas</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">' . ($scraping_info['failed_scrapings'] > 0 ? 'Problemas al conectar' : '¡Todo funcionando!') . '</div>';
+        echo '</div>';
+        
+        echo '</div>';
+        
+        // Información de fechas
+        echo '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #6c757d;">';
+        echo '<h4 style="margin: 0 0 10px 0; color: #495057;">🕒 Última Actividad</h4>';
+        echo '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">';
+        echo '<div><strong>Última conexión exitosa:</strong><br><span style="color: #666;">' . esc_html($scraping_info['last_scraping']) . '</span></div>';
+        echo '<div><strong>Precio expira:</strong><br><span style="color: #666;">' . esc_html($scraping_info['cache_expiry']) . '</span></div>';
+        echo '</div>';
+        echo '</div>';
+        
+        echo '</div>';
+        
+        // Resumen de actividad - Rediseñado
+        echo '<div class="bcv-panel">';
+        echo '<h2>📈 Actividad de Hoy</h2>';
+        echo '<p style="color: #666; margin-bottom: 20px;">Resumen de lo que ha pasado hoy con el plugin.</p>';
+        
+        // Obtener estadísticas de logs simplificadas
+        global $wpdb;
+        $logs_table = $wpdb->prefix . 'bcv_logs';
+        
+        $recent_activity = array(
+            'total_events' => $wpdb->get_var("SELECT COUNT(*) FROM {$logs_table}"),
+            'events_today' => $wpdb->get_var("SELECT COUNT(*) FROM {$logs_table} WHERE DATE(created_at) = CURDATE()"),
+            'errors_today' => $wpdb->get_var("SELECT COUNT(*) FROM {$logs_table} WHERE log_level = 'ERROR' AND DATE(created_at) = CURDATE()"),
+            'success_today' => $wpdb->get_var("SELECT COUNT(*) FROM {$logs_table} WHERE log_level = 'SUCCESS' AND DATE(created_at) = CURDATE()"),
+            'last_activity' => $wpdb->get_var("SELECT created_at FROM {$logs_table} ORDER BY created_at DESC LIMIT 1")
+        );
+        
+        echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-top: 20px;">';
+        
+        // Eventos de hoy
+        echo '<div style="text-align: center; background: #e3f2fd; padding: 20px; border-radius: 12px; border-left: 4px solid #2196f3;">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">📊</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: #1976d2;">' . esc_html($recent_activity['events_today']) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Eventos de hoy</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Actividades registradas hoy</div>';
+        echo '</div>';
+        
+        // Errores de hoy
+        $error_color = $recent_activity['errors_today'] > 0 ? '#f44336' : '#6c757d';
+        $error_bg = $recent_activity['errors_today'] > 0 ? '#ffebee' : '#f8f9fa';
+        
+        echo '<div style="text-align: center; background: ' . $error_bg . '; padding: 20px; border-radius: 12px; border-left: 4px solid ' . $error_color . ';">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">' . ($recent_activity['errors_today'] > 0 ? '❌' : '✅') . '</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: ' . $error_color . ';">' . esc_html($recent_activity['errors_today']) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Errores de hoy</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">' . ($recent_activity['errors_today'] > 0 ? 'Problemas detectados' : '¡Todo funcionando!') . '</div>';
+        echo '</div>';
+        
+        // Éxitos de hoy
+        echo '<div style="text-align: center; background: #e8f5e8; padding: 20px; border-radius: 12px; border-left: 4px solid #4caf50;">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">✅</div>';
+        echo '<div style="font-size: 28px; font-weight: bold; color: #388e3c;">' . esc_html($recent_activity['success_today']) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Éxitos de hoy</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Operaciones exitosas</div>';
+        echo '</div>';
+        
+        // Última actividad
+        $last_activity_time = $recent_activity['last_activity'] ? date('H:i', strtotime($recent_activity['last_activity'])) : 'N/A';
+        echo '<div style="text-align: center; background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #6c757d;">';
+        echo '<div style="font-size: 32px; margin-bottom: 10px;">🕒</div>';
+        echo '<div style="font-size: 24px; font-weight: bold; color: #495057;">' . esc_html($last_activity_time) . '</div>';
+        echo '<div style="font-size: 14px; color: #666; margin-top: 5px;">Última actividad</div>';
+        echo '<div style="font-size: 12px; color: #999; margin-top: 5px;">Hora de la última acción</div>';
+        echo '</div>';
+        
+        echo '</div>';
+        
+        // Información adicional
+        if ($recent_activity['total_events'] > 0) {
+            echo '<div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #6c757d;">';
+            echo '<h4 style="margin: 0 0 10px 0; color: #495057;">📋 Resumen Total</h4>';
+            echo '<p style="margin: 0; color: #666; font-size: 14px;">Desde que se instaló el plugin, se han registrado <strong>' . esc_html($recent_activity['total_events']) . ' eventos</strong> en total.</p>';
+            echo '</div>';
+        }
+        
         echo '</div>';
         
         echo '</div>'; // .bcv-admin-container
         
         echo '</div>'; // .wrap
+    }
+    
+    /**
+     * Obtener tendencia del precio
+     */
+    private function get_price_trend($price_stats) {
+        if ($price_stats['total_records'] < 2) {
+            return '📊 Datos insuficientes';
+        }
+        
+        // Simular tendencia basada en precio promedio vs último precio
+        $avg = $price_stats['avg_price'];
+        $last = $price_stats['last_price'];
+        
+        if ($last > $avg * 1.05) {
+            return '📈 Subiendo';
+        } elseif ($last < $avg * 0.95) {
+            return '📉 Bajando';
+        } else {
+            return '➡️ Estable';
+        }
+    }
+    
+    /**
+     * Obtener estado de salud del sistema
+     */
+    private function get_system_health($cron_stats, $scraping_info) {
+        $errors = 0;
+        $warnings = 0;
+        
+        // Verificar scraping
+        if ($scraping_info['failed_scrapings'] > $scraping_info['successful_scrapings']) {
+            $errors++;
+        }
+        
+        // Verificar cron
+        if ($cron_stats['failed_executions'] > 0) {
+            $warnings++;
+        }
+        
+        // Verificar caché
+        if (!$scraping_info['cache_valid']) {
+            $warnings++;
+        }
+        
+        if ($errors > 0) {
+            return array('icon' => '❌', 'text' => 'Necesita atención');
+        } elseif ($warnings > 0) {
+            return array('icon' => '⚠️', 'text' => 'Funcionando con advertencias');
+        } else {
+            return array('icon' => '✅', 'text' => 'Todo funcionando bien');
+        }
     }
     
     /**
@@ -503,24 +837,59 @@ class BCV_Admin {
         $logs_table->prepare_items();
         
         echo '<div class="wrap">';
-        echo '<h1>Registro de Actividad del Plugin</h1>';
+        echo '<h1>📋 Registro de Actividad</h1>';
+        echo '<p style="color: #666; font-size: 14px; margin-bottom: 30px;">Aquí puedes ver todo lo que ha estado haciendo el plugin: actualizaciones de precios, errores, configuraciones, etc.</p>';
         
         // Mostrar estado del modo de depuración
         $debug_mode = BCV_Logger::is_debug_mode_enabled();
-        echo '<div class="bcv-panel">';
-        echo '<h3>🔧 Estado del Sistema de Logging</h3>';
-        echo '<p><strong>Modo de depuración:</strong> ';
+        echo '<div class="bcv-panel" style="background: ' . ($debug_mode ? '#e8f5e8' : '#fff3cd') . '; border-left: 4px solid ' . ($debug_mode ? '#28a745' : '#ffc107') . ';">';
+        echo '<h3 style="margin-top: 0;">🔧 Estado del Registro</h3>';
+        echo '<p><strong>Registro de actividad:</strong> ';
         if ($debug_mode) {
-            echo '<span style="color: green;">✅ Habilitado</span>';
+            echo '<span style="color: #28a745; font-weight: bold;">✅ ACTIVO</span>';
+            echo '<br><small style="color: #666;">El plugin está registrando todas las actividades importantes.</small>';
         } else {
-            echo '<span style="color: red;">❌ Deshabilitado</span>';
+            echo '<span style="color: #dc3545; font-weight: bold;">❌ INACTIVO</span>';
+            echo '<br><small style="color: #666;">Para ver la actividad, activa el modo de depuración en la configuración.</small>';
         }
         echo '</p>';
         
         if (!$debug_mode) {
-            echo '<p><em>Los logs solo se registran cuando el modo de depuración está habilitado.</em></p>';
-            echo '<p><a href="' . admin_url('admin.php?page=bcv-dolar-tracker') . '" class="button button-primary">Ir a Configuración</a></p>';
+            echo '<p><a href="' . admin_url('admin.php?page=bcv-dolar-tracker') . '" class="button button-primary">⚙️ Ir a Configuración</a></p>';
         }
+        echo '</div>';
+        
+        // Explicación de la tabla
+        echo '<div class="bcv-panel" style="background: #f8f9fa; border: 1px solid #e9ecef;">';
+        echo '<h3 style="margin-top: 0;">📖 Cómo leer esta tabla</h3>';
+        echo '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">';
+        
+        echo '<div>';
+        echo '<strong>📅 Cuándo:</strong><br>';
+        echo '<small>Fecha y hora del evento</small>';
+        echo '</div>';
+        
+        echo '<div>';
+        echo '<strong>🔍 Tipo:</strong><br>';
+        echo '<small>❌ Error, ⚠️ Advertencia, ✅ Éxito, ℹ️ Info, 🐛 Debug</small>';
+        echo '</div>';
+        
+        echo '<div>';
+        echo '<strong>📝 Qué pasó:</strong><br>';
+        echo '<small>Descripción del evento en lenguaje simple</small>';
+        echo '</div>';
+        
+        echo '<div>';
+        echo '<strong>📍 Dónde:</strong><br>';
+        echo '<small>Parte del sistema donde ocurrió</small>';
+        echo '</div>';
+        
+        echo '<div>';
+        echo '<strong>👤 Quién:</strong><br>';
+        echo '<small>Usuario que realizó la acción</small>';
+        echo '</div>';
+        
+        echo '</div>';
         echo '</div>';
         
         // Formulario de limpieza

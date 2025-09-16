@@ -100,10 +100,12 @@ class BCV_Scraper {
     private function make_request() {
         // Validar URL antes de hacer la petición
         if (!BCV_Security::sanitize_url($this->bcv_url)) {
-            BCV_Logger::error('URL del BCV inválida', array('url' => $this->bcv_url));
+            BCV_Logger::error(BCV_Logger::CONTEXT_API, 'URL del BCV inválida', array('url' => $this->bcv_url));
             BCV_Security::log_security_event('Invalid BCV URL', 'URL: ' . $this->bcv_url);
             return new WP_Error('invalid_url', 'URL del BCV inválida');
         }
+        
+        error_log('BCV Dólar Tracker: Iniciando request a: ' . $this->bcv_url);
         
         $args = array(
             'timeout' => 30,
@@ -115,12 +117,25 @@ class BCV_Scraper {
                 'Connection' => 'keep-alive',
                 'Upgrade-Insecure-Requests' => '1',
             ),
-            'sslverify' => true, // Habilitar verificación SSL para seguridad
+            'sslverify' => false, // Deshabilitar verificación SSL temporalmente para debugging
             'redirection' => 5, // Límite de redirecciones
             'httpversion' => '1.1',
         );
         
-        return wp_remote_get($this->bcv_url, $args);
+        $response = wp_remote_get($this->bcv_url, $args);
+        
+        // Logging detallado de la respuesta
+        if (is_wp_error($response)) {
+            error_log('BCV Dólar Tracker: Error en wp_remote_get: ' . $response->get_error_message());
+            BCV_Logger::error(BCV_Logger::CONTEXT_API, 'Error en wp_remote_get: ' . $response->get_error_message());
+        } else {
+            $code = wp_remote_retrieve_response_code($response);
+            $body_length = strlen(wp_remote_retrieve_body($response));
+            error_log("BCV Dólar Tracker: Response recibido - Código: {$code}, Tamaño: {$body_length} bytes");
+            BCV_Logger::info(BCV_Logger::CONTEXT_API, "Response recibido - Código: {$code}, Tamaño: {$body_length} bytes");
+        }
+        
+        return $response;
     }
     
     /**

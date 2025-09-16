@@ -37,12 +37,11 @@ class BCV_Logs_Table extends WP_List_Table {
     public function get_columns() {
         return array(
             'cb' => '<input type="checkbox" />',
-            'timestamp' => 'Fecha y Hora',
-            'log_level' => 'Nivel',
-            'context' => 'Contexto',
-            'message' => 'Mensaje',
-            'user_id' => 'Usuario',
-            'ip_address' => 'IP'
+            'timestamp' => '📅 Cuándo',
+            'log_level' => '🔍 Tipo',
+            'message' => '📝 Qué pasó',
+            'context' => '📍 Dónde',
+            'user_id' => '👤 Quién'
         );
     }
     
@@ -98,7 +97,19 @@ class BCV_Logs_Table extends WP_List_Table {
      * @return string HTML de la columna
      */
     public function column_timestamp($item) {
-        $timestamp = strtotime($item->timestamp);
+        // Verificar que el item tiene la propiedad created_at
+        if (!isset($item->created_at) || empty($item->created_at)) {
+            return '<span style="color: #999;">Sin fecha</span>';
+        }
+        
+        // Usar created_at en lugar de timestamp
+        $timestamp = strtotime($item->created_at);
+        
+        // Verificar si el timestamp es válido
+        if ($timestamp === false || $timestamp < 0) {
+            return '<span style="color: #999;">Fecha inválida</span>';
+        }
+        
         $date = date('Y-m-d', $timestamp);
         $time = date('H:i:s', $timestamp);
         
@@ -116,30 +127,44 @@ class BCV_Logs_Table extends WP_List_Table {
      * @return string HTML de la columna
      */
     public function column_log_level($item) {
+        // Verificar que el item tiene la propiedad log_level
+        if (!isset($item->log_level) || empty($item->log_level)) {
+            return '<span class="bcv-log-level bcv-log-debug">N/A</span>';
+        }
+        
         $level = $item->log_level;
         $class = '';
+        $icon = '';
         
         switch ($level) {
             case 'ERROR':
                 $class = 'bcv-log-error';
+                $icon = '❌';
                 break;
             case 'WARNING':
                 $class = 'bcv-log-warning';
+                $icon = '⚠️';
                 break;
             case 'SUCCESS':
                 $class = 'bcv-log-success';
+                $icon = '✅';
                 break;
             case 'INFO':
                 $class = 'bcv-log-info';
+                $icon = 'ℹ️';
                 break;
             case 'DEBUG':
                 $class = 'bcv-log-debug';
+                $icon = '🐛';
                 break;
+            default:
+                $icon = '📝';
         }
         
         return sprintf(
-            '<span class="bcv-log-level %s">%s</span>',
+            '<span class="bcv-log-level %s">%s %s</span>',
             esc_attr($class),
+            $icon,
             esc_html($level)
         );
     }
@@ -151,9 +176,69 @@ class BCV_Logs_Table extends WP_List_Table {
      * @return string HTML de la columna
      */
     public function column_context($item) {
+        $context = $item->context;
+        
+        // Traducir contextos técnicos a nombres más amigables
+        $friendly_contexts = array(
+            'Ajustes Guardados' => '⚙️ Configuración',
+            'API BCV' => '🌐 Banco Central',
+            'Ejecución Cron' => '⏰ Tarea Automática',
+            'Base de Datos' => '💾 Base de Datos',
+            'Scraping' => '📊 Obtención de Precio',
+            'Cache' => '🗄️ Almacenamiento',
+            'Admin' => '👤 Panel de Control',
+            'Security' => '🔒 Seguridad',
+            'Performance' => '⚡ Rendimiento',
+            'Test' => '🧪 Pruebas'
+        );
+        
+        // Buscar contexto amigable
+        $friendly_context = $context;
+        foreach ($friendly_contexts as $technical => $friendly) {
+            if (strpos($context, $technical) !== false) {
+                $friendly_context = $friendly;
+                break;
+            }
+        }
+        
+        // Si el contexto es JSON, mostrar solo información relevante
+        $decoded = json_decode($context, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            $info = array();
+            
+            // Extraer información relevante del JSON
+            if (isset($decoded['component'])) {
+                $component = $decoded['component'];
+                $component_names = array(
+                    'admin' => 'Panel',
+                    'scraper' => 'Obtención de Precio',
+                    'cache' => 'Almacenamiento',
+                    'cron' => 'Tarea Automática',
+                    'database' => 'Base de Datos'
+                );
+                $info[] = isset($component_names[$component]) ? $component_names[$component] : ucfirst($component);
+            }
+            
+            if (isset($decoded['success'])) {
+                $info[] = $decoded['success'] ? '✅ Exitoso' : '❌ Falló';
+            }
+            
+            if (isset($decoded['rate'])) {
+                $info[] = '💰 $' . number_format($decoded['rate'], 2);
+            }
+            
+            if (isset($decoded['user_id'])) {
+                $info[] = '👤 Usuario ' . $decoded['user_id'];
+            }
+            
+            if (!empty($info)) {
+                return '<div class="bcv-log-context-simple">' . implode(' • ', $info) . '</div>';
+            }
+        }
+        
         return sprintf(
-            '<span class="bcv-log-context">%s</span>',
-            esc_html($item->context)
+            '<span class="bcv-log-context-simple">%s</span>',
+            esc_html($friendly_context)
         );
     }
     
@@ -166,9 +251,33 @@ class BCV_Logs_Table extends WP_List_Table {
     public function column_message($item) {
         $message = $item->message;
         
+        // Traducir mensajes técnicos a lenguaje más amigable
+        $friendly_messages = array(
+            'Admin area accessed' => '👤 Usuario accedió al panel',
+            'Scraping completed' => '✅ Precio del dólar actualizado',
+            'Cleaned 0 expired cache entries' => '🧹 Limpieza de caché completada',
+            'Tasa obtenida con éxito' => '✅ Precio obtenido del BCV',
+            'Error al contactar la API' => '❌ Error al conectar con el BCV',
+            'Tarea programada iniciada' => '⏰ Tarea automática iniciada',
+            'Tarea finalizada' => '✅ Tarea automática completada',
+            'Modo de depuración habilitado' => '🐛 Modo de depuración activado',
+            'Modo de depuración deshabilitado' => '🐛 Modo de depuración desactivado',
+            'Configuración guardada' => '💾 Configuración actualizada',
+            'Cron programado exitosamente' => '⏰ Tarea automática programada',
+            'Cron desactivado exitosamente' => '⏹️ Tarea automática detenida'
+        );
+        
+        // Buscar mensaje amigable
+        foreach ($friendly_messages as $technical => $friendly) {
+            if (strpos($message, $technical) !== false) {
+                $message = $friendly;
+                break;
+            }
+        }
+        
         // Truncar mensaje si es muy largo
-        if (strlen($message) > 100) {
-            $message = substr($message, 0, 100) . '...';
+        if (strlen($message) > 80) {
+            $message = substr($message, 0, 80) . '...';
         }
         
         return sprintf(
