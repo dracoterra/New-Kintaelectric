@@ -63,14 +63,27 @@ class BCV_Dolar_Tracker {
         register_activation_hook(__FILE__, array($this, 'activate_plugin'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate_plugin'));
         
+        // Hook para inicialización tardía y segura
+        add_action('plugins_loaded', array($this, 'init_plugin'), 10);
+        
+        // Forzar creación de tabla en activación
+        add_action('admin_init', array($this, 'force_create_database_table'));
+    }
+    
+    /**
+     * Inicialización segura del plugin
+     */
+    public function init_plugin() {
+        // Evitar inicializaciones múltiples
+        if (did_action('bcv_plugin_initialized')) {
+            return;
+        }
+        
         // Cargar dependencias
         $this->load_dependencies();
         
         // Inicializar el plugin
         $this->init();
-        
-        // Forzar creación de tabla en activación
-        add_action('admin_init', array($this, 'force_create_database_table'));
     }
     
     /**
@@ -105,7 +118,6 @@ class BCV_Dolar_Tracker {
         
         // Marcar como inicializado
         do_action('bcv_plugin_initialized');
-        
     }
     
     /**
@@ -121,18 +133,6 @@ class BCV_Dolar_Tracker {
         // Hooks de AJAX
         add_action('wp_ajax_bcv_save_cron_settings', array($this, 'save_cron_settings'));
         add_action('wp_ajax_bcv_test_scraping', array($this, 'test_scraping'));
-        
-    }
-    
-    /**
-     * Inicializar el plugin
-     */
-    public function init_plugin() {
-        // Cargar archivos necesarios
-        $this->load_dependencies();
-        
-        // Inicializar hooks
-        $this->init_hooks();
     }
     
     /**

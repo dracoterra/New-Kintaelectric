@@ -279,12 +279,12 @@ class BCV_Cron {
         // Marcar tiempo de ejecución
         set_transient('bcv_cron_last_execution', time(), 3600);
         
-        // Actualizar contador de ejecuciones totales
-        $this->update_cron_stats(true); // Inicialmente asumimos éxito
+        // Variable para controlar el éxito general de la operación
+        $operation_success = false;
         
-        // Ejecutar scraping
+        // Ejecutar scraping con reintentos automáticos (sin duplicar estadísticas)
         $scraper = new BCV_Scraper();
-        $result = $scraper->scrape_bcv_rate();
+        $result = $scraper->scrape_with_retries(3, false);
         
         if ($result !== false) {
             error_log("BCV Dólar Tracker: Scraping exitoso, precio obtenido: {$result}");
@@ -295,17 +295,18 @@ class BCV_Cron {
             
             if ($inserted) {
                 error_log("BCV Dólar Tracker: Precio guardado en BD con ID: {$inserted}");
-                // La ejecución ya se marcó como exitosa arriba
+                $operation_success = true;
             } else {
                 error_log('BCV Dólar Tracker: Error al guardar precio en BD');
-                // Marcar como fallida si no se pudo guardar
-                $this->update_cron_stats(false);
+                $operation_success = false;
             }
         } else {
             error_log('BCV Dólar Tracker: Scraping falló, no se pudo obtener precio');
-            // Marcar como fallida
-            $this->update_cron_stats(false);
+            $operation_success = false;
         }
+        
+        // Actualizar estadísticas UNA SOLA VEZ con el resultado final
+        $this->update_cron_stats($operation_success);
         
         // Reprogramar próximo ejecución
         $this->reschedule_cron();

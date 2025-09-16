@@ -121,6 +121,31 @@
             var $submitButton = $form.find('input[type="submit"]');
             var originalText = $submitButton.val();
             
+            // VALIDAR FORMULARIO ANTES DE CONTINUAR
+            var hours = parseInt($form.find('input[name="cron_hours"]').val()) || 0;
+            var minutes = parseInt($form.find('input[name="cron_minutes"]').val()) || 0;
+            var seconds = parseInt($form.find('input[name="cron_seconds"]').val()) || 0;
+            
+            // Validar rangos
+            if (hours < 0 || hours > 24) {
+                BCVAdmin.showNotice('Las horas deben estar entre 0 y 24', 'error');
+                return false;
+            }
+            if (minutes < 0 || minutes > 59) {
+                BCVAdmin.showNotice('Los minutos deben estar entre 0 y 59', 'error');
+                return false;
+            }
+            if (seconds < 0 || seconds > 59) {
+                BCVAdmin.showNotice('Los segundos deben estar entre 0 y 59', 'error');
+                return false;
+            }
+            
+            // Mínimo 1 minuto
+            if (hours === 0 && minutes === 0 && seconds < 60) {
+                BCVAdmin.showNotice('El intervalo mínimo debe ser de 1 minuto (60 segundos)', 'warning');
+                return false;
+            }
+            
             // Deshabilitar botón y mostrar estado
             $submitButton.prop('disabled', true).val(bcv_ajax.strings.saving);
             
@@ -129,9 +154,9 @@
                 action: 'bcv_save_cron_settings',
                 nonce: bcv_ajax.nonce,
                 enabled: $form.find('input[name="cron_enabled"]').is(':checked') ? 1 : 0,
-                hours: parseInt($form.find('input[name="cron_hours"]').val()) || 0,
-                minutes: parseInt($form.find('input[name="cron_minutes"]').val()) || 0,
-                seconds: parseInt($form.find('input[name="cron_seconds"]').val()) || 0
+                hours: hours,
+                minutes: minutes,
+                seconds: seconds
             };
             
             // Realizar request AJAX

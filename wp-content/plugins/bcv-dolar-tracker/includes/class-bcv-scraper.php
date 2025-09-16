@@ -336,20 +336,26 @@ class BCV_Scraper {
      * Obtener precio del dólar con reintentos
      * 
      * @param int $max_retries Número máximo de reintentos
+     * @param bool $update_stats Si debe actualizar estadísticas (por defecto true)
      * @return float|false Precio del dólar o false si falla
      */
-    public function scrape_with_retries($max_retries = 3) {
+    public function scrape_with_retries($max_retries = 3, $update_stats = true) {
         for ($attempt = 1; $attempt <= $max_retries; $attempt++) {
             error_log("BCV Dólar Tracker: Intento de scraping {$attempt} de {$max_retries}");
             
             $rate = $this->scrape_bcv_rate();
             
             if ($rate !== false) {
-                $this->update_scraping_stats(true);
+                if ($update_stats) {
+                    $this->update_scraping_stats(true);
+                }
                 return $rate;
             }
             
-            $this->update_scraping_stats(false);
+            // Solo actualizar estadísticas en el último intento fallido
+            if ($attempt === $max_retries && $update_stats) {
+                $this->update_scraping_stats(false);
+            }
             
             // Esperar antes del siguiente intento (exponencial backoff)
             if ($attempt < $max_retries) {

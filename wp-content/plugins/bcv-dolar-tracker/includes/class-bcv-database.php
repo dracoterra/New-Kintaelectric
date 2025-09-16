@@ -229,9 +229,21 @@ class BCV_Database {
             return false;
         }
         
+        // Validar rango de precio (máximo 1000 USD por razones de seguridad)
+        if ($precio > 1000) {
+            error_log('BCV Dólar Tracker: Precio fuera de rango válido: ' . $precio);
+            return false;
+        }
+        
         // Usar fecha actual si no se proporciona
         if ($datatime === null) {
             $datatime = current_time('mysql');
+        }
+        
+        // Validar formato de fecha si se proporciona
+        if ($datatime !== null && !$this->validate_datetime($datatime)) {
+            error_log('BCV Dólar Tracker: Formato de fecha inválido: ' . $datatime);
+            return false;
         }
         
         // Preparar datos para inserción
@@ -612,5 +624,36 @@ class BCV_Database {
         $start_of_month = date('Y-m-01');
         $end_of_month = date('Y-m-t');
         return $this->get_prices_by_date_range($start_of_month, $end_of_month);
+    }
+    
+    /**
+     * Validar formato de fecha y hora
+     * 
+     * @param string $datetime Fecha a validar
+     * @return bool True si es válida, False en caso contrario
+     */
+    private function validate_datetime($datetime) {
+        if (empty($datetime)) {
+            return false;
+        }
+        
+        // Intentar crear un objeto DateTime para validar
+        $date = DateTime::createFromFormat('Y-m-d H:i:s', $datetime);
+        
+        // Verificar que la fecha sea válida y coincida con el formato
+        if ($date && $date->format('Y-m-d H:i:s') === $datetime) {
+            // Verificar que la fecha no sea futura (más de 1 hora)
+            $now = new DateTime();
+            $now->add(new DateInterval('PT1H')); // Permitir 1 hora de diferencia
+            
+            if ($date <= $now) {
+                return true;
+            } else {
+                error_log('BCV Dólar Tracker: Fecha futura no permitida: ' . $datetime);
+                return false;
+            }
+        }
+        
+        return false;
     }
 }
