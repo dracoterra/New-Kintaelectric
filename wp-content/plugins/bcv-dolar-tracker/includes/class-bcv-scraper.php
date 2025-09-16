@@ -85,6 +85,13 @@ class BCV_Scraper {
      * @return array|WP_Error Response o error
      */
     private function make_request() {
+        // Validar URL antes de hacer la petición
+        if (!BCV_Security::sanitize_url($this->bcv_url)) {
+            BCV_Logger::error('URL del BCV inválida', array('url' => $this->bcv_url));
+            BCV_Security::log_security_event('Invalid BCV URL', 'URL: ' . $this->bcv_url);
+            return new WP_Error('invalid_url', 'URL del BCV inválida');
+        }
+        
         $args = array(
             'timeout' => 30,
             'user-agent' => $this->user_agent,
@@ -95,7 +102,9 @@ class BCV_Scraper {
                 'Connection' => 'keep-alive',
                 'Upgrade-Insecure-Requests' => '1',
             ),
-            'sslverify' => false, // Para evitar problemas de certificados
+            'sslverify' => true, // Habilitar verificación SSL para seguridad
+            'redirection' => 5, // Límite de redirecciones
+            'httpversion' => '1.1',
         );
         
         return wp_remote_get($this->bcv_url, $args);
@@ -108,6 +117,13 @@ class BCV_Scraper {
      * @return float|false Precio del dólar o false si falla
      */
     private function parse_html($html) {
+        // Validar que el HTML no esté vacío
+        if (empty($html) || strlen($html) > 1000000) { // Límite de 1MB
+            BCV_Logger::error('HTML inválido o demasiado grande', array('size' => strlen($html)));
+            BCV_Security::log_security_event('Invalid HTML size', 'Size: ' . strlen($html));
+            return false;
+        }
+        
         // Crear DOM document
         $dom = new DOMDocument();
         
@@ -170,8 +186,17 @@ class BCV_Scraper {
      * @return float Precio limpio
      */
     private function clean_rate_text($text) {
+        // Sanitizar entrada
+        $text = BCV_Security::sanitize_text($text);
+        
         // Quita espacios en blanco al inicio y al final
         $text = trim($text);
+        
+        // Validar longitud del texto
+        if (strlen($text) > 50) {
+            BCV_Logger::warning('Texto de precio demasiado largo', array('length' => strlen($text)));
+            return false;
+        }
         
         // Quita caracteres no numéricos excepto punto y coma
         $text = preg_replace('/[^0-9.,]/', '', $text);
@@ -185,10 +210,13 @@ class BCV_Scraper {
         // Convierte a float
         $rate = (float) $text;
         
-        // Verificar que sea un número válido
+        // Verificar que sea un número válido y esté en rango seguro
         if (is_numeric($rate) && $rate > 0 && $rate < 1000000) {
             return $rate;
         }
+        
+        // Log de intento de precio inválido
+        BCV_Security::log_security_event('Invalid rate text', 'Text: ' . $text . ', Rate: ' . $rate);
         
         return false;
     }

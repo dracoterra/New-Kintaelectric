@@ -122,21 +122,21 @@
             var originalText = $submitButton.val();
             
             // VALIDAR FORMULARIO ANTES DE CONTINUAR
-            var hours = parseInt($form.find('input[name="cron_hours"]').val()) || 0;
-            var minutes = parseInt($form.find('input[name="cron_minutes"]').val()) || 0;
-            var seconds = parseInt($form.find('input[name="cron_seconds"]').val()) || 0;
+            var hours = BCVAdmin.validateNumber($form.find('input[name="cron_hours"]').val(), 0, 24);
+            var minutes = BCVAdmin.validateNumber($form.find('input[name="cron_minutes"]').val(), 0, 59);
+            var seconds = BCVAdmin.validateNumber($form.find('input[name="cron_seconds"]').val(), 0, 59);
             
-            // Validar rangos
-            if (hours < 0 || hours > 24) {
-                BCVAdmin.showNotice('Las horas deben estar entre 0 y 24', 'error');
+            // Validar que los valores sean números válidos
+            if (hours === false) {
+                BCVAdmin.showNotice('Las horas deben ser un número válido entre 0 y 24', 'error');
                 return false;
             }
-            if (minutes < 0 || minutes > 59) {
-                BCVAdmin.showNotice('Los minutos deben estar entre 0 y 59', 'error');
+            if (minutes === false) {
+                BCVAdmin.showNotice('Los minutos deben ser un número válido entre 0 y 59', 'error');
                 return false;
             }
-            if (seconds < 0 || seconds > 59) {
-                BCVAdmin.showNotice('Los segundos deben estar entre 0 y 59', 'error');
+            if (seconds === false) {
+                BCVAdmin.showNotice('Los segundos deben ser un número válido entre 0 y 59', 'error');
                 return false;
             }
             
@@ -373,18 +373,43 @@
         exportData: function(format) {
             var $form = $('<form method="post" action="' + bcv_ajax.ajax_url + '">');
             $form.append('<input type="hidden" name="action" value="bcv_export_data">');
-            $form.append('<input type="hidden" name="format" value="' + format + '">');
+            $form.append('<input type="hidden" name="format" value="' + BCVAdmin.escapeHtml(format) + '">');
             $form.append('<input type="hidden" name="nonce" value="' + bcv_ajax.nonce + '">');
             
             // Añadir filtros actuales
             var search = $('#bcv-search-prices').val();
             if (search) {
-                $form.append('<input type="hidden" name="search" value="' + search + '">');
+                $form.append('<input type="hidden" name="search" value="' + BCVAdmin.escapeHtml(search) + '">');
             }
             
             $('body').append($form);
             $form.submit();
             $form.remove();
+        },
+        
+        /**
+         * Validar número en rango
+         */
+        validateNumber: function(value, min, max) {
+            var num = parseInt(value, 10);
+            if (isNaN(num) || num < min || num > max) {
+                return false;
+            }
+            return num;
+        },
+        
+        /**
+         * Escapar HTML para prevenir XSS
+         */
+        escapeHtml: function(text) {
+            var map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
     };
     

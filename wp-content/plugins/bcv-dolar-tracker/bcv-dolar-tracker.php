@@ -142,6 +142,7 @@ class BCV_Dolar_Tracker {
         // Cargar archivos de funcionalidad principal
         require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/class-bcv-logger.php';
         require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/class-bcv-performance-monitor.php';
+        require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/class-bcv-security.php';
         require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/class-bcv-database.php';
         require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/class-bcv-cron.php';
         require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'includes/class-bcv-scraper.php';

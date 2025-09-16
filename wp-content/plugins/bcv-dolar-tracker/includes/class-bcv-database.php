@@ -245,26 +245,35 @@ class BCV_Database {
     public function insert_price($precio, $datatime = null) {
         global $wpdb;
         
+        // Sanitizar y validar precio usando la clase de seguridad
+        $precio = BCV_Security::sanitize_number($precio);
+        
         // Validar precio
         if (!is_numeric($precio) || $precio <= 0) {
             BCV_Logger::error('Precio inválido para insertar', array('precio' => $precio));
+            BCV_Security::log_security_event('Invalid price insertion attempt', 'Price: ' . $precio);
             return false;
         }
         
         // Validar rango de precio (máximo 1000 USD por razones de seguridad)
         if ($precio > 1000) {
             BCV_Logger::warning('Precio fuera de rango válido', array('precio' => $precio, 'max_allowed' => 1000));
+            BCV_Security::log_security_event('Price out of range', 'Price: ' . $precio . ', Max: 1000');
             return false;
         }
         
         // Usar fecha actual si no se proporciona
         if ($datatime === null) {
             $datatime = current_time('mysql');
+        } else {
+            // Sanitizar fecha si se proporciona
+            $datatime = BCV_Security::sanitize_text($datatime);
         }
         
         // Validar formato de fecha si se proporciona
         if ($datatime !== null && !$this->validate_datetime($datatime)) {
-            error_log('BCV Dólar Tracker: Formato de fecha inválido: ' . $datatime);
+            BCV_Logger::error('Formato de fecha inválido', array('datatime' => $datatime));
+            BCV_Security::log_security_event('Invalid datetime format', 'DateTime: ' . $datatime);
             return false;
         }
         
@@ -333,6 +342,25 @@ class BCV_Database {
         
         $args = wp_parse_args($args, $defaults);
         
+        // Sanitizar y validar argumentos
+        $args['per_page'] = BCV_Security::validate_number_range($args['per_page'], 1, 100);
+        $args['page'] = BCV_Security::validate_number_range($args['page'], 1, 1000);
+        $args['search'] = BCV_Security::sanitize_text($args['search']);
+        $args['date_from'] = BCV_Security::sanitize_text($args['date_from']);
+        $args['date_to'] = BCV_Security::sanitize_text($args['date_to']);
+        
+        // Validar orderby y order para prevenir inyección SQL
+        $allowed_orderby = array('datatime', 'precio', 'id');
+        $allowed_order = array('ASC', 'DESC');
+        
+        if (!in_array($args['orderby'], $allowed_orderby)) {
+            $args['orderby'] = 'datatime';
+        }
+        
+        if (!in_array(strtoupper($args['order']), $allowed_order)) {
+            $args['order'] = 'DESC';
+        }
+        
         // Construir consulta WHERE
         $where_clauses = array();
         $where_values = array();
@@ -342,12 +370,12 @@ class BCV_Database {
             $where_values[] = '%' . $wpdb->esc_like($args['search']) . '%';
         }
         
-        if (!empty($args['date_from'])) {
+        if (!empty($args['date_from']) && BCV_Security::validate_date($args['date_from'])) {
             $where_clauses[] = 'datatime >= %s';
             $where_values[] = $args['date_from'];
         }
         
-        if (!empty($args['date_to'])) {
+        if (!empty($args['date_to']) && BCV_Security::validate_date($args['date_to'])) {
             $where_clauses[] = 'datatime <= %s';
             $where_values[] = $args['date_to'];
         }

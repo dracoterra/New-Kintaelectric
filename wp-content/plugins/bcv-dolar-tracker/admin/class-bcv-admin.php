@@ -416,34 +416,35 @@ class BCV_Admin {
      * Guardar configuración del cron (AJAX)
      */
     public function save_cron_settings() {
-        // Verificar nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'bcv_admin_nonce')) {
-            wp_send_json_error('Nonce inválido');
-        }
+        // Verificar nonce y permisos usando la clase de seguridad
+        BCV_Security::verify_ajax_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce');
+        BCV_Security::check_capability('manage_options');
         
-        // Verificar permisos
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Permisos insuficientes');
-        }
+        // Log del evento
+        BCV_Security::log_security_event('Cron settings save attempt', 'User: ' . get_current_user_id());
         
-        // Procesar datos
-        $settings = array(
-            'enabled' => isset($_POST['enabled']) ? true : false,
-            'hours' => intval($_POST['hours']),
-            'minutes' => intval($_POST['minutes']),
-            'seconds' => intval($_POST['seconds'])
+        // Definir reglas de validación
+        $validation_rules = array(
+            'enabled' => array('type' => 'checkbox'),
+            'hours' => array('type' => 'number', 'min' => 0, 'max' => 24, 'required' => true, 'label' => 'Horas'),
+            'minutes' => array('type' => 'number', 'min' => 0, 'max' => 59, 'required' => true, 'label' => 'Minutos'),
+            'seconds' => array('type' => 'number', 'min' => 0, 'max' => 59, 'required' => true, 'label' => 'Segundos')
         );
         
-        // Validaciones
-        if ($settings['hours'] < 0 || $settings['hours'] > 24) {
-            wp_send_json_error('Horas inválidas');
+        // Validar y sanitizar datos
+        $validation_result = BCV_Security::validate_form_data($_POST, $validation_rules);
+        
+        if (!empty($validation_result['errors'])) {
+            wp_send_json_error('Datos inválidos: ' . implode(', ', $validation_result['errors']));
         }
-        if ($settings['minutes'] < 0 || $settings['minutes'] > 59) {
-            wp_send_json_error('Minutos inválidos');
-        }
-        if ($settings['seconds'] < 0 || $settings['seconds'] > 59) {
-            wp_send_json_error('Segundos inválidos');
-        }
+        
+        // Procesar datos validados
+        $settings = array(
+            'enabled' => isset($_POST['enabled']) ? true : false,
+            'hours' => $validation_result['data']['hours'],
+            'minutes' => $validation_result['data']['minutes'],
+            'seconds' => $validation_result['data']['seconds']
+        );
         
         // Mínimo 1 minuto
         if ($settings['hours'] == 0 && $settings['minutes'] == 0 && $settings['seconds'] < 60) {
@@ -468,19 +469,23 @@ class BCV_Admin {
      * Probar scraping (AJAX)
      */
     public function test_scraping() {
-        // Verificar nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'bcv_admin_nonce')) {
-            wp_send_json_error('Nonce inválido');
-        }
+        // Verificar nonce y permisos usando la clase de seguridad
+        BCV_Security::verify_ajax_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce');
+        BCV_Security::check_capability('manage_options');
         
-        // Verificar permisos
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Permisos insuficientes');
-        }
+        // Log del evento
+        BCV_Security::log_security_event('Manual scraping test attempt', 'User: ' . get_current_user_id());
         
         // Ejecutar scraping manual
         $cron = new BCV_Cron();
         $result = $cron->execute_manual_scraping();
+        
+        // Log del resultado
+        if ($result['success']) {
+            BCV_Security::log_security_event('Manual scraping test successful', 'Price: ' . ($result['price'] ?? 'N/A'));
+        } else {
+            BCV_Security::log_security_event('Manual scraping test failed', 'Error: ' . ($result['message'] ?? 'Unknown error'));
+        }
         
         wp_send_json($result);
     }
@@ -489,20 +494,27 @@ class BCV_Admin {
      * Obtener datos de precios (AJAX)
      */
     public function get_prices_data() {
-        // Verificar nonce
-        if (!wp_verify_nonce($_POST['nonce'], 'bcv_admin_nonce')) {
-            wp_send_json_error('Nonce inválido');
-        }
+        // Verificar nonce y permisos usando la clase de seguridad
+        BCV_Security::verify_ajax_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce');
+        BCV_Security::check_capability('manage_options');
         
-        // Verificar permisos
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Permisos insuficientes');
-        }
+        // Log del evento
+        BCV_Security::log_security_event('Prices data request', 'User: ' . get_current_user_id());
         
-        // Obtener parámetros de paginación
-        $page = isset($_POST['page']) ? intval($_POST['page']) : 1;
-        $per_page = isset($_POST['per_page']) ? intval($_POST['per_page']) : 20;
-        $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
+        // Definir reglas de validación para parámetros
+        $validation_rules = array(
+            'page' => array('type' => 'number', 'min' => 1, 'max' => 1000),
+            'per_page' => array('type' => 'number', 'min' => 1, 'max' => 100),
+            'search' => array('type' => 'text')
+        );
+        
+        // Validar y sanitizar parámetros
+        $validation_result = BCV_Security::validate_form_data($_POST, $validation_rules);
+        
+        // Obtener parámetros validados con valores por defecto
+        $page = $validation_result['data']['page'] ?: 1;
+        $per_page = $validation_result['data']['per_page'] ?: 20;
+        $search = $validation_result['data']['search'] ?: '';
         
         // Obtener datos
         $database = new BCV_Database();
