@@ -40,7 +40,7 @@ class BCV_Test_Suite {
      * @return array Resultados de las pruebas
      */
     public function run_all_tests() {
-        BCV_Logger::info('Iniciando suite de pruebas automatizadas');
+        BCV_Logger::info('TEST', 'Iniciando suite de pruebas automatizadas');
         BCV_Performance_Monitor::start_timer('automated_tests');
         
         // Limpiar resultados anteriores
@@ -70,7 +70,7 @@ class BCV_Test_Suite {
             'success_rate' => $summary['success_rate'] . '%'
         ));
         
-        BCV_Logger::info('Suite de pruebas completada', $summary);
+        BCV_Logger::info('TEST', 'Suite de pruebas completada', $summary);
         
         return $summary;
     }
@@ -322,7 +322,7 @@ class BCV_Test_Suite {
         // Test 3: Performance del logger
         $start_time = microtime(true);
         for ($i = 0; $i < 50; $i++) {
-            BCV_Logger::debug("Test log message {$i}");
+            BCV_Logger::debug('TEST', "Test log message {$i}");
         }
         $logger_time = microtime(true) - $start_time;
         
@@ -382,7 +382,7 @@ class BCV_Test_Suite {
      * @return array Resultados de las pruebas de carga
      */
     public function run_load_tests($iterations = 10) {
-        BCV_Logger::info("Iniciando pruebas de carga con {$iterations} iteraciones");
+        BCV_Logger::info('TEST', "Iniciando pruebas de carga con {$iterations} iteraciones");
         BCV_Performance_Monitor::start_timer('load_tests');
         
         $results = array(
@@ -438,7 +438,7 @@ class BCV_Test_Suite {
         );
         
         BCV_Performance_Monitor::end_timer('load_tests', $summary);
-        BCV_Logger::info('Pruebas de carga completadas', $summary);
+        BCV_Logger::info('TEST', 'Pruebas de carga completadas', $summary);
         
         return array_merge($results, array('summary' => $summary));
     }

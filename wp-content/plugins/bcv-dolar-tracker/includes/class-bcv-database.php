@@ -248,7 +248,6 @@ class BCV_Database {
         // SQL para crear la tabla de logs
         $sql = "CREATE TABLE {$logs_table_name} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-            timestamp datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
             log_level varchar(20) NOT NULL DEFAULT 'INFO',
             context varchar(100) NOT NULL DEFAULT '',
             message text NOT NULL,
@@ -256,12 +255,11 @@ class BCV_Database {
             ip_address varchar(45) DEFAULT NULL,
             created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            KEY idx_timestamp (timestamp),
             KEY idx_log_level (log_level),
             KEY idx_context (context),
             KEY idx_user_id (user_id),
             KEY idx_created_at (created_at),
-            KEY idx_timestamp_level (timestamp, log_level)
+            KEY idx_created_at_level (created_at, log_level)
         ) {$charset_collate};";
         
         // Usar dbDelta para crear la tabla

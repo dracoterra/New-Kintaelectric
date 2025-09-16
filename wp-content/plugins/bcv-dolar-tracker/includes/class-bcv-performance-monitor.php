@@ -84,7 +84,7 @@ class BCV_Performance_Monitor {
         $instance = self::get_instance();
         $instance->timers[$operation] = microtime(true);
         
-        BCV_Logger::debug("Starting timer for: {$operation}");
+        BCV_Logger::debug('PERFORMANCE', "Starting timer for: {$operation}");
     }
     
     /**
@@ -144,7 +144,7 @@ class BCV_Performance_Monitor {
             'context' => $context
         );
         
-        BCV_Logger::info("Metric recorded: {$name}", array(
+        BCV_Logger::info('PERFORMANCE', "Metric recorded: {$name}", array(
             'value' => $value,
             'context' => $context
         ));

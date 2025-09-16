@@ -124,14 +124,35 @@ class BCV_Admin {
      * Renderizar página principal de administración
      */
     public function render_main_page() {
+        error_log('BCV Dólar Tracker: Renderizando página principal');
+        error_log('BCV Dólar Tracker: POST data: ' . print_r($_POST, true));
+        
         // Procesar formulario de configuración del cron
-        if (isset($_POST['submit']) && $_POST['submit'] === 'Guardar Configuración') {
+        if (isset($_POST['cron_interval_preset']) || isset($_POST['cron_hours']) || isset($_POST['cron_minutes']) || isset($_POST['cron_seconds'])) {
+            error_log('BCV Dólar Tracker: Procesando formulario de cron - Campos de cron detectados');
             $this->process_cron_settings();
         }
         
         // Procesar formulario de configuración de depuración
         if (isset($_POST['save_debug_settings'])) {
+            error_log('BCV Dólar Tracker: Procesando formulario de debug');
             $this->process_debug_settings();
+        }
+        
+        // Recrear tabla de logs si es necesario
+        if (isset($_POST['recreate_logs_table'])) {
+            error_log('BCV Dólar Tracker: Procesando recreación de tabla de logs');
+            if (wp_verify_nonce($_POST['_wpnonce'], 'bcv_recreate_logs_table')) {
+                $this->recreate_logs_table();
+            } else {
+                error_log('BCV Dólar Tracker: Error de nonce en recreación de tabla');
+            }
+        }
+        
+        // Prueba simple de formulario
+        if (isset($_POST['test_form'])) {
+            error_log('BCV Dólar Tracker: Formulario de prueba recibido');
+            echo '<div class="notice notice-success is-dismissible"><p>✅ Formulario de prueba funcionando correctamente</p></div>';
         }
         
         // Verificar si se solicitó crear tabla de emergencia
@@ -150,15 +171,15 @@ class BCV_Admin {
         
         // Mostrar mensajes de resultado
         if (isset($_GET['settings-updated'])) {
-            echo '<div class="notice notice-success is-dismissible"><p>✅ Configuración guardada exitosamente</p></div>';
+            echo '<div class="notice notice-success is-dismissible"><p>✅ Configuración de cron guardada exitosamente</p></div>';
         }
         
         if (isset($_GET['settings-error'])) {
-            echo '<div class="notice notice-error is-dismissible"><p>❌ Error al guardar la configuración</p></div>';
+            echo '<div class="notice notice-error is-dismissible"><p>❌ Error al guardar la configuración de cron</p></div>';
         }
         
         if (isset($_GET['debug-updated'])) {
-            echo '<div class="notice notice-success is-dismissible"><p>✅ Configuración de depuración guardada exitosamente</p></div>';
+            echo '<div class="notice notice-success is-dismissible"><p>✅ Configuración de debug guardada exitosamente</p></div>';
         }
         
         echo '<div class="wrap">';
@@ -432,6 +453,21 @@ class BCV_Admin {
         echo '</div>';
         
         echo '</form>';
+        
+        // Botón para recrear tabla de logs (formulario separado)
+        echo '<div class="bcv-debug-tools">';
+        echo '<h4>🔧 Herramientas de Debug</h4>';
+        echo '<form method="post" style="display: inline; margin-right: 10px;">';
+        wp_nonce_field('bcv_recreate_logs_table');
+        echo '<button type="submit" name="recreate_logs_table" class="bcv-action-btn" onclick="return confirm(\'¿Estás seguro? Esto eliminará todos los logs existentes.\');">Recrear Tabla de Logs</button>';
+        echo '</form>';
+        
+        // Botón de prueba
+        echo '<form method="post" style="display: inline;">';
+        echo '<button type="submit" name="test_form" class="bcv-test-btn">Probar Formulario</button>';
+        echo '</form>';
+        echo '</div>';
+        
         echo '</div>';
     }
     
@@ -538,13 +574,18 @@ class BCV_Admin {
      * Procesar configuración del cron
      */
     private function process_cron_settings() {
+        error_log('BCV Dólar Tracker: Procesando configuración de cron');
+        error_log('BCV Dólar Tracker: POST data para cron: ' . print_r($_POST, true));
+        
         // Verificar nonce
         if (!wp_verify_nonce($_POST['_wpnonce'], 'bcv_cron_settings')) {
-            wp_die('Acceso denegado');
+            error_log('BCV Dólar Tracker: Error de nonce en configuración de cron');
+            wp_die('Acceso denegado - Error de nonce en cron');
         }
         
         // Verificar permisos
         if (!current_user_can('manage_options')) {
+            error_log('BCV Dólar Tracker: Permisos insuficientes para configuración de cron');
             wp_die('Permisos insuficientes');
         }
         
@@ -562,11 +603,13 @@ class BCV_Admin {
             $hours = floor($total_seconds / 3600);
             $minutes = floor(($total_seconds % 3600) / 60);
             $seconds = $total_seconds % 60;
+            error_log('BCV Dólar Tracker: Usando intervalo predefinido - Total segundos: ' . $total_seconds . ', Horas: ' . $hours . ', Minutos: ' . $minutes . ', Segundos: ' . $seconds);
         } else {
             // Usar valores personalizados
             $hours = intval($_POST['cron_hours']);
             $minutes = intval($_POST['cron_minutes']);
             $seconds = intval($_POST['cron_seconds']);
+            error_log('BCV Dólar Tracker: Usando valores personalizados - Horas: ' . $hours . ', Minutos: ' . $minutes . ', Segundos: ' . $seconds);
         }
         
         // Validaciones robustas
@@ -586,17 +629,29 @@ class BCV_Admin {
         
         // Guardar configuración
         $settings = array(
-            'enabled' => $current_settings['enabled'], // Mantener estado actual
+            'enabled' => !empty($current_settings['enabled']) ? $current_settings['enabled'] : true, // Mantener estado actual o true por defecto
             'hours' => $hours,
             'minutes' => $minutes,
             'seconds' => $seconds
         );
         
-        update_option('bcv_cron_settings', $settings);
+        error_log('BCV Dólar Tracker: Configuración a guardar: ' . print_r($settings, true));
+        
+        // Verificar configuración actual
+        $current_cron_settings = get_option('bcv_cron_settings', array());
+        error_log('BCV Dólar Tracker: Configuración actual de cron: ' . print_r($current_cron_settings, true));
+        
+        $saved = update_option('bcv_cron_settings', $settings);
+        error_log('BCV Dólar Tracker: update_option resultado: ' . ($saved ? 'OK' : 'Error'));
+        
+        // Verificar si realmente se guardó
+        $new_cron_settings = get_option('bcv_cron_settings', array());
+        error_log('BCV Dólar Tracker: Configuración después de guardar: ' . print_r($new_cron_settings, true));
         
         // Configurar cron
         $cron = new BCV_Cron();
         $result = $cron->setup_cron($settings);
+        error_log('BCV Dólar Tracker: Cron configurado: ' . ($result ? 'OK' : 'Error'));
         
         // Redirigir con mensaje de éxito o error
         if ($result) {
@@ -611,23 +666,33 @@ class BCV_Admin {
      * Procesar configuración de depuración
      */
     private function process_debug_settings() {
+        error_log('BCV Dólar Tracker: Iniciando procesamiento de debug settings');
+        
         // Verificar nonce
         if (!wp_verify_nonce($_POST['_wpnonce'], 'bcv_debug_settings')) {
-            wp_die('Acceso denegado');
+            error_log('BCV Dólar Tracker: Error de nonce en debug settings');
+            wp_die('Acceso denegado - Error de nonce');
         }
         
         // Verificar permisos
         if (!current_user_can('manage_options')) {
+            error_log('BCV Dólar Tracker: Permisos insuficientes en debug settings');
             wp_die('Permisos insuficientes');
         }
         
         // Procesar toggle de modo de depuración
         $debug_mode = isset($_POST['debug_mode']) ? true : false;
+        error_log('BCV Dólar Tracker: Debug mode checkbox presente: ' . (isset($_POST['debug_mode']) ? 'Sí' : 'No'));
+        error_log('BCV Dólar Tracker: Debug mode valor: ' . ($debug_mode ? 'true' : 'false'));
         
         if ($debug_mode) {
-            BCV_Logger::enable_debug_mode();
+            error_log('BCV Dólar Tracker: Intentando habilitar debug mode');
+            $result = BCV_Logger::enable_debug_mode();
+            error_log('BCV Dólar Tracker: Debug mode habilitado: ' . ($result ? 'OK' : 'Error'));
         } else {
-            BCV_Logger::disable_debug_mode();
+            error_log('BCV Dólar Tracker: Intentando deshabilitar debug mode');
+            $result = BCV_Logger::disable_debug_mode();
+            error_log('BCV Dólar Tracker: Debug mode deshabilitado: ' . ($result ? 'OK' : 'Error'));
         }
         
         // Redirigir con mensaje de éxito
@@ -814,15 +879,39 @@ class BCV_Admin {
         echo '<label for="cron_interval_preset">Intervalo Predefinido</label>';
         echo '<select id="cron_interval_preset" name="cron_interval_preset" class="bcv-select">';
         echo '<option value="">Seleccionar...</option>';
-        echo '<option value="300">Cada 5 minutos</option>';
-        echo '<option value="900">Cada 15 minutos</option>';
-        echo '<option value="1800">Cada 30 minutos</option>';
-        echo '<option value="3600">Cada hora</option>';
-        echo '<option value="7200">Cada 2 horas</option>';
-        echo '<option value="21600">Cada 6 horas</option>';
-        echo '<option value="43200">Cada 12 horas</option>';
-        echo '<option value="86400">Diariamente</option>';
-        echo '<option value="custom">Personalizado</option>';
+        
+        // Calcular el intervalo actual en segundos
+        $current_seconds = ($cron_settings['hours'] * 3600) + ($cron_settings['minutes'] * 60) + $cron_settings['seconds'];
+        
+        // Opciones predefinidas
+        $presets = array(
+            '300' => 'Cada 5 minutos',
+            '900' => 'Cada 15 minutos', 
+            '1800' => 'Cada 30 minutos',
+            '3600' => 'Cada hora',
+            '7200' => 'Cada 2 horas',
+            '21600' => 'Cada 6 horas',
+            '43200' => 'Cada 12 horas',
+            '86400' => 'Diariamente',
+            'custom' => 'Personalizado'
+        );
+        
+        foreach ($presets as $value => $label) {
+            $selected = '';
+            if ($value === 'custom') {
+                // Si no coincide con ningún preset, es personalizado
+                if (!in_array($current_seconds, array_keys(array_slice($presets, 0, -1)))) {
+                    $selected = 'selected';
+                }
+            } else {
+                // Si coincide con un preset
+                if ($current_seconds == intval($value)) {
+                    $selected = 'selected';
+                }
+            }
+            echo '<option value="' . esc_attr($value) . '" ' . $selected . '>' . esc_html($label) . '</option>';
+        }
+        
         echo '</select>';
         echo '</div>';
         
@@ -924,5 +1013,43 @@ class BCV_Admin {
         }
         
         echo '</div>';
+    }
+    
+    /**
+     * Recrear tabla de logs
+     */
+    private function recreate_logs_table() {
+        global $wpdb;
+        
+        // Eliminar tabla existente
+        $logs_table_name = $wpdb->prefix . 'bcv_logs';
+        $wpdb->query("DROP TABLE IF EXISTS {$logs_table_name}");
+        
+        // Crear nueva tabla
+        $charset_collate = $wpdb->get_charset_collate();
+        $sql = "CREATE TABLE {$logs_table_name} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            log_level varchar(20) NOT NULL DEFAULT 'INFO',
+            context varchar(100) NOT NULL DEFAULT '',
+            message text NOT NULL,
+            user_id bigint(20) unsigned DEFAULT NULL,
+            ip_address varchar(45) DEFAULT NULL,
+            created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_log_level (log_level),
+            KEY idx_context (context),
+            KEY idx_user_id (user_id),
+            KEY idx_created_at (created_at),
+            KEY idx_created_at_level (created_at, log_level)
+        ) {$charset_collate};";
+        
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        $result = dbDelta($sql);
+        
+        if (empty($wpdb->last_error)) {
+            echo '<div class="notice notice-success is-dismissible"><p>✅ Tabla de logs recreada correctamente</p></div>';
+        } else {
+            echo '<div class="notice notice-error is-dismissible"><p>❌ Error al recrear tabla de logs: ' . $wpdb->last_error . '</p></div>';
+        }
     }
 }

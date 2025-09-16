@@ -191,9 +191,14 @@ class BCV_Cron {
         $cleared1 = wp_clear_scheduled_hook($this->cron_hook);
         $cleared2 = wp_clear_scheduled_hook('bcv_weekly_cleanup');
         
-        error_log('BCV Dólar Tracker: Crones limpiados - Scraping: ' . ($cleared1 ? 'OK' : 'Error') . ', Limpieza: ' . ($cleared2 ? 'OK' : 'Error'));
+        // wp_clear_scheduled_hook devuelve false si no hay crones programados, pero eso no es un error
+        $scraping_status = ($cleared1 !== false) ? 'OK' : 'No programado';
+        $cleanup_status = ($cleared2 !== false) ? 'OK' : 'No programado';
         
-        return $cleared1 && $cleared2;
+        error_log('BCV Dólar Tracker: Crones limpiados - Scraping: ' . $scraping_status . ', Limpieza: ' . $cleanup_status);
+        
+        // Consideramos exitoso si no hay errores (false significa que no había crones programados)
+        return true;
     }
     
     /**
@@ -329,7 +334,7 @@ class BCV_Cron {
      */
     public function execute_scraping_task() {
         BCV_Performance_Monitor::start_timer('cron_scraping_task');
-        BCV_Logger::info('Ejecutando tarea cron de scraping');
+        BCV_Logger::info(BCV_Logger::CONTEXT_CRON, 'Ejecutando tarea cron de scraping');
         
         // Registrar inicio de ejecución del cron
         BCV_Logger::info(BCV_Logger::CONTEXT_CRON, 'Tarea programada iniciada');
