@@ -32,7 +32,7 @@ class BCV_Database {
      * 
      * @var string
      */
-    private $db_version = '1.0.0';
+    private $db_version = '1.1.0';
     
     /**
      * Constructor de la clase
@@ -192,12 +192,11 @@ class BCV_Database {
             '1.0.0' => array(
                 'description' => 'Crear tabla inicial de precios del dólar',
                 'method' => 'create_initial_table'
+            ),
+            '1.1.0' => array(
+                'description' => 'Crear tabla de logs para sistema de depuración',
+                'method' => 'create_logs_table'
             )
-            // Futuras migraciones se añadirán aquí
-            // '1.1.0' => array(
-            //     'description' => 'Añadir campo adicional',
-            //     'method' => 'add_new_field'
-            // )
         );
     }
     
@@ -236,7 +235,51 @@ class BCV_Database {
     }
     
     /**
-     * Insertar precio del dólar en la base de datos
+     * Crear tabla de logs para sistema de depuración
+     * 
+     * @return bool True si se creó correctamente, False en caso contrario
+     */
+    private function create_logs_table() {
+        global $wpdb;
+        
+        $logs_table_name = $wpdb->prefix . 'bcv_logs';
+        $charset_collate = $wpdb->get_charset_collate();
+        
+        // SQL para crear la tabla de logs
+        $sql = "CREATE TABLE {$logs_table_name} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            timestamp datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            log_level varchar(20) NOT NULL DEFAULT 'INFO',
+            context varchar(100) NOT NULL DEFAULT '',
+            message text NOT NULL,
+            user_id bigint(20) unsigned DEFAULT NULL,
+            ip_address varchar(45) DEFAULT NULL,
+            created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_timestamp (timestamp),
+            KEY idx_log_level (log_level),
+            KEY idx_context (context),
+            KEY idx_user_id (user_id),
+            KEY idx_created_at (created_at),
+            KEY idx_timestamp_level (timestamp, log_level)
+        ) {$charset_collate};";
+        
+        // Usar dbDelta para crear la tabla
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        $result = dbDelta($sql);
+        
+        // Verificar si se creó correctamente
+        if (empty($wpdb->last_error)) {
+            error_log('BCV Dólar Tracker: Tabla de logs creada correctamente');
+            return true;
+        } else {
+            error_log('BCV Dólar Tracker: Error al crear tabla de logs: ' . $wpdb->last_error);
+            return false;
+        }
+    }
+    
+    /**
+     * Insertar precio del dólar en la base de datos con lógica inteligente
      * 
      * @param float $precio Precio del dólar
      * @param string $datatime Fecha y hora del precio (opcional, por defecto ahora)
@@ -277,7 +320,49 @@ class BCV_Database {
             return false;
         }
         
-        // Preparar datos para inserción
+        // ===== LÓGICA DE ALMACENAMIENTO INTELIGENTE =====
+        
+        // Paso 1: Obtener el último registro de la base de datos
+        $ultimo_registro = $this->get_latest_price();
+        
+        // Paso 2: Aplicar lógica condicional
+        $debe_guardar = false;
+        $razon = '';
+        
+        if (!$ultimo_registro) {
+            // No hay registros previos, guardar siempre
+            $debe_guardar = true;
+            $razon = 'Primer registro en la base de datos';
+        } else {
+            $precio_anterior = floatval($ultimo_registro->precio);
+            $fecha_anterior = $ultimo_registro->datatime;
+            $fecha_anterior_dia = date('Y-m-d', strtotime($fecha_anterior));
+            $fecha_hoy = date('Y-m-d');
+            
+            if ($precio != $precio_anterior) {
+                // El precio cambió, guardar siempre
+                $debe_guardar = true;
+                $razon = "Precio cambió de {$precio_anterior} a {$precio}";
+            } elseif ($fecha_anterior_dia < $fecha_hoy) {
+                // El precio es igual pero es un día diferente, guardar
+                $debe_guardar = true;
+                $razon = "Mismo precio ({$precio}) pero nuevo día ({$fecha_hoy})";
+            } else {
+                // El precio es igual y es el mismo día, no guardar
+                $debe_guardar = false;
+                $razon = "Precio igual ({$precio}) y mismo día ({$fecha_hoy}), evitando duplicado";
+            }
+        }
+        
+        // Log de la decisión
+        error_log("BCV Dólar Tracker: Decisión de almacenamiento - {$razon}");
+        
+        if (!$debe_guardar) {
+            error_log("BCV Dólar Tracker: No se guardará el precio - {$razon}");
+            return 'skipped'; // Retornar 'skipped' para indicar que no se guardó por lógica inteligente
+        }
+        
+        // Paso 3: Guardar el nuevo registro
         $data = array(
             'datatime' => $datatime,
             'precio' => floatval($precio)
@@ -287,7 +372,7 @@ class BCV_Database {
         $format = array('%s', '%f');
         
         // Log de inserción
-        error_log("BCV Dólar Tracker: Insertando precio: {$precio} en fecha: {$datatime}");
+        error_log("BCV Dólar Tracker: Insertando precio: {$precio} en fecha: {$datatime} - {$razon}");
         
         // Insertar en la base de datos
         $result = $wpdb->insert($this->table_name, $data, $format);
@@ -295,17 +380,27 @@ class BCV_Database {
         if ($result === false) {
             error_log('BCV Dólar Tracker: Error al insertar precio: ' . $wpdb->last_error);
             error_log('BCV Dólar Tracker: Datos que se intentaron insertar: ' . print_r($data, true));
+            
+            // Registrar error en base de datos
+            BCV_Logger::error(BCV_Logger::CONTEXT_DATABASE, 'Error al insertar precio en base de datos: ' . $wpdb->last_error);
+            
             return false;
         }
         
         $insert_id = $wpdb->insert_id;
-        error_log("BCV Dólar Tracker: Precio insertado exitosamente con ID: {$insert_id}");
+        error_log("BCV Dólar Tracker: Precio insertado exitosamente con ID: {$insert_id} - {$razon}");
+        
+        // Registrar éxito en base de datos
+        BCV_Logger::success(BCV_Logger::CONTEXT_DATABASE, "Nueva tasa {$precio} Bs. guardada en base de datos (ID: {$insert_id})");
         
         // Invalidar caché de estadísticas
         delete_transient('bcv_price_stats');
         
         // Actualizar opción para integración con WooCommerce Venezuela Pro
         $this->update_wvp_integration($precio);
+        
+        // Limpieza automática de registros antiguos
+        $this->auto_cleanup_old_records();
         
         // Verificar que realmente se insertó
         $verification = $wpdb->get_row($wpdb->prepare(
@@ -507,6 +602,16 @@ class BCV_Database {
         
         $cutoff_date = date('Y-m-d H:i:s', strtotime("-{$days} days"));
         
+        // Primero contar cuántos registros se van a eliminar
+        $count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$this->table_name} WHERE datatime < %s",
+            $cutoff_date
+        ));
+        
+        if ($count > 0) {
+            error_log("BCV Dólar Tracker: Limpiando {$count} registros antiguos (anteriores a {$cutoff_date})");
+        }
+        
         $result = $wpdb->query(
             $wpdb->prepare(
                 "DELETE FROM {$this->table_name} WHERE datatime < %s",
@@ -519,7 +624,35 @@ class BCV_Database {
             return false;
         }
         
+        if ($result > 0) {
+            error_log("BCV Dólar Tracker: {$result} registros antiguos eliminados exitosamente");
+        }
+        
         return $result;
+    }
+    
+    /**
+     * Limpieza automática de registros antiguos
+     * Se ejecuta cada vez que se inserta un nuevo precio
+     */
+    private function auto_cleanup_old_records() {
+        // Solo limpiar si hay más de 1000 registros
+        $total_records = $this->get_total_records();
+        
+        if ($total_records > 1000) {
+            $this->cleanup_old_records(90); // Mantener solo 90 días
+        }
+    }
+    
+    /**
+     * Obtener total de registros en la tabla
+     * 
+     * @return int Número total de registros
+     */
+    private function get_total_records() {
+        global $wpdb;
+        
+        return intval($wpdb->get_var("SELECT COUNT(*) FROM {$this->table_name}"));
     }
     
     /**

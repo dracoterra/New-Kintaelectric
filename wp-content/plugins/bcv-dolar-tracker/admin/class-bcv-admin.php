@@ -23,6 +23,7 @@ class BCV_Admin {
         add_action('wp_ajax_bcv_save_cron_settings', array($this, 'save_cron_settings'));
         add_action('wp_ajax_bcv_test_scraping', array($this, 'test_scraping'));
         add_action('wp_ajax_bcv_get_prices_data', array($this, 'get_prices_data'));
+        add_action('wp_ajax_bcv_toggle_cron', array($this, 'toggle_cron'));
     }
     
     /**
@@ -66,6 +67,15 @@ class BCV_Admin {
             'manage_options',
             'bcv-statistics',
             array($this, 'render_statistics_page')
+        );
+        
+        add_submenu_page(
+            'bcv-dolar-tracker',
+            'Registro de Actividad',
+            'Registro de Actividad',
+            'manage_options',
+            'bcv-logs',
+            array($this, 'render_logs_page')
         );
     }
     
@@ -114,6 +124,16 @@ class BCV_Admin {
      * Renderizar página principal de administración
      */
     public function render_main_page() {
+        // Procesar formulario de configuración del cron
+        if (isset($_POST['submit']) && $_POST['submit'] === 'Guardar Configuración') {
+            $this->process_cron_settings();
+        }
+        
+        // Procesar formulario de configuración de depuración
+        if (isset($_POST['save_debug_settings'])) {
+            $this->process_debug_settings();
+        }
+        
         // Verificar si se solicitó crear tabla de emergencia
         if (isset($_POST['bcv_create_table_emergency'])) {
             if (wp_verify_nonce($_POST['_wpnonce'], 'bcv_create_table_emergency')) {
@@ -126,6 +146,19 @@ class BCV_Admin {
             if (wp_verify_nonce($_POST['_wpnonce'], 'bcv_force_cron_schedule')) {
                 $this->handle_force_cron_schedule();
             }
+        }
+        
+        // Mostrar mensajes de resultado
+        if (isset($_GET['settings-updated'])) {
+            echo '<div class="notice notice-success is-dismissible"><p>✅ Configuración guardada exitosamente</p></div>';
+        }
+        
+        if (isset($_GET['settings-error'])) {
+            echo '<div class="notice notice-error is-dismissible"><p>❌ Error al guardar la configuración</p></div>';
+        }
+        
+        if (isset($_GET['debug-updated'])) {
+            echo '<div class="notice notice-success is-dismissible"><p>✅ Configuración de depuración guardada exitosamente</p></div>';
         }
         
         echo '<div class="wrap">';
@@ -143,6 +176,9 @@ class BCV_Admin {
         
         // Mostrar información del cron
         $this->render_cron_info();
+        
+        // Mostrar configuración de depuración
+        $this->render_debug_settings();
         
         // Botón de emergencia para crear tabla
         echo '<div class="bcv-panel">';
@@ -368,34 +404,191 @@ class BCV_Admin {
     }
     
     /**
+     * Renderizar configuración de depuración
+     */
+    private function render_debug_settings() {
+        $debug_mode = BCV_Logger::is_debug_mode_enabled();
+        
+        echo '<div class="bcv-panel">';
+        echo '<h3>🐛 Configuración de Depuración</h3>';
+        echo '<p>Controla el sistema de registro de eventos interno del plugin:</p>';
+        
+        echo '<table class="form-table">';
+        echo '<tr>';
+        echo '<th scope="row"><label for="debug_mode">Modo de Depuración</label></th>';
+        echo '<td>';
+        echo '<label>';
+        echo '<input type="checkbox" id="debug_mode" name="debug_mode" value="1" ' . checked($debug_mode, true, false) . ' />';
+        echo ' Habilitar registro de eventos internos';
+        echo '</label>';
+        echo '<p class="description">Cuando está habilitado, el plugin registrará todas las operaciones importantes en la base de datos.</p>';
+        echo '</td>';
+        echo '</tr>';
+        echo '</table>';
+        
+        echo '<p class="submit">';
+        echo '<input type="submit" name="save_debug_settings" class="button button-primary" value="Guardar Configuración de Depuración">';
+        echo '</p>';
+        
+        if ($debug_mode) {
+            echo '<p><a href="' . admin_url('admin.php?page=bcv-logs') . '" class="button button-secondary">Ver Registro de Actividad</a></p>';
+        }
+        
+        echo '</div>';
+    }
+    
+    /**
+     * Renderizar página de logs
+     */
+    public function render_logs_page() {
+        // Verificar permisos
+        if (!current_user_can('manage_options')) {
+            wp_die('Acceso denegado');
+        }
+        
+        // Procesar acciones de limpieza
+        if (isset($_POST['clear_logs']) && wp_verify_nonce($_POST['_wpnonce'], 'bcv_clear_logs')) {
+            $result = BCV_Logger::clear_all_logs();
+            if ($result !== false) {
+                echo '<div class="notice notice-success is-dismissible"><p>✅ Logs eliminados exitosamente (' . $result . ' registros)</p></div>';
+            } else {
+                echo '<div class="notice notice-error is-dismissible"><p>❌ Error al eliminar logs</p></div>';
+            }
+        }
+        
+        // Procesar acciones masivas
+        if (isset($_POST['action']) && $_POST['action'] === 'delete' && isset($_POST['log_ids'])) {
+            $this->handle_bulk_delete_logs($_POST['log_ids']);
+        }
+        
+        // Crear instancia de la tabla de logs
+        require_once BCV_DOLAR_TRACKER_PLUGIN_DIR . 'admin/class-bcv-logs-table.php';
+        $logs_table = new BCV_Logs_Table();
+        
+        // Preparar la tabla
+        $logs_table->prepare_items();
+        
+        echo '<div class="wrap">';
+        echo '<h1>Registro de Actividad del Plugin</h1>';
+        
+        // Mostrar estado del modo de depuración
+        $debug_mode = BCV_Logger::is_debug_mode_enabled();
+        echo '<div class="bcv-panel">';
+        echo '<h3>🔧 Estado del Sistema de Logging</h3>';
+        echo '<p><strong>Modo de depuración:</strong> ';
+        if ($debug_mode) {
+            echo '<span style="color: green;">✅ Habilitado</span>';
+        } else {
+            echo '<span style="color: red;">❌ Deshabilitado</span>';
+        }
+        echo '</p>';
+        
+        if (!$debug_mode) {
+            echo '<p><em>Los logs solo se registran cuando el modo de depuración está habilitado.</em></p>';
+            echo '<p><a href="' . admin_url('admin.php?page=bcv-dolar-tracker') . '" class="button button-primary">Ir a Configuración</a></p>';
+        }
+        echo '</div>';
+        
+        // Formulario de limpieza
+        echo '<div class="bcv-panel">';
+        echo '<h3>🧹 Gestión de Logs</h3>';
+        echo '<form method="post" style="display: inline-block; margin-right: 10px;">';
+        wp_nonce_field('bcv_clear_logs');
+        echo '<input type="submit" name="clear_logs" class="button button-secondary" value="Limpiar Todos los Logs" onclick="return confirm(\'¿Estás seguro de que quieres eliminar todos los logs? Esta acción no se puede deshacer.\');">';
+        echo '</form>';
+        
+        echo '<a href="' . admin_url('admin.php?page=bcv-dolar-tracker') . '" class="button">Ir a Configuración</a>';
+        echo '</div>';
+        
+        // Formulario de la tabla
+        echo '<form method="post">';
+        echo '<input type="hidden" name="page" value="bcv-logs" />';
+        $logs_table->search_box('Buscar en logs', 'bcv-search-logs');
+        $logs_table->display();
+        echo '</form>';
+        
+        echo '</div>';
+    }
+    
+    /**
+     * Manejar eliminación masiva de logs
+     * 
+     * @param array $log_ids IDs de logs a eliminar
+     */
+    private function handle_bulk_delete_logs($log_ids) {
+        if (empty($log_ids) || !is_array($log_ids)) {
+            return;
+        }
+        
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'bcv_logs';
+        
+        $placeholders = implode(',', array_fill(0, count($log_ids), '%d'));
+        $result = $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$table_name} WHERE id IN ({$placeholders})",
+            $log_ids
+        ));
+        
+        if ($result !== false) {
+            echo '<div class="notice notice-success is-dismissible"><p>✅ ' . $result . ' logs eliminados exitosamente</p></div>';
+        } else {
+            echo '<div class="notice notice-error is-dismissible"><p>❌ Error al eliminar logs seleccionados</p></div>';
+        }
+    }
+    
+    /**
      * Procesar configuración del cron
      */
     private function process_cron_settings() {
-        // Validar y sanitizar datos
-        $enabled = isset($_POST['cron_enabled']) ? true : false;
-        $hours = intval($_POST['cron_hours']);
-        $minutes = intval($_POST['cron_minutes']);
-        $seconds = intval($_POST['cron_seconds']);
+        // Verificar nonce
+        if (!wp_verify_nonce($_POST['_wpnonce'], 'bcv_cron_settings')) {
+            wp_die('Acceso denegado');
+        }
         
-        // Validaciones
-        if ($hours < 0 || $hours > 24) {
-            $hours = 1;
+        // Verificar permisos
+        if (!current_user_can('manage_options')) {
+            wp_die('Permisos insuficientes');
         }
-        if ($minutes < 0 || $minutes > 59) {
-            $minutes = 0;
+        
+        // Obtener configuración actual para mantener el estado enabled
+        $current_settings = get_option('bcv_cron_settings', array(
+            'enabled' => true,
+            'hours' => 1,
+            'minutes' => 0,
+            'seconds' => 0
+        ));
+        
+        // Procesar intervalo predefinido si se seleccionó
+        if (isset($_POST['cron_interval_preset']) && !empty($_POST['cron_interval_preset']) && $_POST['cron_interval_preset'] !== 'custom') {
+            $total_seconds = intval($_POST['cron_interval_preset']);
+            $hours = floor($total_seconds / 3600);
+            $minutes = floor(($total_seconds % 3600) / 60);
+            $seconds = $total_seconds % 60;
+        } else {
+            // Usar valores personalizados
+            $hours = intval($_POST['cron_hours']);
+            $minutes = intval($_POST['cron_minutes']);
+            $seconds = intval($_POST['cron_seconds']);
         }
-        if ($seconds < 0 || $seconds > 59) {
+        
+        // Validaciones robustas
+        $hours = max(0, min(24, $hours));
+        $minutes = max(0, min(59, $minutes));
+        $seconds = max(0, min(59, $seconds));
+        
+        // Calcular total de segundos
+        $total_seconds = ($hours * 3600) + ($minutes * 60) + $seconds;
+        
+        // Mínimo 1 minuto (60 segundos)
+        if ($total_seconds < 60) {
+            $hours = 0;
+            $minutes = 1;
             $seconds = 0;
-        }
-        
-        // Mínimo 1 minuto
-        if ($hours == 0 && $minutes == 0 && $seconds < 60) {
-            $seconds = 60;
         }
         
         // Guardar configuración
         $settings = array(
-            'enabled' => $enabled,
+            'enabled' => $current_settings['enabled'], // Mantener estado actual
             'hours' => $hours,
             'minutes' => $minutes,
             'seconds' => $seconds
@@ -405,10 +598,42 @@ class BCV_Admin {
         
         // Configurar cron
         $cron = new BCV_Cron();
-        $cron->setup_cron($settings);
+        $result = $cron->setup_cron($settings);
+        
+        // Redirigir con mensaje de éxito o error
+        if ($result) {
+            wp_redirect(add_query_arg('settings-updated', 'true', admin_url('admin.php?page=bcv-dolar-tracker')));
+        } else {
+            wp_redirect(add_query_arg('settings-error', 'true', admin_url('admin.php?page=bcv-dolar-tracker')));
+        }
+        exit;
+    }
+    
+    /**
+     * Procesar configuración de depuración
+     */
+    private function process_debug_settings() {
+        // Verificar nonce
+        if (!wp_verify_nonce($_POST['_wpnonce'], 'bcv_cron_settings')) {
+            wp_die('Acceso denegado');
+        }
+        
+        // Verificar permisos
+        if (!current_user_can('manage_options')) {
+            wp_die('Permisos insuficientes');
+        }
+        
+        // Procesar toggle de modo de depuración
+        $debug_mode = isset($_POST['debug_mode']) ? true : false;
+        
+        if ($debug_mode) {
+            BCV_Logger::enable_debug_mode();
+        } else {
+            BCV_Logger::disable_debug_mode();
+        }
         
         // Redirigir con mensaje de éxito
-        wp_redirect(add_query_arg('settings-updated', 'true', admin_url('admin.php?page=bcv-dolar-tracker')));
+        wp_redirect(add_query_arg('debug-updated', 'true', admin_url('admin.php?page=bcv-dolar-tracker')));
         exit;
     }
     
@@ -528,6 +753,40 @@ class BCV_Admin {
     }
     
     /**
+     * Toggle del cron (AJAX)
+     */
+    public function toggle_cron() {
+        // Verificar nonce y permisos usando la clase de seguridad
+        BCV_Security::verify_ajax_nonce($_POST['nonce'] ?? '', 'bcv_admin_nonce');
+        BCV_Security::check_capability('manage_options');
+        
+        // Log del evento
+        BCV_Security::log_security_event('Cron toggle attempt', 'User: ' . get_current_user_id());
+        
+        if (!class_exists('BCV_Cron')) {
+            wp_send_json_error('Clase BCV_Cron no disponible');
+        }
+        
+        $cron = new BCV_Cron();
+        $result = $cron->toggle_cron();
+        
+        if ($result) {
+            $settings = $cron->get_cron_settings();
+            $status = $settings['enabled'] ? 'activado' : 'desactivado';
+            
+            BCV_Security::log_security_event('Cron toggle successful', 'Status: ' . $status);
+            wp_send_json_success(array(
+                'message' => 'Cron ' . $status . ' exitosamente',
+                'enabled' => $settings['enabled'],
+                'status_text' => $settings['enabled'] ? 'Activo' : 'Inactivo'
+            ));
+        } else {
+            BCV_Security::log_security_event('Cron toggle failed', 'Error: Unknown error');
+            wp_send_json_error('Error al cambiar el estado del cron');
+        }
+    }
+    
+    /**
      * Renderizar formulario de configuración del cron
      */
     private function render_cron_settings() {
@@ -541,22 +800,56 @@ class BCV_Admin {
         
         echo '<div class="bcv-panel">';
         echo '<h3>⚙️ Configuración del Cron</h3>';
+        
+        // Control independiente para activar/desactivar cron
+        echo '<div class="bcv-cron-control" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">';
+        echo '<h4>🔄 Control del Cron</h4>';
+        echo '<p>Activa o desactiva la ejecución automática del scraping:</p>';
+        
+        $cron_status = wp_next_scheduled('bcv_scrape_dollar_rate') ? 'Activo' : 'Inactivo';
+        $status_class = wp_next_scheduled('bcv_scrape_dollar_rate') ? 'success' : 'error';
+        
+        echo '<p><strong>Estado actual: <span class="bcv-status-' . $status_class . '">' . $cron_status . '</span></strong></p>';
+        
+        echo '<div style="margin-top: 10px;">';
+        echo '<button type="button" id="toggle-cron" class="button ' . ($cron_settings['enabled'] ? 'button-secondary' : 'button-primary') . '">';
+        echo $cron_settings['enabled'] ? 'Desactivar Cron' : 'Activar Cron';
+        echo '</button>';
+        echo '<span id="cron-toggle-result" style="margin-left: 10px;"></span>';
+        echo '</div>';
+        echo '</div>';
+        
+        // Formulario de configuración de intervalo
         echo '<form method="post" action="" id="cron-settings-form">';
         wp_nonce_field('bcv_cron_settings');
         
+        echo '<h4>⏰ Configuración del Intervalo</h4>';
         echo '<table class="form-table">';
+        
+        // Selector de intervalos predefinidos
         echo '<tr>';
-        echo '<th scope="row"><label for="cron_enabled">Habilitar Cron</label></th>';
+        echo '<th scope="row"><label for="cron_interval_preset">Intervalo Predefinido</label></th>';
         echo '<td>';
-        echo '<input type="checkbox" id="cron_enabled" name="cron_enabled" value="1" ' . checked($cron_settings['enabled'], true, false) . ' />';
-        echo '<span class="description">Habilitar la ejecución automática del scraping</span>';
+        echo '<select id="cron_interval_preset" name="cron_interval_preset" class="regular-text">';
+        echo '<option value="">Seleccionar intervalo...</option>';
+        echo '<option value="300">Cada 5 minutos</option>';
+        echo '<option value="900">Cada 15 minutos</option>';
+        echo '<option value="1800">Cada 30 minutos</option>';
+        echo '<option value="3600">Cada hora</option>';
+        echo '<option value="7200">Cada 2 horas</option>';
+        echo '<option value="21600">Cada 6 horas</option>';
+        echo '<option value="43200">Cada 12 horas</option>';
+        echo '<option value="86400">Diariamente</option>';
+        echo '<option value="custom">Personalizado</option>';
+        echo '</select>';
+        echo '<span class="description">Selecciona un intervalo predefinido o personalizado</span>';
         echo '</td>';
         echo '</tr>';
         
         echo '<tr>';
         echo '<th scope="row"><label for="cron_hours">Horas</label></th>';
         echo '<td>';
-        echo '<input type="number" id="cron_hours" name="cron_hours" value="' . esc_attr($cron_settings['hours']) . '" min="0" max="24" class="small-text" />';
+        echo '<input type="number" id="cron_hours" name="cron_hours" value="' . esc_attr($cron_settings['hours']) . '" min="0" max="24" class="small-text" required />';
         echo '<span class="description">Horas entre ejecuciones (0-24)</span>';
         echo '</td>';
         echo '</tr>';
@@ -564,7 +857,7 @@ class BCV_Admin {
         echo '<tr>';
         echo '<th scope="row"><label for="cron_minutes">Minutos</label></th>';
         echo '<td>';
-        echo '<input type="number" id="cron_minutes" name="cron_minutes" value="' . esc_attr($cron_settings['minutes']) . '" min="0" max="59" class="small-text" />';
+        echo '<input type="number" id="cron_minutes" name="cron_minutes" value="' . esc_attr($cron_settings['minutes']) . '" min="0" max="59" class="small-text" required />';
         echo '<span class="description">Minutos entre ejecuciones (0-59)</span>';
         echo '</td>';
         echo '</tr>';
@@ -572,7 +865,7 @@ class BCV_Admin {
         echo '<tr>';
         echo '<th scope="row"><label for="cron_seconds">Segundos</label></th>';
         echo '<td>';
-        echo '<input type="number" id="cron_seconds" name="cron_seconds" value="' . esc_attr($cron_settings['seconds']) . '" min="0" max="59" class="small-text" />';
+        echo '<input type="number" id="cron_seconds" name="cron_seconds" value="' . esc_attr($cron_settings['seconds']) . '" min="0" max="59" class="small-text" required />';
         echo '<span class="description">Segundos entre ejecuciones (0-59)</span>';
         echo '</td>';
         echo '</tr>';

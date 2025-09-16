@@ -1,9 +1,9 @@
 <?php
 /**
- * Clase para logging optimizado del plugin BCV Dólar Tracker
+ * Clase para sistema de logging interno del plugin BCV Dólar Tracker
  * 
  * @package BCV_Dolar_Tracker
- * @since 1.0.0
+ * @since 1.1.0
  */
 
 // Prevenir acceso directo
@@ -14,221 +14,335 @@ if (!defined('ABSPATH')) {
 class BCV_Logger {
     
     /**
-     * Instancia singleton
+     * Niveles de log disponibles
+     */
+    const LEVEL_INFO = 'INFO';
+    const LEVEL_WARNING = 'WARNING';
+    const LEVEL_ERROR = 'ERROR';
+    const LEVEL_SUCCESS = 'SUCCESS';
+    const LEVEL_DEBUG = 'DEBUG';
+    
+    /**
+     * Contextos predefinidos
+     */
+    const CONTEXT_CRON = 'Ejecución Cron';
+    const CONTEXT_API = 'Llamada API BCV';
+    const CONTEXT_DATABASE = 'Base de Datos';
+    const CONTEXT_SETTINGS = 'Ajustes Guardados';
+    const CONTEXT_SCRAPING = 'Scraping Manual';
+    const CONTEXT_CLEANUP = 'Limpieza de Datos';
+    const CONTEXT_INTEGRATION = 'Integración WVP';
+    const CONTEXT_SECURITY = 'Seguridad';
+    
+    /**
+     * Nombre de la tabla de logs
      * 
-     * @var BCV_Logger
+     * @var string
      */
-    private static $instance = null;
+    private static $table_name;
     
     /**
-     * Niveles de logging
+     * Inicializar la clase
      */
-    const LEVEL_ERROR = 1;
-    const LEVEL_WARNING = 2;
-    const LEVEL_INFO = 3;
-    const LEVEL_DEBUG = 4;
-    
-    /**
-     * Nivel actual de logging
-     * 
-     * @var int
-     */
-    private $log_level;
-    
-    /**
-     * Buffer de logs para escribir en lotes
-     * 
-     * @var array
-     */
-    private $log_buffer = array();
-    
-    /**
-     * Constructor de la clase
-     */
-    private function __construct() {
-        // Determinar nivel de logging basado en WP_DEBUG
-        $this->log_level = (defined('WP_DEBUG') && WP_DEBUG) ? self::LEVEL_DEBUG : self::LEVEL_ERROR;
-        
-        // Hook para escribir buffer al final del request
-        add_action('shutdown', array($this, 'flush_buffer'));
+    public static function init() {
+        global $wpdb;
+        self::$table_name = $wpdb->prefix . 'bcv_logs';
     }
     
     /**
-     * Obtener instancia singleton
+     * Registrar un evento en el sistema de logs
      * 
-     * @return BCV_Logger
+     * @param string $level Nivel del log (INFO, WARNING, ERROR, SUCCESS, DEBUG)
+     * @param string $context Contexto del evento
+     * @param string $message Mensaje del evento
+     * @param array $extra_data Datos adicionales (opcional)
+     * @return bool True si se guardó correctamente, False en caso contrario
      */
-    public static function get_instance() {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return self::$instance;
-    }
-    
-    /**
-     * Log de error
-     * 
-     * @param string $message Mensaje de error
-     * @param array $context Contexto adicional
-     */
-    public static function error($message, $context = array()) {
-        self::get_instance()->log(self::LEVEL_ERROR, $message, $context);
-    }
-    
-    /**
-     * Log de warning
-     * 
-     * @param string $message Mensaje de warning
-     * @param array $context Contexto adicional
-     */
-    public static function warning($message, $context = array()) {
-        self::get_instance()->log(self::LEVEL_WARNING, $message, $context);
-    }
-    
-    /**
-     * Log de información
-     * 
-     * @param string $message Mensaje informativo
-     * @param array $context Contexto adicional
-     */
-    public static function info($message, $context = array()) {
-        self::get_instance()->log(self::LEVEL_INFO, $message, $context);
-    }
-    
-    /**
-     * Log de debug
-     * 
-     * @param string $message Mensaje de debug
-     * @param array $context Contexto adicional
-     */
-    public static function debug($message, $context = array()) {
-        self::get_instance()->log(self::LEVEL_DEBUG, $message, $context);
-    }
-    
-    /**
-     * Logging principal
-     * 
-     * @param int $level Nivel de logging
-     * @param string $message Mensaje
-     * @param array $context Contexto adicional
-     */
-    private function log($level, $message, $context = array()) {
-        // Solo loguear si el nivel es apropiado
-        if ($level > $this->log_level) {
-            return;
+    public static function log($level, $context, $message, $extra_data = array()) {
+        // Verificar si el modo de depuración está activado
+        if (!self::is_debug_mode_enabled()) {
+            return false;
         }
         
-        // Preparar mensaje con timestamp y contexto
-        $timestamp = current_time('Y-m-d H:i:s');
-        $level_name = $this->get_level_name($level);
+        // Validar nivel de log
+        if (!self::is_valid_level($level)) {
+            $level = self::LEVEL_INFO;
+        }
         
-        $formatted_message = sprintf(
-            '[%s] BCV Dólar Tracker [%s]: %s',
-            $timestamp,
-            $level_name,
-            $message
+        // Sanitizar datos
+        $level = sanitize_text_field($level);
+        $context = sanitize_text_field($context);
+        $message = sanitize_textarea_field($message);
+        
+        // Obtener información del usuario actual
+        $user_id = get_current_user_id();
+        $ip_address = self::get_client_ip();
+        
+        // Preparar datos para inserción
+        $data = array(
+            'timestamp' => current_time('mysql'),
+            'log_level' => $level,
+            'context' => $context,
+            'message' => $message,
+            'user_id' => $user_id > 0 ? $user_id : null,
+            'ip_address' => $ip_address
         );
         
-        // Añadir contexto si existe
-        if (!empty($context)) {
-            $formatted_message .= ' | Context: ' . json_encode($context);
+        // Insertar en la base de datos
+        global $wpdb;
+        $result = $wpdb->insert(self::$table_name, $data, array('%s', '%s', '%s', '%s', '%d', '%s'));
+        
+        if ($result === false) {
+            error_log('BCV Dólar Tracker: Error al guardar log - ' . $wpdb->last_error);
+            return false;
         }
         
-        // Añadir al buffer
-        $this->log_buffer[] = $formatted_message;
-        
-        // Si es error crítico, escribir inmediatamente
-        if ($level === self::LEVEL_ERROR) {
-            $this->flush_buffer();
-        }
-    }
-    
-    /**
-     * Obtener nombre del nivel
-     * 
-     * @param int $level Nivel numérico
-     * @return string Nombre del nivel
-     */
-    private function get_level_name($level) {
-        switch ($level) {
-            case self::LEVEL_ERROR:
-                return 'ERROR';
-            case self::LEVEL_WARNING:
-                return 'WARNING';
-            case self::LEVEL_INFO:
-                return 'INFO';
-            case self::LEVEL_DEBUG:
-                return 'DEBUG';
-            default:
-                return 'UNKNOWN';
-        }
-    }
-    
-    /**
-     * Escribir buffer de logs
-     */
-    public function flush_buffer() {
-        if (empty($this->log_buffer)) {
-            return;
-        }
-        
-        // Escribir todos los logs del buffer
-        foreach ($this->log_buffer as $log_message) {
+        // Log también en el debug.log de WordPress si está habilitado
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            $log_message = "[BCV Logger] [{$level}] [{$context}] {$message}";
+            if ($user_id > 0) {
+                $log_message .= " [User: {$user_id}]";
+            }
             error_log($log_message);
         }
         
-        // Limpiar buffer
-        $this->log_buffer = array();
+        return true;
     }
     
     /**
-     * Log de rendimiento
-     * 
-     * @param string $operation Operación realizada
-     * @param float $start_time Tiempo de inicio
-     * @param array $context Contexto adicional
+     * Métodos de conveniencia para diferentes niveles
      */
-    public static function performance($operation, $start_time, $context = array()) {
-        $execution_time = microtime(true) - $start_time;
-        $memory_usage = memory_get_usage(true);
-        $peak_memory = memory_get_peak_usage(true);
-        
-        $context = array_merge($context, array(
-            'execution_time' => round($execution_time, 4) . 's',
-            'memory_usage' => size_format($memory_usage),
-            'peak_memory' => size_format($peak_memory)
-        ));
-        
-        self::info("Performance: {$operation}", $context);
+    public static function info($context, $message, $extra_data = array()) {
+        return self::log(self::LEVEL_INFO, $context, $message, $extra_data);
+    }
+    
+    public static function warning($context, $message, $extra_data = array()) {
+        return self::log(self::LEVEL_WARNING, $context, $message, $extra_data);
+    }
+    
+    public static function error($context, $message, $extra_data = array()) {
+        return self::log(self::LEVEL_ERROR, $context, $message, $extra_data);
+    }
+    
+    public static function success($context, $message, $extra_data = array()) {
+        return self::log(self::LEVEL_SUCCESS, $context, $message, $extra_data);
+    }
+    
+    public static function debug($context, $message, $extra_data = array()) {
+        return self::log(self::LEVEL_DEBUG, $context, $message, $extra_data);
     }
     
     /**
-     * Log de base de datos con query info
+     * Verificar si el modo de depuración está habilitado
      * 
-     * @param string $query Query ejecutada
-     * @param float $start_time Tiempo de inicio
-     * @param int $num_rows Número de filas afectadas
+     * @return bool True si está habilitado, False en caso contrario
      */
-    public static function database($query, $start_time, $num_rows = null) {
+    public static function is_debug_mode_enabled() {
+        return get_option('bcv_debug_mode', false) === true;
+    }
+    
+    /**
+     * Habilitar modo de depuración
+     * 
+     * @return bool True si se guardó correctamente
+     */
+    public static function enable_debug_mode() {
+        $result = update_option('bcv_debug_mode', true);
+        if ($result) {
+            self::info(self::CONTEXT_SETTINGS, 'Modo de depuración habilitado');
+        }
+        return $result;
+    }
+    
+    /**
+     * Deshabilitar modo de depuración
+     * 
+     * @return bool True si se guardó correctamente
+     */
+    public static function disable_debug_mode() {
+        $result = update_option('bcv_debug_mode', false);
+        if ($result) {
+            self::info(self::CONTEXT_SETTINGS, 'Modo de depuración deshabilitado');
+        }
+        return $result;
+    }
+    
+    /**
+     * Obtener logs con paginación y filtros
+     * 
+     * @param array $args Argumentos de consulta
+     * @return array Array con logs y paginación
+     */
+    public static function get_logs($args = array()) {
         global $wpdb;
         
-        $execution_time = microtime(true) - $start_time;
-        
-        $context = array(
-            'query' => $query,
-            'execution_time' => round($execution_time, 4) . 's',
-            'num_queries' => $wpdb->num_queries
+        // Argumentos por defecto
+        $defaults = array(
+            'per_page' => 20,
+            'page' => 1,
+            'orderby' => 'timestamp',
+            'order' => 'DESC',
+            'log_level' => '',
+            'context' => '',
+            'search' => '',
+            'date_from' => '',
+            'date_to' => ''
         );
         
-        if ($num_rows !== null) {
-            $context['rows_affected'] = $num_rows;
+        $args = wp_parse_args($args, $defaults);
+        
+        // Sanitizar argumentos
+        $args['per_page'] = max(1, min(100, intval($args['per_page'])));
+        $args['page'] = max(1, intval($args['page']));
+        $args['log_level'] = sanitize_text_field($args['log_level']);
+        $args['context'] = sanitize_text_field($args['context']);
+        $args['search'] = sanitize_text_field($args['search']);
+        $args['date_from'] = sanitize_text_field($args['date_from']);
+        $args['date_to'] = sanitize_text_field($args['date_to']);
+        
+        // Validar orderby y order
+        $allowed_orderby = array('timestamp', 'log_level', 'context', 'id');
+        $allowed_order = array('ASC', 'DESC');
+        
+        if (!in_array($args['orderby'], $allowed_orderby)) {
+            $args['orderby'] = 'timestamp';
         }
         
-        if ($wpdb->last_error) {
-            $context['error'] = $wpdb->last_error;
-            self::error("Database query failed", $context);
-        } else {
-            self::debug("Database query executed", $context);
+        if (!in_array(strtoupper($args['order']), $allowed_order)) {
+            $args['order'] = 'DESC';
         }
+        
+        // Construir consulta WHERE
+        $where_clauses = array();
+        $where_values = array();
+        
+        if (!empty($args['log_level'])) {
+            $where_clauses[] = 'log_level = %s';
+            $where_values[] = $args['log_level'];
+        }
+        
+        if (!empty($args['context'])) {
+            $where_clauses[] = 'context = %s';
+            $where_values[] = $args['context'];
+        }
+        
+        if (!empty($args['search'])) {
+            $where_clauses[] = '(message LIKE %s OR context LIKE %s)';
+            $where_values[] = '%' . $wpdb->esc_like($args['search']) . '%';
+            $where_values[] = '%' . $wpdb->esc_like($args['search']) . '%';
+        }
+        
+        if (!empty($args['date_from'])) {
+            $where_clauses[] = 'timestamp >= %s';
+            $where_values[] = $args['date_from'];
+        }
+        
+        if (!empty($args['date_to'])) {
+            $where_clauses[] = 'timestamp <= %s';
+            $where_values[] = $args['date_to'];
+        }
+        
+        $where_sql = '';
+        if (!empty($where_clauses)) {
+            $where_sql = 'WHERE ' . implode(' AND ', $where_clauses);
+        }
+        
+        // Consulta para contar total de registros
+        $count_sql = "SELECT COUNT(*) FROM " . self::$table_name . " {$where_sql}";
+        if (!empty($where_values)) {
+            $count_sql = $wpdb->prepare($count_sql, $where_values);
+        }
+        
+        $total_items = $wpdb->get_var($count_sql);
+        
+        // Calcular offset para paginación
+        $offset = ($args['page'] - 1) * $args['per_page'];
+        
+        // Consulta principal
+        $sql = "SELECT * FROM " . self::$table_name . " {$where_sql} ORDER BY {$args['orderby']} {$args['order']} LIMIT %d OFFSET %d";
+        
+        $query_values = array_merge($where_values, array($args['per_page'], $offset));
+        $sql = $wpdb->prepare($sql, $query_values);
+        
+        $items = $wpdb->get_results($sql);
+        
+        return array(
+            'items' => $items,
+            'total_items' => $total_items,
+            'total_pages' => ceil($total_items / $args['per_page']),
+            'current_page' => $args['page'],
+            'per_page' => $args['per_page']
+        );
+    }
+    
+    /**
+     * Limpiar todos los logs
+     * 
+     * @return int|false Número de registros eliminados o false si falla
+     */
+    public static function clear_all_logs() {
+        global $wpdb;
+        
+        $count = $wpdb->get_var("SELECT COUNT(*) FROM " . self::$table_name);
+        
+        if ($count > 0) {
+            self::info(self::CONTEXT_CLEANUP, "Limpiando todos los logs ({$count} registros)");
+        }
+        
+        $result = $wpdb->query("DELETE FROM " . self::$table_name);
+        
+        if ($result === false) {
+            self::error(self::CONTEXT_CLEANUP, 'Error al limpiar todos los logs: ' . $wpdb->last_error);
+            return false;
+        }
+        
+        if ($result > 0) {
+            self::info(self::CONTEXT_CLEANUP, "Todos los logs eliminados exitosamente ({$result} registros)");
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Verificar si un nivel de log es válido
+     * 
+     * @param string $level Nivel a verificar
+     * @return bool True si es válido, False en caso contrario
+     */
+    private static function is_valid_level($level) {
+        $valid_levels = array(
+            self::LEVEL_INFO,
+            self::LEVEL_WARNING,
+            self::LEVEL_ERROR,
+            self::LEVEL_SUCCESS,
+            self::LEVEL_DEBUG
+        );
+        
+        return in_array($level, $valid_levels);
+    }
+    
+    /**
+     * Obtener IP del cliente
+     * 
+     * @return string IP del cliente
+     */
+    private static function get_client_ip() {
+        $ip_keys = array('HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR');
+        
+        foreach ($ip_keys as $key) {
+            if (array_key_exists($key, $_SERVER) === true) {
+                foreach (explode(',', $_SERVER[$key]) as $ip) {
+                    $ip = trim($ip);
+                    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
+                        return $ip;
+                    }
+                }
+            }
+        }
+        
+        return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown';
     }
 }
+
+// Inicializar la clase
+BCV_Logger::init();

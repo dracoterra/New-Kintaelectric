@@ -38,6 +38,10 @@ class BCV_Cron {
         add_action($this->cron_hook, array($this, 'execute_scraping_task'));
         add_action('wp_loaded', array($this, 'maybe_schedule_cron'));
         
+        // Hook para limpieza semanal de registros antiguos
+        add_action('bcv_weekly_cleanup', array($this, 'execute_weekly_cleanup'));
+        add_action('wp_loaded', array($this, 'maybe_schedule_weekly_cleanup'));
+        
         // Registrar intervalo personalizado
         add_filter('cron_schedules', array($this, 'add_custom_cron_interval'));
         
@@ -75,6 +79,7 @@ class BCV_Cron {
         
         // Si el cron está deshabilitado, no programar
         if (!$this->settings['enabled']) {
+            error_log('BCV Dólar Tracker: Cron deshabilitado, no se programará');
             return true;
         }
         
@@ -88,9 +93,64 @@ class BCV_Cron {
         $scheduled = wp_schedule_event(time(), $interval_name, $this->cron_hook);
         
         if ($scheduled) {
+            error_log("BCV Dólar Tracker: Cron programado exitosamente con intervalo: {$interval_name}");
             return true;
         } else {
+            error_log('BCV Dólar Tracker: Error al programar el cron');
             return false;
+        }
+    }
+    
+    /**
+     * Activar cron independientemente
+     * 
+     * @return bool True si se activó correctamente, False en caso contrario
+     */
+    public function enable_cron() {
+        $this->settings['enabled'] = true;
+        update_option('bcv_cron_settings', $this->settings);
+        
+        $result = $this->setup_cron();
+        
+        if ($result) {
+            error_log('BCV Dólar Tracker: Cron activado exitosamente');
+        } else {
+            error_log('BCV Dólar Tracker: Error al activar el cron');
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Desactivar cron independientemente
+     * 
+     * @return bool True si se desactivó correctamente, False en caso contrario
+     */
+    public function disable_cron() {
+        $this->settings['enabled'] = false;
+        update_option('bcv_cron_settings', $this->settings);
+        
+        $result = $this->clear_cron();
+        
+        if ($result) {
+            error_log('BCV Dólar Tracker: Cron desactivado exitosamente');
+        } else {
+            error_log('BCV Dólar Tracker: Error al desactivar el cron');
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Toggle del estado del cron
+     * 
+     * @return bool True si se cambió correctamente, False en caso contrario
+     */
+    public function toggle_cron() {
+        if ($this->settings['enabled']) {
+            return $this->disable_cron();
+        } else {
+            return $this->enable_cron();
         }
     }
     
@@ -128,11 +188,12 @@ class BCV_Cron {
      * @return bool True si se limpió correctamente, False en caso contrario
      */
     public function clear_cron() {
-        $cleared = wp_clear_scheduled_hook($this->cron_hook);
+        $cleared1 = wp_clear_scheduled_hook($this->cron_hook);
+        $cleared2 = wp_clear_scheduled_hook('bcv_weekly_cleanup');
         
-        // Cron limpiado
+        error_log('BCV Dólar Tracker: Crones limpiados - Scraping: ' . ($cleared1 ? 'OK' : 'Error') . ', Limpieza: ' . ($cleared2 ? 'OK' : 'Error'));
         
-        return $cleared;
+        return $cleared1 && $cleared2;
     }
     
     /**
@@ -270,10 +331,14 @@ class BCV_Cron {
         BCV_Performance_Monitor::start_timer('cron_scraping_task');
         BCV_Logger::info('Ejecutando tarea cron de scraping');
         
+        // Registrar inicio de ejecución del cron
+        BCV_Logger::info(BCV_Logger::CONTEXT_CRON, 'Tarea programada iniciada');
+        
         // Verificar si ya se ejecutó recientemente (evitar duplicados)
         $last_execution = get_transient('bcv_cron_last_execution');
         if ($last_execution && (time() - $last_execution) < 300) { // 5 minutos
             error_log('BCV Dólar Tracker: Cron ejecutado recientemente, saltando');
+            BCV_Logger::info(BCV_Logger::CONTEXT_CRON, 'Cron ejecutado recientemente, saltando ejecución');
             return;
         }
         
@@ -290,11 +355,14 @@ class BCV_Cron {
         if ($result !== false) {
             error_log("BCV Dólar Tracker: Scraping exitoso, precio obtenido: {$result}");
             
-            // Guardar en base de datos usando singleton
+            // Guardar en base de datos usando singleton con lógica inteligente
             $database = BCV_Database::get_instance();
             $inserted = $database->insert_price($result);
             
-            if ($inserted) {
+            if ($inserted === 'skipped') {
+                error_log('BCV Dólar Tracker: Precio no guardado - Lógica inteligente evitó duplicado');
+                $operation_success = true; // Consideramos exitoso porque obtuvimos el precio correctamente
+            } elseif ($inserted) {
                 error_log("BCV Dólar Tracker: Precio guardado en BD con ID: {$inserted}");
                 $operation_success = true;
             } else {
@@ -308,6 +376,17 @@ class BCV_Cron {
         
         // Actualizar estadísticas UNA SOLA VEZ con el resultado final
         $this->update_cron_stats($operation_success);
+        
+        // Registrar final de ejecución del cron
+        if ($operation_success) {
+            if ($inserted === 'skipped') {
+                BCV_Logger::info(BCV_Logger::CONTEXT_CRON, 'Tarea finalizada. El valor de la tasa no cambió.');
+            } else {
+                BCV_Logger::info(BCV_Logger::CONTEXT_CRON, "Tarea finalizada. Nueva tasa {$result} Bs. guardada.");
+            }
+        } else {
+            BCV_Logger::error(BCV_Logger::CONTEXT_CRON, 'Tarea finalizada con errores. No se pudo obtener o guardar la tasa.');
+        }
         
         // Reprogramar próximo ejecución
         $this->reschedule_cron();
@@ -361,11 +440,13 @@ class BCV_Cron {
             $response['price'] = $result;
             $response['message'] = "Precio obtenido exitosamente: {$result}";
             
-            // Guardar en base de datos usando singleton
+            // Guardar en base de datos usando singleton con lógica inteligente
             $database = BCV_Database::get_instance();
             $inserted = $database->insert_price($result);
             
-            if ($inserted) {
+            if ($inserted === 'skipped') {
+                $response['message'] .= " (no guardado - lógica inteligente evitó duplicado)";
+            } elseif ($inserted) {
                 $response['message'] .= " y guardado en BD con ID: {$inserted}";
             } else {
                 $response['message'] .= " pero falló al guardar en BD";
@@ -453,5 +534,37 @@ class BCV_Cron {
         delete_option('bcv_cron_failed_executions');
         
         error_log('BCV Dólar Tracker: Estadísticas del cron reseteadas');
+    }
+    
+    /**
+     * Verificar si se debe programar la limpieza semanal
+     */
+    public function maybe_schedule_weekly_cleanup() {
+        // Solo programar si no está ya programado
+        if (!wp_next_scheduled('bcv_weekly_cleanup')) {
+            wp_schedule_event(time(), 'weekly', 'bcv_weekly_cleanup');
+            error_log('BCV Dólar Tracker: Limpieza semanal programada');
+        }
+    }
+    
+    /**
+     * Ejecutar limpieza semanal de registros antiguos
+     */
+    public function execute_weekly_cleanup() {
+        error_log('BCV Dólar Tracker: Ejecutando limpieza semanal de registros antiguos');
+        
+        if (!class_exists('BCV_Database')) {
+            error_log('BCV Dólar Tracker: Clase BCV_Database no disponible para limpieza');
+            return;
+        }
+        
+        $database = new BCV_Database();
+        $deleted = $database->cleanup_old_records(90); // Mantener solo 90 días
+        
+        if ($deleted !== false) {
+            error_log("BCV Dólar Tracker: Limpieza semanal completada - {$deleted} registros eliminados");
+        } else {
+            error_log('BCV Dólar Tracker: Error en limpieza semanal');
+        }
     }
 }

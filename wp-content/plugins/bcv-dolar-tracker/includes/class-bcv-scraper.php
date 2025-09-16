@@ -59,7 +59,12 @@ class BCV_Scraper {
         $response = $this->make_request();
         
         if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
-            error_log('BCV Dólar Tracker: Error en request HTTP: ' . (is_wp_error($response) ? $response->get_error_message() : wp_remote_retrieve_response_code($response)));
+            $error_message = is_wp_error($response) ? $response->get_error_message() : 'Código HTTP: ' . wp_remote_retrieve_response_code($response);
+            error_log('BCV Dólar Tracker: Error en request HTTP: ' . $error_message);
+            
+            // Registrar error en el sistema de logs
+            BCV_Logger::error(BCV_Logger::CONTEXT_API, "Error al contactar la API: {$error_message}");
+            
             return false;
         }
         
@@ -72,10 +77,18 @@ class BCV_Scraper {
             // Guardamos en caché y devolvemos el valor
             $this->set_cached_price($rate);
             error_log('BCV Dólar Tracker: Precio obtenido del BCV: ' . $rate);
+            
+            // Registrar en el sistema de logs
+            BCV_Logger::success(BCV_Logger::CONTEXT_API, "Tasa obtenida con éxito: {$rate} Bs.");
+            
             return $rate;
         }
         
         error_log('BCV Dólar Tracker: No se pudo obtener precio válido del BCV');
+        
+        // Registrar error en el sistema de logs
+        BCV_Logger::error(BCV_Logger::CONTEXT_API, 'No se pudo obtener precio válido del BCV');
+        
         return false;
     }
     
