@@ -79,7 +79,9 @@ class BCV_Cron {
         
         // Si el cron está deshabilitado, no programar
         if (!$this->settings['enabled']) {
-            error_log('BCV Dólar Tracker: Cron deshabilitado, no se programará');
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('BCV Dólar Tracker: Cron deshabilitado, no se programará');
+            }
             return true;
         }
         
@@ -93,10 +95,14 @@ class BCV_Cron {
         $scheduled = wp_schedule_event(time(), $interval_name, $this->cron_hook);
         
         if ($scheduled) {
-            error_log("BCV Dólar Tracker: Cron programado exitosamente con intervalo: {$interval_name}");
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("BCV Dólar Tracker: Cron programado exitosamente con intervalo: {$interval_name}");
+            }
             return true;
         } else {
-            error_log('BCV Dólar Tracker: Error al programar el cron');
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('BCV Dólar Tracker: Error al programar el cron');
+            }
             return false;
         }
     }
@@ -113,9 +119,13 @@ class BCV_Cron {
         $result = $this->setup_cron();
         
         if ($result) {
-            error_log('BCV Dólar Tracker: Cron activado exitosamente');
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('BCV Dólar Tracker: Cron activado exitosamente');
+            }
         } else {
-            error_log('BCV Dólar Tracker: Error al activar el cron');
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('BCV Dólar Tracker: Error al activar el cron');
+            }
         }
         
         return $result;
@@ -133,9 +143,13 @@ class BCV_Cron {
         $result = $this->clear_cron();
         
         if ($result) {
-            error_log('BCV Dólar Tracker: Cron desactivado exitosamente');
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('BCV Dólar Tracker: Cron desactivado exitosamente');
+            }
         } else {
-            error_log('BCV Dólar Tracker: Error al desactivar el cron');
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('BCV Dólar Tracker: Error al desactivar el cron');
+            }
         }
         
         return $result;
@@ -195,7 +209,9 @@ class BCV_Cron {
         $scraping_status = ($cleared1 !== false) ? 'OK' : 'No programado';
         $cleanup_status = ($cleared2 !== false) ? 'OK' : 'No programado';
         
-        error_log('BCV Dólar Tracker: Crones limpiados - Scraping: ' . $scraping_status . ', Limpieza: ' . $cleanup_status);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('BCV Dólar Tracker: Crones limpiados - Scraping: ' . $scraping_status . ', Limpieza: ' . $cleanup_status);
+        }
         
         // Consideramos exitoso si no hay errores (false significa que no había crones programados)
         return true;
@@ -257,7 +273,9 @@ class BCV_Cron {
      * @return bool True si se programó correctamente, False en caso contrario
      */
     public function force_schedule_cron() {
-        error_log('BCV Dólar Tracker: Forzando programación del cron');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('BCV Dólar Tracker: Forzando programación del cron');
+        }
         
         // Limpiar cron existente
         $this->clear_cron();

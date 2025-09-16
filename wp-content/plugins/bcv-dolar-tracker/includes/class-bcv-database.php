@@ -93,11 +93,15 @@ class BCV_Database {
             update_option('bcv_db_version', $this->db_version);
             
             // Log de éxito
-            error_log('BCV Dólar Tracker: Tabla de precios creada correctamente');
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('BCV Dólar Tracker: Tabla de precios creada correctamente');
+            }
             return true;
         } else {
             // Log de error
-            error_log('BCV Dólar Tracker: Error al crear tabla: ' . $wpdb->last_error);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('BCV Dólar Tracker: Error al crear tabla: ' . $wpdb->last_error);
+            }
             return false;
         }
     }
@@ -151,13 +155,17 @@ class BCV_Database {
         global $wpdb;
         
         // Log del inicio de migración
-        error_log("BCV Dólar Tracker: Iniciando migración desde versión {$from_version} a {$this->db_version}");
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("BCV Dólar Tracker: Iniciando migración desde versión {$from_version} a {$this->db_version}");
+        }
         
         // Si la tabla no existe, crearla
         if (!$this->table_exists()) {
             $result = $this->create_price_table();
             if (!$result) {
-                error_log('BCV Dólar Tracker: Error en migración - No se pudo crear la tabla');
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('BCV Dólar Tracker: Error en migración - No se pudo crear la tabla');
+                }
                 return false;
             }
         }
@@ -169,7 +177,9 @@ class BCV_Database {
             if (version_compare($from_version, $version, '<')) {
                 $result = $this->execute_migration($version, $migration);
                 if (!$result) {
-                    error_log("BCV Dólar Tracker: Error en migración versión {$version}");
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log("BCV Dólar Tracker: Error en migración versión {$version}");
+                    }
                     return false;
                 }
             }
@@ -178,7 +188,9 @@ class BCV_Database {
         // Actualizar versión de la base de datos
         update_option('bcv_db_version', $this->db_version);
         
-        error_log("BCV Dólar Tracker: Migración completada exitosamente a versión {$this->db_version}");
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("BCV Dólar Tracker: Migración completada exitosamente a versión {$this->db_version}");
+        }
         return true;
     }
     
@@ -213,14 +225,20 @@ class BCV_Database {
         if (method_exists($this, $method)) {
             $result = $this->$method();
             if ($result) {
-                error_log("BCV Dólar Tracker: Migración {$version} ejecutada correctamente");
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log("BCV Dólar Tracker: Migración {$version} ejecutada correctamente");
+                }
                 return true;
             } else {
-                error_log("BCV Dólar Tracker: Error al ejecutar migración {$version}");
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log("BCV Dólar Tracker: Error al ejecutar migración {$version}");
+                }
                 return false;
             }
         } else {
-            error_log("BCV Dólar Tracker: Método de migración {$method} no encontrado");
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("BCV Dólar Tracker: Método de migración {$method} no encontrado");
+            }
             return false;
         }
     }

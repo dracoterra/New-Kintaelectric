@@ -144,14 +144,7 @@ class BCV_Logger {
      */
     public static function is_debug_mode_enabled() {
         $debug_mode = get_option('bcv_debug_mode', false);
-        error_log('BCV Dólar Tracker: Obteniendo debug mode de BD: ' . ($debug_mode ? 'true' : 'false'));
-        error_log('BCV Dólar Tracker: Tipo de debug_mode: ' . gettype($debug_mode));
-        error_log('BCV Dólar Tracker: Valor exacto: ' . var_export($debug_mode, true));
-        
-        // Verificar si es true, 1, o '1' - simplificado
-        $is_enabled = !empty($debug_mode) && $debug_mode != '0' && $debug_mode != false;
-        error_log('BCV Dólar Tracker: Debug mode habilitado: ' . ($is_enabled ? 'Sí' : 'No'));
-        return $is_enabled;
+        return !empty($debug_mode) && $debug_mode != '0' && $debug_mode != false;
     }
     
     /**
@@ -160,26 +153,8 @@ class BCV_Logger {
      * @return bool True si se guardó correctamente
      */
     public static function enable_debug_mode() {
-        error_log('BCV Dólar Tracker: BCV_Logger::enable_debug_mode() llamado');
-        
-        // Verificar valor actual
-        $current_value = get_option('bcv_debug_mode', false);
-        error_log('BCV Dólar Tracker: Valor actual de bcv_debug_mode: ' . ($current_value ? 'true' : 'false'));
-        
-        // Intentar actualizar
-        $result = update_option('bcv_debug_mode', true);
-        error_log('BCV Dólar Tracker: update_option resultado: ' . ($result ? 'OK' : 'Error'));
-        
-        // Verificar si realmente se guardó
-        $new_value = get_option('bcv_debug_mode', false);
-        error_log('BCV Dólar Tracker: Valor después de update_option: ' . ($new_value ? 'true' : 'false'));
-        
+        $result = update_option('bcv_debug_mode', '1');
         if ($result) {
-            error_log('BCV Dólar Tracker: Intentando registrar log de info');
-            self::info(self::CONTEXT_SETTINGS, 'Modo de depuración habilitado');
-        } else {
-            error_log('BCV Dólar Tracker: update_option falló, pero el valor puede haberse guardado igual');
-            // Intentar registrar el log de todas formas
             self::info(self::CONTEXT_SETTINGS, 'Modo de depuración habilitado');
         }
         return $result;
@@ -191,26 +166,8 @@ class BCV_Logger {
      * @return bool True si se guardó correctamente
      */
     public static function disable_debug_mode() {
-        error_log('BCV Dólar Tracker: BCV_Logger::disable_debug_mode() llamado');
-        
-        // Verificar valor actual
-        $current_value = get_option('bcv_debug_mode', false);
-        error_log('BCV Dólar Tracker: Valor actual de bcv_debug_mode: ' . ($current_value ? 'true' : 'false'));
-        
-        // Intentar actualizar
-        $result = update_option('bcv_debug_mode', false);
-        error_log('BCV Dólar Tracker: update_option resultado: ' . ($result ? 'OK' : 'Error'));
-        
-        // Verificar si realmente se guardó
-        $new_value = get_option('bcv_debug_mode', false);
-        error_log('BCV Dólar Tracker: Valor después de update_option: ' . ($new_value ? 'true' : 'false'));
-        
+        $result = update_option('bcv_debug_mode', '0');
         if ($result) {
-            error_log('BCV Dólar Tracker: Intentando registrar log de info');
-            self::info(self::CONTEXT_SETTINGS, 'Modo de depuración deshabilitado');
-        } else {
-            error_log('BCV Dólar Tracker: update_option falló, pero el valor puede haberse guardado igual');
-            // Intentar registrar el log de todas formas
             self::info(self::CONTEXT_SETTINGS, 'Modo de depuración deshabilitado');
         }
         return $result;
