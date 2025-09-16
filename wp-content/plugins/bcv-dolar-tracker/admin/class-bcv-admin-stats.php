@@ -25,6 +25,13 @@ class BCV_Admin_Stats {
             }
         }
         
+        // Procesar limpieza de datos incorrectos
+        if (isset($_POST['bcv_cleanup_incorrect_data'])) {
+            if (wp_verify_nonce($_POST['_wpnonce'], 'bcv_cleanup_incorrect_data')) {
+                self::handle_cleanup_incorrect_data();
+            }
+        }
+        
         // Obtener estadísticas
         $database = new BCV_Database();
         $price_stats = $database->get_price_stats();
@@ -215,6 +222,11 @@ class BCV_Admin_Stats {
         echo '</form>';
         
         echo '<form method="post" class="bcv-action-form">';
+        wp_nonce_field('bcv_cleanup_incorrect_data');
+        echo '<button type="submit" name="bcv_cleanup_incorrect_data" class="bcv-btn bcv-btn-warning" onclick="return confirm(\'¿Estás seguro? Esto eliminará todos los datos de precios incorrectos (fuera del rango 1-1000 Bs.).\');">🧹 Limpiar Datos Incorrectos</button>';
+        echo '</form>';
+        
+        echo '<form method="post" class="bcv-action-form">';
         wp_nonce_field('bcv_fix_database');
         echo '<button type="submit" name="bcv_fix_database" class="bcv-btn bcv-btn-danger" onclick="return confirm(\'¿Estás seguro? Esto recreará la tabla de logs.\');">🔧 Reparar Base de Datos</button>';
         echo '</form>';
@@ -278,7 +290,7 @@ class BCV_Admin_Stats {
      * Obtener estado de salud de la conexión
      */
     private static function get_connection_health($scraping_info) {
-        if ($scraping_info['total_scrapings'] == 0) {
+        if (!isset($scraping_info['total_scrapings']) || $scraping_info['total_scrapings'] == 0) {
             return 'warning';
         }
         
@@ -297,7 +309,7 @@ class BCV_Admin_Stats {
      * Obtener texto del estado de conexión
      */
     private static function get_connection_status_text($scraping_info) {
-        if ($scraping_info['total_scrapings'] == 0) {
+        if (!isset($scraping_info['total_scrapings']) || $scraping_info['total_scrapings'] == 0) {
             return 'Sin intentos de conexión';
         }
         
@@ -322,5 +334,29 @@ class BCV_Admin_Stats {
         update_option('bcv_cron_failed_executions', 0);
         
         echo '<div class="notice notice-success"><p>Contadores reiniciados correctamente.</p></div>';
+    }
+    
+    /**
+     * Manejar limpieza de datos incorrectos
+     */
+    private static function handle_cleanup_incorrect_data() {
+        if (!class_exists('BCV_Database')) {
+            echo '<div class="notice notice-error"><p>❌ Error: Clase BCV_Database no disponible</p></div>';
+            return;
+        }
+        
+        $database = new BCV_Database();
+        $result = $database->cleanup_incorrect_data();
+        
+        if ($result['success']) {
+            if ($result['deleted_count'] > 0) {
+                echo '<div class="notice notice-success"><p>✅ ' . $result['message'] . '</p></div>';
+            } else {
+                echo '<div class="notice notice-info"><p>ℹ️ ' . $result['message'] . '</p></div>';
+            }
+            echo '<script>location.reload();</script>';
+        } else {
+            echo '<div class="notice notice-error"><p>❌ Error al limpiar los datos incorrectos</p></div>';
+        }
     }
 }

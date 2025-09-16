@@ -341,7 +341,7 @@ class BCV_Cron {
         
         // Verificar si ya se ejecutó recientemente (evitar duplicados)
         $last_execution = get_transient('bcv_cron_last_execution');
-        if ($last_execution && (time() - $last_execution) < 300) { // 5 minutos
+        if ($last_execution && (time() - $last_execution) < 60) { // 1 minuto (temporal para testing)
             error_log('BCV Dólar Tracker: Cron ejecutado recientemente, saltando');
             BCV_Logger::info(BCV_Logger::CONTEXT_CRON, 'Cron ejecutado recientemente, saltando ejecución');
             return;

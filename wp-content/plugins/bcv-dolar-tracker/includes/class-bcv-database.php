@@ -332,13 +332,18 @@ class BCV_Database {
             $debe_guardar = true;
             $razon = 'Primer registro en la base de datos';
         } else {
-            $precio_anterior = floatval($ultimo_registro->precio);
+            $precio_anterior = $ultimo_registro->precio; // Mantener como string para comparación exacta
             $fecha_anterior = $ultimo_registro->datatime;
             $fecha_anterior_dia = date('Y-m-d', strtotime($fecha_anterior));
             $fecha_hoy = date('Y-m-d');
             
-            if ($precio != $precio_anterior) {
-                // El precio cambió, guardar siempre
+            // Comparar precios con tolerancia de 4 decimales
+            $precio_anterior_float = floatval($precio_anterior);
+            $precio_float = floatval($precio);
+            $diferencia = abs($precio_float - $precio_anterior_float);
+            
+            if ($diferencia > 0.0001) { // Tolerancia de 0.0001 para 4 decimales
+                // El precio cambió significativamente, guardar siempre
                 $debe_guardar = true;
                 $razon = "Precio cambió de {$precio_anterior} a {$precio}";
             } elseif ($fecha_anterior_dia < $fecha_hoy) {
@@ -587,6 +592,45 @@ class BCV_Database {
         set_transient($cache_key, $stats, 900);
         
         return $stats;
+    }
+    
+    /**
+     * Limpiar datos incorrectos de la base de datos
+     * 
+     * @return array Resultado de la limpieza
+     */
+    public function cleanup_incorrect_data() {
+        global $wpdb;
+        
+        // Identificar datos incorrectos (precios fuera del rango realista para bolívares venezolanos)
+        // El dólar en Venezuela es muy volátil, puede estar entre 50 y 500 bolívares
+        $incorrect_query = "SELECT COUNT(*) FROM {$this->table_name} WHERE precio > 500 OR precio < 10";
+        $incorrect_count = $wpdb->get_var($incorrect_query);
+        
+        if ($incorrect_count > 0) {
+            // Eliminar datos incorrectos (solo valores extremadamente fuera de rango)
+            $deleted = $wpdb->query("DELETE FROM {$this->table_name} WHERE precio > 500 OR precio < 10");
+            
+            // Limpiar caché de estadísticas
+            delete_transient('bcv_price_stats');
+            
+            BCV_Logger::info("Datos incorrectos eliminados", array(
+                'deleted_count' => $deleted,
+                'incorrect_count' => $incorrect_count
+            ));
+            
+            return array(
+                'success' => true,
+                'deleted_count' => $deleted,
+                'message' => "Se eliminaron {$deleted} registros con datos incorrectos"
+            );
+        }
+        
+        return array(
+            'success' => true,
+            'deleted_count' => 0,
+            'message' => "No se encontraron datos incorrectos"
+        );
     }
     
     /**

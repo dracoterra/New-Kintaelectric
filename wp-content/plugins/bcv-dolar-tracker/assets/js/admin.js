@@ -76,21 +76,63 @@ jQuery(document).ready(function($) {
         $('#cron_seconds').val(seconds);
     });
     
-    // ===== VALIDACIÓN DEL FORMULARIO =====
-    $('form').on('submit', function(e) {
+    // ===== VALIDACIÓN DEL FORMULARIO DE CRON =====
+    $('#cron-settings-form').on('submit', function(e) {
         var hours = parseInt($('#cron_hours').val()) || 0;
         var minutes = parseInt($('#cron_minutes').val()) || 0;
         var seconds = parseInt($('#cron_seconds').val()) || 0;
         var totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
         
         if (totalSeconds < 60) {
-            alert('El intervalo mínimo debe ser de 1 minuto.');
+            showValidationError('El intervalo mínimo debe ser de 1 minuto (60 segundos).');
             e.preventDefault();
             return false;
         }
         
         return true;
     });
+    
+    // ===== FUNCIÓN PARA MOSTRAR ERRORES DE VALIDACIÓN =====
+    function showValidationError(message) {
+        // Remover mensajes anteriores
+        $('.bcv-validation-error').remove();
+        
+        // Crear mensaje de error elegante
+        var errorHtml = '<div class="bcv-validation-error" style="' +
+            'background: #f8d7da; ' +
+            'color: #721c24; ' +
+            'border: 1px solid #f5c6cb; ' +
+            'border-radius: 8px; ' +
+            'padding: 15px 20px; ' +
+            'margin: 15px 0; ' +
+            'display: flex; ' +
+            'align-items: center; ' +
+            'gap: 10px; ' +
+            'box-shadow: 0 2px 8px rgba(220, 53, 69, 0.1); ' +
+            'animation: slideDown 0.3s ease-out;' +
+        '">';
+        errorHtml += '<span style="font-size: 18px;">⚠️</span>';
+        errorHtml += '<div>';
+        errorHtml += '<strong>Error de Validación</strong><br>';
+        errorHtml += '<span style="font-size: 14px;">' + message + '</span>';
+        errorHtml += '</div>';
+        errorHtml += '</div>';
+        
+        // Insertar mensaje después del formulario
+        $('form').after(errorHtml);
+        
+        // Scroll al mensaje
+        $('html, body').animate({
+            scrollTop: $('.bcv-validation-error').offset().top - 100
+        }, 500);
+        
+        // Auto-ocultar después de 8 segundos
+        setTimeout(function() {
+            $('.bcv-validation-error').fadeOut(500, function() {
+                $(this).remove();
+            });
+        }, 8000);
+    }
     
     // ===== PRUEBA DE SCRAPING DETALLADA =====
     $('#test-scraping').on('click', function() {

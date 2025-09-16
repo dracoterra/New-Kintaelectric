@@ -160,6 +160,13 @@ class BCV_Admin_Clean {
             echo '<div class="notice notice-success is-dismissible"><p>✅ Configuración de debug guardada exitosamente</p></div>';
         }
         
+        if (isset($_GET['validation-error'])) {
+            $error_type = $_GET['validation-error'];
+            if ($error_type === 'interval-too-short') {
+                echo '<div class="notice notice-error is-dismissible"><p>⚠️ <strong>Error de Validación:</strong> El intervalo mínimo debe ser de 1 minuto (60 segundos).</p></div>';
+            }
+        }
+        
         echo '<div class="wrap">';
         echo '<h1>BCV Dólar Tracker</h1>';
         echo '<p>Configuración del plugin para rastrear precios del dólar del BCV.</p>';
@@ -401,11 +408,11 @@ class BCV_Admin_Clean {
         // Calcular total de segundos
         $total_seconds = ($hours * 3600) + ($minutes * 60) + $seconds;
         
-        // Mínimo 1 minuto (60 segundos)
+        // Validar mínimo 1 minuto (60 segundos)
         if ($total_seconds < 60) {
-            $hours = 0;
-            $minutes = 1;
-            $seconds = 0;
+            // Redirigir con mensaje de error específico
+            wp_redirect(add_query_arg('validation-error', 'interval-too-short', admin_url('admin.php?page=bcv-dolar-tracker')));
+            exit;
         }
         
         // Guardar configuración
@@ -634,7 +641,7 @@ class BCV_Admin_Clean {
         echo '</div>';
         
         // Formulario de configuración
-        echo '<form method="post" class="bcv-form">';
+        echo '<form method="post" class="bcv-form" id="cron-settings-form">';
         wp_nonce_field('bcv_cron_settings');
         
         echo '<div class="bcv-input-group">';

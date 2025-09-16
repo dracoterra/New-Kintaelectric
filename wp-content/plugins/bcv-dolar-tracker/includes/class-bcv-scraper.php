@@ -81,6 +81,9 @@ class BCV_Scraper {
             $this->set_cached_price($rate);
             error_log('BCV Dólar Tracker: Precio obtenido del BCV: ' . $rate);
             
+            // Actualizar estadísticas de scraping
+            $this->update_scraping_stats(true);
+            
             // Registrar en el sistema de logs
             BCV_Logger::success(BCV_Logger::CONTEXT_API, "Tasa obtenida con éxito: {$rate} Bs.");
             
@@ -88,6 +91,9 @@ class BCV_Scraper {
         }
         
         error_log('BCV Dólar Tracker: No se pudo obtener precio válido del BCV');
+        
+        // Actualizar estadísticas de scraping (fallo)
+        $this->update_scraping_stats(false);
         
         // Registrar error en el sistema de logs
         BCV_Logger::error(BCV_Logger::CONTEXT_API, 'No se pudo obtener precio válido del BCV');
@@ -349,14 +355,24 @@ class BCV_Scraper {
         $cached_price = $this->get_cached_price();
         $cache_expiry = get_option('_transient_timeout_bcv_scraped_rate', 0);
         
+        // Obtener estadísticas con valores por defecto seguros
+        $total_scrapings = get_option('bcv_scraping_attempts', 0);
+        $successful_scrapings = get_option('bcv_successful_scrapings', 0);
+        $failed_scrapings = get_option('bcv_failed_scrapings', 0);
+        
+        // Asegurar que los valores sean números
+        $total_scrapings = intval($total_scrapings);
+        $successful_scrapings = intval($successful_scrapings);
+        $failed_scrapings = intval($failed_scrapings);
+        
         return array(
             'cached_price' => $cached_price,
             'cache_expiry' => $cache_expiry ? date('Y-m-d H:i:s', $cache_expiry) : 'No disponible',
             'cache_valid' => $cached_price !== false,
             'last_scraping' => get_option('bcv_last_scraping_time', 'Nunca'),
-            'scraping_attempts' => get_option('bcv_scraping_attempts', 0),
-            'successful_scrapings' => get_option('bcv_successful_scrapings', 0),
-            'failed_scrapings' => get_option('bcv_failed_scrapings', 0)
+            'total_scrapings' => $total_scrapings,
+            'successful_scrapings' => $successful_scrapings,
+            'failed_scrapings' => $failed_scrapings
         );
     }
     
