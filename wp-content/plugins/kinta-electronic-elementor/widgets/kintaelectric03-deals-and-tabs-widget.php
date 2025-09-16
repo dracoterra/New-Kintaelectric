@@ -536,7 +536,7 @@ class KEE_Kintaelectric03_Deals_And_Tabs_Widget extends KEE_Base_Widget
                                         <span class="price">
                                             <span class="electro-price"><?php echo $product_price; ?></span>
                                         </span>
-                                        <div class="add-to-cart-wrap" data-bs-toggle="tooltip" data-bs-title="<?php esc_attr_e('Add to cart', 'kinta-electric-elementor'); ?>">
+                                        <div class="add-to-cart-wrap">
                                             <?php
                                             $add_to_cart_url = wc_get_cart_url() . '?add-to-cart=' . $product_id;
                                             ?>

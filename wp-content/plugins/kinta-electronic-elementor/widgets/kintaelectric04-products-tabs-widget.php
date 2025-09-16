@@ -511,7 +511,7 @@ class KEE_Kintaelectric04_Products_Tabs_Widget extends KEE_Base_Widget
                             <span class="price">
                                 <span class="electro-price"><?php echo $product_price; ?></span>
                             </span>
-                            <div class="add-to-cart-wrap" data-bs-toggle="tooltip" data-bs-title="<?php esc_attr_e('Add to cart', 'kinta-electric-elementor'); ?>">
+                            <div class="add-to-cart-wrap">
                                 <?php
                                 if ($is_in_stock) {
                                     $add_to_cart_url = wc_get_cart_url() . '?add-to-cart=' . $product_id;
@@ -717,7 +717,7 @@ class KEE_Kintaelectric04_Products_Tabs_Widget extends KEE_Base_Widget
                                 <span class="price">
                                     <span class="electro-price"><?php echo $product_price; ?></span>
                                 </span>
-                                <div class="add-to-cart-wrap" data-bs-toggle="tooltip" data-bs-title="<?php esc_attr_e('Añadir al carrito', 'kinta-electric-elementor'); ?>">
+                                <div class="add-to-cart-wrap">
                                     <?php
                                     if ($is_in_stock) {
                                         $add_to_cart_url = wc_get_cart_url() . '?add-to-cart=' . $product_id;
@@ -907,7 +907,7 @@ class KEE_Kintaelectric04_Products_Tabs_Widget extends KEE_Base_Widget
                                                             <span class="price">
                                                                 <span class="electro-price">$99.00</span>
                                                             </span>
-                                                            <div class="add-to-cart-wrap" data-bs-toggle="tooltip" data-bs-title="Add to cart">
+                                                            <div class="add-to-cart-wrap">
                                                                 <a href="#" class="button product_type_simple add_to_cart_button ajax_add_to_cart">Add to cart</a>
                                                             </div>
                                                         </div>
@@ -983,7 +983,7 @@ class KEE_Kintaelectric04_Products_Tabs_Widget extends KEE_Base_Widget
                                                                 <span class="price">
                                                                     <span class="electro-price">$299.00</span>
                                                                 </span>
-                                                                <div class="add-to-cart-wrap" data-bs-toggle="tooltip" data-bs-title="Add to cart">
+                                                                <div class="add-to-cart-wrap">
                                                                     <a href="#" class="button product_type_simple add_to_cart_button ajax_add_to_cart">Add to cart</a>
                                                                 </div>
                                                             </div>
@@ -1046,7 +1046,7 @@ class KEE_Kintaelectric04_Products_Tabs_Widget extends KEE_Base_Widget
                                                             <span class="price">
                                                                 <span class="electro-price">$149.00</span>
                                                             </span>
-                                                            <div class="add-to-cart-wrap" data-bs-toggle="tooltip" data-bs-title="Add to cart">
+                                                            <div class="add-to-cart-wrap">
                                                                 <a href="#" class="button product_type_simple add_to_cart_button ajax_add_to_cart">Add to cart</a>
                                                             </div>
                                                         </div>

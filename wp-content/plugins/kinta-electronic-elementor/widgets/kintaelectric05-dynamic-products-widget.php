@@ -535,7 +535,7 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
                                             </a>
                                             <div class="price-add-to-cart">
                                                 <span class="price"><?php echo $product['price_html']; ?></span>
-                                                <div class="add-to-cart-wrap" data-bs-toggle="tooltip" data-bs-title="Add to cart">
+                                                <div class="add-to-cart-wrap">
                                                     <a href="<?php echo esc_url($product['add_to_cart_url']); ?>" aria-describedby="woocommerce_loop_add_to_cart_link_describedby_<?php echo $product['id']; ?>" data-quantity="1" class="button product_type_simple add_to_cart_button ajax_add_to_cart" data-product_id="<?php echo $product['id']; ?>" data-product_sku="<?php echo esc_attr($product['sku']); ?>" aria-label="Add to cart: &ldquo;<?php echo esc_attr($product['name']); ?>&rdquo;" rel="nofollow" data-success_message="&ldquo;<?php echo esc_attr($product['name']); ?>&rdquo; has been added to your cart">Add to cart</a>
                                                 </div>
                                                 <span id="woocommerce_loop_add_to_cart_link_describedby_<?php echo $product['id']; ?>" class="screen-reader-text"></span>

@@ -441,8 +441,6 @@ class KEE_Kintaelectric07_Recently_Added_Widget extends KEE_Base_Widget {
                                                     </span>
                                                 </span>
                                                 <div class="add-to-cart-wrap" 
-                                                     data-bs-toggle="tooltip" 
-                                                     data-bs-title="Add to cart">
                                                     <?php if ($product->is_in_stock()): ?>
                                                         <a href="<?php echo esc_url($add_to_cart_url); ?>"
                                                            aria-describedby="woocommerce_loop_add_to_cart_link_describedby_<?php echo $product_id; ?>"
