@@ -339,7 +339,7 @@ class BCV_Database {
         // ===== LÓGICA DE ALMACENAMIENTO INTELIGENTE =====
         
         // Paso 1: Obtener el último registro de la base de datos
-        $ultimo_registro = $this->get_latest_price();
+        $ultimo_registro = $this->get_latest_record();
         
         // Paso 2: Aplicar lógica condicional
         $debe_guardar = false;
@@ -535,9 +535,22 @@ class BCV_Database {
     /**
      * Obtener el precio más reciente del dólar
      * 
-     * @return object|false Objeto con datos del precio o false si no hay datos
+     * @return float|null Precio del dólar o null si no hay datos
      */
     public function get_latest_price() {
+        global $wpdb;
+        
+        $sql = "SELECT precio FROM {$this->table_name} ORDER BY datatime DESC LIMIT 1";
+        $result = $wpdb->get_var($sql);
+        return $result ? floatval($result) : null;
+    }
+    
+    /**
+     * Obtener el registro más reciente del dólar
+     * 
+     * @return object|null Objeto con datos del precio o null si no hay datos
+     */
+    public function get_latest_record() {
         global $wpdb;
         
         $sql = "SELECT * FROM {$this->table_name} ORDER BY datatime DESC LIMIT 1";
