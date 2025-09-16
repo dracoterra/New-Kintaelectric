@@ -409,31 +409,29 @@ class BCV_Admin {
     private function render_debug_settings() {
         $debug_mode = BCV_Logger::is_debug_mode_enabled();
         
-        echo '<div class="bcv-panel">';
-        echo '<h3>🐛 Configuración de Depuración</h3>';
-        echo '<p>Controla el sistema de registro de eventos interno del plugin:</p>';
+        echo '<div class="bcv-simple-panel">';
+        echo '<h3>🐛 Modo de Depuración</h3>';
         
-        echo '<table class="form-table">';
-        echo '<tr>';
-        echo '<th scope="row"><label for="debug_mode">Modo de Depuración</label></th>';
-        echo '<td>';
-        echo '<label>';
-        echo '<input type="checkbox" id="debug_mode" name="debug_mode" value="1" ' . checked($debug_mode, true, false) . ' />';
-        echo ' Habilitar registro de eventos internos';
+        echo '<form method="post" class="bcv-simple-form">';
+        wp_nonce_field('bcv_debug_settings');
+        
+        echo '<div class="bcv-checkbox-group">';
+        echo '<label class="bcv-checkbox-label">';
+        echo '<input type="checkbox" name="debug_mode" value="1" ' . checked($debug_mode, true, false) . ' />';
+        echo '<span class="bcv-checkbox-text">Habilitar registro de eventos internos</span>';
         echo '</label>';
-        echo '<p class="description">Cuando está habilitado, el plugin registrará todas las operaciones importantes en la base de datos.</p>';
-        echo '</td>';
-        echo '</tr>';
-        echo '</table>';
+        echo '<p class="bcv-help-text">Cuando está habilitado, el plugin registrará todas las operaciones importantes en la base de datos.</p>';
+        echo '</div>';
         
-        echo '<p class="submit">';
-        echo '<input type="submit" name="save_debug_settings" class="button button-primary" value="Guardar Configuración de Depuración">';
-        echo '</p>';
+        echo '<div class="bcv-form-buttons">';
+        echo '<button type="submit" name="save_debug_settings" class="bcv-save-btn">Guardar</button>';
         
         if ($debug_mode) {
-            echo '<p><a href="' . admin_url('admin.php?page=bcv-logs') . '" class="button button-secondary">Ver Registro de Actividad</a></p>';
+            echo '<a href="' . admin_url('admin.php?page=bcv-logs') . '" class="bcv-link-btn">Ver Logs</a>';
         }
+        echo '</div>';
         
+        echo '</form>';
         echo '</div>';
     }
     
@@ -614,7 +612,7 @@ class BCV_Admin {
      */
     private function process_debug_settings() {
         // Verificar nonce
-        if (!wp_verify_nonce($_POST['_wpnonce'], 'bcv_cron_settings')) {
+        if (!wp_verify_nonce($_POST['_wpnonce'], 'bcv_debug_settings')) {
             wp_die('Acceso denegado');
         }
         
@@ -798,40 +796,24 @@ class BCV_Admin {
             'enabled' => true
         ));
         
-        echo '<div class="bcv-panel">';
+        echo '<div class="bcv-simple-panel">';
         echo '<h3>⚙️ Configuración del Cron</h3>';
         
-        // Control independiente para activar/desactivar cron
-        echo '<div class="bcv-cron-control" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">';
-        echo '<h4>🔄 Control del Cron</h4>';
-        echo '<p>Activa o desactiva la ejecución automática del scraping:</p>';
-        
+        // Estado del cron
         $cron_status = wp_next_scheduled('bcv_scrape_dollar_rate') ? 'Activo' : 'Inactivo';
-        $status_class = wp_next_scheduled('bcv_scrape_dollar_rate') ? 'success' : 'error';
-        
-        echo '<p><strong>Estado actual: <span class="bcv-status-' . $status_class . '">' . $cron_status . '</span></strong></p>';
-        
-        echo '<div style="margin-top: 10px;">';
-        echo '<button type="button" id="toggle-cron" class="button ' . ($cron_settings['enabled'] ? 'button-secondary' : 'button-primary') . '">';
-        echo $cron_settings['enabled'] ? 'Desactivar Cron' : 'Activar Cron';
-        echo '</button>';
-        echo '<span id="cron-toggle-result" style="margin-left: 10px;"></span>';
-        echo '</div>';
+        echo '<div class="bcv-status-info">';
+        echo '<span class="bcv-status-label">Estado:</span>';
+        echo '<span class="bcv-status-value bcv-status-' . (wp_next_scheduled('bcv_scrape_dollar_rate') ? 'active' : 'inactive') . '">' . $cron_status . '</span>';
         echo '</div>';
         
-        // Formulario de configuración de intervalo
-        echo '<form method="post" action="" id="cron-settings-form">';
+        // Formulario de configuración
+        echo '<form method="post" class="bcv-simple-form">';
         wp_nonce_field('bcv_cron_settings');
         
-        echo '<h4>⏰ Configuración del Intervalo</h4>';
-        echo '<table class="form-table">';
-        
-        // Selector de intervalos predefinidos
-        echo '<tr>';
-        echo '<th scope="row"><label for="cron_interval_preset">Intervalo Predefinido</label></th>';
-        echo '<td>';
-        echo '<select id="cron_interval_preset" name="cron_interval_preset" class="regular-text">';
-        echo '<option value="">Seleccionar intervalo...</option>';
+        echo '<div class="bcv-input-group">';
+        echo '<label for="cron_interval_preset">Intervalo Predefinido</label>';
+        echo '<select id="cron_interval_preset" name="cron_interval_preset" class="bcv-select">';
+        echo '<option value="">Seleccionar...</option>';
         echo '<option value="300">Cada 5 minutos</option>';
         echo '<option value="900">Cada 15 minutos</option>';
         echo '<option value="1800">Cada 30 minutos</option>';
@@ -842,38 +824,30 @@ class BCV_Admin {
         echo '<option value="86400">Diariamente</option>';
         echo '<option value="custom">Personalizado</option>';
         echo '</select>';
-        echo '<span class="description">Selecciona un intervalo predefinido o personalizado</span>';
-        echo '</td>';
-        echo '</tr>';
+        echo '</div>';
         
-        echo '<tr>';
-        echo '<th scope="row"><label for="cron_hours">Horas</label></th>';
-        echo '<td>';
-        echo '<input type="number" id="cron_hours" name="cron_hours" value="' . esc_attr($cron_settings['hours']) . '" min="0" max="24" class="small-text" required />';
-        echo '<span class="description">Horas entre ejecuciones (0-24)</span>';
-        echo '</td>';
-        echo '</tr>';
+        echo '<div class="bcv-time-inputs" id="time-inputs" style="display: none;">';
+        echo '<div class="bcv-input-row">';
+        echo '<div class="bcv-input-group">';
+        echo '<label for="cron_hours">Horas</label>';
+        echo '<input type="number" id="cron_hours" name="cron_hours" value="' . esc_attr($cron_settings['hours']) . '" min="0" max="24" class="bcv-input" />';
+        echo '</div>';
+        echo '<div class="bcv-input-group">';
+        echo '<label for="cron_minutes">Minutos</label>';
+        echo '<input type="number" id="cron_minutes" name="cron_minutes" value="' . esc_attr($cron_settings['minutes']) . '" min="0" max="59" class="bcv-input" />';
+        echo '</div>';
+        echo '<div class="bcv-input-group">';
+        echo '<label for="cron_seconds">Segundos</label>';
+        echo '<input type="number" id="cron_seconds" name="cron_seconds" value="' . esc_attr($cron_settings['seconds']) . '" min="0" max="59" class="bcv-input" />';
+        echo '</div>';
+        echo '</div>';
+        echo '</div>';
         
-        echo '<tr>';
-        echo '<th scope="row"><label for="cron_minutes">Minutos</label></th>';
-        echo '<td>';
-        echo '<input type="number" id="cron_minutes" name="cron_minutes" value="' . esc_attr($cron_settings['minutes']) . '" min="0" max="59" class="small-text" required />';
-        echo '<span class="description">Minutos entre ejecuciones (0-59)</span>';
-        echo '</td>';
-        echo '</tr>';
+        echo '<div class="bcv-form-buttons">';
+        echo '<button type="submit" name="submit" class="bcv-save-btn">Guardar Configuración</button>';
+        echo '<button type="button" id="toggle-cron" class="bcv-toggle-btn">' . ($cron_settings['enabled'] ? 'Desactivar' : 'Activar') . ' Cron</button>';
+        echo '</div>';
         
-        echo '<tr>';
-        echo '<th scope="row"><label for="cron_seconds">Segundos</label></th>';
-        echo '<td>';
-        echo '<input type="number" id="cron_seconds" name="cron_seconds" value="' . esc_attr($cron_settings['seconds']) . '" min="0" max="59" class="small-text" required />';
-        echo '<span class="description">Segundos entre ejecuciones (0-59)</span>';
-        echo '</td>';
-        echo '</tr>';
-        echo '</table>';
-        
-        echo '<p class="submit">';
-        echo '<input type="submit" name="submit" id="submit" class="button button-primary" value="Guardar Configuración">';
-        echo '</p>';
         echo '</form>';
         echo '</div>';
     }
@@ -882,12 +856,14 @@ class BCV_Admin {
      * Renderizar botón de prueba de scraping
      */
     private function render_test_scraping() {
-        echo '<div class="bcv-panel">';
+        echo '<div class="bcv-simple-panel">';
         echo '<h3>🧪 Prueba de Scraping</h3>';
-        echo '<p>';
-        echo '<button type="button" id="test-scraping" class="button button-secondary">Probar Scraping Manual</button>';
-        echo '<span id="test-result" style="margin-left: 10px;"></span>';
-        echo '</p>';
+        echo '<p>Haz clic en el botón para probar la conexión con el BCV y obtener el precio actual del dólar.</p>';
+        
+        echo '<div class="bcv-test-section">';
+        echo '<button type="button" id="test-scraping" class="bcv-test-btn">Probar Scraping</button>';
+        echo '<span id="test-result" class="bcv-result"></span>';
+        echo '</div>';
         echo '</div>';
     }
 
@@ -895,11 +871,11 @@ class BCV_Admin {
      * Renderizar información del cron
      */
     private function render_cron_info() {
-        echo '<div class="bcv-panel">';
+        echo '<div class="bcv-simple-panel">';
         echo '<h3>⏰ Estado del Cron</h3>';
         
         if (!class_exists('BCV_Cron')) {
-            echo '<p style="color: #a94442;">❌ Clase BCV_Cron no disponible</p>';
+            echo '<p class="bcv-error">❌ Clase BCV_Cron no disponible</p>';
             echo '</div>';
             return;
         }
@@ -908,34 +884,43 @@ class BCV_Admin {
         $cron_info = $cron->get_cron_info();
         
         if ($cron_info) {
-            echo '<table class="form-table">';
-            echo '<tr>';
-            echo '<th scope="row">Estado</th>';
-            echo '<td>' . ($cron_info['is_scheduled'] ? '✅ Programado' : '❌ No programado') . '</td>';
-            echo '</tr>';
+            echo '<div class="bcv-info-list">';
+            
+            // Estado
+            echo '<div class="bcv-info-item">';
+            echo '<span class="bcv-info-label">Estado:</span>';
+            if ($cron_info['is_scheduled']) {
+                echo '<span class="bcv-status-active">✅ Programado</span>';
+            } else {
+                echo '<span class="bcv-status-inactive">❌ No programado</span>';
+            }
+            echo '</div>';
             
             if ($cron_info['is_scheduled']) {
-                echo '<tr>';
-                echo '<th scope="row">Próxima ejecución</th>';
-                echo '<td>' . esc_html($cron_info['next_run']) . '</td>';
-                echo '</tr>';
+                // Próxima ejecución
+                echo '<div class="bcv-info-item">';
+                echo '<span class="bcv-info-label">Próxima ejecución:</span>';
+                echo '<span class="bcv-info-value">' . esc_html($cron_info['next_run']) . '</span>';
+                echo '</div>';
                 
-                echo '<tr>';
-                echo '<th scope="row">Intervalo</th>';
-                echo '<td>' . esc_html($cron_info['interval_formatted']) . '</td>';
-                echo '</tr>';
+                // Intervalo
+                echo '<div class="bcv-info-item">';
+                echo '<span class="bcv-info-label">Intervalo:</span>';
+                echo '<span class="bcv-info-value">' . esc_html($cron_info['interval_formatted']) . '</span>';
+                echo '</div>';
             }
-            echo '</table>';
+            
+            echo '</div>';
             
             // Botón para forzar programación del cron
             if (!$cron_info['is_scheduled']) {
-                echo '<form method="post" style="margin-top: 15px;">';
+                echo '<form method="post" class="bcv-inline-form">';
                 wp_nonce_field('bcv_force_cron_schedule');
-                echo '<input type="submit" name="bcv_force_cron_schedule" class="button button-secondary" value="🔄 Forzar Programación del Cron">';
+                echo '<button type="submit" name="bcv_force_cron_schedule" class="bcv-action-btn">Forzar Programación</button>';
                 echo '</form>';
             }
         } else {
-            echo '<p style="color: #a94442;">❌ No se pudo obtener información del cron</p>';
+            echo '<p class="bcv-error">❌ No se pudo obtener información del cron</p>';
         }
         
         echo '</div>';
