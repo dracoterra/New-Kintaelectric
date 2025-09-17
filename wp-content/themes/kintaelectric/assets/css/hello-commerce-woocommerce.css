@@ -5,12 +5,12 @@
 
 /* Variables del proyecto */
 :root {
-    --primary-color: var(--bs-ec-primary, #fed700);
+    --primary-color: var(--bs-ec-primary, #ccc634);
     --primary-dark: var(--bs-ec-primary-d, rgb(231.05, 195.5738188976, 0));
     --secondary-color: var(--bs-secondary, #6c757d);
     --success-color: var(--bs-success, #198754);
     --danger-color: var(--bs-danger, #dc3545);
-    --warning-color: var(--bs-warning, #fed700);
+    --warning-color: var(--bs-warning, #ccc634);
     --info-color: var(--bs-info, #0dcaf0);
     --light-color: var(--bs-light, #f8f9fa);
     --dark-color: var(--bs-ec-dark, #181818);

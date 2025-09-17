@@ -596,7 +596,7 @@ function kintaelectric_customize_register( $wp_customize ) {
 
     // Primary Color
     $wp_customize->add_setting( 'kintaelectric_primary_color', array(
-        'default'           => '#fed700',
+        'default'           => '#ccc634',
         'sanitize_callback' => 'sanitize_hex_color',
     ) );
 
@@ -732,7 +732,7 @@ add_action( 'customize_register', 'kintaelectric_customize_register' );
  * Generate dynamic CSS based on customizer values
  */
 function kintaelectric_generate_dynamic_css() {
-    $primary_color = get_theme_mod( 'kintaelectric_primary_color', '#fed700' );
+    $primary_color = get_theme_mod( 'kintaelectric_primary_color', '#ccc634' );
     $primary_dark = get_theme_mod( 'kintaelectric_primary_dark', '#e0a800' );
     $secondary_color = get_theme_mod( 'kintaelectric_secondary_color', '#6c757d' );
     $success_color = get_theme_mod( 'kintaelectric_success_color', '#198754' );

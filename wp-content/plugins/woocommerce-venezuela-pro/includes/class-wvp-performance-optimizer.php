@@ -424,8 +424,20 @@ class WVP_Performance_Optimizer {
         // Limpiar transientes expirados
         global $wpdb;
         
-        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wvp_%' AND option_value < " . time());
-        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wvp_%' AND option_name NOT IN (SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wvp_%')");
+        // Limpiar timeouts expirados
+        $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s AND option_value < %d",
+            '_transient_timeout_wvp_%',
+            time()
+        ));
+        
+        // Limpiar transientes sin timeout (usando JOIN para evitar subconsulta)
+        $wpdb->query("
+            DELETE t1 FROM {$wpdb->options} t1
+            LEFT JOIN {$wpdb->options} t2 ON t1.option_name = CONCAT('_transient_', SUBSTRING(t2.option_name, 20))
+            WHERE t1.option_name LIKE '_transient_wvp_%' 
+            AND t2.option_name IS NULL
+        ");
         
         // Limpiar logs antiguos
         $this->cleanup_old_logs();
@@ -457,9 +469,28 @@ class WVP_Performance_Optimizer {
     private function cleanup_database_cache() {
         global $wpdb;
         
-        // Limpiar caché de consultas
-        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wc_%' AND option_value < " . time());
-        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wc_%' AND option_name NOT IN (SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wc_%')");
+        // Limpiar timeouts expirados de WooCommerce
+        $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s AND option_value < %d",
+            '_transient_timeout_wc_%',
+            time()
+        ));
+        
+        // Limpiar transientes de WooCommerce sin timeout (usando JOIN)
+        $wpdb->query("
+            DELETE t1 FROM {$wpdb->options} t1
+            LEFT JOIN {$wpdb->options} t2 ON t1.option_name = CONCAT('_transient_', SUBSTRING(t2.option_name, 20))
+            WHERE t1.option_name LIKE '_transient_wc_%' 
+            AND t2.option_name IS NULL
+        ");
+        
+        // Limpiar transientes de WP Query
+        $wpdb->query("
+            DELETE t1 FROM {$wpdb->options} t1
+            LEFT JOIN {$wpdb->options} t2 ON t1.option_name = CONCAT('_transient_', SUBSTRING(t2.option_name, 20))
+            WHERE t1.option_name LIKE '_transient_wp_query_%' 
+            AND t2.option_name IS NULL
+        ");
     }
     
     /**

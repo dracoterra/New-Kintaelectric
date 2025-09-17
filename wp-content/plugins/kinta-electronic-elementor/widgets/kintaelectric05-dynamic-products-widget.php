@@ -409,7 +409,7 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
             width: 30px;
             height: 8px;
             border-radius: 3px;
-            background-color: var(--bs-ec-primary, #fed700);
+            background-color: var(--bs-ec-primary, #ccc634);
         }
         .section-product-cards-carousel .products-carousel .owl-nav {
             display: block;
@@ -440,7 +440,7 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
         }
         .section-product-cards-carousel .products-carousel .owl-nav .owl-prev:hover,
         .section-product-cards-carousel .products-carousel .owl-nav .owl-next:hover {
-            background: var(--bs-ec-primary, #fed700);
+            background: var(--bs-ec-primary, #ccc634);
             color: #fff;
         }
         </style>

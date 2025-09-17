@@ -129,7 +129,7 @@
   align-items: center;
 }
 .mas-product:hover .mas-add-to-cart a {
-  background-color: #FED700 !important;
+  background-color: #ccc634 !important;
 }
 .mas-product:hover > div {
   position: absolute;

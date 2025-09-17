@@ -293,7 +293,14 @@ class KintaElectricElementor {
      */
     public function clear_cache_on_product_update($post_id) {
         if (get_post_type($post_id) === 'product') {
-            KEE_Base_Widget::clear_cache();
+            // Verificar que la clase existe antes de usarla
+            if (class_exists('KEE_Base_Widget')) {
+                KEE_Base_Widget::clear_cache();
+            } else {
+                // Fallback: limpiar transients directamente
+                delete_transient('kee_products_on_sale');
+                delete_transient('kee_product_categories');
+            }
         }
     }
     
@@ -301,7 +308,14 @@ class KintaElectricElementor {
      * Clear cache when categories are updated
      */
     public function clear_cache_on_category_update() {
-        KEE_Base_Widget::clear_cache();
+        // Verificar que la clase existe antes de usarla
+        if (class_exists('KEE_Base_Widget')) {
+            KEE_Base_Widget::clear_cache();
+        } else {
+            // Fallback: limpiar transients directamente
+            delete_transient('kee_products_on_sale');
+            delete_transient('kee_product_categories');
+        }
     }
 }
 

@@ -60,7 +60,7 @@
     -webkit-transform: none;
     transform: none;
     width: 1.87512rem;
-    background-color: #fed700;
+    background-color: #ccc634;
     border-radius: 6.1875rem;
 }
 
@@ -81,8 +81,8 @@
 /* Button (extraído de theme.css) */
 .btn-primary {
     color: #1e2022;
-    background-color: #fed700;
-    border-color: #fed700;
+    background-color: #ccc634;
+    border-color: #ccc634;
 }
 
 .btn-primary:hover {

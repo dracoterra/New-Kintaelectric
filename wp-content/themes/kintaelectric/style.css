@@ -18,7 +18,7 @@
     --bs-pink: #d63384;
     --bs-red: #dc3545;
     --bs-orange: #fd7e14;
-    --bs-yellow: #fed700;
+    --bs-yellow: #ccc634;
     --bs-green: #198754;
     --bs-teal: #20c997;
     --bs-cyan: #0dcaf0;
@@ -26,13 +26,13 @@
     --bs-gray: #6c757d;
     --bs-ec-dark: #181818;
     --bs-ec-dark-body: rgb(217, 217, 217);
-    --bs-primary: #fed700;
-    --bs-ec-primary: #fed700;
+    --bs-primary: #ccc634;
+    --bs-ec-primary: #ccc634;
     --bs-ec-primary-d: rgb(231.05, 195.5738188976, 0);
     --bs-secondary: #6c757d;
     --bs-success: #198754;
     --bs-info: #0dcaf0;
-    --bs-warning: #fed700;
+    --bs-warning: #ccc634;
     --bs-danger: #dc3545;
     --bs-light: #f8f9fa;
     --bs-dark: #333e48;
@@ -2831,8 +2831,8 @@ select:-moz-focusring {
 }
 
 .form-check-input:checked {
-    background-color: #fed700;
-    border-color: #fed700
+    background-color: #ccc634;
+    border-color: #ccc634
 }
 
 .form-check-input:checked[type=checkbox] {
@@ -2844,8 +2844,8 @@ select:-moz-focusring {
 }
 
 .form-check-input[type=checkbox]:indeterminate {
-    background-color: #fed700;
-    border-color: #fed700;
+    background-color: #ccc634;
+    border-color: #ccc634;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10h8'/%3e%3c/svg%3e")
 }
 
@@ -2948,7 +2948,7 @@ select:-moz-focusring {
     width: 1rem;
     height: 1rem;
     margin-top: -.25rem;
-    background-color: #fed700;
+    background-color: #ccc634;
     border: 0;
     border-radius: 1rem;
     box-shadow: 0 .1rem .25rem rgba(0, 0, 0, .1);
@@ -2980,7 +2980,7 @@ select:-moz-focusring {
 .form-range::-moz-range-thumb {
     width: 1rem;
     height: 1rem;
-    background-color: #fed700;
+    background-color: #ccc634;
     border: 0;
     border-radius: 1rem;
     box-shadow: 0 .1rem .25rem rgba(0, 0, 0, .1);
@@ -3882,8 +3882,8 @@ input[type=submit]:disabled {
 
 .btn-primary {
     color: #000;
-    background-color: #fed700;
-    border-color: #fed700;
+    background-color: #ccc634;
+    border-color: #ccc634;
     box-shadow: 0 0 0 rgba(255, 255, 255, 0)
 }
 
@@ -3922,14 +3922,14 @@ input[type=submit]:disabled {
 .btn-primary.disabled,
 .btn-primary:disabled {
     color: #000;
-    background-color: #fed700;
-    border-color: #fed700
+    background-color: #ccc634;
+    border-color: #ccc634
 }
 
 .btn-ec-primary {
     color: #000;
-    background-color: #fed700;
-    border-color: #fed700;
+    background-color: #ccc634;
+    border-color: #ccc634;
     box-shadow: 0 0 0 rgba(255, 255, 255, 0)
 }
 
@@ -3968,8 +3968,8 @@ input[type=submit]:disabled {
 .btn-ec-primary.disabled,
 .btn-ec-primary:disabled {
     color: #000;
-    background-color: #fed700;
-    border-color: #fed700
+    background-color: #ccc634;
+    border-color: #ccc634
 }
 
 .btn-ec-primary-d {
@@ -4158,8 +4158,8 @@ input[type=submit]:disabled {
 
 .btn-warning {
     color: #000;
-    background-color: #fed700;
-    border-color: #fed700;
+    background-color: #ccc634;
+    border-color: #ccc634;
     box-shadow: 0 0 0 rgba(255, 255, 255, 0)
 }
 
@@ -4198,8 +4198,8 @@ input[type=submit]:disabled {
 .btn-warning.disabled,
 .btn-warning:disabled {
     color: #000;
-    background-color: #fed700;
-    border-color: #fed700
+    background-color: #ccc634;
+    border-color: #ccc634
 }
 
 .btn-danger {
@@ -4341,14 +4341,14 @@ input[type=submit]:disabled {
 }
 
 .btn-outline-primary {
-    color: #fed700;
-    border-color: #fed700
+    color: #ccc634;
+    border-color: #ccc634
 }
 
 .btn-outline-primary:hover {
     color: #000;
-    background-color: #fed700;
-    border-color: #fed700
+    background-color: #ccc634;
+    border-color: #ccc634
 }
 
 .btn-check:focus+.btn-outline-primary,
@@ -4362,8 +4362,8 @@ input[type=submit]:disabled {
 .btn-outline-primary.dropdown-toggle.show,
 .btn-outline-primary:active {
     color: #000;
-    background-color: #fed700;
-    border-color: #fed700
+    background-color: #ccc634;
+    border-color: #ccc634
 }
 
 .btn-check:active+.btn-outline-primary:focus,
@@ -4376,19 +4376,19 @@ input[type=submit]:disabled {
 
 .btn-outline-primary.disabled,
 .btn-outline-primary:disabled {
-    color: #fed700;
+    color: #ccc634;
     background-color: transparent
 }
 
 .btn-outline-ec-primary {
-    color: #fed700;
-    border-color: #fed700
+    color: #ccc634;
+    border-color: #ccc634
 }
 
 .btn-outline-ec-primary:hover {
     color: #000;
-    background-color: #fed700;
-    border-color: #fed700
+    background-color: #ccc634;
+    border-color: #ccc634
 }
 
 .btn-check:focus+.btn-outline-ec-primary,
@@ -4402,8 +4402,8 @@ input[type=submit]:disabled {
 .btn-outline-ec-primary.dropdown-toggle.show,
 .btn-outline-ec-primary:active {
     color: #000;
-    background-color: #fed700;
-    border-color: #fed700
+    background-color: #ccc634;
+    border-color: #ccc634
 }
 
 .btn-check:active+.btn-outline-ec-primary:focus,
@@ -4416,7 +4416,7 @@ input[type=submit]:disabled {
 
 .btn-outline-ec-primary.disabled,
 .btn-outline-ec-primary:disabled {
-    color: #fed700;
+    color: #ccc634;
     background-color: transparent
 }
 
@@ -4581,14 +4581,14 @@ input[type=submit]:disabled {
 }
 
 .btn-outline-warning {
-    color: #fed700;
-    border-color: #fed700
+    color: #ccc634;
+    border-color: #ccc634
 }
 
 .btn-outline-warning:hover {
     color: #000;
-    background-color: #fed700;
-    border-color: #fed700
+    background-color: #ccc634;
+    border-color: #ccc634
 }
 
 .btn-check:focus+.btn-outline-warning,
@@ -4602,8 +4602,8 @@ input[type=submit]:disabled {
 .btn-outline-warning.dropdown-toggle.show,
 .btn-outline-warning:active {
     color: #000;
-    background-color: #fed700;
-    border-color: #fed700
+    background-color: #ccc634;
+    border-color: #ccc634
 }
 
 .btn-check:active+.btn-outline-warning:focus,
@@ -4616,7 +4616,7 @@ input[type=submit]:disabled {
 
 .btn-outline-warning.disabled,
 .btn-outline-warning:disabled {
-    color: #fed700;
+    color: #ccc634;
     background-color: transparent
 }
 
@@ -5241,7 +5241,7 @@ input[type=submit]:disabled {
 .nav-pills .nav-link.active,
 .nav-pills .show>.nav-link {
     color: #fff;
-    background-color: #fed700
+    background-color: #ccc634
 }
 
 .nav-fill .nav-item,
@@ -5811,7 +5811,7 @@ input[type=submit]:disabled {
     color: #fff;
     text-align: center;
     white-space: nowrap;
-    background-color: #fed700;
+    background-color: #ccc634;
     transition: width .6s ease
 }
 
@@ -5902,8 +5902,8 @@ input[type=submit]:disabled {
 .list-group-item.active {
     z-index: 2;
     color: #fff;
-    background-color: #fed700;
-    border-color: #fed700
+    background-color: #ccc634;
+    border-color: #ccc634
 }
 
 .list-group-item+.list-group-item {
@@ -6760,11 +6760,11 @@ input[type=submit]:disabled {
 }
 
 .border-primary {
-    border-color: #fed700 !important
+    border-color: #ccc634 !important
 }
 
 .border-ec-primary {
-    border-color: #fed700 !important
+    border-color: #ccc634 !important
 }
 
 .border-ec-primary-d {
@@ -6784,7 +6784,7 @@ input[type=submit]:disabled {
 }
 
 .border-warning {
-    border-color: #fed700 !important
+    border-color: #ccc634 !important
 }
 
 .border-danger {
@@ -7962,11 +7962,11 @@ input[type=submit]:disabled {
 }
 
 .text-primary {
-    color: #fed700 !important
+    color: #ccc634 !important
 }
 
 .text-ec-primary {
-    color: #fed700 !important
+    color: #ccc634 !important
 }
 
 .text-ec-primary-d {
@@ -7986,7 +7986,7 @@ input[type=submit]:disabled {
 }
 
 .text-warning {
-    color: #fed700 !important
+    color: #ccc634 !important
 }
 
 .text-danger {
@@ -8026,11 +8026,11 @@ input[type=submit]:disabled {
 }
 
 .bg-primary {
-    background-color: #fed700 !important
+    background-color: #ccc634 !important
 }
 
 .bg-ec-primary {
-    background-color: #fed700 !important
+    background-color: #ccc634 !important
 }
 
 .bg-ec-primary-d {
@@ -8050,7 +8050,7 @@ input[type=submit]:disabled {
 }
 
 .bg-warning {
-    background-color: #fed700 !important
+    background-color: #ccc634 !important
 }
 
 .bg-danger {
@@ -14031,7 +14031,7 @@ textarea.input-text {
     --bs-pink: #d63384;
     --bs-red: #dc3545;
     --bs-orange: #fd7e14;
-    --bs-yellow: #fed700;
+    --bs-yellow: #ccc634;
     --bs-green: #198754;
     --bs-teal: #20c997;
     --bs-cyan: #0dcaf0;
@@ -14039,13 +14039,13 @@ textarea.input-text {
     --bs-gray: #6c757d;
     --bs-ec-dark: #181818;
     --bs-ec-dark-body: rgb(217, 217, 217);
-    --bs-primary: #fed700;
-    --bs-ec-primary: #fed700;
+    --bs-primary: #ccc634;
+    --bs-ec-primary: #ccc634;
     --bs-ec-primary-d: rgb(231.05, 195.5738188976, 0);
     --bs-secondary: #6c757d;
     --bs-success: #198754;
     --bs-info: #0dcaf0;
-    --bs-warning: #fed700;
+    --bs-warning: #ccc634;
     --bs-danger: #dc3545;
     --bs-light: #f8f9fa;
     --bs-dark: #333e48;
@@ -21249,7 +21249,7 @@ section header .action-text:after {
     top: 0;
     position: absolute;
     left: 0;
-    color: #fed700
+    color: #ccc634
 }
 
 p.stars {
@@ -29697,7 +29697,7 @@ ul.products>li.product.product-card:nth-last-child(2) {
 }
 
 #reviews:not(.electro-advanced-reviews) .product-rating .product-rating-details table tr .rating-number a .rating-star:before {
-    color: #fed700
+    color: #ccc634
 }
 
 #reviews:not(.electro-advanced-reviews) .product-rating .product-rating-details table tr .rating-graph a.bar {
@@ -30734,7 +30734,7 @@ p.out-of-stock {
 
 .available-on-backorder span,
 p.available-on-backorder {
-    color: #fed700
+    color: #ccc634
 }
 
 .product_list_widget {
@@ -46455,7 +46455,7 @@ article.post .entry-content .page-links>span {
 }
 
 article.post .entry-content .page-links>span {
-    background-color: #fed700
+    background-color: #ccc634
 }
 
 article.post .entry-content dl,
@@ -49316,7 +49316,7 @@ tr.shipping>th {
 .widget.dokan-best-seller-widget ul.dokan-feature-sellers>li i,
 .widget.dokan-feature-seller-widget ul.dokan-best-sellers>li i,
 .widget.dokan-feature-seller-widget ul.dokan-feature-sellers>li i {
-    color: #fed700
+    color: #ccc634
 }
 
 .widget.dokan-best-seller-widget ul.dokan-best-sellers>li:last-child,
