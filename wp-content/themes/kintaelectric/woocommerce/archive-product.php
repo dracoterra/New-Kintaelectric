@@ -237,7 +237,18 @@ do_action( 'woocommerce_before_main_content' );
 													}
 												});
 												
-												console.log("Owl Carousel inicializado exitosamente");
+												// Conectar botones de navegación personalizados
+												$('.slider-prev[data-target="#products-carousel-recommended"]').on('click', function(e) {
+													e.preventDefault();
+													$carousel.trigger('prev.owl.carousel');
+												});
+												
+												$('.slider-next[data-target="#products-carousel-recommended"]').on('click', function(e) {
+													e.preventDefault();
+													$carousel.trigger('next.owl.carousel');
+												});
+												
+												console.log("Owl Carousel inicializado exitosamente con navegación");
 												
 											} catch (error) {
 												console.log("Error al inicializar Owl Carousel:", error);
