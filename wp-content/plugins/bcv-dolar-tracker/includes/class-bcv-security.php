@@ -61,7 +61,7 @@ class BCV_Security {
      * Sanitizar entrada de número
      */
     public static function sanitize_number($number) {
-        return intval($number);
+        return floatval($number);
     }
 
     /**
@@ -89,7 +89,7 @@ class BCV_Security {
      * Validar rango de número
      */
     public static function validate_number_range($number, $min = 0, $max = 999999) {
-        $number = intval($number);
+        $number = floatval($number);
         return ($number >= $min && $number <= $max) ? $number : $min;
     }
 
