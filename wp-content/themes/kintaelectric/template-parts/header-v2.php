@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</li>
 		</ul>
 		<ul id="menu-top-bar-right" class="nav nav-inline float-end electro-animate-dropdown flip">
-			<li id="menu-item-5167" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5167"><a title="Localizador de Tiendas" href="/contact"><i class="ec ec-map-pointer"></i>Localizador de Tiendas</a></li>
+			<li id="menu-item-5167" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5167"><?php echo do_shortcode('[wvp_bcv_rate format="simple" show_label="true"]'); ?></li>
 			<li id="menu-item-5299" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5299"><a title="Rastrea tu Pedido" href="track-your-order/index.htm"><i class="ec ec-transport"></i>Rastrea tu Pedido</a></li>
 			<li id="menu-item-5293" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5293"><a title="Tienda" href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>"><i class="ec ec-shopping-bag"></i>Tienda</a></li>
 			<li id="menu-item-5294" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5294">
@@ -74,20 +74,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 				</div>
 			</div>
 
-			<form class="navbar-search col" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>" autocomplete="off">
-				<label class="sr-only screen-reader-text visually-hidden" for="search">Search for:</label>
+			<form class="navbar-search col" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>"
+				autocomplete="off">
+				<label class="sr-only screen-reader-text visually-hidden" for="search">Buscar:</label>
 				<div class="input-group">
 					<div class="input-search-field">
-						<input type="text" id="search" class="form-control search-field product-search-field" dir="ltr" value="" name="s" placeholder="Search for Products" autocomplete="off">
+						<input type="text" id="search"
+							class="form-control search-field product-search-field" dir="ltr" value=""
+							name="s" placeholder="Buscar productos..." autocomplete="off">
 					</div>
 					<div class="input-group-addon search-categories d-flex">
-						<select name='product_cat' id='electro_header_search_categories_dropdown' class='postform resizeselect'>
+						<select name='product_cat' id='electro_header_search_categories_dropdown'
+							class='postform resizeselect'>
 							<?php echo kintaelectric_get_product_categories(); ?>
 						</select>
 					</div>
 					<div class="input-group-btn">
 						<input type="hidden" id="search-param" name="post_type" value="product">
-						<button type="submit" class="btn btn-secondary"><i class="ec ec-search"></i></button>
+						<button type="submit" class="btn btn-secondary"><i
+								class="fas fa-search"></i></button>
 					</div>
 				</div>
 			</form>
@@ -95,13 +100,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<div class="header-icons col-auto d-flex justify-content-end align-items-center">
 				<?php if ( class_exists( 'YITH_Woocompare' ) ) : ?>
 				<div style="position: relative;" class="header-icon">
-					<a href="<?php echo esc_url( add_query_arg( array( 'action' => 'yith-woocompare-view-table', 'iframe' => 'yes' ), site_url() ) ); ?>" class="yith-woocompare-open">
+					<a href="<?php echo esc_url( add_query_arg( array( 'action' => 'yith-woocompare-view-table', 'iframe' => 'yes' ), site_url() ) ); ?>"
+						class="yith-woocompare-open">
 						<i class="ec ec-compare"></i>
-						<span id="navbar-compare-count" class="navbar-compare-count count header-icon-counter">0</span>
+						<span id="navbar-compare-count"
+							class="navbar-compare-count count header-icon-counter">0</span>
 					</a>
 				</div>
 				<?php endif; ?>
-
 				<div class="header-icon">
 					<?php
 					// Verificar si YITH Wishlist está activo
@@ -110,8 +116,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 						$wishlist_count = yith_wcwl_count_products();
 						?>
 						<a href="<?php echo esc_url($wishlist_url); ?>" 
-						   class="yith-wcwl-wishlist-link" 
-						   id="header-wishlist-link">
+							class="yith-wcwl-wishlist-link" 
+							id="header-wishlist-link">
 							<i class="ec ec-favorites"></i>
 							<?php if ($wishlist_count > 0): ?>
 								<span class="header-icon-counter" id="header-wishlist-count">
@@ -134,35 +140,53 @@ if ( ! defined( 'ABSPATH' ) ) {
 					}
 					?>
 				</div>
-
 				<div class="header-icon header-icon__user-account dropdown animate-dropdown">
-					<a class="dropdown-toggle" href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" data-bs-toggle="dropdown">
-						<i class="ec ec-user"></i>
-					</a>
+					<a class="dropdown-toggle" href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" data-bs-toggle="dropdown"><i
+							class="ec ec-user"></i></a>
 					<ul class="dropdown-menu dropdown-menu-user-account">
 						<li>
-							<div class="register-sign-in-dropdown-inner">
-								<div class="sign-in">
-									<p><?php esc_html_e('Returning Customer ?', 'kintaelectric'); ?></p>
-									<div class="sign-in-action">
-										<a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" class="sign-in-button">
-											<?php esc_html_e('Sign in', 'kintaelectric'); ?>
-										</a>
+							<?php if (is_user_logged_in()) : ?>
+								<div class="register-sign-in-dropdown-inner">
+									<div class="sign-in">
+										<p>Hola, <?php echo esc_html(wp_get_current_user()->display_name); ?>!</p>
+										<div class="sign-in-action">
+											<a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" class="sign-in-button">
+												Mi Cuenta
+											</a>
+										</div>
+									</div>
+									<div class="register">
+										<p>¿Quieres salir?</p>
+										<div class="register-action">
+											<a href="<?php echo esc_url(wp_logout_url(wc_get_page_permalink('myaccount'))); ?>">
+												Cerrar Sesión
+											</a>
+										</div>
 									</div>
 								</div>
-								<div class="register">
-									<p><?php esc_html_e('Don\'t have an account ?', 'kintaelectric'); ?></p>
-									<div class="register-action">
-										<a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>">
-											<?php esc_html_e('Register', 'kintaelectric'); ?>
-										</a>
+							<?php else : ?>
+								<div class="register-sign-in-dropdown-inner">
+									<div class="sign-in">
+										<p>¿Cliente frecuente?</p>
+										<div class="sign-in-action">
+											<a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" class="sign-in-button">
+												Iniciar Sesión
+											</a>
+										</div>
+									</div>
+									<div class="register">
+										<p>¿No tienes cuenta?</p>
+										<div class="register-action">
+											<a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>">
+												Registrarse
+											</a>
+										</div>
 									</div>
 								</div>
-							</div>
+							<?php endif; ?>
 						</li>
 					</ul>
 				</div>
-
 				<div class="header-icon header-icon__cart animate-dropdown dropdown">
 					<a class="dropdown-toggle" href="<?php echo esc_url(wc_get_cart_url()); ?>" data-bs-toggle="dropdown">
 						<i class="ec ec-shopping-bag"></i>
