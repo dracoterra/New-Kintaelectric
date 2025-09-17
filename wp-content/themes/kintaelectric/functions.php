@@ -64,6 +64,12 @@ function kintaelectric_enqueue_electro_assets() {
     // Custom Colors - Override CSS variables from customizer
     wp_enqueue_style( 'electro-custom-colors', kintaelectric_ASSETS_URL . 'css/custom-colors.css', array('electro-style'), '3.6.2' );
     
+    // Bootstrap Icons for Mode Switcher Widget
+    wp_enqueue_style( 'bootstrap-icons', 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css', array(), '1.11.3' );
+    
+    // Electro Mode Switcher Widget Styles
+    wp_enqueue_style( 'electro-mode-switcher-widget', kintaelectric_ASSETS_URL . 'css/electro-mode-switcher-widget.css', array('electro-style'), '1.0.0' );
+    
     // JavaScript Files - Solo archivos del tema Electro original
     wp_enqueue_script( 'bootstrap-bundle', kintaelectric_ASSETS_URL . 'js/bootstrap.bundle.min.js', array( 'jquery' ), '3.6.2', true );
     wp_enqueue_script( 'jquery-waypoints', kintaelectric_ASSETS_URL . 'js/jquery.waypoints.min.js', array( 'jquery' ), '3.6.2', true );
@@ -80,6 +86,9 @@ function kintaelectric_enqueue_electro_assets() {
     
     // Footer scripts
     wp_enqueue_script( 'kintaelectric-footer-scripts', kintaelectric_ASSETS_URL . 'js/footer-scripts.js', array( 'jquery' ), '1.0.0', true );
+    
+    // Electro Mode Switcher Widget JavaScript
+    wp_enqueue_script( 'electro-mode-switcher-widget', kintaelectric_ASSETS_URL . 'js/electro-mode-switcher-widget.js', array( 'jquery' ), '1.0.0', true );
     
     // Search suggestions styling
     wp_enqueue_style( 'kintaelectric-search-suggestions', kintaelectric_ASSETS_URL . 'css/search-suggestions.css', array(), '1.0.0' );
@@ -459,8 +468,8 @@ function kintaelectric_customize_register( $wp_customize ) {
 
     $wp_customize->add_control( 'kintaelectric_enable_mode_switcher', array(
         'label'       => esc_html__( 'Enable Dark/Light Mode Switcher', 'kintaelectric' ),
-        'description' => esc_html__( 'Show the dark/light mode toggle button', 'kintaelectric' ),
-        'section'     => 'kintaelectric_header',
+        'description' => esc_html__( 'Show the dark/light mode toggle button in header', 'kintaelectric' ),
+        'section'     => 'kintaelectric-options',
         'type'        => 'checkbox',
     ) );
 
@@ -1074,6 +1083,11 @@ require_once kintaelectric_PATH . '/includes/class-yamm-walker.php';
  * Register custom widgets
  */
 function kintaelectric_register_widgets() {
+    // Electro Mode Switcher Widget
+    require_once kintaelectric_PATH . '/inc/widgets/class-electro-mode-switcher-widget.php';
+    register_widget( 'Electro_Mode_Switcher_Widget' );
+    
+    // Other custom widgets
     register_widget( 'KintaElectric_Newsletter_Widget' );
     register_widget( 'KintaElectric_Products_Widget' );
     register_widget( 'KintaElectric_Image_Widget' );

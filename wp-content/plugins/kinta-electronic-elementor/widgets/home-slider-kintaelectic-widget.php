@@ -206,20 +206,20 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
                                 <div class="js-slide bg-img-hero-center">
                                     <div class="row min-height-420 py-7 py-md-0">
                                         <div class="offset-xl-3 col-xl-4 col-6 mt-md-8">
-                                            <h1 class="font-size-64 text-lh-57 font-weight-light" data-scs-animation-in="fadeInUp">
+                                            <h1 class="font-size-64 text-lh-57 font-weight-light" data-scs-animation-in="fadeInUp" style="color: #000;">
                                                 <?php echo esc_html($slide['title']); ?>
                                             </h1>
-                                            <h6 class="font-size-15 font-weight-bold mb-3" data-scs-animation-in="fadeInUp" data-scs-animation-delay="200">
+                                            <h6 class="font-size-15 font-weight-bold mb-3" data-scs-animation-in="fadeInUp" data-scs-animation-delay="200" style="color: #000;">
                                                 <?php echo esc_html($slide['subtitle']); ?>
                                             </h6>
                                             <div class="mb-4" data-scs-animation-in="fadeInUp" data-scs-animation-delay="300">
-                                                <span class="font-size-13">FROM</span>
-                                                <div class="font-size-50 font-weight-bold text-lh-45">
+                                                <span class="font-size-13" style="color: #000;">FROM</span>
+                                                <div class="font-size-50 font-weight-bold text-lh-45" style="color: #000;">
                                                     <sup class="">$</sup><?php echo esc_html($slide['price_from']); ?><sup class=""><?php echo esc_html($slide['price_cents']); ?></sup>
                                                 </div>
                                             </div>
                                             <a href="<?php echo esc_url($slide['button_url']['url']); ?>" 
-                                               class="btn btn-primary transition-3d-hover rounded-lg font-weight-normal py-2 px-md-7 px-3 font-size-16" 
+                                               class="btn btn-primary transition-3d-hover rounded-lg font-weight-normal py-2 px-md-7 px-3 font-size-16" style="color: #000;" 
                                                data-scs-animation-in="fadeInUp" 
                                                data-scs-animation-delay="400"
                                                <?php echo $slide['button_url']['is_external'] ? 'target="_blank"' : ''; ?>

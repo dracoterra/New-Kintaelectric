@@ -19,8 +19,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 			</li>
 		</ul>
 		<ul id="menu-top-bar-right" class="nav nav-inline float-end electro-animate-dropdown flip">
-			<li id="menu-item-5167" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5167"><?php echo do_shortcode('[wvp_bcv_rate format="simple" show_label="true"]'); ?></li>
-			<li id="menu-item-5299" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5299"><a title="Rastrea tu Pedido" href="track-your-order/index.htm"><i class="ec ec-transport"></i>Rastrea tu Pedido</a></li>
+			<li id="menu-item-5167" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-5167 d-flex align-items-center"><?php echo do_shortcode('[electro_mode_switcher]'); ?></li>
+			<li id="menu-item-5299" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5299"><?php echo do_shortcode('[wvp_bcv_rate format="simple" show_label="true"]'); ?></li>
 			<li id="menu-item-5293" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5293"><a title="Tienda" href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>"><i class="ec ec-shopping-bag"></i>Tienda</a></li>
 			<li id="menu-item-5294" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-5294">
 				<?php if (is_user_logged_in()) : ?>
