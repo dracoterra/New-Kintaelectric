@@ -188,6 +188,18 @@ do_action( 'woocommerce_before_main_content' );
 											?>
 								</div>
 								
+								<style>
+								/* Asegurar que el carousel se muestre */
+								#products-carousel-recommended {
+									display: block !important;
+									opacity: 1 !important;
+								}
+								
+								/* Altura mínima para el contenedor del carousel */
+								#products-carousel-recommended .owl-stage-outer {
+									min-height: 436px;
+								}
+								</style>
 								
 								<script>
 								jQuery(document).ready(function($) {
