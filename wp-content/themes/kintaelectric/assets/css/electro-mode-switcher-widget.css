@@ -59,7 +59,7 @@
 }
 
 .electro-mode-switcher-widget .icon--light {
-  color: #f39c12;
+  color: #ccc634;
   opacity: 1;
 }
 
@@ -84,7 +84,7 @@ body.electro-dark .electro-mode-switcher-widget .icon--light {
 }
 
 body.electro-dark .electro-mode-switcher-widget .icon--dark {
-  color: #f1c40f;
+  color: #ccc634;
   opacity: 1;
 }
 
