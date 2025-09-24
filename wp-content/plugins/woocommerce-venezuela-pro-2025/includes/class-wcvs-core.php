@@ -195,8 +195,8 @@ class WCVS_Core {
 	private function register_core_modules() {
 		// Module 1: Sistema Fiscal Venezolano
 		$this->module_manager->register_module( 'tax_system', array(
-			'name' => __( 'Sistema Fiscal Venezolano', 'woocommerce-venezuela-pro-2025' ),
-			'description' => __( 'IVA dinámico, IGTF configurable y facturación electrónica', 'woocommerce-venezuela-pro-2025' ),
+			'name' => 'Sistema Fiscal Venezolano',
+			'description' => 'IVA dinámico, IGTF configurable y facturación electrónica',
 			'version' => '1.0.0',
 			'class' => 'WCVS_Tax_System',
 			'file' => 'modules/tax-system/class-wcvs-tax-system.php',
@@ -207,8 +207,8 @@ class WCVS_Core {
 
 		// Module 2: Pasarelas de Pago Locales
 		$this->module_manager->register_module( 'payment_gateways', array(
-			'name' => __( 'Pasarelas de Pago Locales', 'woocommerce-venezuela-pro-2025' ),
-			'description' => __( 'Pago Móvil, Zelle, Binance Pay y transferencias bancarias', 'woocommerce-venezuela-pro-2025' ),
+			'name' => 'Pasarelas de Pago Locales',
+			'description' => 'Pago Móvil, Zelle, Binance Pay y transferencias bancarias',
 			'version' => '1.0.0',
 			'class' => 'WCVS_Payment_Gateways',
 			'file' => 'modules/payment-gateways/class-wcvs-payment-gateways.php',
@@ -219,8 +219,8 @@ class WCVS_Core {
 
 		// Module 3: Gestor de Moneda Inteligente
 		$this->module_manager->register_module( 'currency_manager', array(
-			'name' => __( 'Gestor de Moneda Inteligente', 'woocommerce-venezuela-pro-2025' ),
-			'description' => __( 'Sistema dual USD/VES con actualización automática', 'woocommerce-venezuela-pro-2025' ),
+			'name' => 'Gestor de Moneda Inteligente',
+			'description' => 'Sistema dual USD/VES con actualización automática',
 			'version' => '1.0.0',
 			'class' => 'WCVS_Currency_Manager',
 			'file' => 'modules/currency-manager/class-wcvs-currency-manager.php',
@@ -231,8 +231,8 @@ class WCVS_Core {
 
 		// Module 4: Envíos Nacionales
 		$this->module_manager->register_module( 'shipping_methods', array(
-			'name' => __( 'Envíos Nacionales', 'woocommerce-venezuela-pro-2025' ),
-			'description' => __( 'MRW, Zoom, Tealca y delivery local', 'woocommerce-venezuela-pro-2025' ),
+			'name' => 'Envíos Nacionales',
+			'description' => 'MRW, Zoom, Tealca y delivery local',
 			'version' => '1.0.0',
 			'class' => 'WCVS_Shipping_Methods',
 			'file' => 'modules/shipping-methods/class-wcvs-shipping-methods.php',
@@ -243,8 +243,8 @@ class WCVS_Core {
 
 		// Module 5: Campos de Checkout Personalizados
 		$this->module_manager->register_module( 'checkout_fields', array(
-			'name' => __( 'Campos de Checkout Personalizados', 'woocommerce-venezuela-pro-2025' ),
-			'description' => __( 'Cédula, RIF y validaciones venezolanas', 'woocommerce-venezuela-pro-2025' ),
+			'name' => 'Campos de Checkout Personalizados',
+			'description' => 'Cédula, RIF y validaciones venezolanas',
 			'version' => '1.0.0',
 			'class' => 'WCVS_Checkout_Fields',
 			'file' => 'modules/checkout-fields/class-wcvs-checkout-fields.php',
@@ -255,8 +255,8 @@ class WCVS_Core {
 
 		// Module 6: Sistema de Facturación Electrónica
 		$this->module_manager->register_module( 'electronic_billing', array(
-			'name' => __( 'Sistema de Facturación Electrónica', 'woocommerce-venezuela-pro-2025' ),
-			'description' => __( 'Cumplimiento SENIAT con firma digital', 'woocommerce-venezuela-pro-2025' ),
+			'name' => 'Sistema de Facturación Electrónica',
+			'description' => 'Cumplimiento SENIAT con firma digital',
 			'version' => '1.0.0',
 			'class' => 'WCVS_Electronic_Billing',
 			'file' => 'modules/electronic-billing/class-wcvs-electronic-billing.php',
@@ -267,8 +267,8 @@ class WCVS_Core {
 
 		// Module 7: Notificaciones Avanzadas (Opcional)
 		$this->module_manager->register_module( 'notifications', array(
-			'name' => __( 'Notificaciones Avanzadas', 'woocommerce-venezuela-pro-2025' ),
-			'description' => __( 'WhatsApp, SMS y Telegram', 'woocommerce-venezuela-pro-2025' ),
+			'name' => 'Notificaciones Avanzadas',
+			'description' => 'WhatsApp, SMS y Telegram',
 			'version' => '1.0.0',
 			'class' => 'WCVS_Notifications',
 			'file' => 'modules/notifications/class-wcvs-notifications.php',
@@ -279,8 +279,8 @@ class WCVS_Core {
 
 		// Module 8: Reportes y Analytics (Opcional)
 		$this->module_manager->register_module( 'reports_analytics', array(
-			'name' => __( 'Reportes y Analytics', 'woocommerce-venezuela-pro-2025' ),
-			'description' => __( 'Dashboard ejecutivo y reportes fiscales', 'woocommerce-venezuela-pro-2025' ),
+			'name' => 'Reportes y Analytics',
+			'description' => 'Dashboard ejecutivo y reportes fiscales',
 			'version' => '1.0.0',
 			'class' => 'WCVS_Reports_Analytics',
 			'file' => 'modules/reports-analytics/class-wcvs-reports-analytics.php',

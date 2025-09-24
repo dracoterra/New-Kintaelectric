@@ -92,6 +92,39 @@ echo '<p>' . __( 'Depósito en Efectivo USD no está configurado correctamente. 
 - Logging específico para HPOS
 - JavaScript para frontend con HPOS
 
+### **7. Error Persistente de Carga de Traducciones**
+**Problema**: Las traducciones seguían cargándose antes del hook `init`  
+**Causa**: Las clases se cargaban durante la inicialización del plugin, ejecutando funciones de traducción  
+**Solución**: Reorganizada la carga de clases y eliminadas las funciones de traducción tempranas
+
+**Cambios realizados**:
+- Movida la carga de clases al hook `woocommerce_loaded`
+- Eliminadas las funciones `__()` del método `register_core_modules()`
+- Carga de traducciones antes de inicializar las clases
+- Carga condicional de archivos PHP
+
+**Antes**:
+```php
+// Carga temprana de clases
+require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-core.php';
+
+// Funciones de traducción en construcción de clase
+'name' => __( 'Sistema Fiscal Venezolano', 'woocommerce-venezuela-pro-2025' ),
+```
+
+**Después**:
+```php
+// Carga después de WooCommerce
+function wcvs_init_plugin() {
+    wcvs_load_textdomain();
+    require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-core.php';
+    // ...
+}
+
+// Sin funciones de traducción en construcción
+'name' => 'Sistema Fiscal Venezolano',
+```
+
 **Antes**:
 ```php
 // Initialize plugin after WooCommerce is loaded
@@ -162,12 +195,14 @@ add_action( 'woocommerce_loaded', 'wcvs_init_plugin' );
 
 **✅ 5 errores de sintaxis corregidos**  
 **✅ Error de carga de traducciones corregido**  
+**✅ Error persistente de traducciones resuelto**  
 **✅ Compatibilidad con HPOS implementada**  
 **✅ Plugin funciona correctamente**  
 **✅ No hay errores en el debug.log**  
 **✅ Cumple con estándares de WordPress**  
 **✅ Todos los payment gateways funcionan**  
-**✅ Compatible con WooCommerce HPOS**
+**✅ Compatible con WooCommerce HPOS**  
+**✅ Carga de traducciones optimizada**
 
 ---
 

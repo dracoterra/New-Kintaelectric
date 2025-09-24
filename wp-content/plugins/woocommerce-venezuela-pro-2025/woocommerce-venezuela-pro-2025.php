@@ -84,16 +84,6 @@ register_activation_hook( __FILE__, 'wcvs_activate_plugin' );
 register_deactivation_hook( __FILE__, 'wcvs_deactivate_plugin' );
 
 /**
- * Load the core plugin class
- */
-require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-core.php';
-
-/**
- * Load HPOS compatibility
- */
-require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-hpos-compatibility.php';
-
-/**
  * Load plugin text domain
  */
 function wcvs_load_textdomain() {
@@ -104,12 +94,18 @@ function wcvs_load_textdomain() {
  * Initialize the plugin
  */
 function wcvs_init_plugin() {
+	// Load text domain first
+	wcvs_load_textdomain();
+	
+	// Load the core plugin class
+	require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-core.php';
+	
+	// Load HPOS compatibility
+	require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-hpos-compatibility.php';
+	
 	$plugin = WCVS_Core::get_instance();
 	$plugin->init();
 }
-
-// Load text domain on init
-add_action( 'init', 'wcvs_load_textdomain' );
 
 // Initialize plugin after WooCommerce is loaded
 add_action( 'woocommerce_loaded', 'wcvs_init_plugin' );
