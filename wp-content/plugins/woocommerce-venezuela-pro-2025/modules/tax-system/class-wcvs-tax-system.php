@@ -336,7 +336,7 @@ class WCVS_Tax_System {
 	}
 
 	/**
-	 * Calculate IGTF
+	 * Calculate IGTF with proper rounding
 	 *
 	 * @param float $amount
 	 * @param string $payment_method
@@ -353,7 +353,11 @@ class WCVS_Tax_System {
 			return 0;
 		}
 
-		return $amount * ( $this->settings['igtf_rate'] / 100 );
+		$igtf_rate = isset( $this->settings['igtf_rate'] ) ? floatval( $this->settings['igtf_rate'] ) : 3.0;
+		$tax_amount = $amount * ( $igtf_rate / 100 );
+		
+		// Round to 2 decimal places for VES
+		return round( $tax_amount, 2 );
 	}
 
 	/**
@@ -471,5 +475,275 @@ class WCVS_Tax_System {
 	 */
 	public function clear_scheduled_tax_rate_updates() {
 		wp_clear_scheduled_hook( 'wcvs_update_tax_rates' );
+	}
+
+	/**
+	 * Calculate Venezuelan taxes with enhanced precision
+	 *
+	 * @param float $amount
+	 * @param string $payment_method
+	 * @param array $order_data
+	 * @return array
+	 */
+	public function calculate_taxes( $amount, $payment_method = '', $order_data = array() ) {
+		$taxes = array();
+		$breakdown = array();
+		
+		// Get current tax rates (can be dynamic)
+		$iva_rate = $this->get_current_iva_rate();
+		$igtf_rate = $this->get_current_igtf_rate();
+		
+		// Calculate IVA with proper rounding
+		$iva_amount = $this->calculate_iva( $amount, $iva_rate );
+		$taxes['iva'] = array(
+			'rate' => $iva_rate,
+			'amount' => $iva_amount,
+			'label' => __( 'IVA', 'woocommerce-venezuela-pro-2025' ),
+			'type' => 'vat',
+			'base_amount' => $amount
+		);
+		$breakdown['iva'] = $iva_amount;
+		
+		// Calculate IGTF for USD payments with enhanced logic
+		if ( $this->should_apply_igtf( $payment_method, $amount, $order_data ) ) {
+			$igtf_amount = $this->calculate_igtf( $amount, $igtf_rate );
+			$taxes['igtf'] = array(
+				'rate' => $igtf_rate,
+				'amount' => $igtf_amount,
+				'label' => __( 'IGTF', 'woocommerce-venezuela-pro-2025' ),
+				'type' => 'financial_transaction_tax',
+				'base_amount' => $amount
+			);
+			$breakdown['igtf'] = $igtf_amount;
+		}
+		
+		// Calculate other local taxes if applicable
+		$local_taxes = $this->calculate_local_taxes( $amount, $order_data );
+		foreach ( $local_taxes as $tax_key => $tax_data ) {
+			$taxes[ $tax_key ] = $tax_data;
+			$breakdown[ $tax_key ] = $tax_data['amount'];
+		}
+		
+		// Calculate total taxes
+		$total_taxes = array_sum( $breakdown );
+		
+		// Store breakdown for reporting
+		$taxes['breakdown'] = $breakdown;
+		$taxes['total'] = $total_taxes;
+		$taxes['total_with_taxes'] = $amount + $total_taxes;
+		
+		return $taxes;
+	}
+
+	/**
+	 * Get current IVA rate (can be dynamic from SENIAT)
+	 *
+	 * @return float
+	 */
+	private function get_current_iva_rate() {
+		// Check if we have a cached rate
+		$cached_rate = get_transient( 'wcvs_current_iva_rate' );
+		if ( $cached_rate !== false ) {
+			return floatval( $cached_rate );
+		}
+		
+		// Use configured rate as fallback
+		$rate = isset( $this->settings['iva_rate'] ) ? floatval( $this->settings['iva_rate'] ) : 16.0;
+		
+		// Cache for 1 hour
+		set_transient( 'wcvs_current_iva_rate', $rate, HOUR_IN_SECONDS );
+		
+		return $rate;
+	}
+
+	/**
+	 * Get current IGTF rate (can be dynamic from BCV)
+	 *
+	 * @return float
+	 */
+	private function get_current_igtf_rate() {
+		// Check if we have a cached rate
+		$cached_rate = get_transient( 'wcvs_current_igtf_rate' );
+		if ( $cached_rate !== false ) {
+			return floatval( $cached_rate );
+		}
+		
+		// Use configured rate as fallback
+		$rate = isset( $this->settings['igtf_rate'] ) ? floatval( $this->settings['igtf_rate'] ) : 3.0;
+		
+		// Cache for 1 hour
+		set_transient( 'wcvs_current_igtf_rate', $rate, HOUR_IN_SECONDS );
+		
+		return $rate;
+	}
+
+	/**
+	 * Calculate IVA with proper rounding
+	 *
+	 * @param float $amount
+	 * @param float $rate
+	 * @return float
+	 */
+	private function calculate_iva( $amount, $rate ) {
+		$tax_amount = $amount * ( $rate / 100 );
+		
+		// Round to 2 decimal places for VES
+		return round( $tax_amount, 2 );
+	}
+
+
+	/**
+	 * Determine if IGTF should be applied
+	 *
+	 * @param string $payment_method
+	 * @param float $amount
+	 * @param array $order_data
+	 * @return bool
+	 */
+	private function should_apply_igtf( $payment_method, $amount, $order_data ) {
+		// Check if IGTF is enabled
+		if ( ! isset( $this->settings['apply_igtf_usd'] ) || ! $this->settings['apply_igtf_usd'] ) {
+			return false;
+		}
+		
+		// Check if payment method is USD-based
+		$usd_payment_methods = array( 'wcvs_zelle', 'wcvs_binance_pay', 'wcvs_cash_deposit' );
+		if ( ! in_array( $payment_method, $usd_payment_methods ) ) {
+			return false;
+		}
+		
+		// Check minimum amount threshold (if configured)
+		$minimum_amount = isset( $this->settings['igtf_minimum_amount'] ) ? floatval( $this->settings['igtf_minimum_amount'] ) : 0;
+		if ( $amount < $minimum_amount ) {
+			return false;
+		}
+		
+		// Check if customer is exempt (if configured)
+		if ( isset( $order_data['customer_type'] ) && $order_data['customer_type'] === 'exempt' ) {
+			return false;
+		}
+		
+		return true;
+	}
+
+	/**
+	 * Calculate local taxes (municipal, state, etc.)
+	 *
+	 * @param float $amount
+	 * @param array $order_data
+	 * @return array
+	 */
+	private function calculate_local_taxes( $amount, $order_data ) {
+		$local_taxes = array();
+		
+		// Municipal tax (if applicable)
+		if ( isset( $this->settings['municipal_tax_rate'] ) && $this->settings['municipal_tax_rate'] > 0 ) {
+			$municipal_rate = floatval( $this->settings['municipal_tax_rate'] );
+			$municipal_amount = $amount * ( $municipal_rate / 100 );
+			
+			$local_taxes['municipal'] = array(
+				'rate' => $municipal_rate,
+				'amount' => round( $municipal_amount, 2 ),
+				'label' => __( 'Impuesto Municipal', 'woocommerce-venezuela-pro-2025' ),
+				'type' => 'municipal_tax',
+				'base_amount' => $amount
+			);
+		}
+		
+		// State tax (if applicable)
+		if ( isset( $this->settings['state_tax_rate'] ) && $this->settings['state_tax_rate'] > 0 ) {
+			$state_rate = floatval( $this->settings['state_tax_rate'] );
+			$state_amount = $amount * ( $state_rate / 100 );
+			
+			$local_taxes['state'] = array(
+				'rate' => $state_rate,
+				'amount' => round( $state_amount, 2 ),
+				'label' => __( 'Impuesto Estadal', 'woocommerce-venezuela-pro-2025' ),
+				'type' => 'state_tax',
+				'base_amount' => $amount
+			);
+		}
+		
+		return $local_taxes;
+	}
+
+	/**
+	 * Generate tax report
+	 *
+	 * @param string $period
+	 * @param array $filters
+	 * @return array
+	 */
+	public function generate_tax_report( $period = 'month', $filters = array() ) {
+		global $wpdb;
+		
+		// Determine date range
+		$date_range = $this->get_date_range( $period );
+		
+		// Build query
+		$query = "
+			SELECT 
+				DATE(post_date) as date,
+				SUM(meta_value) as total_iva,
+				COUNT(*) as order_count
+			FROM {$wpdb->posts} p
+			INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+			WHERE p.post_type = 'shop_order'
+			AND p.post_status IN ('wc-completed', 'wc-processing')
+			AND pm.meta_key = '_wcvs_iva_amount'
+			AND p.post_date >= %s
+			AND p.post_date <= %s
+			GROUP BY DATE(post_date)
+			ORDER BY date ASC
+		";
+		
+		$results = $wpdb->get_results( $wpdb->prepare( $query, $date_range['start'], $date_range['end'] ) );
+		
+		// Calculate totals
+		$total_iva = array_sum( wp_list_pluck( $results, 'total_iva' ) );
+		$total_orders = array_sum( wp_list_pluck( $results, 'order_count' ) );
+		
+		return array(
+			'period' => $period,
+			'date_range' => $date_range,
+			'daily_data' => $results,
+			'totals' => array(
+				'total_iva' => $total_iva,
+				'total_orders' => $total_orders,
+				'average_iva_per_order' => $total_orders > 0 ? $total_iva / $total_orders : 0
+			)
+		);
+	}
+
+	/**
+	 * Get date range for period
+	 *
+	 * @param string $period
+	 * @return array
+	 */
+	private function get_date_range( $period ) {
+		$end_date = current_time( 'Y-m-d H:i:s' );
+		
+		switch ( $period ) {
+			case 'week':
+				$start_date = date( 'Y-m-d H:i:s', strtotime( '-1 week' ) );
+				break;
+			case 'month':
+				$start_date = date( 'Y-m-d H:i:s', strtotime( '-1 month' ) );
+				break;
+			case 'quarter':
+				$start_date = date( 'Y-m-d H:i:s', strtotime( '-3 months' ) );
+				break;
+			case 'year':
+				$start_date = date( 'Y-m-d H:i:s', strtotime( '-1 year' ) );
+				break;
+			default:
+				$start_date = date( 'Y-m-d H:i:s', strtotime( '-1 month' ) );
+		}
+		
+		return array(
+			'start' => $start_date,
+			'end' => $end_date
+		);
 	}
 }

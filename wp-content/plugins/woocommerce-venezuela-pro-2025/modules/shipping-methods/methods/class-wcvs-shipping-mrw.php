@@ -172,27 +172,58 @@ class WCVS_Shipping_MRW extends WC_Shipping_Method {
 	}
 
 	/**
-	 * Calculate MRW cost
+	 * Calculate MRW cost with enhanced precision
 	 *
 	 * @param array $package
 	 * @return float
 	 */
 	private function calculate_mrw_cost( $package ) {
 		$cost = floatval( $this->base_cost );
+		$breakdown = array();
 		
-		// Add weight cost
+		// Add weight cost with tiered pricing
 		$weight = $this->get_package_weight( $package );
-		$cost += $weight * floatval( $this->weight_cost );
+		$weight_cost = $this->calculate_tiered_weight_cost( $weight );
+		$cost += $weight_cost;
+		$breakdown['weight'] = $weight_cost;
 		
-		// Add volume cost
+		// Add volume cost with dimensional weight calculation
 		$volume = $this->get_package_volume( $package );
-		$cost += $volume * floatval( $this->volume_cost );
+		$volume_cost = $this->calculate_volume_cost( $volume );
+		$cost += $volume_cost;
+		$breakdown['volume'] = $volume_cost;
 		
-		// Apply destination multiplier
+		// Apply destination multiplier with enhanced calculation
 		$destination_multiplier = $this->get_destination_multiplier( $package['destination'] );
 		$cost *= $destination_multiplier;
+		$breakdown['destination_multiplier'] = $destination_multiplier;
 		
-		return $cost;
+		// Add distance-based cost
+		$distance_cost = $this->calculate_distance_cost( $package );
+		$cost += $distance_cost;
+		$breakdown['distance'] = $distance_cost;
+		
+		// Add insurance cost if enabled
+		if ( $this->insurance_enabled === 'yes' ) {
+			$insurance_cost = $this->calculate_insurance_cost( $package );
+			$cost += $insurance_cost;
+			$breakdown['insurance'] = $insurance_cost;
+		}
+		
+		// Add packaging cost
+		$packaging_cost = $this->calculate_packaging_cost( $package );
+		$cost += $packaging_cost;
+		$breakdown['packaging'] = $packaging_cost;
+		
+		// Apply volume discount
+		$discount = $this->calculate_volume_discount( $package );
+		$cost -= $discount;
+		$breakdown['discount'] = $discount;
+		
+		// Store breakdown for debugging
+		$this->cost_breakdown = $breakdown;
+		
+		return max( $cost, floatval( $this->minimum_cost ) );
 	}
 
 	/**
@@ -346,5 +377,188 @@ class WCVS_Shipping_MRW extends WC_Shipping_Method {
 			'label_url' => '#',
 			'message' => __( 'Etiqueta de envío MRW generada', 'woocommerce-venezuela-pro-2025' )
 		);
+	}
+
+	/**
+	 * Calculate tiered weight cost
+	 *
+	 * @param float $weight
+	 * @return float
+	 */
+	private function calculate_tiered_weight_cost( $weight ) {
+		$cost = 0;
+		
+		// Tier 1: 0-5kg
+		if ( $weight <= 5 ) {
+			$cost = $weight * floatval( $this->weight_cost );
+		}
+		// Tier 2: 5-15kg (10% discount)
+		elseif ( $weight <= 15 ) {
+			$cost = 5 * floatval( $this->weight_cost );
+			$cost += ( $weight - 5 ) * floatval( $this->weight_cost ) * 0.9;
+		}
+		// Tier 3: 15kg+ (20% discount)
+		else {
+			$cost = 5 * floatval( $this->weight_cost );
+			$cost += 10 * floatval( $this->weight_cost ) * 0.9;
+			$cost += ( $weight - 15 ) * floatval( $this->weight_cost ) * 0.8;
+		}
+		
+		return $cost;
+	}
+
+	/**
+	 * Calculate volume cost with dimensional weight
+	 *
+	 * @param float $volume
+	 * @return float
+	 */
+	private function calculate_volume_cost( $volume ) {
+		// Calculate dimensional weight (volume / 6000 for air freight)
+		$dimensional_weight = $volume / 6000;
+		
+		// Use the higher of actual weight or dimensional weight
+		$effective_weight = max( $this->get_package_weight( array() ), $dimensional_weight );
+		
+		return $effective_weight * floatval( $this->volume_cost );
+	}
+
+	/**
+	 * Calculate distance-based cost
+	 *
+	 * @param array $package
+	 * @return float
+	 */
+	private function calculate_distance_cost( $package ) {
+		$destination = $package['destination']['state'] ?? '';
+		
+		// Distance multipliers by state (approximate distances from Caracas)
+		$distance_multipliers = array(
+			'Distrito Capital' => 0,
+			'Miranda' => 0.1,
+			'Vargas' => 0.2,
+			'Aragua' => 0.3,
+			'Carabobo' => 0.4,
+			'Lara' => 0.6,
+			'Zulia' => 0.8,
+			'Bolívar' => 1.0,
+			'Amazonas' => 1.2,
+			'Delta Amacuro' => 1.1,
+			'Apure' => 0.9,
+			'Barinas' => 0.7,
+			'Cojedes' => 0.5,
+			'Falcón' => 0.6,
+			'Guárico' => 0.5,
+			'Mérida' => 0.8,
+			'Monagas' => 0.9,
+			'Nueva Esparta' => 0.4,
+			'Portuguesa' => 0.6,
+			'San Cristóbal' => 0.9,
+			'Sucre' => 0.8,
+			'Táchira' => 1.0,
+			'Trujillo' => 0.7,
+			'Yaracuy' => 0.5
+		);
+		
+		$multiplier = $distance_multipliers[ $destination ] ?? 0.5;
+		return floatval( $this->base_cost ) * $multiplier * 0.1; // 10% of base cost per distance unit
+	}
+
+	/**
+	 * Calculate insurance cost
+	 *
+	 * @param array $package
+	 * @return float
+	 */
+	private function calculate_insurance_cost( $package ) {
+		$cart_total = WC()->cart->get_cart_contents_total();
+		$insurance_rate = 0.02; // 2% of cart value
+		
+		return $cart_total * $insurance_rate;
+	}
+
+	/**
+	 * Calculate packaging cost
+	 *
+	 * @param array $package
+	 * @return float
+	 */
+	private function calculate_packaging_cost( $package ) {
+		$weight = $this->get_package_weight( $package );
+		$volume = $this->get_package_volume( $package );
+		
+		// Base packaging cost
+		$cost = 5000; // 5000 VES base
+		
+		// Add cost for heavy items
+		if ( $weight > 10 ) {
+			$cost += 2000; // Additional 2000 VES for heavy items
+		}
+		
+		// Add cost for large items
+		if ( $volume > 0.1 ) {
+			$cost += 3000; // Additional 3000 VES for large items
+		}
+		
+		return $cost;
+	}
+
+	/**
+	 * Calculate volume discount
+	 *
+	 * @param array $package
+	 * @return float
+	 */
+	private function calculate_volume_discount( $package ) {
+		$cart_total = WC()->cart->get_cart_contents_total();
+		$discount = 0;
+		
+		// Volume discount tiers
+		if ( $cart_total >= 1000000 ) { // 1M VES
+			$discount = floatval( $this->base_cost ) * 0.15; // 15% discount
+		} elseif ( $cart_total >= 500000 ) { // 500K VES
+			$discount = floatval( $this->base_cost ) * 0.10; // 10% discount
+		} elseif ( $cart_total >= 200000 ) { // 200K VES
+			$discount = floatval( $this->base_cost ) * 0.05; // 5% discount
+		}
+		
+		return $discount;
+	}
+
+	/**
+	 * Get estimated delivery days
+	 *
+	 * @param string $destination
+	 * @return int
+	 */
+	private function get_estimated_delivery_days( $destination ) {
+		$delivery_days = array(
+			'Distrito Capital' => 1,
+			'Miranda' => 1,
+			'Vargas' => 2,
+			'Aragua' => 2,
+			'Carabobo' => 3,
+			'Lara' => 3,
+			'Zulia' => 4,
+			'Bolívar' => 5,
+			'Amazonas' => 7,
+			'Delta Amacuro' => 6,
+			'Apure' => 5,
+			'Barinas' => 4,
+			'Cojedes' => 3,
+			'Falcón' => 4,
+			'Guárico' => 3,
+			'Mérida' => 5,
+			'Monagas' => 4,
+			'Nueva Esparta' => 3,
+			'Portuguesa' => 4,
+			'San Cristóbal' => 5,
+			'Sucre' => 4,
+			'Táchira' => 5,
+			'Trujillo' => 4,
+			'Yaracuy' => 3
+		);
+		
+		return $delivery_days[ $destination ] ?? 5;
 	}
 }

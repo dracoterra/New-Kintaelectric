@@ -62,6 +62,174 @@
                     WCVS_Payment_Gateways.clearFieldError($input);
                 }
             });
+
+            // Enhanced real-time validation
+            this.initRealTimeValidation();
+        },
+
+        /**
+         * Initialize real-time validation
+         */
+        initRealTimeValidation: function() {
+            // RIF validation
+            $('.wcvs-rif-field').on('input', function() {
+                var $field = $(this);
+                var rif = $field.val();
+                var validation = WCVS_Payment_Gateways.validateRIF(rif);
+                
+                WCVS_Payment_Gateways.showFieldValidation($field, validation);
+            });
+
+            // Phone validation
+            $('.wcvs-phone-field').on('input', function() {
+                var $field = $(this);
+                var phone = $field.val();
+                var validation = WCVS_Payment_Gateways.validatePhone(phone);
+                
+                WCVS_Payment_Gateways.showFieldValidation($field, validation);
+            });
+
+            // Payment reference validation
+            $('.wcvs-reference-field').on('input', function() {
+                var $field = $(this);
+                var reference = $field.val();
+                var validation = WCVS_Payment_Gateways.validatePaymentReference(reference);
+                
+                WCVS_Payment_Gateways.showFieldValidation($field, validation);
+            });
+        },
+
+        /**
+         * Validate RIF format
+         */
+        validateRIF: function(rif) {
+            if (!rif) {
+                return { valid: false, message: 'RIF requerido' };
+            }
+
+            // Clean RIF
+            rif = rif.toUpperCase().replace(/[\s\-]/g, '');
+            
+            // Basic format check
+            if (!/^[VJPG][0-9]{9}$/.test(rif)) {
+                return { valid: false, message: 'Formato inválido. Use: V-12345678-9' };
+            }
+
+            // Extract components
+            var prefix = rif.charAt(0);
+            var number = rif.substring(1, 9);
+            var checkDigit = rif.charAt(9);
+
+            // Validate prefix
+            if (!['V', 'J', 'P', 'G'].includes(prefix)) {
+                return { valid: false, message: 'Prefijo inválido. Use V, J, P o G' };
+            }
+
+            // Calculate check digit
+            var calculatedDigit = WCVS_Payment_Gateways.calculateRIFCheckDigit(number);
+            if (checkDigit !== calculatedDigit) {
+                return { valid: false, message: 'Dígito verificador inválido' };
+            }
+
+            return { valid: true, message: 'RIF válido' };
+        },
+
+        /**
+         * Calculate RIF check digit
+         */
+        calculateRIFCheckDigit: function(number) {
+            var multipliers = [3, 2, 7, 6, 5, 4, 3, 2];
+            var sum = 0;
+            
+            for (var i = 0; i < 8; i++) {
+                sum += parseInt(number.charAt(i)) * multipliers[i];
+            }
+            
+            var remainder = sum % 11;
+            var checkDigit = 11 - remainder;
+            
+            if (checkDigit >= 10) {
+                checkDigit = 0;
+            }
+            
+            return checkDigit.toString();
+        },
+
+        /**
+         * Validate Venezuelan phone number
+         */
+        validatePhone: function(phone) {
+            if (!phone) {
+                return { valid: false, message: 'Teléfono requerido' };
+            }
+
+            // Clean phone number
+            phone = phone.replace(/[\s\-\(\)]/g, '');
+            
+            // Remove country code
+            if (phone.startsWith('+58')) {
+                phone = phone.substring(3);
+            } else if (phone.startsWith('58')) {
+                phone = phone.substring(2);
+            }
+
+            // Validate Venezuelan formats
+            if (/^04[0-9]{8}$/.test(phone)) {
+                return { 
+                    valid: true, 
+                    message: 'Teléfono móvil válido',
+                    formatted: '+58-' + phone.substring(0, 4) + '-' + phone.substring(4)
+                };
+            }
+
+            if (/^02[0-9]{8}$/.test(phone)) {
+                return { 
+                    valid: true, 
+                    message: 'Teléfono fijo válido',
+                    formatted: '+58-' + phone.substring(0, 4) + '-' + phone.substring(4)
+                };
+            }
+
+            return { valid: false, message: 'Formato inválido. Use: 04XX-XXXXXXX o 02XX-XXXXXXX' };
+        },
+
+        /**
+         * Validate payment reference
+         */
+        validatePaymentReference: function(reference) {
+            if (!reference) {
+                return { valid: false, message: 'Referencia requerida' };
+            }
+
+            // Check length and format
+            if (reference.length < 6 || reference.length > 20) {
+                return { valid: false, message: 'Referencia debe tener entre 6 y 20 caracteres' };
+            }
+
+            if (!/^[A-Za-z0-9]+$/.test(reference)) {
+                return { valid: false, message: 'Solo se permiten letras y números' };
+            }
+
+            return { valid: true, message: 'Referencia válida' };
+        },
+
+        /**
+         * Show field validation feedback
+         */
+        showFieldValidation: function($field, validation) {
+            var $container = $field.closest('.wcvs-field-container');
+            var $feedback = $container.find('.wcvs-field-feedback');
+            
+            if ($feedback.length === 0) {
+                $feedback = $('<div class="wcvs-field-feedback"></div>');
+                $container.append($feedback);
+            }
+
+            $feedback.removeClass('valid invalid').addClass(validation.valid ? 'valid' : 'invalid');
+            $feedback.text(validation.message);
+
+            // Update field appearance
+            $field.removeClass('error success').addClass(validation.valid ? 'success' : 'error');
         },
 
         /**

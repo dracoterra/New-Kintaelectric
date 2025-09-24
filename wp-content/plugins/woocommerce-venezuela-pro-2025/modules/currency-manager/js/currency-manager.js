@@ -24,14 +24,15 @@
             this.init();
         }
 
-        /**
-         * Initialize currency manager
-         */
-        init() {
-            this.bindEvents();
-            this.updateCurrencyDisplay();
-            this.startRateUpdateInterval();
-        }
+    /**
+     * Initialize currency manager
+     */
+    init() {
+        this.bindEvents();
+        this.updateCurrencyDisplay();
+        this.startRateUpdateInterval();
+        this.initializeLoadingStates();
+    }
 
         /**
          * Bind events
@@ -120,12 +121,20 @@
         }
 
         /**
-         * Update currency display
+         * Update currency display with debouncing
          */
         updateCurrencyDisplay() {
-            this.updateProductPrices();
-            this.updateCartTotals();
-            this.updateCheckoutTotals();
+            // Clear existing timeout
+            if (this.updateTimeout) {
+                clearTimeout(this.updateTimeout);
+            }
+            
+            // Debounce the update to avoid excessive calls
+            this.updateTimeout = setTimeout(() => {
+                this.updateProductPrices();
+                this.updateCartTotals();
+                this.updateCheckoutTotals();
+            }, 300); // 300ms debounce
         }
 
         /**
@@ -192,13 +201,14 @@
         }
 
         /**
-         * Update current rate
+         * Update current rate with improved error handling
          */
         updateCurrentRate() {
             const $button = $('.wcvs-update-rate');
             const originalText = $button.text();
             
-            $button.prop('disabled', true).text('Actualizando...');
+            // Show loading state
+            this.showLoadingState($button, 'Actualizando...');
             
             $.ajax({
                 url: wcvs_currency_manager.ajax_url,
@@ -207,20 +217,29 @@
                     action: 'wcvs_update_currency_display',
                     nonce: wcvs_currency_manager.nonce
                 },
+                timeout: 10000, // 10 second timeout
                 success: (response) => {
                     if (response.success && response.data.rate) {
                         this.currentRate = response.data.rate;
                         this.updateCurrencyDisplay();
-                        this.showRateUpdateSuccess();
+                        this.showRateUpdateSuccess(response.data);
                     } else {
-                        this.showRateUpdateError();
+                        this.showRateUpdateError(response.data?.message || 'Error desconocido');
                     }
                 },
-                error: () => {
-                    this.showRateUpdateError();
+                error: (xhr, status, error) => {
+                    let errorMessage = 'Error de conexión';
+                    if (status === 'timeout') {
+                        errorMessage = 'Tiempo de espera agotado';
+                    } else if (xhr.status === 403) {
+                        errorMessage = 'Error de permisos';
+                    } else if (xhr.status === 500) {
+                        errorMessage = 'Error del servidor';
+                    }
+                    this.showRateUpdateError(errorMessage);
                 },
                 complete: () => {
-                    $button.prop('disabled', false).text(originalText);
+                    this.hideLoadingState($button, originalText);
                 }
             });
         }
@@ -228,15 +247,60 @@
         /**
          * Show rate update success
          */
-        showRateUpdateSuccess() {
-            $('.wcvs-rate-status').html('<span style="color: green;">✓ Tasa actualizada: ' + this.formatVES(this.currentRate) + '/USD</span>');
+        showRateUpdateSuccess(data) {
+            const message = data?.message || `Tasa actualizada: ${this.formatVES(this.currentRate)}/USD`;
+            $('.wcvs-rate-status').html(`<span class="wcvs-success-message">✓ ${message}</span>`);
+            
+            // Auto-hide success message after 5 seconds
+            setTimeout(() => {
+                $('.wcvs-rate-status').fadeOut();
+            }, 5000);
         }
 
         /**
          * Show rate update error
          */
-        showRateUpdateError() {
-            $('.wcvs-rate-status').html('<span style="color: red;">✗ Error al actualizar tasa</span>');
+        showRateUpdateError(message) {
+            $('.wcvs-rate-status').html(`<span class="wcvs-error-message">✗ ${message}</span>`);
+            
+            // Auto-hide error message after 10 seconds
+            setTimeout(() => {
+                $('.wcvs-rate-status').fadeOut();
+            }, 10000);
+        }
+
+        /**
+         * Show loading state
+         */
+        showLoadingState($element, text) {
+            $element.prop('disabled', true)
+                   .addClass('wcvs-loading')
+                   .data('original-text', $element.text())
+                   .html(`<span class="wcvs-spinner"></span> ${text}`);
+        }
+
+        /**
+         * Hide loading state
+         */
+        hideLoadingState($element, originalText) {
+            $element.prop('disabled', false)
+                   .removeClass('wcvs-loading')
+                   .text(originalText);
+        }
+
+        /**
+         * Initialize loading states
+         */
+        initializeLoadingStates() {
+            // Add loading states to currency selector
+            $('.wcvs-currency-selector select').on('change', (e) => {
+                const $select = $(e.target);
+                this.showLoadingState($select, 'Cambiando...');
+                
+                setTimeout(() => {
+                    this.hideLoadingState($select, $select.val());
+                }, 1000);
+            });
         }
 
         /**

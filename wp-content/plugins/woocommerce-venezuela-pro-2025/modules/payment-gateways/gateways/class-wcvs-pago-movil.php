@@ -347,4 +347,117 @@ class WCVS_Gateway_Pago_Movil extends WC_Payment_Gateway {
 			echo wpautop( wptexturize( $this->instructions ) ) . PHP_EOL;
 		}
 	}
+
+	/**
+	 * Validate RIF format with enhanced algorithm
+	 *
+	 * @param string $rif
+	 * @return array
+	 */
+	private function validate_rif( $rif ) {
+		// Clean RIF (remove spaces, convert to uppercase)
+		$rif = strtoupper( trim( $rif ) );
+		
+		// Basic format validation: V-12345678-9 format
+		$pattern = '/^[VJPG]-[0-9]{8}-[0-9]$/';
+		if ( ! preg_match( $pattern, $rif ) ) {
+			return array(
+				'valid' => false,
+				'message' => __( 'Formato de RIF inválido. Use el formato: V-12345678-9', 'woocommerce-venezuela-pro-2025' )
+			);
+		}
+		
+		// Extract components
+		$prefix = substr( $rif, 0, 1 );
+		$number = substr( $rif, 2, 8 );
+		$check_digit = substr( $rif, 11, 1 );
+		
+		// Validate prefix
+		$valid_prefixes = array( 'V', 'J', 'P', 'G' );
+		if ( ! in_array( $prefix, $valid_prefixes ) ) {
+			return array(
+				'valid' => false,
+				'message' => __( 'Prefijo de RIF inválido. Use V, J, P o G', 'woocommerce-venezuela-pro-2025' )
+			);
+		}
+		
+		// Validate check digit using Venezuelan algorithm
+		$calculated_digit = $this->calculate_rif_check_digit( $number );
+		if ( $check_digit != $calculated_digit ) {
+			return array(
+				'valid' => false,
+				'message' => __( 'Dígito verificador de RIF inválido', 'woocommerce-venezuela-pro-2025' )
+			);
+		}
+		
+		return array(
+			'valid' => true,
+			'message' => __( 'RIF válido', 'woocommerce-venezuela-pro-2025' )
+		);
+	}
+
+	/**
+	 * Calculate RIF check digit using Venezuelan algorithm
+	 *
+	 * @param string $number
+	 * @return string
+	 */
+	private function calculate_rif_check_digit( $number ) {
+		$multipliers = array( 3, 2, 7, 6, 5, 4, 3, 2 );
+		$sum = 0;
+		
+		for ( $i = 0; $i < 8; $i++ ) {
+			$sum += intval( $number[$i] ) * $multipliers[$i];
+		}
+		
+		$remainder = $sum % 11;
+		$check_digit = 11 - $remainder;
+		
+		if ( $check_digit >= 10 ) {
+			$check_digit = 0;
+		}
+		
+		return strval( $check_digit );
+	}
+
+	/**
+	 * Validate Venezuelan phone number
+	 *
+	 * @param string $phone
+	 * @return array
+	 */
+	private function validate_venezuelan_phone( $phone ) {
+		// Clean phone number (remove spaces, dashes, parentheses)
+		$phone = preg_replace( '/[\s\-\(\)]/', '', $phone );
+		
+		// Remove country code if present
+		if ( substr( $phone, 0, 3 ) === '+58' ) {
+			$phone = substr( $phone, 3 );
+		} elseif ( substr( $phone, 0, 2 ) === '58' ) {
+			$phone = substr( $phone, 2 );
+		}
+		
+		// Validate Venezuelan mobile format: 04XX-XXXXXXX (10 digits starting with 04)
+		if ( preg_match( '/^04[0-9]{8}$/', $phone ) ) {
+			return array(
+				'valid' => true,
+				'message' => __( 'Número de teléfono válido', 'woocommerce-venezuela-pro-2025' ),
+				'formatted' => '+58-' . substr( $phone, 0, 4 ) . '-' . substr( $phone, 4 )
+			);
+		}
+		
+		// Validate Venezuelan landline format: 0XXX-XXXXXXX (10 digits starting with 02)
+		if ( preg_match( '/^02[0-9]{8}$/', $phone ) ) {
+			return array(
+				'valid' => true,
+				'message' => __( 'Número de teléfono válido', 'woocommerce-venezuela-pro-2025' ),
+				'formatted' => '+58-' . substr( $phone, 0, 4 ) . '-' . substr( $phone, 4 )
+			);
+		}
+		
+		return array(
+			'valid' => false,
+			'message' => __( 'Formato de teléfono inválido. Use formato venezolano: 04XX-XXXXXXX o 02XX-XXXXXXX', 'woocommerce-venezuela-pro-2025' )
+		);
+	}
 }

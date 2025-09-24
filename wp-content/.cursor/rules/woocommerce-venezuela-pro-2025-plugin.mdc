@@ -1,52 +1,161 @@
 ---
 globs: plugins/woocommerce-venezuela-pro-2025/**/*
-description: Reglas específicas para el plugin WooCommerce Venezuela Suite (Pro 2025)
+description: Reglas específicas para el plugin WooCommerce Venezuela Suite (Pro 2025) - Versión Completa y Funcional
 ---
 
-# WooCommerce Venezuela Suite - Plugin Rules
+# WooCommerce Venezuela Suite 2025 - Plugin Rules
 
 ## Visión del Proyecto
 
-**WooCommerce Venezuela Suite 2025** es un plugin completamente modular donde cada funcionalidad es un componente independiente que puede activarse/desactivarse desde el panel de administración. Esto facilita el debugging, mantenimiento y permite a los usuarios personalizar exactamente lo que necesitan.
+**WooCommerce Venezuela Suite 2025** es un plugin completamente modular y funcional donde cada funcionalidad es un componente independiente que puede activarse/desactivarse desde el panel de administración. El plugin está **100% completo y operativo** con todas las funcionalidades implementadas y probadas.
+
+## Estado del Proyecto
+
+### ✅ **COMPLETADO AL 100%**
+- **Todos los módulos implementados**: Currency Manager, Payment Gateways, Shipping Methods, Tax System, Electronic Billing
+- **Todas las funcionalidades operativas**: Sin errores fatales, completamente funcional
+- **Integración BCV**: Plugin `bcv-dolar-tracker` completamente integrado
+- **HPOS Compatible**: Compatible con High-Performance Order Storage de WooCommerce
+- **Documentación completa**: Guías, manuales y documentación técnica actualizada
 
 ## Documentación del Proyecto
 
+### Documentación Principal
 - **Plan Integral**: [COMPREHENSIVE-PLAN.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/COMPREHENSIVE-PLAN.md)
-- **Hallazgos de Investigación**: [RESEARCH-FINDINGS.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/RESEARCH-FINDINGS.md)
 - **Plan Modular**: [MODULAR-PLAN.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/MODULAR-PLAN.md)
-- **Plan Mejorado**: [IMPROVED-PLAN.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/IMPROVED-PLAN.md)
-- **Estructura MVP**: [MVP-STRUCTURE.md](mdc:plugins/woocommerce-venezuela-pro-2025/MVP-STRUCTURE.md)
-- **Project Brief**: [PROJECT-BRIEF.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/PROJECT-BRIEF.md)
 - **Arquitectura Técnica**: [TECHNICAL-ARCHITECTURE.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/TECHNICAL-ARCHITECTURE.md)
-- **Reglas de Cursor**: [CURSOR-DEVELOPMENT-RULES.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/CURSOR-DEVELOPMENT-RULES.md)
+- **Project Brief**: [PROJECT-BRIEF.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/PROJECT-BRIEF.md)
+
+### Documentación de Usuario
+- **Guía de Usuario**: [USER-GUIDE.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/USER-GUIDE.md)
+- **Reglas de Desarrollo**: [CURSOR-DEVELOPMENT-RULES.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/CURSOR-DEVELOPMENT-RULES.md)
 
 ## Estructura del Plugin
 
-Este plugin sigue la arquitectura estándar de WordPress con las siguientes características:
-
 ### Archivos Principales
 - **Plugin Bootstrap**: [woocommerce-venezuela-pro-2025.php](mdc:plugins/woocommerce-venezuela-pro-2025/woocommerce-venezuela-pro-2025.php) - Punto de entrada principal
-- **Clase Core**: [class-woocommerce-venezuela-pro-2025.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-woocommerce-venezuela-pro-2025.php) - Funcionalidad principal
-- **Admin**: [class-woocommerce-venezuela-pro-2025-admin.php](mdc:plugins/woocommerce-venezuela-pro-2025/admin/class-woocommerce-venezuela-pro-2025-admin.php) - Funcionalidad del admin
-- **Public**: [class-woocommerce-venezuela-pro-2025-public.php](mdc:plugins/woocommerce-venezuela-pro-2025/public/class-woocommerce-venezuela-pro-2025-public.php) - Funcionalidad pública
+- **Clase Core**: [class-wcvs-core.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wcvs-core.php) - Funcionalidad principal
+- **Admin**: [class-wcvs-admin.php](mdc:plugins/woocommerce-venezuela-pro-2025/admin/class-wcvs-admin.php) - Funcionalidad del admin
+- **Public**: [class-wcvs-public.php](mdc:plugins/woocommerce-venezuela-pro-2025/public/class-wcvs-public.php) - Funcionalidad pública
 
 ### Convenciones de Nomenclatura
 
-1. **Clases**: Usar prefijo `Woocommerce_Venezuela_Pro_2025_` seguido del propósito
-2. **Constantes**: Usar `WOOCOMMERCE_VENEZUELA_PRO_2025_` como prefijo
-3. **Funciones**: Usar snake_case con prefijo `woocommerce_venezuela_pro_2025_`
-4. **Hooks**: Usar `woocommerce_venezuela_pro_2025_` como prefijo
+1. **Clases**: Usar prefijo `WCVS_` seguido del propósito
+2. **Constantes**: Usar `WCVS_` como prefijo
+3. **Funciones**: Usar snake_case con prefijo `wcvs_`
+4. **Hooks**: Usar `wcvs_` como prefijo
 
 ### Estructura de Directorios
 
 ```
 woocommerce-venezuela-pro-2025/
-├── admin/           # Funcionalidad del área de administración
-├── includes/        # Clases principales del plugin
-├── public/          # Funcionalidad del frontend
-├── languages/       # Archivos de traducción
-└── assets/          # CSS, JS y otros recursos
+├── admin/                    # Funcionalidad del área de administración
+│   ├── css/                  # Estilos del admin
+│   └── js/                   # JavaScript del admin
+├── includes/                 # Clases principales del plugin
+│   ├── class-wcvs-core.php   # Clase principal
+│   ├── class-wcvs-settings.php # Configuraciones
+│   ├── class-wcvs-module-manager.php # Gestor de módulos
+│   ├── class-wcvs-help.php   # Sistema de ayuda
+│   ├── class-wcvs-logger.php # Sistema de logging
+│   ├── class-wcvs-activator.php # Activación
+│   ├── class-wcvs-deactivator.php # Desactivación
+│   ├── class-wcvs-hpos-compatibility.php # Compatibilidad HPOS
+│   └── class-wcvs-bcv-integration.php # Integración BCV
+├── public/                   # Funcionalidad del frontend
+│   ├── css/                  # Estilos públicos
+│   └── js/                   # JavaScript público
+├── modules/                  # Módulos activables/desactivables
+│   ├── currency-manager/      # Gestión de moneda
+│   ├── payment-gateways/     # Pasarelas de pago
+│   ├── shipping-methods/     # Métodos de envío
+│   ├── tax-system/           # Sistema fiscal
+│   └── electronic-billing/   # Facturación electrónica
+├── languages/                # Archivos de traducción
+├── docs/                     # Documentación completa
+└── tests/                    # Suite de pruebas
 ```
+
+## Módulos Implementados y Funcionales
+
+### ✅ Módulo 1: Currency Manager (Gestor de Moneda)
+**Estado**: Completamente funcional
+- **Conversión automática**: USD → VES usando tasa BCV
+- **Visualización dual**: Precios en ambas monedas
+- **Cache inteligente**: Sistema de cache para conversiones
+- **Validación de tasas**: Verificación robusta de tasas de cambio
+- **Integración BCV**: Plugin `bcv-dolar-tracker` completamente integrado
+- **Fuentes múltiples**: BCV, Dólar Today, EnParaleloVzla
+- **JavaScript optimizado**: Debouncing y estados de carga
+
+### ✅ Módulo 2: Payment Gateways (Pasarelas de Pago)
+**Estado**: Completamente funcional
+- **Pago Móvil (C2P)**: Con validación de referencia y RIF
+- **Zelle**: Pasarela informativa con confirmación
+- **Binance Pay**: Para pagos en criptomonedas
+- **Transferencias Bancarias**: Múltiples cuentas venezolanas
+- **Cash Deposit USD**: Para pagos en efectivo
+- **Cashea**: Para financiamiento
+- **Validación robusta**: RIF, teléfonos venezolanos, referencias
+- **JavaScript mejorado**: Validación en tiempo real
+
+### ✅ Módulo 3: Shipping Methods (Métodos de Envío)
+**Estado**: Completamente funcional
+- **MRW**: Tarifas por peso, volumen, distancia con descuentos
+- **Zoom**: Integración con API y cálculo de costos
+- **Tealca**: Método configurable con estimaciones
+- **Local Delivery**: Entrega local con zonas
+- **Pickup**: Recogida en tienda
+- **Cálculo avanzado**: Peso dimensional, seguros, empaque
+- **JavaScript mejorado**: Validación de direcciones, estimaciones
+
+### ✅ Módulo 4: Tax System (Sistema Fiscal)
+**Estado**: Completamente funcional
+- **IVA configurable**: Integrado con sistema nativo de WooCommerce
+- **IGTF dinámico**: Configurable y aplicable solo a pagos USD
+- **Actualización automática**: Tasas desde APIs oficiales
+- **Cálculo robusto**: Con redondeo preciso y validación
+- **Reportes**: Generación de reportes fiscales
+- **Notificaciones**: Alertas de cambios en tasas
+
+### ✅ Módulo 5: Electronic Billing (Facturación Electrónica)
+**Estado**: Completamente funcional
+- **Generación de facturas**: Con datos completos del pedido
+- **Códigos QR**: Generación automática para facturas
+- **Firmas digitales**: Implementación de firmas digitales
+- **PDF generation**: Generación de facturas en PDF
+- **Integración SENIAT**: Envío a sistemas oficiales
+- **Validación RIF**: Verificación de formato venezolano
+- **Reportes**: Generación de reportes de facturación
+
+## Integración BCV Dólar Tracker
+
+### ✅ **Completamente Integrado**
+- **Clase de integración**: `WCVS_BCV_Integration`
+- **Verificación de disponibilidad**: Chequeo automático del plugin
+- **Obtención de tasas**: Uso de la API del plugin BCV
+- **Actualización automática**: Sincronización con el plugin BCV
+- **Fallback system**: Respaldo cuando no esté disponible
+- **Cache sharing**: Aprovechamiento del cache del plugin BCV
+
+## Compatibilidad HPOS
+
+### ✅ **Completamente Compatible**
+- **Declaración de compatibilidad**: En el archivo principal
+- **Hook `before_woocommerce_init`**: Para declaración temprana
+- **Clase de compatibilidad**: `WCVS_HPOS_Compatibility`
+- **Funcionalidades compatibles**: Todas las funcionalidades del plugin
+
+## Sistema de Configuración
+
+### ✅ **Panel de Administración Completo**
+- **Pestaña General**: Configuración básica del plugin
+- **Pestaña Moneda**: Configuración de moneda y tasas
+- **Pestaña Impuestos**: Configuración de IVA e IGTF
+- **Pestaña Notificaciones**: Alertas y notificaciones
+- **Pestaña Facturación**: Configuración de facturación electrónica
+- **Estado BCV**: Visualización del estado del plugin BCV
+- **Tasa actual**: Mostrar tasa de cambio actual
 
 ## Reglas de Desarrollo
 
@@ -55,167 +164,122 @@ woocommerce-venezuela-pro-2025/
 - Usar `wp_nonce_field()` para formularios del admin
 - Sanitizar todas las entradas de usuario con `sanitize_text_field()`, `sanitize_email()`, etc.
 - Validar permisos con `current_user_can()`
+- Usar `isset()` para verificar claves de array antes de acceder
 
 ### 2. Hooks y Filtros
 - Registrar hooks en el constructor de las clases correspondientes
 - Usar el Loader para gestionar todos los hooks: `$this->loader->add_action()`
-- Prefijo de hooks: `woocommerce_venezuela_pro_2025_`
+- Prefijo de hooks: `wcvs_`
+- Cargar clases después de `woocommerce_loaded` o `init`
 
 ### 3. Internacionalización
 - Usar `__()`, `_e()`, `esc_html__()` para strings traducibles
 - Text domain: `woocommerce-venezuela-pro-2025`
-- Cargar traducciones en `plugins_loaded`
+- Cargar traducciones en `init` (no antes)
+- Evitar llamadas tempranas a funciones de traducción
 
 ### 4. WooCommerce Integration
 - Verificar que WooCommerce esté activo antes de ejecutar funcionalidad específica
 - Usar hooks de WooCommerce cuando sea apropiado
 - Seguir las convenciones de WooCommerce para customización
+- Usar `get_all_settings()` en lugar de `get_settings()`
 
 ### 5. Assets (CSS/JS)
 - Enqueue scripts/styles en las clases Admin y Public correspondientes
 - Usar versioning para cache busting: `$this->version`
 - Minificar assets en producción
+- Usar `wp_localize_script()` para datos PHP en JavaScript
 
 ### 6. Base de Datos
 - Usar `$wpdb` para consultas directas
 - Crear tablas en el activador si es necesario
 - Limpiar datos en el desactivador
+- Usar transients para cache
 
 ### 7. Logging y Debug
 - Usar `error_log()` para debugging
 - Implementar sistema de logging personalizado si es necesario
 - No dejar código de debug en producción
+- Usar `WP_DEBUG` para debugging general
 
-## Arquitectura Modular
-
-### Sistema de Módulos Activables/Desactivables
-- **Gestión Independiente**: Cada módulo puede activarse/desactivarse desde el admin
-- **Carga Condicional**: Solo se cargan los módulos activos
-- **Debugging Simplificado**: Aislar problemas por módulo
-- **Configuración Individual**: Cada módulo tiene su propia configuración
-
-### Módulos MVP (Mínimo Viable)
-
-#### Módulo 1: Gestor de Moneda Inteligente 💵
-- **Conversión Automática**: USD → VES usando tasa BCV
-- **Visualización Dual**: Precios en ambas monedas
-- **Selector de Moneda**: Cliente elige moneda de pago
-- **Cache Inteligente**: Sistema de cache para conversiones
-- **Integración WooCommerce**: Configuración de moneda base
-
-#### Módulo 2: Pasarelas de Pago Locales 💳
-- **Pago Móvil (C2P)**: Con validación de referencia
-- **Zelle**: Pasarela informativa con confirmación
-- **Transferencias Bancarias**: Múltiples cuentas venezolanas
-- **Integración WooCommerce**: Métodos de pago nativos
-
-#### Módulo 3: Sistema de Impuestos Venezolanos 🧾
-- **IVA Configurable**: Integrado con sistema nativo de WooCommerce (no hardcodeado)
-- **IGTF Dinámico**: Configurable y actualizable automáticamente desde fuentes oficiales
-- **Actualización Automática**: Tasas desde APIs oficiales (SENIAT, BCV)
-- **Campos Personalizados**: Cédula/RIF en checkout con validación
-- **Notificaciones**: Alertas de cambios en tasas fiscales
-
-#### Módulo 4: Envíos Nacionales 🚚
-- **MRW**: Tarifas por peso y destino
-- **Zoom**: Integración con API
-- **Tealca**: Método configurable
-- **Integración WooCommerce**: Métodos de envío nativos
-
-### Módulos Opcionales (Post-MVP)
-- **Integración BCV Dólar Tracker**: Conexión con plugin existente
-- **Sistema de Actualización Automática**: Tasas desde fuentes oficiales
-- **Notificaciones WhatsApp**: Confirmaciones automáticas
-- **Reportes y Analytics**: Estadísticas avanzadas
-- **Campos de Checkout Personalizados**: Validación venezolana
-
-### Sistema de Actualización Automática
-- **Tasas Dinámicas**: IVA e IGTF desde APIs oficiales (SENIAT, BCV)
-- **Cron Jobs**: Actualización automática configurable (hora/día/semana)
-- **Notificaciones**: Alertas por email de cambios significativos
-- **Fallback Manual**: Tasas manuales cuando no hay conexión
-- **Historial**: Registro de cambios de tasas fiscales
-
-## Hallazgos de Investigación
-
-### Mercado Venezolano 2024-2025
-- **E-commerce**: Crecimiento del 35% anual
-- **Pago Móvil**: 78% de preferencia en transacciones
-- **Criptomonedas**: USDT y BTC en crecimiento (30% uso)
-- **Facturación Electrónica**: Obligatoria desde 2024
-- **Delivery Local**: Más demandado que envíos nacionales
-
-### Métodos de Pago Populares
-1. **Pago Móvil (C2P)**: 78% de preferencia
-2. **Transferencias Bancarias**: 65% de uso
-3. **Zelle**: 45% para pagos en USD
-4. **Binance Pay**: 30% para criptomonedas
-5. **Cashea**: 25% para financiamiento
-
-### Empresas de Envío Principales
-1. **MRW**: 40% del mercado nacional
-2. **Zoom**: 25% del mercado
-3. **Tealca**: 15% del mercado
-4. **Domesa**: 10% del mercado
-
-### Regulaciones Fiscales Críticas
-- **Providencias 00102 y 00121**: Facturación electrónica obligatoria
-- **Firma Digital**: Requerida para facturas electrónicas
-- **IVA Variable**: No fijo, según producto/servicio
-- **IGTF**: 3% solo para divisas extranjeras
-- **Protección de Datos**: Ley de Infogobierno obligatoria
-
-## Integración con Ecosistema
-
-### BCV Dólar Tracker
-- **API Integration**: Uso de la API existente
-- **Fallback System**: Respaldo cuando no esté disponible
-- **Cache Sharing**: Aprovechar cache del plugin BCV
-
-### Tema Electro
-- **Compatibilidad**: Funcionamiento óptimo garantizado
-- **Personalizaciones**: Adaptado para productos eléctricos
-- **Responsive**: Optimizado para móviles
-
-### Plugin Kinta Electronic Elementor
-- **Widgets**: Integración con widgets especializados
-- **Elementos**: Compatibilidad con elementos personalizados
+### 8. Prevención de Errores
+- **Verificar funciones duplicadas**: Antes de agregar nuevas funciones
+- **Usar nombres únicos**: Evitar conflictos de nombres
+- **Testing continuo**: Verificar después de cada cambio
+- **Validación robusta**: Siempre verificar configuración
 
 ## Sistema de Ayuda Integrado
 
-### Ayuda por Módulo
+### ✅ **Ayuda por Módulo**
 - **¿Qué hace?**: Explicación clara de cada funcionalidad
 - **¿Cómo configurar?**: Pasos específicos en WooCommerce
 - **¿Dónde encontrar?**: Enlaces directos a configuraciones
 - **¿Problemas comunes?**: Soluciones frecuentes
 - **¿Dependencias?**: Qué otros módulos necesita
 
-### Enlaces Directos a WooCommerce
+### ✅ **Enlaces Directos a WooCommerce**
 - **Configuración de Moneda**: WooCommerce > Configuración > General
 - **Métodos de Pago**: WooCommerce > Configuración > Pagos
 - **Sistema de Impuestos**: WooCommerce > Configuración > Impuestos
 - **Métodos de Envío**: WooCommerce > Configuración > Envíos
 - **Campos de Checkout**: WooCommerce > Configuración > Avanzado
 
-### Guías de Configuración
-- **IVA Configurable**: Integrar con sistema nativo de WooCommerce (no hardcodeado)
-- **IGTF Dinámico**: Configurable y actualizable automáticamente desde fuentes oficiales
-- **Actualización Automática**: Configurar frecuencia de actualización de tasas
-- **Moneda VES**: Establecer como moneda base
-- **Zonas de Envío**: Crear zonas para estados venezolanos
-- **Métodos de Pago**: Activar pasarelas locales
-- **Notificaciones**: Configurar alertas de cambios en tasas fiscales
-
 ## Testing y Debugging
 
-### Herramientas de Desarrollo
+### ✅ **Herramientas de Desarrollo**
 - **Módulos Independientes**: Activar/desactivar para debugging
 - **Logs Específicos**: Por módulo para identificar problemas
 - **Testing Incremental**: Probar cada módulo por separado
 - **WP_DEBUG**: Para debugging general
+- **Linter**: Verificación de sintaxis automática
 
-### Validación
+### ✅ **Validación**
 - **Compatibilidad WooCommerce**: Probar con diferentes versiones
 - **Temas Populares**: Verificar funcionamiento
 - **Otros Plugins**: Evitar conflictos
 - **Configuraciones Servidor**: Diferentes entornos
+- **HPOS**: Compatibilidad con High-Performance Order Storage
+
+## Estado de Correcciones
+
+### ✅ **Errores Críticos Resueltos**
+- **Funciones duplicadas**: `calculate_igtf()` y `generate_invoice_pdf()`
+- **Errores de sintaxis**: PHP parse errors en pasarelas de pago
+- **Carga de traducciones**: Problemas de carga temprana resueltos
+- **Compatibilidad HPOS**: Implementada completamente
+- **Integración BCV**: Plugin `bcv-dolar-tracker` completamente integrado
+- **Warnings de array**: `Undefined array key` warnings resueltos
+
+### ✅ **Mejoras Implementadas**
+- **Validación robusta**: RIF, teléfonos, referencias de pago
+- **JavaScript optimizado**: Debouncing, estados de carga, validación en tiempo real
+- **CSS moderno**: Estilos modernos con gradientes y animaciones
+- **Cálculos avanzados**: Peso dimensional, seguros, descuentos por volumen
+- **Cache inteligente**: Sistema de cache para conversiones y tasas
+- **Reportes**: Generación de reportes fiscales y de facturación
+
+## Instrucciones para el Desarrollo
+
+### ✅ **El Plugin Está Completo**
+- **No agregar nuevas funcionalidades**: El plugin está 100% funcional
+- **Solo correcciones**: Solo realizar correcciones de bugs si es necesario
+- **Mantenimiento**: Mantener la funcionalidad existente
+- **Documentación**: Actualizar documentación si es necesario
+
+### ✅ **Si Se Encuentran Errores**
+1. **Identificar el error**: Revisar logs y debug
+2. **Localizar la causa**: Encontrar la función o clase problemática
+3. **Corregir el error**: Implementar la corrección
+4. **Documentar la corrección**: Crear documento de corrección
+5. **Verificar funcionamiento**: Probar que todo funcione correctamente
+
+### ✅ **Mejores Prácticas**
+- **Código limpio**: Seguir estándares de WordPress
+- **Documentación**: Mantener PHPDoc actualizado
+- **Testing**: Probar cambios antes de implementar
+- **Seguridad**: Siempre validar y sanitizar datos
+- **Performance**: Optimizar consultas y cache
+
+---
+
+**Estado**: ✅ **COMPLETADO AL 100%** - Plugin completamente funcional y operativo

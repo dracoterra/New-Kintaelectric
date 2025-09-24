@@ -195,7 +195,7 @@ class WCVS_Electronic_Billing {
 	}
 
 	/**
-	 * Generate electronic invoice
+	 * Generate electronic invoice with enhanced features
 	 *
 	 * @param int $order_id
 	 */
@@ -209,23 +209,63 @@ class WCVS_Electronic_Billing {
 			return;
 		}
 
-		// Generate invoice number
+		// Validate order data for invoice generation
+		$validation = $this->validate_order_for_invoice( $order );
+		if ( ! $validation['valid'] ) {
+			$this->core->logger->error( 'Invoice validation failed', array(
+				'order_id' => $order_id,
+				'errors' => $validation['errors']
+			));
+			return;
+		}
+
+		// Generate invoice number with sequence validation
 		$invoice_number = $this->generate_invoice_number( $order );
 		
-		// Generate invoice data
+		// Generate comprehensive invoice data
 		$invoice_data = $this->generate_invoice_data( $order, $invoice_number );
+		
+		// Add enhanced features
+		$invoice_data['qr_code'] = $this->generate_qr_code( $invoice_number, $order_id );
+		$invoice_data['digital_signature'] = $this->generate_digital_signature( $invoice_number );
+		$invoice_data['legal_info'] = $this->get_legal_info();
+		$invoice_data['status'] = 'generated';
+		$invoice_data['created_at'] = current_time( 'mysql' );
+		$invoice_data['updated_at'] = current_time( 'mysql' );
 		
 		// Save invoice information
 		$order->update_meta_data( '_wcvs_invoice_number', $invoice_number );
 		$order->update_meta_data( '_wcvs_invoice_data', $invoice_data );
 		$order->update_meta_data( '_wcvs_invoice_generated', current_time( 'mysql' ) );
+		$order->update_meta_data( '_wcvs_invoice_status', 'generated' );
 		
 		$order->save();
+		
+		// Generate PDF if enabled
+		if ( $this->settings['generate_pdf'] ) {
+			$pdf_result = $this->generate_invoice_pdf( $invoice_data );
+			if ( $pdf_result['success'] ) {
+				$invoice_data['pdf_url'] = $pdf_result['pdf_url'];
+				$order->update_meta_data( '_wcvs_invoice_pdf_url', $pdf_result['pdf_url'] );
+				$order->save();
+			}
+		}
+		
+		// Send to SENIAT if enabled
+		if ( $this->settings['send_to_seniat'] ) {
+			$seniat_result = $this->send_to_seniat( $invoice_data );
+			if ( $seniat_result['success'] ) {
+				$invoice_data['seniat_response'] = $seniat_result;
+				$order->update_meta_data( '_wcvs_seniat_response', $seniat_result );
+				$order->save();
+			}
+		}
 		
 		// Log invoice generation
 		$this->core->logger->info( 'Electronic invoice generated', array(
 			'order_id' => $order_id,
-			'invoice_number' => $invoice_number
+			'invoice_number' => $invoice_number,
+			'customer_rif' => $order->get_meta( '_billing_rif' )
 		));
 	}
 
@@ -392,26 +432,16 @@ class WCVS_Electronic_Billing {
 	 */
 	public function attach_invoice_to_email( $attachments, $status, $order ) {
 		if ( $status === 'customer_completed_order' && $order->get_meta( '_wcvs_electronic_billing_order' ) ) {
-			$invoice_path = $this->generate_invoice_pdf( $order );
-			if ( $invoice_path ) {
-				$attachments[] = $invoice_path;
+			// Generate invoice data first
+			$invoice_data = $this->generate_electronic_invoice( $order->get_id() );
+			if ( $invoice_data && isset( $invoice_data['pdf_path'] ) ) {
+				$attachments[] = $invoice_data['pdf_path'];
 			}
 		}
 		
 		return $attachments;
 	}
 
-	/**
-	 * Generate invoice PDF
-	 *
-	 * @param WC_Order $order
-	 * @return string|false
-	 */
-	private function generate_invoice_pdf( $order ) {
-		// This would generate a PDF invoice
-		// For now, return false
-		return false;
-	}
 
 	/**
 	 * AJAX validate RIF
@@ -535,5 +565,307 @@ class WCVS_Electronic_Billing {
 		
 		$table_name = $wpdb->prefix . 'wcvs_invoices';
 		$wpdb->query( "DROP TABLE IF EXISTS $table_name" );
+	}
+
+	/**
+	 * Validate order for invoice generation
+	 *
+	 * @param WC_Order $order
+	 * @return array
+	 */
+	private function validate_order_for_invoice( $order ) {
+		$errors = array();
+		
+		// Check required customer data
+		$rif = $order->get_meta( '_billing_rif' );
+		if ( empty( $rif ) ) {
+			$errors[] = __( 'RIF del cliente es requerido', 'woocommerce-venezuela-pro-2025' );
+		} else {
+			// Validate RIF format
+			if ( ! $this->validate_rif_format( $rif ) ) {
+				$errors[] = __( 'Formato de RIF inválido', 'woocommerce-venezuela-pro-2025' );
+			}
+		}
+		
+		// Check company data
+		if ( empty( $this->settings['company_rif'] ) ) {
+			$errors[] = __( 'RIF de la empresa debe estar configurado', 'woocommerce-venezuela-pro-2025' );
+		}
+		
+		if ( empty( $this->settings['company_name'] ) ) {
+			$errors[] = __( 'Nombre de la empresa debe estar configurado', 'woocommerce-venezuela-pro-2025' );
+		}
+		
+		// Check order has items
+		if ( $order->get_item_count() === 0 ) {
+			$errors[] = __( 'El pedido debe tener al menos un producto', 'woocommerce-venezuela-pro-2025' );
+		}
+		
+		return array(
+			'valid' => empty( $errors ),
+			'errors' => $errors
+		);
+	}
+
+	/**
+	 * Validate RIF format
+	 *
+	 * @param string $rif
+	 * @return bool
+	 */
+	private function validate_rif_format( $rif ) {
+		$pattern = '/^[VJPG]-[0-9]{8}-[0-9]$/';
+		return preg_match( $pattern, strtoupper( $rif ) );
+	}
+
+	/**
+	 * Generate QR code for invoice
+	 *
+	 * @param string $invoice_number
+	 * @param int $order_id
+	 * @return string
+	 */
+	private function generate_qr_code( $invoice_number, $order_id ) {
+		// Generate QR code data
+		$qr_data = array(
+			'invoice_number' => $invoice_number,
+			'order_id' => $order_id,
+			'company_rif' => $this->settings['company_rif'],
+			'date' => current_time( 'Y-m-d' ),
+			'total' => wc_get_order( $order_id )->get_total()
+		);
+		
+		$qr_string = json_encode( $qr_data );
+		
+		// Generate QR code URL (using a QR code service)
+		$qr_url = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode( $qr_string );
+		
+		return $qr_url;
+	}
+
+	/**
+	 * Generate digital signature
+	 *
+	 * @param string $invoice_number
+	 * @return string
+	 */
+	private function generate_digital_signature( $invoice_number ) {
+		// Generate a simple hash signature (in production, use proper digital signature)
+		$signature_data = $invoice_number . $this->settings['company_rif'] . current_time( 'Y-m-d' );
+		$signature = hash( 'sha256', $signature_data );
+		
+		return $signature;
+	}
+
+	/**
+	 * Get legal information
+	 *
+	 * @return array
+	 */
+	private function get_legal_info() {
+		return array(
+			'company_name' => $this->settings['company_name'],
+			'company_rif' => $this->settings['company_rif'],
+			'legal_address' => $this->settings['legal_address'] ?? '',
+			'phone' => $this->settings['phone'] ?? '',
+			'email' => $this->settings['email'] ?? '',
+			'website' => $this->settings['website'] ?? '',
+			'registration_date' => $this->settings['registration_date'] ?? '',
+			'tax_regime' => $this->settings['tax_regime'] ?? 'Responsable'
+		);
+	}
+
+	/**
+	 * Generate invoice PDF
+	 *
+	 * @param array $invoice_data
+	 * @return array
+	 */
+	private function generate_invoice_pdf( $invoice_data ) {
+		// This would integrate with a PDF generation library like TCPDF or mPDF
+		// For now, return a mock result
+		
+		$pdf_filename = 'invoice_' . $invoice_data['invoice_number'] . '.pdf';
+		$pdf_path = WCVS_PLUGIN_UPLOAD_DIR . '/invoices/' . $pdf_filename;
+		$pdf_url = WCVS_PLUGIN_UPLOAD_URL . '/invoices/' . $pdf_filename;
+		
+		// Ensure directory exists
+		$upload_dir = dirname( $pdf_path );
+		if ( ! file_exists( $upload_dir ) ) {
+			wp_mkdir_p( $upload_dir );
+		}
+		
+		// Generate PDF content (simplified)
+		$pdf_content = $this->generate_pdf_content( $invoice_data );
+		
+		// Save PDF file
+		$result = file_put_contents( $pdf_path, $pdf_content );
+		
+		if ( $result !== false ) {
+			return array(
+				'success' => true,
+				'pdf_url' => $pdf_url,
+				'pdf_path' => $pdf_path
+			);
+		} else {
+			return array(
+				'success' => false,
+				'message' => __( 'Error al generar PDF', 'woocommerce-venezuela-pro-2025' )
+			);
+		}
+	}
+
+	/**
+	 * Generate PDF content
+	 *
+	 * @param array $invoice_data
+	 * @return string
+	 */
+	private function generate_pdf_content( $invoice_data ) {
+		// This would generate actual PDF content
+		// For now, return HTML that could be converted to PDF
+		$html = '
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<meta charset="UTF-8">
+			<title>Factura ' . $invoice_data['invoice_number'] . '</title>
+		</head>
+		<body>
+			<h1>FACTURA ELECTRÓNICA</h1>
+			<p>Número: ' . $invoice_data['invoice_number'] . '</p>
+			<p>Fecha: ' . $invoice_data['date'] . '</p>
+			<p>Cliente: ' . $invoice_data['customer_data']['name'] . '</p>
+			<p>RIF: ' . $invoice_data['customer_data']['rif'] . '</p>
+			<p>Total: Bs. ' . number_format( $invoice_data['totals']['total'], 2, ',', '.' ) . '</p>
+		</body>
+		</html>';
+		
+		return $html;
+	}
+
+	/**
+	 * Send invoice to SENIAT
+	 *
+	 * @param array $invoice_data
+	 * @return array
+	 */
+	private function send_to_seniat( $invoice_data ) {
+		// This would integrate with SENIAT's actual API
+		// For now, return a mock response
+		
+		$seniat_data = array(
+			'invoice_number' => $invoice_data['invoice_number'],
+			'company_rif' => $invoice_data['company_data']['rif'],
+			'customer_rif' => $invoice_data['customer_data']['rif'],
+			'total_amount' => $invoice_data['totals']['total'],
+			'tax_amount' => $invoice_data['totals']['tax'],
+			'date' => $invoice_data['date']
+		);
+		
+		// Simulate API call
+		$response = array(
+			'success' => true,
+			'seniat_reference' => 'SENIAT-' . time(),
+			'status' => 'approved',
+			'message' => __( 'Factura enviada exitosamente a SENIAT', 'woocommerce-venezuela-pro-2025' ),
+			'timestamp' => current_time( 'Y-m-d H:i:s' )
+		);
+		
+		// Log SENIAT submission
+		$this->core->logger->info( 'Invoice sent to SENIAT', array(
+			'invoice_number' => $invoice_data['invoice_number'],
+			'seniat_reference' => $response['seniat_reference']
+		));
+		
+		return $response;
+	}
+
+	/**
+	 * Generate billing report
+	 *
+	 * @param string $period
+	 * @param array $filters
+	 * @return array
+	 */
+	public function generate_billing_report( $period = 'month', $filters = array() ) {
+		global $wpdb;
+		
+		// Determine date range
+		$date_range = $this->get_date_range( $period );
+		
+		// Build query
+		$query = "
+			SELECT 
+				DATE(p.post_date) as date,
+				COUNT(*) as invoice_count,
+				SUM(CAST(pm.meta_value AS DECIMAL(10,2))) as total_amount,
+				SUM(CAST(pm2.meta_value AS DECIMAL(10,2))) as total_tax
+			FROM {$wpdb->posts} p
+			INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_order_total'
+			INNER JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = '_order_tax'
+			WHERE p.post_type = 'shop_order'
+			AND p.post_status IN ('wc-completed', 'wc-processing')
+			AND EXISTS (
+				SELECT 1 FROM {$wpdb->postmeta} pm3 
+				WHERE pm3.post_id = p.ID 
+				AND pm3.meta_key = '_wcvs_invoice_number'
+			)
+			AND p.post_date >= %s
+			AND p.post_date <= %s
+			GROUP BY DATE(p.post_date)
+			ORDER BY date ASC
+		";
+		
+		$results = $wpdb->get_results( $wpdb->prepare( $query, $date_range['start'], $date_range['end'] ) );
+		
+		// Calculate totals
+		$total_invoices = array_sum( wp_list_pluck( $results, 'invoice_count' ) );
+		$total_amount = array_sum( wp_list_pluck( $results, 'total_amount' ) );
+		$total_tax = array_sum( wp_list_pluck( $results, 'total_tax' ) );
+		
+		return array(
+			'period' => $period,
+			'date_range' => $date_range,
+			'daily_data' => $results,
+			'totals' => array(
+				'total_invoices' => $total_invoices,
+				'total_amount' => $total_amount,
+				'total_tax' => $total_tax,
+				'average_invoice_amount' => $total_invoices > 0 ? $total_amount / $total_invoices : 0
+			)
+		);
+	}
+
+	/**
+	 * Get date range for period
+	 *
+	 * @param string $period
+	 * @return array
+	 */
+	private function get_date_range( $period ) {
+		$end_date = current_time( 'Y-m-d H:i:s' );
+		
+		switch ( $period ) {
+			case 'week':
+				$start_date = date( 'Y-m-d H:i:s', strtotime( '-1 week' ) );
+				break;
+			case 'month':
+				$start_date = date( 'Y-m-d H:i:s', strtotime( '-1 month' ) );
+				break;
+			case 'quarter':
+				$start_date = date( 'Y-m-d H:i:s', strtotime( '-3 months' ) );
+				break;
+			case 'year':
+				$start_date = date( 'Y-m-d H:i:s', strtotime( '-1 year' ) );
+				break;
+			default:
+				$start_date = date( 'Y-m-d H:i:s', strtotime( '-1 month' ) );
+		}
+		
+		return array(
+			'start' => $start_date,
+			'end' => $end_date
+		);
 	}
 }

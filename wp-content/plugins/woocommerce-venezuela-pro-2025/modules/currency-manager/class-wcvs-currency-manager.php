@@ -249,20 +249,50 @@ class WCVS_Currency_Manager {
 	}
 
 	/**
-	 * Convert price between currencies
+	 * Convert price between currencies with caching
 	 *
 	 * @param float $price
 	 * @param string $from_currency
 	 * @return float|false
 	 */
 	private function convert_price( $price, $from_currency ) {
-		if ( $from_currency === 'USD' ) {
-			return $this->core->bcv_integration->convert_usd_to_ves( $price );
-		} elseif ( $from_currency === 'VES' ) {
-			return $this->core->bcv_integration->convert_ves_to_usd( $price );
+		if ( ! $price || $price <= 0 ) {
+			return false;
 		}
+
+		// Create cache key
+		$cache_key = 'wcvs_conversion_' . md5( $price . '_' . $from_currency . '_' . $this->get_current_rate_hash() );
 		
-		return false;
+		// Try to get from cache first
+		$cached_result = get_transient( $cache_key );
+		if ( $cached_result !== false ) {
+			return $cached_result;
+		}
+
+		// Perform conversion
+		$converted_price = false;
+		if ( $from_currency === 'USD' ) {
+			$converted_price = $this->core->bcv_integration->convert_usd_to_ves( $price );
+		} elseif ( $from_currency === 'VES' ) {
+			$converted_price = $this->core->bcv_integration->convert_ves_to_usd( $price );
+		}
+
+		// Cache the result for 30 minutes
+		if ( $converted_price !== false ) {
+			set_transient( $cache_key, $converted_price, 30 * MINUTE_IN_SECONDS );
+		}
+
+		return $converted_price;
+	}
+
+	/**
+	 * Get current rate hash for cache invalidation
+	 *
+	 * @return string
+	 */
+	private function get_current_rate_hash() {
+		$rate = $this->core->bcv_integration->get_current_rate();
+		return md5( $rate . '_' . date( 'Y-m-d-H' ) ); // Changes every hour
 	}
 
 	/**
@@ -450,24 +480,72 @@ class WCVS_Currency_Manager {
 	}
 
 	/**
-	 * Get current rate display
+	 * Get current rate display with validation
 	 *
 	 * @return string
 	 */
 	public function get_current_rate_display() {
 		$rate = $this->core->bcv_integration->get_current_rate();
+		$rate_status = $this->validate_rate( $rate );
 		
-		if ( ! $rate ) {
-			return '<span class="wcvs-rate-unavailable">' . __( 'Tasa no disponible', 'woocommerce-venezuela-pro-2025' ) . '</span>';
-		}
-
 		$html = '<div class="wcvs-current-rate">';
 		$html .= '<span class="wcvs-rate-label">' . __( 'Tasa actual:', 'woocommerce-venezuela-pro-2025' ) . '</span>';
-		$html .= '<span class="wcvs-rate-value">' . $this->format_price( $rate, 'VES' ) . '/USD</span>';
+		
+		if ( $rate_status['valid'] ) {
+			$html .= '<span class="wcvs-rate-value valid">' . $this->format_price( $rate, 'VES' ) . '/USD</span>';
+			$html .= '<span class="wcvs-rate-status">' . $rate_status['message'] . '</span>';
+		} else {
+			$html .= '<span class="wcvs-rate-value invalid">' . __( 'Tasa no disponible', 'woocommerce-venezuela-pro-2025' ) . '</span>';
+			$html .= '<span class="wcvs-rate-status error">' . $rate_status['message'] . '</span>';
+		}
+		
 		$html .= '<button class="wcvs-update-rate" type="button">' . __( 'Actualizar', 'woocommerce-venezuela-pro-2025' ) . '</button>';
 		$html .= '</div>';
 		
 		return $html;
+	}
+
+	/**
+	 * Validate exchange rate
+	 *
+	 * @param float $rate
+	 * @return array
+	 */
+	private function validate_rate( $rate ) {
+		if ( ! $rate || $rate <= 0 ) {
+			return array(
+				'valid' => false,
+				'message' => __( 'Tasa de cambio no disponible', 'woocommerce-venezuela-pro-2025' )
+			);
+		}
+
+		// Check if rate is within reasonable bounds (VES/USD typically 1-1000)
+		if ( $rate < 1 || $rate > 10000 ) {
+			return array(
+				'valid' => false,
+				'message' => __( 'Tasa de cambio fuera de rango normal', 'woocommerce-venezuela-pro-2025' )
+			);
+		}
+
+		// Check if rate has changed significantly from last known rate
+		$last_rate = get_option( 'wcvs_last_valid_rate', 0 );
+		if ( $last_rate > 0 ) {
+			$change_percentage = abs( $rate - $last_rate ) / $last_rate;
+			if ( $change_percentage > 0.5 ) { // More than 50% change
+				return array(
+					'valid' => true,
+					'message' => __( 'Tasa con cambio significativo detectado', 'woocommerce-venezuela-pro-2025' )
+				);
+			}
+		}
+
+		// Update last valid rate
+		update_option( 'wcvs_last_valid_rate', $rate );
+
+		return array(
+			'valid' => true,
+			'message' => __( 'Tasa válida y actualizada', 'woocommerce-venezuela-pro-2025' )
+		);
 	}
 
 	/**

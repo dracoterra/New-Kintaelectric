@@ -29,13 +29,20 @@
 /* Current Rate Display */
 .wcvs-current-rate {
     margin: 15px 0;
-    padding: 10px;
-    background: #e8f5e8;
+    padding: 15px;
+    background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
     border: 1px solid #28a745;
-    border-radius: 4px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.1);
+    transition: all 0.3s ease;
+}
+
+.wcvs-current-rate:hover {
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.15);
+    transform: translateY(-1px);
 }
 
 .wcvs-rate-label {
@@ -45,8 +52,20 @@
 
 .wcvs-rate-value {
     font-weight: bold;
-    color: #155724;
     font-size: 1.1em;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.wcvs-rate-value.valid {
+    color: #155724;
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.wcvs-rate-value.invalid {
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
 }
 
 .wcvs-update-rate {
@@ -230,27 +249,46 @@
 
 /* Loading States */
 .wcvs-loading {
-    opacity: 0.6;
+    opacity: 0.7;
     pointer-events: none;
+    position: relative;
 }
 
-.wcvs-loading::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 20px;
-    height: 20px;
-    margin: -10px 0 0 -10px;
+.wcvs-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
     border: 2px solid #f3f3f3;
     border-top: 2px solid #007cba;
     border-radius: 50%;
     animation: wcvs-spin 1s linear infinite;
+    margin-right: 8px;
 }
 
 @keyframes wcvs-spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Status Messages */
+.wcvs-rate-status {
+    margin-left: auto;
+    font-size: 0.9em;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.wcvs-success-message {
+    color: #155724;
+    background: rgba(40, 167, 69, 0.1);
+    border: 1px solid rgba(40, 167, 69, 0.2);
+}
+
+.wcvs-error-message {
+    color: #dc3545;
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.2);
 }
 
 /* Error States */

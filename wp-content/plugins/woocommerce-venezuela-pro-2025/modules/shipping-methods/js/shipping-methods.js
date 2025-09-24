@@ -22,6 +22,9 @@
             this.initShippingCalculation();
             this.initShippingInfo();
             this.initDeliveryZones();
+            this.initAddressValidation();
+            this.initDeliveryEstimator();
+            this.initShippingBreakdown();
         },
 
         /**
@@ -359,6 +362,427 @@
                 .wcvs-shipping-info .wcvs-shipping-details {
                     grid-template-columns: 1fr;
                 }
+            }
+            </style>
+        `;
+        
+        $('head').append(shippingStyles);
+    },
+
+    /**
+     * Initialize address validation
+     */
+    initAddressValidation: function() {
+        // Validate Venezuelan addresses
+        $('input[name="shipping_city"], input[name="shipping_state"]').on('blur', function() {
+            var $field = $(this);
+            var value = $field.val();
+            var fieldName = $field.attr('name');
+            
+            if (value) {
+                WCVS_Shipping_Methods.validateVenezuelanAddress($field, fieldName, value);
+            } else {
+                WCVS_Shipping_Methods.clearFieldError($field);
+            }
+        });
+    },
+
+    /**
+     * Validate Venezuelan address
+     */
+    validateVenezuelanAddress: function($field, fieldName, value) {
+        var isValid = true;
+        var message = '';
+        
+        if (fieldName === 'shipping_state') {
+            // Validate Venezuelan states
+            var venezuelanStates = [
+                'Distrito Capital', 'Miranda', 'Vargas', 'Aragua', 'Carabobo',
+                'Lara', 'Zulia', 'Bolívar', 'Amazonas', 'Delta Amacuro',
+                'Apure', 'Barinas', 'Cojedes', 'Falcón', 'Guárico',
+                'Mérida', 'Monagas', 'Nueva Esparta', 'Portuguesa',
+                'San Cristóbal', 'Sucre', 'Táchira', 'Trujillo', 'Yaracuy'
+            ];
+            
+            if (!venezuelanStates.includes(value)) {
+                isValid = false;
+                message = 'Estado venezolano inválido';
+            }
+        } else if (fieldName === 'shipping_city') {
+            // Basic city validation
+            if (value.length < 2) {
+                isValid = false;
+                message = 'Nombre de ciudad muy corto';
+            }
+        }
+        
+        WCVS_Shipping_Methods.showFieldValidation($field, isValid, message);
+    },
+
+    /**
+     * Initialize delivery estimator
+     */
+    initDeliveryEstimator: function() {
+        // Show estimated delivery when shipping method is selected
+        $('input[name="shipping_method"]').on('change', function() {
+            var method = $(this).val();
+            var state = $('input[name="shipping_state"]').val();
+            
+            if (method && state) {
+                WCVS_Shipping_Methods.showDeliveryEstimate(method, state);
+            }
+        });
+    },
+
+    /**
+     * Show delivery estimate
+     */
+    showDeliveryEstimate: function(method, state) {
+        var estimates = {
+            'wcvs_shipping_mrw': WCVS_Shipping_Methods.getMRWEstimate(state),
+            'wcvs_shipping_zoom': WCVS_Shipping_Methods.getZoomEstimate(state),
+            'wcvs_shipping_tealca': WCVS_Shipping_Methods.getTealcaEstimate(state),
+            'wcvs_shipping_local_delivery': WCVS_Shipping_Methods.getLocalEstimate(state),
+            'wcvs_shipping_pickup': WCVS_Shipping_Methods.getPickupEstimate(state)
+        };
+        
+        var estimate = estimates[method];
+        if (estimate) {
+            WCVS_Shipping_Methods.displayDeliveryEstimate(estimate);
+        }
+    },
+
+    /**
+     * Get MRW delivery estimate
+     */
+    getMRWEstimate: function(state) {
+        var estimates = {
+            'Distrito Capital': 1,
+            'Miranda': 1,
+            'Vargas': 2,
+            'Aragua': 2,
+            'Carabobo': 3,
+            'Lara': 3,
+            'Zulia': 4,
+            'Bolívar': 5,
+            'Amazonas': 7,
+            'Delta Amacuro': 6,
+            'Apure': 5,
+            'Barinas': 4,
+            'Cojedes': 3,
+            'Falcón': 4,
+            'Guárico': 3,
+            'Mérida': 5,
+            'Monagas': 4,
+            'Nueva Esparta': 3,
+            'Portuguesa': 4,
+            'San Cristóbal': 5,
+            'Sucre': 4,
+            'Táchira': 5,
+            'Trujillo': 4,
+            'Yaracuy': 3
+        };
+        
+        var days = estimates[state] || 5;
+        return {
+            method: 'MRW',
+            days: days,
+            message: 'Entrega estimada: ' + days + ' día' + (days > 1 ? 's' : '') + ' hábiles'
+        };
+    },
+
+    /**
+     * Get Zoom delivery estimate
+     */
+    getZoomEstimate: function(state) {
+        var estimates = {
+            'Distrito Capital': 1,
+            'Miranda': 1,
+            'Vargas': 2,
+            'Aragua': 2,
+            'Carabobo': 3,
+            'Lara': 3,
+            'Zulia': 4,
+            'Bolívar': 5,
+            'Amazonas': 7,
+            'Delta Amacuro': 6,
+            'Apure': 5,
+            'Barinas': 4,
+            'Cojedes': 3,
+            'Falcón': 4,
+            'Guárico': 3,
+            'Mérida': 5,
+            'Monagas': 4,
+            'Nueva Esparta': 3,
+            'Portuguesa': 4,
+            'San Cristóbal': 5,
+            'Sucre': 4,
+            'Táchira': 5,
+            'Trujillo': 4,
+            'Yaracuy': 3
+        };
+        
+        var days = estimates[state] || 5;
+        return {
+            method: 'Zoom',
+            days: days,
+            message: 'Entrega estimada: ' + days + ' día' + (days > 1 ? 's' : '') + ' hábiles'
+        };
+    },
+
+    /**
+     * Get Tealca delivery estimate
+     */
+    getTealcaEstimate: function(state) {
+        var estimates = {
+            'Distrito Capital': 1,
+            'Miranda': 1,
+            'Vargas': 2,
+            'Aragua': 2,
+            'Carabobo': 3,
+            'Lara': 3,
+            'Zulia': 4,
+            'Bolívar': 5,
+            'Amazonas': 7,
+            'Delta Amacuro': 6,
+            'Apure': 5,
+            'Barinas': 4,
+            'Cojedes': 3,
+            'Falcón': 4,
+            'Guárico': 3,
+            'Mérida': 5,
+            'Monagas': 4,
+            'Nueva Esparta': 3,
+            'Portuguesa': 4,
+            'San Cristóbal': 5,
+            'Sucre': 4,
+            'Táchira': 5,
+            'Trujillo': 4,
+            'Yaracuy': 3
+        };
+        
+        var days = estimates[state] || 5;
+        return {
+            method: 'Tealca',
+            days: days,
+            message: 'Entrega estimada: ' + days + ' día' + (days > 1 ? 's' : '') + ' hábiles'
+        };
+    },
+
+    /**
+     * Get local delivery estimate
+     */
+    getLocalEstimate: function(state) {
+        return {
+            method: 'Entrega Local',
+            days: 1,
+            message: 'Entrega el mismo día (solo Caracas y área metropolitana)'
+        };
+    },
+
+    /**
+     * Get pickup estimate
+     */
+    getPickupEstimate: function(state) {
+        return {
+            method: 'Recogida',
+            days: 0,
+            message: 'Recogida inmediata en nuestro local'
+        };
+    },
+
+    /**
+     * Display delivery estimate
+     */
+    displayDeliveryEstimate: function(estimate) {
+        var $estimateDiv = $('.wcvs-delivery-estimate');
+        
+        if ($estimateDiv.length === 0) {
+            $estimateDiv = $('<div class="wcvs-delivery-estimate"></div>');
+            $('.wcvs-shipping-methods').append($estimateDiv);
+        }
+        
+        $estimateDiv.html(`
+            <div class="wcvs-estimate-info">
+                <h4>📅 ${estimate.method}</h4>
+                <p>${estimate.message}</p>
+            </div>
+        `);
+    },
+
+    /**
+     * Initialize shipping breakdown
+     */
+    initShippingBreakdown: function() {
+        // Show cost breakdown when shipping method is selected
+        $('input[name="shipping_method"]').on('change', function() {
+            var method = $(this).val();
+            if (method) {
+                WCVS_Shipping_Methods.showShippingBreakdown(method);
+            }
+        });
+    },
+
+    /**
+     * Show shipping breakdown
+     */
+    showShippingBreakdown: function(method) {
+        var $breakdownDiv = $('.wcvs-shipping-breakdown');
+        
+        if ($breakdownDiv.length === 0) {
+            $breakdownDiv = $('<div class="wcvs-shipping-breakdown"></div>');
+            $('.wcvs-shipping-methods').append($breakdownDiv);
+        }
+        
+        // This would be populated with actual breakdown data from the server
+        $breakdownDiv.html(`
+            <div class="wcvs-breakdown-info">
+                <h4>💰 Desglose de Costos</h4>
+                <div class="wcvs-breakdown-items">
+                    <div class="wcvs-breakdown-item">
+                        <span>Costo Base:</span>
+                        <span>Bs. 15,000</span>
+                    </div>
+                    <div class="wcvs-breakdown-item">
+                        <span>Por Peso:</span>
+                        <span>Bs. 5,000</span>
+                    </div>
+                    <div class="wcvs-breakdown-item">
+                        <span>Por Destino:</span>
+                        <span>Bs. 3,000</span>
+                    </div>
+                    <div class="wcvs-breakdown-item total">
+                        <span>Total:</span>
+                        <span>Bs. 23,000</span>
+                    </div>
+                </div>
+            </div>
+        `);
+    },
+
+    /**
+     * Show field validation feedback
+     */
+    showFieldValidation: function($field, isValid, message) {
+        var $container = $field.closest('.form-row');
+        var $feedback = $container.find('.wcvs-field-feedback');
+        
+        if ($feedback.length === 0) {
+            $feedback = $('<div class="wcvs-field-feedback"></div>');
+            $container.append($feedback);
+        }
+
+        $feedback.removeClass('valid invalid').addClass(isValid ? 'valid' : 'invalid');
+        $feedback.text(message);
+
+        // Update field appearance
+        $field.removeClass('error success').addClass(isValid ? 'success' : 'error');
+    },
+
+    /**
+     * Clear field error
+     */
+    clearFieldError: function($field) {
+        var $container = $field.closest('.form-row');
+        var $feedback = $container.find('.wcvs-field-feedback');
+        
+        $feedback.remove();
+        $field.removeClass('error success');
+    }
+    };
+
+    // Add CSS styles for shipping methods
+    $(document).ready(function() {
+        var shippingStyles = `
+            <style>
+            .wcvs-delivery-estimate {
+                background: #e7f3ff;
+                border: 1px solid #b3d9ff;
+                border-radius: 6px;
+                padding: 15px;
+                margin: 10px 0;
+            }
+            
+            .wcvs-estimate-info h4 {
+                color: #0056b3;
+                margin: 0 0 10px 0;
+                font-size: 16px;
+            }
+            
+            .wcvs-estimate-info p {
+                margin: 0;
+                color: #333;
+                font-weight: 500;
+            }
+            
+            .wcvs-shipping-breakdown {
+                background: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+                padding: 15px;
+                margin: 10px 0;
+            }
+            
+            .wcvs-breakdown-info h4 {
+                color: #495057;
+                margin: 0 0 15px 0;
+                font-size: 16px;
+            }
+            
+            .wcvs-breakdown-items {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .wcvs-breakdown-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 5px 0;
+                border-bottom: 1px solid #e9ecef;
+            }
+            
+            .wcvs-breakdown-item:last-child {
+                border-bottom: none;
+            }
+            
+            .wcvs-breakdown-item.total {
+                font-weight: bold;
+                color: #007cba;
+                border-top: 2px solid #007cba;
+                margin-top: 10px;
+                padding-top: 10px;
+            }
+            
+            .wcvs-field-feedback {
+                margin-top: 5px;
+                font-size: 12px;
+                padding: 5px 8px;
+                border-radius: 4px;
+                transition: all 0.3s ease;
+            }
+            
+            .wcvs-field-feedback.valid {
+                color: #155724;
+                background: rgba(40, 167, 69, 0.1);
+                border: 1px solid rgba(40, 167, 69, 0.2);
+            }
+            
+            .wcvs-field-feedback.invalid {
+                color: #dc3545;
+                background: rgba(220, 53, 69, 0.1);
+                border: 1px solid rgba(220, 53, 69, 0.2);
+            }
+            
+            .form-row input.success {
+                border-color: #28a745;
+                background: rgba(40, 167, 69, 0.05);
+            }
+            
+            .form-row input.error {
+                border-color: #dc3545;
+                background: rgba(220, 53, 69, 0.05);
             }
             </style>
         `;
