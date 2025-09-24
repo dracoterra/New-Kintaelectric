@@ -56,7 +56,7 @@
 body {
     margin: 0;
     font-family: var(--bs-font-sans-serif);
-    font-size: .875rem;
+    font-size: 14px;
     font-weight: 400;
     line-height: 1.714;
     color: #333e48;
@@ -28268,7 +28268,7 @@ section.product-categories-menu-list {
 .owl-item>.product .hover-area .action-buttons,
 .products>.product .hover-area .action-buttons {
     width: 100%;
-    font-size: .929rem !important;
+    font-size: .929em !important;
     line-height: 1.385em;
     display: flex;
     justify-content: space-around;
@@ -28278,7 +28278,7 @@ section.product-categories-menu-list {
 .yith-wcwl-add-to-wishlist-button,
 span.yith-wcwl-add-to-wishlist-button__label {
     width: auto !important;
-    font-size: .929rem !important;
+    font-size: 1em !important;
 }
 
 a.yith-wcwl-add-to-wishlist-button.yith-wcwl-add-to-wishlist-button--anchor {
@@ -45994,7 +45994,7 @@ width: auto !important;
 
 .woocommerce.product.compare-button::before {
     font: normal normal normal 14px/1 font-electro;
-    margin-right: 6px;
+    margin-right: 2px;
     content: "\64";
     vertical-align: middle;
     display: inline-block;
@@ -51014,4 +51014,8 @@ body.electro-dark .header-logo-placeholder {
 }
 .header-site-branding{
     max-width: 170px;
+}
+
+svg#yith-wcwl-icon-heart-outline{
+    width: 20px !important;
 }

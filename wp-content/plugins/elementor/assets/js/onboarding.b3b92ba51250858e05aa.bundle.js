@@ -1,4 +1,4 @@
-/*! elementor - v3.32.0 - 16-09-2025 */
+/*! elementor - v3.32.0 - 18-09-2025 */
 "use strict";
 (self["webpackChunkelementor"] = self["webpackChunkelementor"] || []).push([["onboarding"],{
 
@@ -1122,14 +1122,18 @@ function Account() {
       });
     };
   }
-  var connectSuccessCallback = function connectSuccessCallback(data) {
+  var connectSuccessCallback = function connectSuccessCallback(event, data) {
     var _elementorCommon$even4;
     var stateToUpdate = getStateObjectToUpdate(state, 'steps', pageId, 'completed');
+    var isTrackingOptedInConnect = data.tracking_opted_in && elementorCommon.config.editor_events;
     stateToUpdate.isLibraryConnected = true;
     elementorCommon.config.library_connect.is_connected = true;
     elementorCommon.config.library_connect.current_access_level = data.kits_access_level || data.access_level || 0;
     elementorCommon.config.library_connect.current_access_tier = data.access_tier;
     elementorCommon.config.library_connect.plan_type = data.plan_type;
+    if (isTrackingOptedInConnect) {
+      elementorCommon.config.editor_events.can_send_events = true;
+    }
     updateState(stateToUpdate);
     (0, _utils.safeDispatchEvent)('account_connected_success', {
       location: 'plugin_onboarding',
@@ -1192,8 +1196,8 @@ function Account() {
     noticeState: noticeState
   }, actionButton.ref && !state.isLibraryConnected && /*#__PURE__*/_react.default.createElement(_connect.default, {
     buttonRef: actionButton.ref,
-    successCallback: function successCallback(data) {
-      return connectSuccessCallback(data);
+    successCallback: function successCallback(event, data) {
+      return connectSuccessCallback(event, data);
     },
     errorCallback: connectFailureCallback
   }), /*#__PURE__*/_react.default.createElement("span", null, pageTexts.firstLine), /*#__PURE__*/_react.default.createElement("ul", null, pageTexts.listItems.map(function (listItem, index) {
@@ -2365,7 +2369,7 @@ function Connect(props) {
     state = _useContext.state,
     updateState = _useContext.updateState,
     getStateObjectToUpdate = _useContext.getStateObjectToUpdate;
-  var connectSuccessCallback = function connectSuccessCallback(data) {
+  var connectSuccessCallback = function connectSuccessCallback(event, data) {
     var stateToUpdate = getStateObjectToUpdate(state, 'steps', 'account', 'completed');
     elementorCommon.config.library_connect.is_connected = true;
     elementorCommon.config.library_connect.current_access_level = data.kits_access_level || data.access_level || 0;
@@ -2376,8 +2380,8 @@ function Connect(props) {
   };
   (0, _react.useEffect)(function () {
     jQuery(props.buttonRef.current).elementorConnect({
-      success: function success(data) {
-        return props.successCallback ? props.successCallback(data) : connectSuccessCallback(data);
+      success: function success(event, data) {
+        return props.successCallback ? props.successCallback(event, data) : connectSuccessCallback(event, data);
       },
       error: function error() {
         if (props.errorCallback) {
@@ -2517,4 +2521,4 @@ var safeDispatchEvent = exports.safeDispatchEvent = function safeDispatchEvent(e
 /***/ })
 
 }]);
-//# sourceMappingURL=onboarding.dad7d3c968d3b42e2296.bundle.js.map
+//# sourceMappingURL=onboarding.b3b92ba51250858e05aa.bundle.js.map
