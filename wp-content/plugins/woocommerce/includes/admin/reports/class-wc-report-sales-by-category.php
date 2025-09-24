@@ -120,7 +120,7 @@ class WC_Report_Sales_By_Category extends WC_Admin_Report {
 			'7day'       => __( 'Last 7 days', 'woocommerce' ),
 		);
 
-		$this->chart_colours = array( '#3498db', '#34495e', '#1abc9c', '#2ecc71', '#ccc634', '#e67e22', '#e74c3c', '#2980b9', '#8e44ad', '#2c3e50', '#16a085', '#27ae60', '#ccc634', '#d35400', '#c0392b' );
+		$this->chart_colours = array( '#3498db', '#34495e', '#1abc9c', '#2ecc71', '#f1c40f', '#e67e22', '#e74c3c', '#2980b9', '#8e44ad', '#2c3e50', '#16a085', '#27ae60', '#f39c12', '#d35400', '#c0392b' );
 
 		$current_range = ! empty( $_GET['range'] ) ? sanitize_text_field( wp_unslash( $_GET['range'] ) ) : '7day';
 

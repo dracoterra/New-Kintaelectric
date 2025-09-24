@@ -1,0 +1,451 @@
+/**
+ * WooCommerce Venezuela Suite 2025 - Currency Manager Styles
+ *
+ * @package WooCommerce_Venezuela_Suite_2025
+ * @since   1.0.0
+ */
+
+/* Currency Switcher Styles */
+.wcvs-currency-switcher {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.wcvs-currency-switcher h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.wcvs-currency-options {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.wcvs-currency-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    background: #fff;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+}
+
+.wcvs-currency-option:hover {
+    border-color: #0073aa;
+    background: #f8f9fa;
+}
+
+.wcvs-currency-option input[type="radio"] {
+    margin: 0;
+    width: 18px;
+    height: 18px;
+}
+
+.wcvs-currency-option input[type="radio"]:checked + .currency-symbol {
+    color: #0073aa;
+    font-weight: bold;
+}
+
+.wcvs-currency-option input[type="radio"]:checked + .currency-symbol + .currency-name {
+    color: #0073aa;
+    font-weight: 600;
+}
+
+.currency-symbol {
+    font-size: 20px;
+    font-weight: bold;
+    color: #666;
+}
+
+.currency-name {
+    font-size: 16px;
+    color: #333;
+}
+
+/* Exchange Rate Display */
+.wcvs-exchange-rate {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #666;
+}
+
+.rate-label {
+    font-weight: 600;
+    color: #333;
+}
+
+.rate-value {
+    font-weight: bold;
+    color: #0073aa;
+    font-size: 16px;
+}
+
+.rate-update {
+    font-size: 12px;
+    color: #999;
+}
+
+.rate-source {
+    font-size: 12px;
+    color: #999;
+    font-style: italic;
+}
+
+/* Dual Price Display */
+.wcvs-dual-price {
+    font-size: 14px;
+    color: #666;
+    font-weight: normal;
+    margin-left: 8px;
+}
+
+.wcvs-dual-price:before {
+    content: "(";
+}
+
+.wcvs-dual-price:after {
+    content: ")";
+}
+
+/* Currency Display States */
+.wcvs-currency-display.ves .wcvs-price {
+    color: #0073aa;
+}
+
+.wcvs-currency-display.usd .wcvs-price {
+    color: #28a745;
+}
+
+/* Exchange Rate Controls */
+.wcvs-exchange-rate-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.wcvs-refresh-exchange-rate,
+.wcvs-copy-exchange-rate {
+    padding: 8px 12px;
+    background: #0073aa;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.3s ease;
+}
+
+.wcvs-refresh-exchange-rate:hover,
+.wcvs-copy-exchange-rate:hover {
+    background: #005a87;
+}
+
+.wcvs-refresh-exchange-rate:disabled,
+.wcvs-copy-exchange-rate:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Messages */
+.wcvs-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: 500;
+    z-index: 9999;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.wcvs-message-success {
+    background: #28a745;
+}
+
+.wcvs-message-error {
+    background: #dc3545;
+}
+
+.wcvs-message-warning {
+    background: #ffc107;
+    color: #333;
+}
+
+.wcvs-message-info {
+    background: #17a2b8;
+}
+
+/* Admin Styles */
+.wcvs-admin-header {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.wcvs-admin-header h2 {
+    margin: 0 0 10px 0;
+    color: #23282d;
+    font-size: 24px;
+}
+
+.wcvs-admin-header p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.wcvs-current-rate {
+    font-size: 32px;
+    font-weight: bold;
+    color: #0073aa;
+    margin: 10px 0;
+}
+
+.wcvs-rate-info {
+    display: flex;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.wcvs-rate-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.wcvs-rate-info-label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.wcvs-rate-info-value {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Exchange Rate Chart */
+.wcvs-exchange-rate-chart-container {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 6px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.wcvs-exchange-rate-chart-container h3 {
+    margin: 0 0 20px 0;
+    color: #23282d;
+    font-size: 18px;
+}
+
+/* Source Settings */
+.wcvs-source-settings {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 6px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.wcvs-source-settings h3 {
+    margin: 0 0 15px 0;
+    color: #23282d;
+    font-size: 16px;
+}
+
+.wcvs-source-settings .form-table {
+    margin: 0;
+}
+
+.wcvs-source-settings .form-table th {
+    width: 200px;
+    padding: 15px 10px 15px 0;
+    vertical-align: top;
+}
+
+.wcvs-source-settings .form-table td {
+    padding: 15px 10px;
+}
+
+/* Exchange Settings Form */
+.wcvs-exchange-settings-form {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 6px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.wcvs-exchange-settings-form h3 {
+    margin: 0 0 20px 0;
+    color: #23282d;
+    font-size: 18px;
+}
+
+.wcvs-exchange-settings-form .form-table {
+    margin: 0;
+}
+
+.wcvs-exchange-settings-form .form-table th {
+    width: 200px;
+    padding: 15px 10px 15px 0;
+    vertical-align: top;
+}
+
+.wcvs-exchange-settings-form .form-table td {
+    padding: 15px 10px;
+}
+
+/* Action Buttons */
+.wcvs-action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.wcvs-save-exchange-settings,
+.wcvs-reset-exchange-settings {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.wcvs-save-exchange-settings {
+    background: #0073aa;
+    color: #fff;
+}
+
+.wcvs-save-exchange-settings:hover {
+    background: #005a87;
+}
+
+.wcvs-reset-exchange-settings {
+    background: #dc3545;
+    color: #fff;
+}
+
+.wcvs-reset-exchange-settings:hover {
+    background: #c82333;
+}
+
+.wcvs-save-exchange-settings:disabled,
+.wcvs-reset-exchange-settings:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Test Source Button */
+.wcvs-test-exchange-source {
+    padding: 8px 12px;
+    background: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.3s ease;
+}
+
+.wcvs-test-exchange-source:hover {
+    background: #218838;
+}
+
+.wcvs-test-exchange-source:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .wcvs-currency-options {
+        flex-direction: column;
+    }
+    
+    .wcvs-currency-option {
+        flex: none;
+    }
+    
+    .wcvs-exchange-rate {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .wcvs-rate-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .wcvs-action-buttons {
+        flex-direction: column;
+    }
+    
+    .wcvs-current-rate {
+        font-size: 24px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .wcvs-currency-switcher {
+        background: #2c2c2c;
+        border-color: #444;
+        color: #fff;
+    }
+    
+    .wcvs-currency-switcher h3 {
+        color: #fff;
+    }
+    
+    .wcvs-currency-option {
+        background: #3c3c3c;
+        border-color: #555;
+        color: #fff;
+    }
+    
+    .wcvs-currency-option:hover {
+        background: #4c4c4c;
+    }
+    
+    .wcvs-exchange-rate {
+        background: #3c3c3c;
+        border-color: #555;
+        color: #fff;
+    }
+    
+    .rate-label {
+        color: #fff;
+    }
+    
+    .rate-value {
+        color: #4a9eff;
+    }
+}

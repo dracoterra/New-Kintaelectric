@@ -1,82 +1,115 @@
 <?php
 
 /**
- * The plugin bootstrap file
+ * WooCommerce Venezuela Suite 2025 - Plugin Bootstrap
  *
- * This file is read by WordPress to generate the plugin information in the plugin
- * admin area. This file also includes all of the dependencies used by the plugin,
- * registers the activation and deactivation functions, and defines a function
- * that starts the plugin.
+ * Plugin modular para localizar WooCommerce al mercado venezolano
+ * con cumplimiento total de regulaciones fiscales y legales.
  *
- * @link              https://https://artifexcodes.com/
+ * @link              https://artifexcodes.com/
  * @since             1.0.0
- * @package           Woocommerce_Venezuela_Pro_2025
+ * @package           WooCommerce_Venezuela_Suite_2025
  *
  * @wordpress-plugin
- * Plugin Name:       Woocommerce Venezuela Pro 2025
- * Plugin URI:        https://https://artifexcodes.com/plugin
- * Description:       Plugin para tiendas Venezolanas.
+ * Plugin Name:       WooCommerce Venezuela Suite 2025
+ * Plugin URI:        https://artifexcodes.com/woocommerce-venezuela-suite
+ * Description:       Solución completa para localizar WooCommerce al mercado venezolano con módulos de moneda, pagos locales, impuestos, envíos y facturación electrónica.
  * Version:           1.0.0
- * Author:            ronald alvarez
- * Author URI:        https://https://artifexcodes.com//
+ * Author:            Ronald Alvarez
+ * Author URI:        https://artifexcodes.com/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       woocommerce-venezuela-pro-2025
  * Domain Path:       /languages
+ * Requires at least: 5.0
+ * Tested up to:      6.4
+ * Requires PHP:      7.4
+ * WC requires at least: 5.0
+ * WC tested up to:   10.0
  */
 
-// If this file is called directly, abort.
-if ( ! defined( 'WPINC' ) ) {
-	die;
+// Prevent direct access
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+// Define plugin constants
+define( 'WCVS_VERSION', '1.0.0' );
+define( 'WCVS_PLUGIN_FILE', __FILE__ );
+define( 'WCVS_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+define( 'WCVS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'WCVS_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+
+// Check WooCommerce dependency
+if ( ! function_exists( 'is_plugin_active' ) ) {
+	include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+}
+
+if ( ! is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
+	add_action( 'admin_notices', 'wcvs_woocommerce_missing_notice' );
+	return;
 }
 
 /**
- * Currently plugin version.
- * Start at version 1.0.0 and use SemVer - https://semver.org
- * Rename this for your plugin and update it as you release new versions.
+ * Display WooCommerce missing notice
  */
-define( 'WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION', '1.0.0' );
-
-/**
- * The code that runs during plugin activation.
- * This action is documented in includes/class-woocommerce-venezuela-pro-2025-activator.php
- */
-function activate_woocommerce_venezuela_pro_2025() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-woocommerce-venezuela-pro-2025-activator.php';
-	Woocommerce_Venezuela_Pro_2025_Activator::activate();
+function wcvs_woocommerce_missing_notice() {
+	?>
+	<div class="notice notice-error">
+		<p>
+			<strong>WooCommerce Venezuela Suite 2025</strong> requiere WooCommerce para funcionar.
+			Por favor, instala y activa WooCommerce primero.
+		</p>
+	</div>
+	<?php
 }
 
 /**
- * The code that runs during plugin deactivation.
- * This action is documented in includes/class-woocommerce-venezuela-pro-2025-deactivator.php
+ * The code that runs during plugin activation
  */
-function deactivate_woocommerce_venezuela_pro_2025() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-woocommerce-venezuela-pro-2025-deactivator.php';
-	Woocommerce_Venezuela_Pro_2025_Deactivator::deactivate();
+function wcvs_activate_plugin() {
+	require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-activator.php';
+	WCVS_Activator::activate();
 }
 
-register_activation_hook( __FILE__, 'activate_woocommerce_venezuela_pro_2025' );
-register_deactivation_hook( __FILE__, 'deactivate_woocommerce_venezuela_pro_2025' );
-
 /**
- * The core plugin class that is used to define internationalization,
- * admin-specific hooks, and public-facing site hooks.
+ * The code that runs during plugin deactivation
  */
-require plugin_dir_path( __FILE__ ) . 'includes/class-woocommerce-venezuela-pro-2025.php';
-
-/**
- * Begins execution of the plugin.
- *
- * Since everything within the plugin is registered via hooks,
- * then kicking off the plugin from this point in the file does
- * not affect the page life cycle.
- *
- * @since    1.0.0
- */
-function run_woocommerce_venezuela_pro_2025() {
-
-	$plugin = new Woocommerce_Venezuela_Pro_2025();
-	$plugin->run();
-
+function wcvs_deactivate_plugin() {
+	require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-deactivator.php';
+	WCVS_Deactivator::deactivate();
 }
-run_woocommerce_venezuela_pro_2025();
+
+register_activation_hook( __FILE__, 'wcvs_activate_plugin' );
+register_deactivation_hook( __FILE__, 'wcvs_deactivate_plugin' );
+
+/**
+ * Load the core plugin class
+ */
+require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-core.php';
+
+/**
+ * Load HPOS compatibility
+ */
+require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-hpos-compatibility.php';
+
+/**
+ * Load plugin text domain
+ */
+function wcvs_load_textdomain() {
+	load_plugin_textdomain( 'woocommerce-venezuela-pro-2025', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+}
+
+/**
+ * Initialize the plugin
+ */
+function wcvs_init_plugin() {
+	$plugin = WCVS_Core::get_instance();
+	$plugin->init();
+}
+
+// Load text domain on init
+add_action( 'init', 'wcvs_load_textdomain' );
+
+// Initialize plugin after WooCommerce is loaded
+add_action( 'woocommerce_loaded', 'wcvs_init_plugin' );

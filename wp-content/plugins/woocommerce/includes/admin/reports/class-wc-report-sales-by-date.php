@@ -590,7 +590,7 @@ class WC_Report_Sales_By_Date extends WC_Admin_Report {
 			'order_count'      => '#dbe1e3',
 			'item_count'       => '#ecf0f1',
 			'shipping_amount'  => '#5cc488',
-			'coupon_amount'    => '#ccc634',
+			'coupon_amount'    => '#f1c40f',
 			'refund_amount'    => '#e74c3c',
 		);
 
