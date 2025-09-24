@@ -76,6 +76,13 @@ class WCVS_Core {
 	public $hpos_compatibility;
 
 	/**
+	 * BCV Integration instance
+	 *
+	 * @var WCVS_BCV_Integration
+	 */
+	public $bcv_integration;
+
+	/**
 	 * Get single instance of the class
 	 *
 	 * @return WCVS_Core
@@ -136,6 +143,10 @@ class WCVS_Core {
 
 		// Initialize HPOS compatibility
 		$this->hpos_compatibility = new WCVS_HPOS_Compatibility();
+
+		// Initialize BCV integration
+		require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-bcv-integration.php';
+		$this->bcv_integration = new WCVS_BCV_Integration();
 
 		// Initialize admin
 		if ( is_admin() ) {

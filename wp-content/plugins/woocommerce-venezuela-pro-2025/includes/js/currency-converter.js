@@ -1,5 +1,5 @@
 /**
- * WooCommerce Venezuela Suite 2025 - Currency Manager JavaScript
+ * WooCommerce Venezuela Suite 2025 - Currency Converter JavaScript
  *
  * @package WooCommerce_Venezuela_Suite_2025
  * @since   1.0.0
@@ -9,23 +9,17 @@
     'use strict';
 
     /**
-     * Currency Manager Class
+     * Currency Converter Class
      */
-    class WCVSCurrencyManager {
+    class WCVSCurrencyConverter {
         constructor() {
-            this.currentRate = wcvs_currency_manager.current_rate || 0;
-            this.baseCurrency = wcvs_currency_manager.base_currency || 'VES';
-            this.dualPricing = wcvs_currency_manager.dual_pricing || false;
-            this.pricePosition = wcvs_currency_manager.price_position || 'before';
-            this.decimalPlaces = wcvs_currency_manager.decimal_places || 2;
-            this.thousandSeparator = wcvs_currency_manager.thousand_separator || '.';
-            this.decimalSeparator = wcvs_currency_manager.decimal_separator || ',';
-            
+            this.currentRate = wcvs_currency.current_rate || 0;
+            this.fallbackRate = wcvs_currency.fallback_rate || 0;
             this.init();
         }
 
         /**
-         * Initialize currency manager
+         * Initialize currency converter
          */
         init() {
             this.bindEvents();
@@ -38,18 +32,14 @@
          */
         bindEvents() {
             // Currency selector change
-            $(document).on('change', '.wcvs-currency-selector select', this.handleCurrencyChange.bind(this));
+            $(document).on('change', '.wcvs-currency-selector', this.handleCurrencyChange.bind(this));
             
-            // Update rate button
-            $(document).on('click', '.wcvs-update-rate', this.updateCurrentRate.bind(this));
-            
-            // WooCommerce events
+            // Price update events
             $(document).on('updated_wc_div', this.updateCurrencyDisplay.bind(this));
             $(document).on('woocommerce_cart_updated', this.updateCurrencyDisplay.bind(this));
-            $(document).on('woocommerce_checkout_updated', this.updateCurrencyDisplay.bind(this));
             
-            // Product price updates
-            $(document).on('woocommerce_variation_has_changed', this.updateProductPrices.bind(this));
+            // Manual rate update
+            $(document).on('click', '.wcvs-update-rate', this.updateCurrentRate.bind(this));
         }
 
         /**
@@ -68,7 +58,7 @@
                 this.showVESPrices();
             } else if (currency === 'USD') {
                 this.showUSDPrices();
-            } else if (currency === 'dual') {
+            } else {
                 this.showDualPrices();
             }
         }
@@ -79,12 +69,9 @@
         showVESPrices() {
             $('.wcvs-price-usd').hide();
             $('.wcvs-price-ves').show();
-            $('.wcvs-price-display').each(function() {
-                const $display = $(this);
-                const vesPrice = $display.data('ves-price');
-                if (vesPrice) {
-                    $display.find('.wcvs-current-price').text(vesPrice);
-                }
+            $('.wcvs-price-dual').each(function() {
+                const vesPrice = $(this).data('ves-price');
+                $(this).text(vesPrice);
             });
         }
 
@@ -94,12 +81,9 @@
         showUSDPrices() {
             $('.wcvs-price-ves').hide();
             $('.wcvs-price-usd').show();
-            $('.wcvs-price-display').each(function() {
-                const $display = $(this);
-                const usdPrice = $display.data('usd-price');
-                if (usdPrice) {
-                    $display.find('.wcvs-current-price').text(usdPrice);
-                }
+            $('.wcvs-price-dual').each(function() {
+                const usdPrice = $(this).data('usd-price');
+                $(this).text(usdPrice);
             });
         }
 
@@ -109,13 +93,10 @@
         showDualPrices() {
             $('.wcvs-price-ves').show();
             $('.wcvs-price-usd').show();
-            $('.wcvs-price-display').each(function() {
-                const $display = $(this);
-                const vesPrice = $display.data('ves-price');
-                const usdPrice = $display.data('usd-price');
-                if (vesPrice && usdPrice) {
-                    $display.find('.wcvs-current-price').text(`${vesPrice} (${usdPrice})`);
-                }
+            $('.wcvs-price-dual').each(function() {
+                const vesPrice = $(this).data('ves-price');
+                const usdPrice = $(this).data('usd-price');
+                $(this).text(`${vesPrice} (${usdPrice})`);
             });
         }
 
@@ -123,8 +104,13 @@
          * Update currency display
          */
         updateCurrencyDisplay() {
+            // Update product prices
             this.updateProductPrices();
+            
+            // Update cart totals
             this.updateCartTotals();
+            
+            // Update checkout totals
             this.updateCheckoutTotals();
         }
 
@@ -138,13 +124,13 @@
                 const baseCurrency = $element.data('base-currency');
                 
                 if (baseCurrency === 'USD') {
-                    const vesPrice = basePrice * WCVSCurrencyManager.prototype.currentRate;
-                    $element.find('.wcvs-price-ves').text(WCVSCurrencyManager.prototype.formatVES(vesPrice));
-                    $element.find('.wcvs-price-usd').text(WCVSCurrencyManager.prototype.formatUSD(basePrice));
+                    const vesPrice = basePrice * WCVSCurrencyConverter.prototype.currentRate;
+                    $element.find('.wcvs-price-ves').text(WCVSCurrencyConverter.prototype.formatVES(vesPrice));
+                    $element.find('.wcvs-price-usd').text(WCVSCurrencyConverter.prototype.formatUSD(basePrice));
                 } else if (baseCurrency === 'VES') {
-                    const usdPrice = basePrice / WCVSCurrencyManager.prototype.currentRate;
-                    $element.find('.wcvs-price-ves').text(WCVSCurrencyManager.prototype.formatVES(basePrice));
-                    $element.find('.wcvs-price-usd').text(WCVSCurrencyManager.prototype.formatUSD(usdPrice));
+                    const usdPrice = basePrice / WCVSCurrencyConverter.prototype.currentRate;
+                    $element.find('.wcvs-price-ves').text(WCVSCurrencyConverter.prototype.formatVES(basePrice));
+                    $element.find('.wcvs-price-usd').text(WCVSCurrencyConverter.prototype.formatUSD(usdPrice));
                 }
             });
         }
@@ -159,13 +145,13 @@
                 const baseCurrency = $element.data('base-currency');
                 
                 if (baseCurrency === 'USD') {
-                    const vesTotal = baseTotal * WCVSCurrencyManager.prototype.currentRate;
-                    $element.find('.wcvs-total-ves').text(WCVSCurrencyManager.prototype.formatVES(vesTotal));
-                    $element.find('.wcvs-total-usd').text(WCVSCurrencyManager.prototype.formatUSD(baseTotal));
+                    const vesTotal = baseTotal * WCVSCurrencyConverter.prototype.currentRate;
+                    $element.find('.wcvs-total-ves').text(WCVSCurrencyConverter.prototype.formatVES(vesTotal));
+                    $element.find('.wcvs-total-usd').text(WCVSCurrencyConverter.prototype.formatUSD(baseTotal));
                 } else if (baseCurrency === 'VES') {
-                    const usdTotal = baseTotal / WCVSCurrencyManager.prototype.currentRate;
-                    $element.find('.wcvs-total-ves').text(WCVSCurrencyManager.prototype.formatVES(baseTotal));
-                    $element.find('.wcvs-total-usd').text(WCVSCurrencyManager.prototype.formatUSD(usdTotal));
+                    const usdTotal = baseTotal / WCVSCurrencyConverter.prototype.currentRate;
+                    $element.find('.wcvs-total-ves').text(WCVSCurrencyConverter.prototype.formatVES(baseTotal));
+                    $element.find('.wcvs-total-usd').text(WCVSCurrencyConverter.prototype.formatUSD(usdTotal));
                 }
             });
         }
@@ -180,13 +166,13 @@
                 const baseCurrency = $element.data('base-currency');
                 
                 if (baseCurrency === 'USD') {
-                    const vesTotal = baseTotal * WCVSCurrencyManager.prototype.currentRate;
-                    $element.find('.wcvs-total-ves').text(WCVSCurrencyManager.prototype.formatVES(vesTotal));
-                    $element.find('.wcvs-total-usd').text(WCVSCurrencyManager.prototype.formatUSD(baseTotal));
+                    const vesTotal = baseTotal * WCVSCurrencyConverter.prototype.currentRate;
+                    $element.find('.wcvs-total-ves').text(WCVSCurrencyConverter.prototype.formatVES(vesTotal));
+                    $element.find('.wcvs-total-usd').text(WCVSCurrencyConverter.prototype.formatUSD(baseTotal));
                 } else if (baseCurrency === 'VES') {
-                    const usdTotal = baseTotal / WCVSCurrencyManager.prototype.currentRate;
-                    $element.find('.wcvs-total-ves').text(WCVSCurrencyManager.prototype.formatVES(baseTotal));
-                    $element.find('.wcvs-total-usd').text(WCVSCurrencyManager.prototype.formatUSD(usdTotal));
+                    const usdTotal = baseTotal / WCVSCurrencyConverter.prototype.currentRate;
+                    $element.find('.wcvs-total-ves').text(WCVSCurrencyConverter.prototype.formatVES(baseTotal));
+                    $element.find('.wcvs-total-usd').text(WCVSCurrencyConverter.prototype.formatUSD(usdTotal));
                 }
             });
         }
@@ -201,11 +187,11 @@
             $button.prop('disabled', true).text('Actualizando...');
             
             $.ajax({
-                url: wcvs_currency_manager.ajax_url,
+                url: wcvs_currency.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'wcvs_update_currency_display',
-                    nonce: wcvs_currency_manager.nonce
+                    action: 'wcvs_get_current_rate',
+                    nonce: wcvs_currency.nonce
                 },
                 success: (response) => {
                     if (response.success && response.data.rate) {
@@ -254,8 +240,8 @@
          */
         formatVES(amount) {
             return 'Bs. ' + parseFloat(amount).toLocaleString('es-VE', {
-                minimumFractionDigits: this.decimalPlaces,
-                maximumFractionDigits: this.decimalPlaces
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             });
         }
 
@@ -264,8 +250,8 @@
          */
         formatUSD(amount) {
             return '$' + parseFloat(amount).toLocaleString('en-US', {
-                minimumFractionDigits: this.decimalPlaces,
-                maximumFractionDigits: this.decimalPlaces
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             });
         }
 
@@ -297,58 +283,18 @@
             this.currentRate = rate;
             this.updateCurrencyDisplay();
         }
-
-        /**
-         * Add currency selector to page
-         */
-        addCurrencySelector() {
-            if ($('.wcvs-currency-selector').length === 0) {
-                const selectorHtml = `
-                    <div class="wcvs-currency-selector">
-                        <label for="wcvs-currency-select">Moneda:</label>
-                        <select id="wcvs-currency-select" name="wcvs-currency">
-                            <option value="VES">VES - Bolívar</option>
-                            <option value="USD">USD - Dólar</option>
-                            <option value="dual">Ambas</option>
-                        </select>
-                    </div>
-                `;
-                
-                $('.woocommerce-cart-form').prepend(selectorHtml);
-                $('.woocommerce-checkout-form').prepend(selectorHtml);
-            }
-        }
-
-        /**
-         * Add rate display to page
-         */
-        addRateDisplay() {
-            if ($('.wcvs-current-rate').length === 0) {
-                const rateHtml = `
-                    <div class="wcvs-current-rate">
-                        <span class="wcvs-rate-label">Tasa actual:</span>
-                        <span class="wcvs-rate-value">${this.formatVES(this.currentRate)}/USD</span>
-                        <button class="wcvs-update-rate" type="button">Actualizar</button>
-                        <div class="wcvs-rate-status"></div>
-                    </div>
-                `;
-                
-                $('.woocommerce-cart-form').prepend(rateHtml);
-                $('.woocommerce-checkout-form').prepend(rateHtml);
-            }
-        }
     }
 
     /**
      * Initialize when document is ready
      */
     $(document).ready(function() {
-        new WCVSCurrencyManager();
+        new WCVSCurrencyConverter();
     });
 
     /**
      * Export for global access
      */
-    window.WCVSCurrencyManager = WCVSCurrencyManager;
+    window.WCVSCurrencyConverter = WCVSCurrencyConverter;
 
 })(jQuery);

@@ -3,8 +3,7 @@
 /**
  * WooCommerce Venezuela Suite 2025 - Currency Manager Module
  *
- * Módulo de gestión de moneda dual USD/VES con actualización automática
- * y integración con BCV y otras fuentes de tipo de cambio.
+ * Módulo de gestión de moneda con integración BCV
  *
  * @package WooCommerce_Venezuela_Suite_2025
  * @since   1.0.0
@@ -15,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Currency Manager Module class
+ * Currency Manager Module
  */
 class WCVS_Currency_Manager {
 
@@ -27,568 +26,78 @@ class WCVS_Currency_Manager {
 	private $core;
 
 	/**
-	 * Exchange rate sources
+	 * Settings
 	 *
 	 * @var array
 	 */
-	private $exchange_sources = array();
+	private $settings;
 
 	/**
 	 * Constructor
 	 */
 	public function __construct() {
 		$this->core = WCVS_Core::get_instance();
+		$all_settings = $this->core->settings->get_all_settings();
+		$this->settings = $all_settings['currency'];
 		$this->init_hooks();
-		$this->load_exchange_sources();
 	}
 
 	/**
 	 * Initialize hooks
 	 */
 	private function init_hooks() {
-		add_action( 'init', array( $this, 'init' ) );
-		add_action( 'woocommerce_loaded', array( $this, 'init_woocommerce' ) );
-		add_action( 'wcvs_update_exchange_rates', array( $this, 'update_exchange_rates' ) );
-		add_action( 'wp_ajax_wcvs_get_exchange_rate', array( $this, 'ajax_get_exchange_rate' ) );
-		add_action( 'wp_ajax_nopriv_wcvs_get_exchange_rate', array( $this, 'ajax_get_exchange_rate' ) );
-		add_action( 'wp_ajax_wcvs_convert_currency', array( $this, 'ajax_convert_currency' ) );
-		add_action( 'wp_ajax_nopriv_wcvs_convert_currency', array( $this, 'ajax_convert_currency' ) );
-	}
-
-	/**
-	 * Initialize module
-	 */
-	public function init() {
-		// Initialize module functionality
-		$this->init_currency_display();
-		$this->init_exchange_rate_updates();
-	}
-
-	/**
-	 * Initialize WooCommerce integration
-	 */
-	public function init_woocommerce() {
-		// Add currency switcher to checkout
-		add_action( 'woocommerce_checkout_before_customer_details', array( $this, 'add_currency_switcher' ) );
-		
-		// Add currency switcher to cart
-		add_action( 'woocommerce_cart_collaterals', array( $this, 'add_currency_switcher_cart' ) );
-		
-		// Add currency switcher to product pages
-		add_action( 'woocommerce_single_product_summary', array( $this, 'add_currency_switcher_product' ), 25 );
-		
-		// Add dual price display
-		add_filter( 'woocommerce_price_html', array( $this, 'display_dual_prices' ), 10, 2 );
-		add_filter( 'woocommerce_cart_item_price', array( $this, 'display_dual_cart_price' ), 10, 3 );
-		add_filter( 'woocommerce_cart_item_subtotal', array( $this, 'display_dual_cart_subtotal' ), 10, 3 );
-		add_filter( 'woocommerce_cart_subtotal', array( $this, 'display_dual_cart_subtotal_total' ), 10, 3 );
-		add_filter( 'woocommerce_cart_total', array( $this, 'display_dual_cart_total' ), 10, 1 );
-	}
-
-	/**
-	 * Initialize currency display
-	 */
-	private function init_currency_display() {
-		// Add currency selector to frontend
+		// Frontend hooks
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_scripts' ) );
-		
-		// Add currency selector to admin
+		add_action( 'woocommerce_single_product_summary', array( $this, 'display_dual_pricing' ), 25 );
+		add_action( 'woocommerce_after_shop_loop_item_title', array( $this, 'display_dual_pricing_loop' ), 15 );
+		add_action( 'woocommerce_cart_totals_before_order_total', array( $this, 'display_cart_dual_totals' ) );
+		add_action( 'woocommerce_review_order_before_order_total', array( $this, 'display_checkout_dual_totals' ) );
+
+		// Admin hooks
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
-	}
+		add_action( 'woocommerce_product_options_pricing', array( $this, 'add_product_currency_fields' ) );
+		add_action( 'woocommerce_process_product_meta', array( $this, 'save_product_currency_fields' ) );
 
-	/**
-	 * Initialize exchange rate updates
-	 */
-	private function init_exchange_rate_updates() {
-		// Schedule exchange rate updates
-		if ( ! wp_next_scheduled( 'wcvs_update_exchange_rates' ) ) {
-			wp_schedule_event( time(), 'hourly', 'wcvs_update_exchange_rates' );
-		}
-	}
+		// AJAX hooks
+		add_action( 'wp_ajax_wcvs_update_currency_display', array( $this, 'ajax_update_currency_display' ) );
+		add_action( 'wp_ajax_nopriv_wcvs_update_currency_display', array( $this, 'ajax_update_currency_display' ) );
 
-	/**
-	 * Load exchange rate sources
-	 */
-	private function load_exchange_sources() {
-		$this->exchange_sources = get_option( 'wcvs_exchange_sources', array(
-			'bcv' => array(
-				'name' => 'Banco Central de Venezuela',
-				'url' => 'https://www.bcv.org.ve/',
-				'active' => true,
-				'priority' => 1,
-				'class' => 'WCVS_Exchange_Source_BCV'
-			),
-			'dolar_today' => array(
-				'name' => 'Dólar Today',
-				'url' => 'https://dolartoday.com/',
-				'active' => true,
-				'priority' => 2,
-				'class' => 'WCVS_Exchange_Source_DolarToday'
-			),
-			'en_paralelo' => array(
-				'name' => 'EnParaleloVzla',
-				'url' => 'https://enparalelovzla.com/',
-				'active' => true,
-				'priority' => 3,
-				'class' => 'WCVS_Exchange_Source_EnParalelo'
-			)
-		));
-	}
-
-	/**
-	 * Update exchange rates
-	 */
-	public function update_exchange_rates() {
-		$updated = false;
-		$errors = array();
-
-		foreach ( $this->exchange_sources as $source_id => $source_config ) {
-			if ( ! $source_config['active'] ) {
-				continue;
-			}
-
-			try {
-				$rate = $this->get_exchange_rate_from_source( $source_id );
-				if ( $rate ) {
-					$this->store_exchange_rate( $source_id, $rate );
-					$updated = true;
-				}
-			} catch ( Exception $e ) {
-				$errors[] = sprintf( __( 'Error actualizando %s: %s', 'woocommerce-venezuela-pro-2025' ), 
-					$source_config['name'], $e->getMessage() );
-			}
-		}
-
-		if ( $updated ) {
-			$this->core->logger->info( 'Exchange rates updated successfully' );
-		}
-
-		if ( ! empty( $errors ) ) {
-			$this->core->logger->error( 'Exchange rate update errors', array( 'errors' => $errors ) );
-		}
-	}
-
-	/**
-	 * Get exchange rate from source
-	 *
-	 * @param string $source_id
-	 * @return float|false
-	 */
-	private function get_exchange_rate_from_source( $source_id ) {
-		$source_config = $this->exchange_sources[ $source_id ];
-		
-		switch ( $source_id ) {
-			case 'bcv':
-				return $this->get_bcv_rate();
-			case 'dolar_today':
-				return $this->get_dolar_today_rate();
-			case 'en_paralelo':
-				return $this->get_en_paralelo_rate();
-			default:
-				return false;
-		}
-	}
-
-	/**
-	 * Get BCV exchange rate
-	 *
-	 * @return float|false
-	 */
-	private function get_bcv_rate() {
-		// This would integrate with BCV's actual API
-		// For now, return a mock rate
-		return 3570.50;
-	}
-
-	/**
-	 * Get Dólar Today exchange rate
-	 *
-	 * @return float|false
-	 */
-	private function get_dolar_today_rate() {
-		// This would integrate with Dólar Today's actual API
-		// For now, return a mock rate
-		return 3580.25;
-	}
-
-	/**
-	 * Get EnParaleloVzla exchange rate
-	 *
-	 * @return float|false
-	 */
-	private function get_en_paralelo_rate() {
-		// This would integrate with EnParaleloVzla's actual API
-		// For now, return a mock rate
-		return 3575.75;
-	}
-
-	/**
-	 * Store exchange rate
-	 *
-	 * @param string $source_id
-	 * @param float  $rate
-	 */
-	private function store_exchange_rate( $source_id, $rate ) {
-		global $wpdb;
-		
-		$table = $wpdb->prefix . 'wcvs_exchange_rates_history';
-		$wpdb->insert(
-			$table,
-			array(
-				'from_currency' => 'USD',
-				'to_currency' => 'VES',
-				'rate' => $rate,
-				'source' => $source_id,
-				'created_at' => current_time( 'mysql' )
-			),
-			array( '%s', '%s', '%f', '%s', '%s' )
-		);
-		
-		// Update current rate
-		update_option( 'wcvs_current_exchange_rate', $rate );
-		update_option( 'wcvs_exchange_rate_source', $source_id );
-		update_option( 'wcvs_exchange_rate_updated', current_time( 'mysql' ) );
-	}
-
-	/**
-	 * Get current exchange rate
-	 *
-	 * @return float
-	 */
-	public function get_current_exchange_rate() {
-		$rate = get_option( 'wcvs_current_exchange_rate', 3570.50 );
-		return floatval( $rate );
-	}
-
-	/**
-	 * Convert currency
-	 *
-	 * @param float  $amount
-	 * @param string $from_currency
-	 * @param string $to_currency
-	 * @return float
-	 */
-	public function convert_currency( $amount, $from_currency, $to_currency ) {
-		if ( $from_currency === $to_currency ) {
-			return $amount;
-		}
-
-		$rate = $this->get_current_exchange_rate();
-		
-		if ( $from_currency === 'USD' && $to_currency === 'VES' ) {
-			return $amount * $rate;
-		} elseif ( $from_currency === 'VES' && $to_currency === 'USD' ) {
-			return $amount / $rate;
-		}
-		
-		return $amount;
-	}
-
-	/**
-	 * Format currency
-	 *
-	 * @param float  $amount
-	 * @param string $currency
-	 * @return string
-	 */
-	public function format_currency( $amount, $currency ) {
-		if ( $currency === 'VES' ) {
-			return 'Bs. ' . number_format( $amount, 2, ',', '.' );
-		} elseif ( $currency === 'USD' ) {
-			return '$' . number_format( $amount, 2, '.', ',' );
-		}
-		
-		return $amount;
-	}
-
-	/**
-	 * Add currency switcher to checkout
-	 */
-	public function add_currency_switcher() {
-		if ( ! $this->core->settings->get_setting( 'currency', 'show_dual_prices' ) ) {
-			return;
-		}
-
-		?>
-		<div class="wcvs-currency-switcher">
-			<h3><?php _e( 'Selecciona tu moneda preferida', 'woocommerce-venezuela-pro-2025' ); ?></h3>
-			<div class="wcvs-currency-options">
-				<label class="wcvs-currency-option">
-					<input type="radio" name="wcvs_preferred_currency" value="VES" checked>
-					<span class="currency-symbol">Bs.</span>
-					<span class="currency-name">Bolívares</span>
-				</label>
-				<label class="wcvs-currency-option">
-					<input type="radio" name="wcvs_preferred_currency" value="USD">
-					<span class="currency-symbol">$</span>
-					<span class="currency-name">Dólares</span>
-				</label>
-			</div>
-			<div class="wcvs-exchange-rate">
-				<span class="rate-label"><?php _e( 'Tipo de cambio:', 'woocommerce-venezuela-pro-2025' ); ?></span>
-				<span class="rate-value"><?php echo $this->format_currency( $this->get_current_exchange_rate(), 'VES' ); ?></span>
-				<span class="rate-update"><?php _e( 'Actualizado:', 'woocommerce-venezuela-pro-2025' ); ?> <?php echo get_option( 'wcvs_exchange_rate_updated', 'N/A' ); ?></span>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Add currency switcher to cart
-	 */
-	public function add_currency_switcher_cart() {
-		if ( ! $this->core->settings->get_setting( 'currency', 'show_dual_prices' ) ) {
-			return;
-		}
-
-		?>
-		<div class="wcvs-currency-switcher">
-			<h3><?php _e( 'Selecciona tu moneda preferida', 'woocommerce-venezuela-pro-2025' ); ?></h3>
-			<div class="wcvs-currency-options">
-				<label class="wcvs-currency-option">
-					<input type="radio" name="wcvs_preferred_currency" value="VES" checked>
-					<span class="currency-symbol">Bs.</span>
-					<span class="currency-name">Bolívares</span>
-				</label>
-				<label class="wcvs-currency-option">
-					<input type="radio" name="wcvs_preferred_currency" value="USD">
-					<span class="currency-symbol">$</span>
-					<span class="currency-name">Dólares</span>
-				</label>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Add currency switcher to product page
-	 */
-	public function add_currency_switcher_product() {
-		if ( ! $this->core->settings->get_setting( 'currency', 'show_dual_prices' ) ) {
-			return;
-		}
-
-		?>
-		<div class="wcvs-currency-switcher">
-			<h3><?php _e( 'Selecciona tu moneda preferida', 'woocommerce-venezuela-pro-2025' ); ?></h3>
-			<div class="wcvs-currency-options">
-				<label class="wcvs-currency-option">
-					<input type="radio" name="wcvs_preferred_currency" value="VES" checked>
-					<span class="currency-symbol">Bs.</span>
-					<span class="currency-name">Bolívares</span>
-				</label>
-				<label class="wcvs-currency-option">
-					<input type="radio" name="wcvs_preferred_currency" value="USD">
-					<span class="currency-symbol">$</span>
-					<span class="currency-name">Dólares</span>
-				</label>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Display dual prices
-	 *
-	 * @param string $price_html
-	 * @param WC_Product $product
-	 * @return string
-	 */
-	public function display_dual_prices( $price_html, $product ) {
-		if ( ! $this->core->settings->get_setting( 'currency', 'show_dual_prices' ) ) {
-			return $price_html;
-		}
-
-		$base_currency = $this->core->settings->get_setting( 'currency', 'base_currency', 'VES' );
-		$exchange_rate = $this->get_current_exchange_rate();
-
-		if ( $exchange_rate ) {
-			$price = $product->get_price();
-			$converted_price = $this->convert_currency( $price, $base_currency, 'USD' );
-			
-			$price_html .= sprintf(
-				' <span class="wcvs-dual-price">(%s)</span>',
-				$this->format_currency( $converted_price, 'USD' )
-			);
-		}
-
-		return $price_html;
-	}
-
-	/**
-	 * Display dual cart price
-	 *
-	 * @param string $price_html
-	 * @param array $cart_item
-	 * @param string $cart_item_key
-	 * @return string
-	 */
-	public function display_dual_cart_price( $price_html, $cart_item, $cart_item_key ) {
-		if ( ! $this->core->settings->get_setting( 'currency', 'show_dual_prices' ) ) {
-			return $price_html;
-		}
-
-		$base_currency = $this->core->settings->get_setting( 'currency', 'base_currency', 'VES' );
-		$exchange_rate = $this->get_current_exchange_rate();
-
-		if ( $exchange_rate ) {
-			$price = $cart_item['data']->get_price();
-			$converted_price = $this->convert_currency( $price, $base_currency, 'USD' );
-			
-			$price_html .= sprintf(
-				' <span class="wcvs-dual-price">(%s)</span>',
-				$this->format_currency( $converted_price, 'USD' )
-			);
-		}
-
-		return $price_html;
-	}
-
-	/**
-	 * Display dual cart subtotal
-	 *
-	 * @param string $subtotal_html
-	 * @param array $cart_item
-	 * @param string $cart_item_key
-	 * @return string
-	 */
-	public function display_dual_cart_subtotal( $subtotal_html, $cart_item, $cart_item_key ) {
-		if ( ! $this->core->settings->get_setting( 'currency', 'show_dual_prices' ) ) {
-			return $subtotal_html;
-		}
-
-		$base_currency = $this->core->settings->get_setting( 'currency', 'base_currency', 'VES' );
-		$exchange_rate = $this->get_current_exchange_rate();
-
-		if ( $exchange_rate ) {
-			$subtotal = $cart_item['line_subtotal'];
-			$converted_subtotal = $this->convert_currency( $subtotal, $base_currency, 'USD' );
-			
-			$subtotal_html .= sprintf(
-				' <span class="wcvs-dual-price">(%s)</span>',
-				$this->format_currency( $converted_subtotal, 'USD' )
-			);
-		}
-
-		return $subtotal_html;
-	}
-
-	/**
-	 * Display dual cart subtotal total
-	 *
-	 * @param string $subtotal_html
-	 * @param array $cart_item
-	 * @param string $cart_item_key
-	 * @return string
-	 */
-	public function display_dual_cart_subtotal_total( $subtotal_html, $cart_item, $cart_item_key ) {
-		if ( ! $this->core->settings->get_setting( 'currency', 'show_dual_prices' ) ) {
-			return $subtotal_html;
-		}
-
-		$base_currency = $this->core->settings->get_setting( 'currency', 'base_currency', 'VES' );
-		$exchange_rate = $this->get_current_exchange_rate();
-
-		if ( $exchange_rate ) {
-			$subtotal = $cart_item['line_subtotal'];
-			$converted_subtotal = $this->convert_currency( $subtotal, $base_currency, 'USD' );
-			
-			$subtotal_html .= sprintf(
-				' <span class="wcvs-dual-price">(%s)</span>',
-				$this->format_currency( $converted_subtotal, 'USD' )
-			);
-		}
-
-		return $subtotal_html;
-	}
-
-	/**
-	 * Display dual cart total
-	 *
-	 * @param string $total_html
-	 * @return string
-	 */
-	public function display_dual_cart_total( $total_html ) {
-		if ( ! $this->core->settings->get_setting( 'currency', 'show_dual_prices' ) ) {
-			return $total_html;
-		}
-
-		$base_currency = $this->core->settings->get_setting( 'currency', 'base_currency', 'VES' );
-		$exchange_rate = $this->get_current_exchange_rate();
-
-		if ( $exchange_rate ) {
-			$total = WC()->cart->get_total( 'raw' );
-			$converted_total = $this->convert_currency( $total, $base_currency, 'USD' );
-			
-			$total_html .= sprintf(
-				' <span class="wcvs-dual-price">(%s)</span>',
-				$this->format_currency( $converted_total, 'USD' )
-			);
-		}
-
-		return $total_html;
-	}
-
-	/**
-	 * AJAX handler for getting exchange rate
-	 */
-	public function ajax_get_exchange_rate() {
-		check_ajax_referer( 'wcvs_get_exchange_rate', 'nonce' );
-
-		$rate = $this->get_current_exchange_rate();
-		$source = get_option( 'wcvs_exchange_rate_source', 'bcv' );
-		$updated = get_option( 'wcvs_exchange_rate_updated', 'N/A' );
-
-		wp_send_json_success( array(
-			'rate' => $rate,
-			'source' => $source,
-			'updated' => $updated
-		));
-	}
-
-	/**
-	 * AJAX handler for currency conversion
-	 */
-	public function ajax_convert_currency() {
-		check_ajax_referer( 'wcvs_convert_currency', 'nonce' );
-
-		$amount = floatval( $_POST['amount'] );
-		$from_currency = sanitize_text_field( $_POST['from_currency'] );
-		$to_currency = sanitize_text_field( $_POST['to_currency'] );
-
-		$converted_amount = $this->convert_currency( $amount, $from_currency, $to_currency );
-		$formatted_amount = $this->format_currency( $converted_amount, $to_currency );
-
-		wp_send_json_success( array(
-			'amount' => $converted_amount,
-			'formatted' => $formatted_amount
-		));
+		// Currency conversion hooks
+		add_filter( 'woocommerce_currency_symbol', array( $this, 'custom_currency_symbol' ), 10, 2 );
+		add_filter( 'woocommerce_price_format', array( $this, 'custom_price_format' ) );
+		add_filter( 'woocommerce_price_html', array( $this, 'add_dual_pricing' ), 10, 2 );
 	}
 
 	/**
 	 * Enqueue frontend scripts
 	 */
 	public function enqueue_frontend_scripts() {
-		if ( is_shop() || is_product() || is_cart() || is_checkout() ) {
-			wp_enqueue_script(
-				'wcvs-currency-manager',
-				WCVS_PLUGIN_URL . 'modules/currency-manager/js/currency-manager.js',
-				array( 'jquery' ),
-				WCVS_VERSION,
-				true
-			);
+		wp_enqueue_script(
+			'wcvs-currency-manager',
+			WCVS_PLUGIN_URL . 'modules/currency-manager/js/currency-manager.js',
+			array( 'jquery' ),
+			WCVS_VERSION,
+			true
+		);
 
-			wp_localize_script( 'wcvs-currency-manager', 'wcvs_currency_manager', array(
-				'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'nonce' => wp_create_nonce( 'wcvs_get_exchange_rate' ),
-				'convert_nonce' => wp_create_nonce( 'wcvs_convert_currency' ),
-				'strings' => array(
-					'loading' => __( 'Cargando...', 'woocommerce-venezuela-pro-2025' ),
-					'error' => __( 'Error', 'woocommerce-venezuela-pro-2025' ),
-					'success' => __( 'Éxito', 'woocommerce-venezuela-pro-2025' )
-				)
-			));
-		}
+		wp_enqueue_style(
+			'wcvs-currency-manager',
+			WCVS_PLUGIN_URL . 'modules/currency-manager/css/currency-manager.css',
+			array(),
+			WCVS_VERSION
+		);
+
+		wp_localize_script( 'wcvs-currency-manager', 'wcvs_currency_manager', array(
+			'ajax_url' => admin_url( 'admin-ajax.php' ),
+			'nonce' => wp_create_nonce( 'wcvs_currency_manager_nonce' ),
+			'current_rate' => $this->core->bcv_integration->get_current_rate(),
+			'base_currency' => isset( $this->settings['base_currency'] ) ? $this->settings['base_currency'] : 'VES',
+			'dual_pricing' => isset( $this->settings['dual_pricing'] ) ? $this->settings['dual_pricing'] : false,
+			'price_position' => isset( $this->settings['price_position'] ) ? $this->settings['price_position'] : 'before',
+			'decimal_places' => isset( $this->settings['decimal_places'] ) ? $this->settings['decimal_places'] : 2,
+			'thousand_separator' => isset( $this->settings['thousand_separator'] ) ? $this->settings['thousand_separator'] : '.',
+			'decimal_separator' => isset( $this->settings['decimal_separator'] ) ? $this->settings['decimal_separator'] : ','
+		));
 	}
 
 	/**
@@ -602,23 +111,369 @@ class WCVS_Currency_Manager {
 			WCVS_VERSION,
 			true
 		);
+	}
 
-		wp_localize_script( 'wcvs-currency-manager-admin', 'wcvs_currency_manager_admin', array(
-			'ajax_url' => admin_url( 'admin-ajax.php' ),
-			'nonce' => wp_create_nonce( 'wcvs_get_exchange_rate' ),
-			'strings' => array(
-				'loading' => __( 'Cargando...', 'woocommerce-venezuela-pro-2025' ),
-				'error' => __( 'Error', 'woocommerce-venezuela-pro-2025' ),
-				'success' => __( 'Éxito', 'woocommerce-venezuela-pro-2025' )
+	/**
+	 * Display dual pricing on single product
+	 */
+	public function display_dual_pricing() {
+		if ( ! $this->settings['dual_pricing'] ) {
+			return;
+		}
+
+		global $product;
+		if ( ! $product ) {
+			return;
+		}
+
+		$price_html = $this->get_dual_pricing_html( $product );
+		if ( $price_html ) {
+			echo '<div class="wcvs-dual-pricing">' . $price_html . '</div>';
+		}
+	}
+
+	/**
+	 * Display dual pricing on product loop
+	 */
+	public function display_dual_pricing_loop() {
+		if ( ! $this->settings['dual_pricing'] ) {
+			return;
+		}
+
+		global $product;
+		if ( ! $product ) {
+			return;
+		}
+
+		$price_html = $this->get_dual_pricing_html( $product );
+		if ( $price_html ) {
+			echo '<div class="wcvs-dual-pricing-loop">' . $price_html . '</div>';
+		}
+	}
+
+	/**
+	 * Display cart dual totals
+	 */
+	public function display_cart_dual_totals() {
+		if ( ! $this->settings['dual_pricing'] ) {
+			return;
+		}
+
+		$cart_total = WC()->cart->get_total( 'raw' );
+		$base_currency = get_woocommerce_currency();
+		
+		echo '<div class="wcvs-cart-dual-totals">';
+		echo '<h3>' . __( 'Total en ambas monedas', 'woocommerce-venezuela-pro-2025' ) . '</h3>';
+		echo $this->get_total_dual_html( $cart_total, $base_currency );
+		echo '</div>';
+	}
+
+	/**
+	 * Display checkout dual totals
+	 */
+	public function display_checkout_dual_totals() {
+		if ( ! $this->settings['dual_pricing'] ) {
+			return;
+		}
+
+		$checkout_total = WC()->cart->get_total( 'raw' );
+		$base_currency = get_woocommerce_currency();
+		
+		echo '<div class="wcvs-checkout-dual-totals">';
+		echo '<h3>' . __( 'Total en ambas monedas', 'woocommerce-venezuela-pro-2025' ) . '</h3>';
+		echo $this->get_total_dual_html( $checkout_total, $base_currency );
+		echo '</div>';
+	}
+
+	/**
+	 * Get dual pricing HTML
+	 *
+	 * @param WC_Product $product
+	 * @return string
+	 */
+	private function get_dual_pricing_html( $product ) {
+		$price = $product->get_price();
+		if ( ! $price ) {
+			return '';
+		}
+
+		$base_currency = get_woocommerce_currency();
+		$converted_price = $this->convert_price( $price, $base_currency );
+		
+		if ( ! $converted_price ) {
+			return '';
+		}
+
+		$html = '<div class="wcvs-price-display">';
+		
+		if ( $base_currency === 'USD' ) {
+			$html .= '<span class="wcvs-price-usd">' . $this->format_price( $price, 'USD' ) . '</span>';
+			$html .= '<span class="wcvs-price-ves">' . $this->format_price( $converted_price, 'VES' ) . '</span>';
+		} else {
+			$html .= '<span class="wcvs-price-ves">' . $this->format_price( $price, 'VES' ) . '</span>';
+			$html .= '<span class="wcvs-price-usd">' . $this->format_price( $converted_price, 'USD' ) . '</span>';
+		}
+		
+		$html .= '</div>';
+		
+		return $html;
+	}
+
+	/**
+	 * Get total dual HTML
+	 *
+	 * @param float $total
+	 * @param string $base_currency
+	 * @return string
+	 */
+	private function get_total_dual_html( $total, $base_currency ) {
+		$converted_total = $this->convert_price( $total, $base_currency );
+		
+		if ( ! $converted_total ) {
+			return '';
+		}
+
+		$html = '<div class="wcvs-total-display">';
+		
+		if ( $base_currency === 'USD' ) {
+			$html .= '<div class="wcvs-total-usd">' . $this->format_price( $total, 'USD' ) . '</div>';
+			$html .= '<div class="wcvs-total-ves">' . $this->format_price( $converted_total, 'VES' ) . '</div>';
+		} else {
+			$html .= '<div class="wcvs-total-ves">' . $this->format_price( $total, 'VES' ) . '</div>';
+			$html .= '<div class="wcvs-total-usd">' . $this->format_price( $converted_total, 'USD' ) . '</div>';
+		}
+		
+		$html .= '</div>';
+		
+		return $html;
+	}
+
+	/**
+	 * Convert price between currencies
+	 *
+	 * @param float $price
+	 * @param string $from_currency
+	 * @return float|false
+	 */
+	private function convert_price( $price, $from_currency ) {
+		if ( $from_currency === 'USD' ) {
+			return $this->core->bcv_integration->convert_usd_to_ves( $price );
+		} elseif ( $from_currency === 'VES' ) {
+			return $this->core->bcv_integration->convert_ves_to_usd( $price );
+		}
+		
+		return false;
+	}
+
+	/**
+	 * Format price
+	 *
+	 * @param float $price
+	 * @param string $currency
+	 * @return string
+	 */
+	private function format_price( $price, $currency ) {
+		return $this->core->bcv_integration->format_currency( $price, $currency );
+	}
+
+	/**
+	 * Add product currency fields
+	 */
+	public function add_product_currency_fields() {
+		global $post;
+		$product = wc_get_product( $post->ID );
+		
+		if ( ! $product ) {
+			return;
+		}
+
+		echo '<div class="options_group">';
+		
+		woocommerce_wp_text_input( array(
+			'id' => '_wcvs_usd_price',
+			'label' => __( 'Precio en USD', 'woocommerce-venezuela-pro-2025' ),
+			'placeholder' => '0.00',
+			'desc_tip' => true,
+			'description' => __( 'Precio en dólares estadounidenses', 'woocommerce-venezuela-pro-2025' ),
+			'type' => 'number',
+			'custom_attributes' => array(
+				'step' => '0.01',
+				'min' => '0'
 			)
+		));
+
+		woocommerce_wp_text_input( array(
+			'id' => '_wcvs_ves_price',
+			'label' => __( 'Precio en VES', 'woocommerce-venezuela-pro-2025' ),
+			'placeholder' => '0.00',
+			'desc_tip' => true,
+			'description' => __( 'Precio en bolívares venezolanos', 'woocommerce-venezuela-pro-2025' ),
+			'type' => 'number',
+			'custom_attributes' => array(
+				'step' => '0.01',
+				'min' => '0'
+			)
+		));
+
+		woocommerce_wp_checkbox( array(
+			'id' => '_wcvs_auto_convert',
+			'label' => __( 'Conversión Automática', 'woocommerce-venezuela-pro-2025' ),
+			'description' => __( 'Convertir automáticamente el precio según la tasa de cambio actual', 'woocommerce-venezuela-pro-2025' )
+		));
+
+		echo '</div>';
+	}
+
+	/**
+	 * Save product currency fields
+	 *
+	 * @param int $post_id
+	 */
+	public function save_product_currency_fields( $post_id ) {
+		$product = wc_get_product( $post_id );
+		
+		if ( ! $product ) {
+			return;
+		}
+
+		// Save USD price
+		if ( isset( $_POST['_wcvs_usd_price'] ) ) {
+			$usd_price = sanitize_text_field( $_POST['_wcvs_usd_price'] );
+			$product->update_meta_data( '_wcvs_usd_price', $usd_price );
+		}
+
+		// Save VES price
+		if ( isset( $_POST['_wcvs_ves_price'] ) ) {
+			$ves_price = sanitize_text_field( $_POST['_wcvs_ves_price'] );
+			$product->update_meta_data( '_wcvs_ves_price', $ves_price );
+		}
+
+		// Save auto convert setting
+		$auto_convert = isset( $_POST['_wcvs_auto_convert'] ) ? 'yes' : 'no';
+		$product->update_meta_data( '_wcvs_auto_convert', $auto_convert );
+
+		$product->save();
+	}
+
+	/**
+	 * Custom currency symbol
+	 *
+	 * @param string $currency_symbol
+	 * @param string $currency
+	 * @return string
+	 */
+	public function custom_currency_symbol( $currency_symbol, $currency ) {
+		if ( $currency === 'VES' ) {
+			return 'Bs.';
+		}
+		
+		return $currency_symbol;
+	}
+
+	/**
+	 * Custom price format
+	 *
+	 * @param string $format
+	 * @return string
+	 */
+	public function custom_price_format( $format ) {
+		$currency = get_woocommerce_currency();
+		
+		if ( $currency === 'VES' ) {
+			return '%1$s%2$s';
+		}
+		
+		return $format;
+	}
+
+	/**
+	 * Add dual pricing to price HTML
+	 *
+	 * @param string $price_html
+	 * @param WC_Product $product
+	 * @return string
+	 */
+	public function add_dual_pricing( $price_html, $product ) {
+		if ( ! $this->settings['dual_pricing'] ) {
+			return $price_html;
+		}
+
+		$dual_html = $this->get_dual_pricing_html( $product );
+		if ( $dual_html ) {
+			$price_html .= '<div class="wcvs-dual-pricing-additional">' . $dual_html . '</div>';
+		}
+
+		return $price_html;
+	}
+
+	/**
+	 * AJAX update currency display
+	 */
+	public function ajax_update_currency_display() {
+		check_ajax_referer( 'wcvs_currency_manager_nonce', 'nonce' );
+
+		$currency = sanitize_text_field( $_POST['currency'] );
+		$rate = $this->core->bcv_integration->get_current_rate();
+
+		wp_send_json_success( array(
+			'currency' => $currency,
+			'rate' => $rate,
+			'timestamp' => current_time( 'mysql' )
 		));
 	}
 
 	/**
-	 * Initialize frontend functionality
+	 * Get currency selector HTML
+	 *
+	 * @return string
 	 */
-	public function init_frontend() {
-		// Add currency manager specific frontend functionality
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_scripts' ) );
+	public function get_currency_selector_html() {
+		$current_currency = get_woocommerce_currency();
+		
+		$html = '<div class="wcvs-currency-selector">';
+		$html .= '<label for="wcvs-currency-select">' . __( 'Moneda:', 'woocommerce-venezuela-pro-2025' ) . '</label>';
+		$html .= '<select id="wcvs-currency-select" name="wcvs-currency">';
+		$html .= '<option value="VES" ' . selected( $current_currency, 'VES', false ) . '>VES - Bolívar</option>';
+		$html .= '<option value="USD" ' . selected( $current_currency, 'USD', false ) . '>USD - Dólar</option>';
+		$html .= '<option value="dual" ' . selected( $current_currency, 'dual', false ) . '>' . __( 'Ambas', 'woocommerce-venezuela-pro-2025' ) . '</option>';
+		$html .= '</select>';
+		$html .= '</div>';
+		
+		return $html;
+	}
+
+	/**
+	 * Display currency selector
+	 */
+	public function display_currency_selector() {
+		echo $this->get_currency_selector_html();
+	}
+
+	/**
+	 * Get current rate display
+	 *
+	 * @return string
+	 */
+	public function get_current_rate_display() {
+		$rate = $this->core->bcv_integration->get_current_rate();
+		
+		if ( ! $rate ) {
+			return '<span class="wcvs-rate-unavailable">' . __( 'Tasa no disponible', 'woocommerce-venezuela-pro-2025' ) . '</span>';
+		}
+
+		$html = '<div class="wcvs-current-rate">';
+		$html .= '<span class="wcvs-rate-label">' . __( 'Tasa actual:', 'woocommerce-venezuela-pro-2025' ) . '</span>';
+		$html .= '<span class="wcvs-rate-value">' . $this->format_price( $rate, 'VES' ) . '/USD</span>';
+		$html .= '<button class="wcvs-update-rate" type="button">' . __( 'Actualizar', 'woocommerce-venezuela-pro-2025' ) . '</button>';
+		$html .= '</div>';
+		
+		return $html;
+	}
+
+	/**
+	 * Display current rate
+	 */
+	public function display_current_rate() {
+		echo $this->get_current_rate_display();
 	}
 }

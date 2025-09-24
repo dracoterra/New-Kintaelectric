@@ -71,7 +71,9 @@ class WCVS_Settings {
 				'price_position' => 'before',
 				'decimal_places' => 2,
 				'thousand_separator' => '.',
-				'decimal_separator' => ','
+				'decimal_separator' => ',',
+				'dual_pricing' => true,
+				'manual_rate' => 0
 			),
 
 			// Configuración Fiscal
@@ -79,7 +81,8 @@ class WCVS_Settings {
 				'iva_rate' => 16,
 				'igtf_rate' => 3,
 				'auto_update_tax_rates' => true,
-				'tax_source' => 'seniat'
+				'tax_source' => 'seniat',
+				'apply_igtf_usd' => true
 			),
 
 			// Configuración de Notificaciones
@@ -87,7 +90,8 @@ class WCVS_Settings {
 				'email_notifications' => true,
 				'whatsapp_notifications' => false,
 				'sms_notifications' => false,
-				'telegram_notifications' => false
+				'telegram_notifications' => false,
+				'rate_change_notifications' => true
 			),
 
 			// Configuración de Facturación
@@ -95,7 +99,9 @@ class WCVS_Settings {
 				'electronic_billing' => true,
 				'auto_generate_invoices' => true,
 				'digital_signature' => false,
-				'seniat_validation' => true
+				'seniat_validation' => true,
+				'company_rif' => '',
+				'company_name' => ''
 			)
 		);
 	}

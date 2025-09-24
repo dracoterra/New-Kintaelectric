@@ -3,8 +3,7 @@
 /**
  * WooCommerce Venezuela Suite 2025 - Electronic Billing Module
  *
- * Módulo de facturación electrónica con cumplimiento SENIAT
- * y firma digital para Venezuela.
+ * Módulo de facturación electrónica venezolana (SENIAT)
  *
  * @package WooCommerce_Venezuela_Suite_2025
  * @since   1.0.0
@@ -15,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Electronic Billing Module class
+ * Electronic Billing Module
  */
 class WCVS_Electronic_Billing {
 
@@ -27,261 +26,170 @@ class WCVS_Electronic_Billing {
 	private $core;
 
 	/**
-	 * SENIAT configuration
+	 * Settings
 	 *
 	 * @var array
 	 */
-	private $seniat_config = array();
+	private $settings;
 
 	/**
 	 * Constructor
 	 */
 	public function __construct() {
 		$this->core = WCVS_Core::get_instance();
+		$all_settings = $this->core->settings->get_all_settings();
+		$this->settings = $all_settings['billing'];
 		$this->init_hooks();
-		$this->load_seniat_config();
 	}
 
 	/**
 	 * Initialize hooks
 	 */
 	private function init_hooks() {
-		add_action( 'init', array( $this, 'init' ) );
-		add_action( 'woocommerce_loaded', array( $this, 'init_woocommerce' ) );
-		add_action( 'woocommerce_checkout_order_processed', array( $this, 'process_order_billing' ), 10, 1 );
+		// Frontend hooks
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_scripts' ) );
+		add_action( 'woocommerce_checkout_process', array( $this, 'validate_billing_fields' ) );
+		add_action( 'woocommerce_checkout_order_processed', array( $this, 'process_electronic_billing' ), 10, 1 );
+
+		// Admin hooks
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+		add_action( 'woocommerce_admin_order_data_after_billing_address', array( $this, 'display_billing_info_admin' ) );
 		add_action( 'woocommerce_order_status_completed', array( $this, 'generate_electronic_invoice' ), 10, 1 );
-		add_action( 'woocommerce_order_status_processing', array( $this, 'generate_electronic_invoice' ), 10, 1 );
+
+		// AJAX hooks
+		add_action( 'wp_ajax_wcvs_validate_rif', array( $this, 'ajax_validate_rif' ) );
+		add_action( 'wp_ajax_nopriv_wcvs_validate_rif', array( $this, 'ajax_validate_rif' ) );
 		add_action( 'wp_ajax_wcvs_generate_invoice', array( $this, 'ajax_generate_invoice' ) );
-		add_action( 'wp_ajax_wcvs_download_invoice', array( $this, 'ajax_download_invoice' ) );
-		add_action( 'wp_ajax_wcvs_validate_invoice', array( $this, 'ajax_validate_invoice' ) );
+
+		// Invoice hooks
+		add_action( 'woocommerce_thankyou', array( $this, 'display_invoice_info' ), 10, 1 );
+		add_filter( 'woocommerce_email_attachments', array( $this, 'attach_invoice_to_email' ), 10, 3 );
 	}
 
 	/**
-	 * Initialize module
+	 * Enqueue frontend scripts
 	 */
-	public function init() {
-		// Initialize module functionality
-		$this->init_billing_fields();
-		$this->init_invoice_generation();
-		$this->init_seniat_integration();
-	}
+	public function enqueue_frontend_scripts() {
+		wp_enqueue_script(
+			'wcvs-electronic-billing',
+			WCVS_PLUGIN_URL . 'modules/electronic-billing/js/electronic-billing.js',
+			array( 'jquery' ),
+			WCVS_VERSION,
+			true
+		);
 
-	/**
-	 * Initialize WooCommerce integration
-	 */
-	public function init_woocommerce() {
-		// Add billing fields to checkout
-		add_filter( 'woocommerce_checkout_fields', array( $this, 'add_venezuelan_billing_fields' ) );
-		
-		// Add billing fields to admin order page
-		add_action( 'woocommerce_admin_order_data_after_billing_address', array( $this, 'display_admin_billing_fields' ) );
-		
-		// Add invoice generation to order actions
-		add_filter( 'woocommerce_order_actions', array( $this, 'add_order_actions' ) );
-		
-		// Add invoice status to order meta
-		add_action( 'woocommerce_order_item_meta_end', array( $this, 'display_invoice_status' ), 10, 3 );
-	}
+		wp_enqueue_style(
+			'wcvs-electronic-billing',
+			WCVS_PLUGIN_URL . 'modules/electronic-billing/css/electronic-billing.css',
+			array(),
+			WCVS_VERSION
+		);
 
-	/**
-	 * Load SENIAT configuration
-	 */
-	private function load_seniat_config() {
-		$this->seniat_config = get_option( 'wcvs_seniat_config', array(
-			'company_rif' => '',
-			'company_name' => '',
-			'company_address' => '',
-			'company_phone' => '',
-			'company_email' => '',
-			'company_website' => '',
-			'company_logo' => '',
-			'company_signature' => '',
-			'company_certificate' => '',
-			'company_private_key' => '',
-			'seniat_environment' => 'test', // test or production
-			'seniat_api_url' => 'https://api.seniat.gob.ve/',
-			'seniat_api_key' => '',
-			'seniat_api_secret' => '',
-			'invoice_series' => 'A',
-			'invoice_start_number' => 1,
-			'invoice_template' => 'default',
-			'invoice_footer_text' => '',
-			'invoice_terms_conditions' => '',
-			'auto_generate_invoice' => true,
-			'invoice_generation_delay' => 0, // minutes
-			'invoice_retry_attempts' => 3,
-			'invoice_retry_delay' => 300 // seconds
+		wp_localize_script( 'wcvs-electronic-billing', 'wcvs_electronic_billing', array(
+			'ajax_url' => admin_url( 'admin-ajax.php' ),
+			'nonce' => wp_create_nonce( 'wcvs_electronic_billing_nonce' ),
+			'company_rif' => isset( $this->settings['company_rif'] ) ? $this->settings['company_rif'] : '',
+			'company_name' => isset( $this->settings['company_name'] ) ? $this->settings['company_name'] : '',
+			'validation_messages' => array(
+				'rif_required' => __( 'El RIF es requerido para facturación', 'woocommerce-venezuela-pro-2025' ),
+				'invalid_rif' => __( 'Formato de RIF inválido', 'woocommerce-venezuela-pro-2025' ),
+				'cedula_required' => __( 'La Cédula es requerida para facturación', 'woocommerce-venezuela-pro-2025' ),
+				'invalid_cedula' => __( 'Formato de Cédula inválido', 'woocommerce-venezuela-pro-2025' ),
+				'company_rif_required' => __( 'El RIF de la empresa debe estar configurado', 'woocommerce-venezuela-pro-2025' )
+			)
 		));
 	}
 
 	/**
-	 * Initialize billing fields
+	 * Enqueue admin scripts
 	 */
-	private function init_billing_fields() {
-		// Add Venezuelan-specific billing fields
-		add_action( 'woocommerce_checkout_billing', array( $this, 'add_venezuelan_fields' ) );
-		add_action( 'woocommerce_checkout_shipping', array( $this, 'add_venezuelan_fields' ) );
-	}
-
-	/**
-	 * Initialize invoice generation
-	 */
-	private function init_invoice_generation() {
-		// Schedule invoice generation for completed orders
-		add_action( 'wcvs_generate_electronic_invoice', array( $this, 'generate_electronic_invoice' ), 10, 1 );
-	}
-
-	/**
-	 * Initialize SENIAT integration
-	 */
-	private function init_seniat_integration() {
-		// Initialize SENIAT API connection
-		add_action( 'init', array( $this, 'init_seniat_api' ) );
-	}
-
-	/**
-	 * Add Venezuelan billing fields to checkout
-	 *
-	 * @param array $fields
-	 * @return array
-	 */
-	public function add_venezuelan_billing_fields( $fields ) {
-		// Add RIF field
-		$fields['billing']['billing_rif'] = array(
-			'label' => __( 'RIF', 'woocommerce-venezuela-pro-2025' ),
-			'placeholder' => __( 'V-12345678-9', 'woocommerce-venezuela-pro-2025' ),
-			'required' => true,
-			'class' => array( 'form-row-wide' ),
-			'priority' => 25,
-			'validate' => array( 'rif' )
+	public function enqueue_admin_scripts() {
+		wp_enqueue_script(
+			'wcvs-electronic-billing-admin',
+			WCVS_PLUGIN_URL . 'modules/electronic-billing/js/electronic-billing-admin.js',
+			array( 'jquery' ),
+			WCVS_VERSION,
+			true
 		);
-
-		// Add Cédula field
-		$fields['billing']['billing_cedula'] = array(
-			'label' => __( 'Cédula de Identidad', 'woocommerce-venezuela-pro-2025' ),
-			'placeholder' => __( 'V-12345678', 'woocommerce-venezuela-pro-2025' ),
-			'required' => true,
-			'class' => array( 'form-row-wide' ),
-			'priority' => 26,
-			'validate' => array( 'cedula' )
-		);
-
-		// Add phone field with Venezuelan format
-		$fields['billing']['billing_phone']['placeholder'] = __( '+58-XXX-XXXXXXX', 'woocommerce-venezuela-pro-2025' );
-		$fields['billing']['billing_phone']['validate'] = array( 'venezuelan_phone' );
-
-		return $fields;
 	}
 
 	/**
-	 * Add Venezuelan fields to checkout
+	 * Validate billing fields
 	 */
-	public function add_venezuelan_fields() {
-		?>
-		<div class="wcvs-venezuelan-fields">
-			<h3><?php _e( 'Información Fiscal Venezolana', 'woocommerce-venezuela-pro-2025' ); ?></h3>
-			<p class="form-row form-row-wide">
-				<label for="billing_rif"><?php _e( 'RIF', 'woocommerce-venezuela-pro-2025' ); ?> <span class="required">*</span></label>
-				<input type="text" class="input-text" name="billing_rif" id="billing_rif" placeholder="<?php _e( 'V-12345678-9', 'woocommerce-venezuela-pro-2025' ); ?>" value="<?php echo esc_attr( WC()->checkout()->get_value( 'billing_rif' ) ); ?>" />
-			</p>
-			<p class="form-row form-row-wide">
-				<label for="billing_cedula"><?php _e( 'Cédula de Identidad', 'woocommerce-venezuela-pro-2025' ); ?> <span class="required">*</span></label>
-				<input type="text" class="input-text" name="billing_cedula" id="billing_cedula" placeholder="<?php _e( 'V-12345678', 'woocommerce-venezuela-pro-2025' ); ?>" value="<?php echo esc_attr( WC()->checkout()->get_value( 'billing_cedula' ) ); ?>" />
-			</p>
-		</div>
-		<?php
-	}
+	public function validate_billing_fields() {
+		if ( ! $this->settings['electronic_billing'] ) {
+			return;
+		}
 
-	/**
-	 * Display admin billing fields
-	 *
-	 * @param WC_Order $order
-	 */
-	public function display_admin_billing_fields( $order ) {
-		$rif = $order->get_meta( '_billing_rif' );
-		$cedula = $order->get_meta( '_billing_cedula' );
-		
-		if ( $rif || $cedula ) {
-			?>
-			<div class="wcvs-admin-billing-fields">
-				<h4><?php _e( 'Información Fiscal Venezolana', 'woocommerce-venezuela-pro-2025' ); ?></h4>
-				<?php if ( $rif ) : ?>
-					<p><strong><?php _e( 'RIF:', 'woocommerce-venezuela-pro-2025' ); ?></strong> <?php echo esc_html( $rif ); ?></p>
-				<?php endif; ?>
-				<?php if ( $cedula ) : ?>
-					<p><strong><?php _e( 'Cédula:', 'woocommerce-venezuela-pro-2025' ); ?></strong> <?php echo esc_html( $cedula ); ?></p>
-				<?php endif; ?>
-			</div>
-			<?php
+		// Validate company RIF
+		if ( empty( $this->settings['company_rif'] ) ) {
+			wc_add_notice( __( 'El RIF de la empresa debe estar configurado para facturación electrónica.', 'woocommerce-venezuela-pro-2025' ), 'error' );
+			return;
+		}
+
+		// Validate customer RIF
+		if ( empty( $_POST['billing_rif'] ) ) {
+			wc_add_notice( __( 'El RIF es requerido para facturación electrónica.', 'woocommerce-venezuela-pro-2025' ), 'error' );
+		} elseif ( ! $this->validate_rif( $_POST['billing_rif'] ) ) {
+			wc_add_notice( __( 'El formato del RIF no es válido.', 'woocommerce-venezuela-pro-2025' ), 'error' );
+		}
+
+		// Validate customer Cédula
+		if ( empty( $_POST['billing_cedula'] ) ) {
+			wc_add_notice( __( 'La Cédula es requerida para facturación electrónica.', 'woocommerce-venezuela-pro-2025' ), 'error' );
+		} elseif ( ! $this->validate_cedula( $_POST['billing_cedula'] ) ) {
+			wc_add_notice( __( 'El formato de la Cédula no es válido.', 'woocommerce-venezuela-pro-2025' ), 'error' );
 		}
 	}
 
 	/**
-	 * Add order actions
-	 *
-	 * @param array $actions
-	 * @return array
-	 */
-	public function add_order_actions( $actions ) {
-		$actions['wcvs_generate_invoice'] = __( 'Generar Factura Electrónica', 'woocommerce-venezuela-pro-2025' );
-		$actions['wcvs_download_invoice'] = __( 'Descargar Factura Electrónica', 'woocommerce-venezuela-pro-2025' );
-		$actions['wcvs_validate_invoice'] = __( 'Validar Factura Electrónica', 'woocommerce-venezuela-pro-2025' );
-		
-		return $actions;
-	}
-
-	/**
-	 * Display invoice status
-	 *
-	 * @param int $item_id
-	 * @param array $item
-	 * @param WC_Order $order
-	 */
-	public function display_invoice_status( $item_id, $item, $order ) {
-		$invoice_status = $order->get_meta( '_wcvs_invoice_status' );
-		$invoice_number = $order->get_meta( '_wcvs_invoice_number' );
-		$invoice_date = $order->get_meta( '_wcvs_invoice_date' );
-		
-		if ( $invoice_status ) {
-			?>
-			<div class="wcvs-invoice-status">
-				<h4><?php _e( 'Estado de Factura Electrónica', 'woocommerce-venezuela-pro-2025' ); ?></h4>
-				<p><strong><?php _e( 'Estado:', 'woocommerce-venezuela-pro-2025' ); ?></strong> 
-					<span class="wcvs-invoice-status-<?php echo esc_attr( $invoice_status ); ?>">
-						<?php echo $this->get_invoice_status_text( $invoice_status ); ?>
-					</span>
-				</p>
-				<?php if ( $invoice_number ) : ?>
-					<p><strong><?php _e( 'Número:', 'woocommerce-venezuela-pro-2025' ); ?></strong> <?php echo esc_html( $invoice_number ); ?></p>
-				<?php endif; ?>
-				<?php if ( $invoice_date ) : ?>
-					<p><strong><?php _e( 'Fecha:', 'woocommerce-venezuela-pro-2025' ); ?></strong> <?php echo esc_html( $invoice_date ); ?></p>
-				<?php endif; ?>
-			</div>
-			<?php
-		}
-	}
-
-	/**
-	 * Process order billing
+	 * Process electronic billing
 	 *
 	 * @param int $order_id
 	 */
-	public function process_order_billing( $order_id ) {
+	public function process_electronic_billing( $order_id ) {
+		if ( ! $this->settings['electronic_billing'] ) {
+			return;
+		}
+
 		$order = wc_get_order( $order_id );
-		
 		if ( ! $order ) {
 			return;
 		}
 
-		// Save Venezuelan billing fields
-		if ( isset( $_POST['billing_rif'] ) ) {
+		// Save billing information
+		$this->save_billing_information( $order );
+		
+		// Log billing processing
+		$this->core->logger->info( 'Electronic billing processed', array(
+			'order_id' => $order_id,
+			'company_rif' => $this->settings['company_rif'],
+			'customer_rif' => $order->get_meta( '_billing_rif' ),
+			'customer_cedula' => $order->get_meta( '_billing_cedula' )
+		));
+	}
+
+	/**
+	 * Save billing information
+	 *
+	 * @param WC_Order $order
+	 */
+	private function save_billing_information( $order ) {
+		// Save company information
+		$order->update_meta_data( '_wcvs_company_rif', $this->settings['company_rif'] );
+		$order->update_meta_data( '_wcvs_company_name', $this->settings['company_name'] );
+		
+		// Save customer information
+		if ( ! empty( $_POST['billing_rif'] ) ) {
 			$order->update_meta_data( '_billing_rif', sanitize_text_field( $_POST['billing_rif'] ) );
 		}
 		
-		if ( isset( $_POST['billing_cedula'] ) ) {
+		if ( ! empty( $_POST['billing_cedula'] ) ) {
 			$order->update_meta_data( '_billing_cedula', sanitize_text_field( $_POST['billing_cedula'] ) );
 		}
+		
+		// Mark as electronic billing order
+		$order->update_meta_data( '_wcvs_electronic_billing_order', true );
 		
 		$order->save();
 	}
@@ -292,95 +200,91 @@ class WCVS_Electronic_Billing {
 	 * @param int $order_id
 	 */
 	public function generate_electronic_invoice( $order_id ) {
+		if ( ! $this->settings['electronic_billing'] ) {
+			return;
+		}
+
 		$order = wc_get_order( $order_id );
+		if ( ! $order || ! $order->get_meta( '_wcvs_electronic_billing_order' ) ) {
+			return;
+		}
+
+		// Generate invoice number
+		$invoice_number = $this->generate_invoice_number( $order );
 		
-		if ( ! $order ) {
-			return;
-		}
-
-		// Check if invoice already exists
-		$existing_invoice = $order->get_meta( '_wcvs_invoice_status' );
-		if ( $existing_invoice && $existing_invoice !== 'failed' ) {
-			return;
-		}
-
-		// Set invoice status to processing
-		$order->update_meta_data( '_wcvs_invoice_status', 'processing' );
+		// Generate invoice data
+		$invoice_data = $this->generate_invoice_data( $order, $invoice_number );
+		
+		// Save invoice information
+		$order->update_meta_data( '_wcvs_invoice_number', $invoice_number );
+		$order->update_meta_data( '_wcvs_invoice_data', $invoice_data );
+		$order->update_meta_data( '_wcvs_invoice_generated', current_time( 'mysql' ) );
+		
 		$order->save();
-
-		try {
-			// Generate invoice data
-			$invoice_data = $this->prepare_invoice_data( $order );
-			
-			// Generate invoice number
-			$invoice_number = $this->generate_invoice_number();
-			
-			// Create invoice document
-			$invoice_document = $this->create_invoice_document( $invoice_data, $invoice_number );
-			
-			// Sign invoice
-			$signed_invoice = $this->sign_invoice( $invoice_document );
-			
-			// Send to SENIAT
-			$seniat_response = $this->send_to_seniat( $signed_invoice );
-			
-			if ( $seniat_response['success'] ) {
-				// Update order with invoice information
-				$order->update_meta_data( '_wcvs_invoice_status', 'generated' );
-				$order->update_meta_data( '_wcvs_invoice_number', $invoice_number );
-				$order->update_meta_data( '_wcvs_invoice_date', current_time( 'mysql' ) );
-				$order->update_meta_data( '_wcvs_invoice_seniat_id', $seniat_response['seniat_id'] );
-				$order->update_meta_data( '_wcvs_invoice_document', $signed_invoice );
-				$order->save();
-				
-				// Send invoice to customer
-				$this->send_invoice_to_customer( $order, $invoice_document );
-				
-				$this->core->logger->info( 'Electronic invoice generated successfully', array(
-					'order_id' => $order_id,
-					'invoice_number' => $invoice_number,
-					'seniat_id' => $seniat_response['seniat_id']
-				));
-			} else {
-				// Handle SENIAT error
-				$order->update_meta_data( '_wcvs_invoice_status', 'failed' );
-				$order->update_meta_data( '_wcvs_invoice_error', $seniat_response['error'] );
-				$order->save();
-				
-				$this->core->logger->error( 'Electronic invoice generation failed', array(
-					'order_id' => $order_id,
-					'error' => $seniat_response['error']
-				));
-			}
-			
-		} catch ( Exception $e ) {
-			// Handle general error
-			$order->update_meta_data( '_wcvs_invoice_status', 'failed' );
-			$order->update_meta_data( '_wcvs_invoice_error', $e->getMessage() );
-			$order->save();
-			
-			$this->core->logger->error( 'Electronic invoice generation error', array(
-				'order_id' => $order_id,
-				'error' => $e->getMessage()
-			));
-		}
+		
+		// Log invoice generation
+		$this->core->logger->info( 'Electronic invoice generated', array(
+			'order_id' => $order_id,
+			'invoice_number' => $invoice_number
+		));
 	}
 
 	/**
-	 * Prepare invoice data
+	 * Generate invoice number
 	 *
 	 * @param WC_Order $order
+	 * @return string
+	 */
+	private function generate_invoice_number( $order ) {
+		$year = date( 'Y' );
+		$month = date( 'm' );
+		$sequence = $this->get_next_invoice_sequence( $year, $month );
+		
+		return sprintf( 'F-%s%s-%06d', $year, $month, $sequence );
+	}
+
+	/**
+	 * Get next invoice sequence
+	 *
+	 * @param string $year
+	 * @param string $month
+	 * @return int
+	 */
+	private function get_next_invoice_sequence( $year, $month ) {
+		global $wpdb;
+		
+		$table_name = $wpdb->prefix . 'wcvs_invoices';
+		
+		$last_sequence = $wpdb->get_var( $wpdb->prepare(
+			"SELECT MAX(CAST(SUBSTRING_INDEX(invoice_number, '-', -1) AS UNSIGNED)) 
+			FROM {$table_name} 
+			WHERE invoice_number LIKE %s",
+			"F-{$year}{$month}-%"
+		));
+		
+		return ( $last_sequence ? $last_sequence + 1 : 1 );
+	}
+
+	/**
+	 * Generate invoice data
+	 *
+	 * @param WC_Order $order
+	 * @param string $invoice_number
 	 * @return array
 	 */
-	private function prepare_invoice_data( $order ) {
+	private function generate_invoice_data( $order, $invoice_number ) {
 		$invoice_data = array(
+			'invoice_number' => $invoice_number,
+			'invoice_date' => current_time( 'Y-m-d' ),
+			'invoice_time' => current_time( 'H:i:s' ),
 			'company' => array(
-				'rif' => $this->seniat_config['company_rif'],
-				'name' => $this->seniat_config['company_name'],
-				'address' => $this->seniat_config['company_address'],
-				'phone' => $this->seniat_config['company_phone'],
-				'email' => $this->seniat_config['company_email'],
-				'website' => $this->seniat_config['company_website']
+				'rif' => $this->settings['company_rif'],
+				'name' => $this->settings['company_name'],
+				'address' => get_option( 'woocommerce_store_address' ),
+				'city' => get_option( 'woocommerce_store_city' ),
+				'state' => get_option( 'woocommerce_store_state' ),
+				'postcode' => get_option( 'woocommerce_store_postcode' ),
+				'country' => get_option( 'woocommerce_store_country' )
 			),
 			'customer' => array(
 				'rif' => $order->get_meta( '_billing_rif' ),
@@ -388,45 +292,32 @@ class WCVS_Electronic_Billing {
 				'name' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
 				'email' => $order->get_billing_email(),
 				'phone' => $order->get_billing_phone(),
-				'address' => $order->get_formatted_billing_address()
+				'address' => $order->get_billing_address_1(),
+				'city' => $order->get_billing_city(),
+				'state' => $order->get_billing_state(),
+				'postcode' => $order->get_billing_postcode(),
+				'country' => $order->get_billing_country()
 			),
 			'order' => array(
 				'id' => $order->get_id(),
 				'number' => $order->get_order_number(),
-				'date' => $order->get_date_created()->format( 'Y-m-d H:i:s' ),
-				'status' => $order->get_status(),
+				'date' => $order->get_date_created()->format( 'Y-m-d' ),
 				'total' => $order->get_total(),
-				'currency' => $order->get_currency(),
-				'payment_method' => $order->get_payment_method_title(),
-				'shipping_method' => $order->get_shipping_method()
-			),
-			'items' => array(),
-			'taxes' => array(),
-			'totals' => array(
 				'subtotal' => $order->get_subtotal(),
-				'shipping' => $order->get_shipping_total(),
-				'tax' => $order->get_total_tax(),
-				'total' => $order->get_total()
-			)
+				'tax_total' => $order->get_total_tax(),
+				'shipping_total' => $order->get_shipping_total(),
+				'payment_method' => $order->get_payment_method_title()
+			),
+			'items' => array()
 		);
 
 		// Add order items
-		foreach ( $order->get_items() as $item ) {
+		foreach ( $order->get_items() as $item_id => $item ) {
 			$invoice_data['items'][] = array(
 				'name' => $item->get_name(),
 				'quantity' => $item->get_quantity(),
-				'price' => $item->get_total() / $item->get_quantity(),
-				'total' => $item->get_total(),
+				'price' => $item->get_total(),
 				'tax' => $item->get_total_tax()
-			);
-		}
-
-		// Add taxes
-		foreach ( $order->get_taxes() as $tax ) {
-			$invoice_data['taxes'][] = array(
-				'name' => $tax->get_name(),
-				'rate' => $tax->get_rate_percent(),
-				'total' => $tax->get_tax_total()
 			);
 		}
 
@@ -434,211 +325,215 @@ class WCVS_Electronic_Billing {
 	}
 
 	/**
-	 * Generate invoice number
-	 *
-	 * @return string
-	 */
-	private function generate_invoice_number() {
-		$series = $this->seniat_config['invoice_series'];
-		$start_number = $this->seniat_config['invoice_start_number'];
-		
-		// Get last invoice number
-		global $wpdb;
-		$last_number = $wpdb->get_var( $wpdb->prepare(
-			"SELECT MAX(CAST(SUBSTRING(meta_value, 2) AS UNSIGNED)) FROM {$wpdb->postmeta} WHERE meta_key = %s",
-			'_wcvs_invoice_number'
-		));
-		
-		$next_number = $last_number ? $last_number + 1 : $start_number;
-		
-		return $series . str_pad( $next_number, 8, '0', STR_PAD_LEFT );
-	}
-
-	/**
-	 * Create invoice document
-	 *
-	 * @param array $invoice_data
-	 * @param string $invoice_number
-	 * @return string
-	 */
-	private function create_invoice_document( $invoice_data, $invoice_number ) {
-		// This would generate the actual invoice document (PDF, XML, etc.)
-		// For now, return a mock document
-		return json_encode( array(
-			'invoice_number' => $invoice_number,
-			'data' => $invoice_data,
-			'created_at' => current_time( 'mysql' )
-		));
-	}
-
-	/**
-	 * Sign invoice
-	 *
-	 * @param string $invoice_document
-	 * @return string
-	 */
-	private function sign_invoice( $invoice_document ) {
-		// This would implement digital signature
-		// For now, return the document with a mock signature
-		return $invoice_document . '|SIGNATURE:' . md5( $invoice_document );
-	}
-
-	/**
-	 * Send to SENIAT
-	 *
-	 * @param string $signed_invoice
-	 * @return array
-	 */
-	private function send_to_seniat( $signed_invoice ) {
-		// This would implement SENIAT API integration
-		// For now, return a mock response
-		return array(
-			'success' => true,
-			'seniat_id' => 'SENIAT-' . time(),
-			'message' => 'Invoice sent successfully'
-		);
-	}
-
-	/**
-	 * Send invoice to customer
+	 * Display billing info in admin
 	 *
 	 * @param WC_Order $order
-	 * @param string $invoice_document
 	 */
-	private function send_invoice_to_customer( $order, $invoice_document ) {
-		// This would send the invoice via email
-		// For now, just log the action
-		$this->core->logger->info( 'Invoice sent to customer', array(
-			'order_id' => $order->get_id(),
-			'customer_email' => $order->get_billing_email()
+	public function display_billing_info_admin( $order ) {
+		if ( ! $order->get_meta( '_wcvs_electronic_billing_order' ) ) {
+			return;
+		}
+
+		echo '<div class="wcvs-admin-billing-info">';
+		echo '<h4>' . __( 'Información de Facturación Electrónica', 'woocommerce-venezuela-pro-2025' ) . '</h4>';
+		
+		if ( $order->get_meta( '_wcvs_company_rif' ) ) {
+			echo '<p><strong>' . __( 'RIF Empresa:', 'woocommerce-venezuela-pro-2025' ) . '</strong> ' . esc_html( $order->get_meta( '_wcvs_company_rif' ) ) . '</p>';
+		}
+		
+		if ( $order->get_meta( '_wcvs_company_name' ) ) {
+			echo '<p><strong>' . __( 'Nombre Empresa:', 'woocommerce-venezuela-pro-2025' ) . '</strong> ' . esc_html( $order->get_meta( '_wcvs_company_name' ) ) . '</p>';
+		}
+		
+		if ( $order->get_meta( '_wcvs_invoice_number' ) ) {
+			echo '<p><strong>' . __( 'Número de Factura:', 'woocommerce-venezuela-pro-2025' ) . '</strong> ' . esc_html( $order->get_meta( '_wcvs_invoice_number' ) ) . '</p>';
+		}
+		
+		if ( $order->get_meta( '_wcvs_invoice_generated' ) ) {
+			echo '<p><strong>' . __( 'Factura Generada:', 'woocommerce-venezuela-pro-2025' ) . '</strong> ' . esc_html( $order->get_meta( '_wcvs_invoice_generated' ) ) . '</p>';
+		}
+		
+		echo '</div>';
+	}
+
+	/**
+	 * Display invoice info on thank you page
+	 *
+	 * @param int $order_id
+	 */
+	public function display_invoice_info( $order_id ) {
+		$order = wc_get_order( $order_id );
+		if ( ! $order || ! $order->get_meta( '_wcvs_electronic_billing_order' ) ) {
+			return;
+		}
+
+		echo '<div class="wcvs-invoice-info">';
+		echo '<h3>' . __( 'Información de Facturación', 'woocommerce-venezuela-pro-2025' ) . '</h3>';
+		
+		if ( $order->get_meta( '_wcvs_invoice_number' ) ) {
+			echo '<p><strong>' . __( 'Número de Factura:', 'woocommerce-venezuela-pro-2025' ) . '</strong> ' . esc_html( $order->get_meta( '_wcvs_invoice_number' ) ) . '</p>';
+		}
+		
+		if ( $order->get_meta( '_wcvs_invoice_generated' ) ) {
+			echo '<p><strong>' . __( 'Fecha de Factura:', 'woocommerce-venezuela-pro-2025' ) . '</strong> ' . esc_html( $order->get_meta( '_wcvs_invoice_generated' ) ) . '</p>';
+		}
+		
+		echo '<p>' . __( 'La factura electrónica será enviada por email.', 'woocommerce-venezuela-pro-2025' ) . '</p>';
+		echo '</div>';
+	}
+
+	/**
+	 * Attach invoice to email
+	 *
+	 * @param array $attachments
+	 * @param string $status
+	 * @param WC_Order $order
+	 * @return array
+	 */
+	public function attach_invoice_to_email( $attachments, $status, $order ) {
+		if ( $status === 'customer_completed_order' && $order->get_meta( '_wcvs_electronic_billing_order' ) ) {
+			$invoice_path = $this->generate_invoice_pdf( $order );
+			if ( $invoice_path ) {
+				$attachments[] = $invoice_path;
+			}
+		}
+		
+		return $attachments;
+	}
+
+	/**
+	 * Generate invoice PDF
+	 *
+	 * @param WC_Order $order
+	 * @return string|false
+	 */
+	private function generate_invoice_pdf( $order ) {
+		// This would generate a PDF invoice
+		// For now, return false
+		return false;
+	}
+
+	/**
+	 * AJAX validate RIF
+	 */
+	public function ajax_validate_rif() {
+		check_ajax_referer( 'wcvs_electronic_billing_nonce', 'nonce' );
+
+		$rif = sanitize_text_field( $_POST['rif'] );
+		$is_valid = $this->validate_rif( $rif );
+
+		wp_send_json_success( array(
+			'valid' => $is_valid,
+			'message' => $is_valid ? __( 'RIF válido', 'woocommerce-venezuela-pro-2025' ) : __( 'Formato de RIF inválido', 'woocommerce-venezuela-pro-2025' )
 		));
 	}
 
 	/**
-	 * Get invoice status text
-	 *
-	 * @param string $status
-	 * @return string
-	 */
-	private function get_invoice_status_text( $status ) {
-		$statuses = array(
-			'processing' => __( 'Procesando', 'woocommerce-venezuela-pro-2025' ),
-			'generated' => __( 'Generada', 'woocommerce-venezuela-pro-2025' ),
-			'failed' => __( 'Falló', 'woocommerce-venezuela-pro-2025' ),
-			'validated' => __( 'Validada', 'woocommerce-venezuela-pro-2025' )
-		);
-		
-		return isset( $statuses[ $status ] ) ? $statuses[ $status ] : $status;
-	}
-
-	/**
-	 * AJAX handler for generating invoice
+	 * AJAX generate invoice
 	 */
 	public function ajax_generate_invoice() {
-		check_ajax_referer( 'wcvs_generate_invoice', 'nonce' );
-		
+		check_ajax_referer( 'wcvs_electronic_billing_nonce', 'nonce' );
+
 		$order_id = intval( $_POST['order_id'] );
 		$order = wc_get_order( $order_id );
-		
-		if ( ! $order ) {
-			wp_send_json_error( array( 'message' => 'Order not found' ) );
+
+		if ( ! $order || ! $order->get_meta( '_wcvs_electronic_billing_order' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Pedido no válido', 'woocommerce-venezuela-pro-2025' ) ) );
 		}
-		
+
 		$this->generate_electronic_invoice( $order_id );
-		
-		wp_send_json_success( array( 'message' => 'Invoice generated successfully' ) );
+
+		wp_send_json_success( array(
+			'message' => __( 'Factura generada exitosamente', 'woocommerce-venezuela-pro-2025' ),
+			'invoice_number' => $order->get_meta( '_wcvs_invoice_number' )
+		));
 	}
 
 	/**
-	 * AJAX handler for downloading invoice
+	 * Validate RIF
+	 *
+	 * @param string $rif
+	 * @return bool
 	 */
-	public function ajax_download_invoice() {
-		check_ajax_referer( 'wcvs_download_invoice', 'nonce' );
-		
-		$order_id = intval( $_POST['order_id'] );
-		$order = wc_get_order( $order_id );
-		
-		if ( ! $order ) {
-			wp_send_json_error( array( 'message' => 'Order not found' ) );
-		}
-		
-		$invoice_document = $order->get_meta( '_wcvs_invoice_document' );
-		
-		if ( ! $invoice_document ) {
-			wp_send_json_error( array( 'message' => 'Invoice not found' ) );
-		}
-		
-		// This would generate and serve the invoice file
-		wp_send_json_success( array( 'message' => 'Invoice download started' ) );
+	private function validate_rif( $rif ) {
+		return preg_match( '/^[JGVEP]-[0-9]{8}-[0-9]$/', $rif );
 	}
 
 	/**
-	 * AJAX handler for validating invoice
+	 * Validate Cédula
+	 *
+	 * @param string $cedula
+	 * @return bool
 	 */
-	public function ajax_validate_invoice() {
-		check_ajax_referer( 'wcvs_validate_invoice', 'nonce' );
-		
-		$order_id = intval( $_POST['order_id'] );
-		$order = wc_get_order( $order_id );
-		
-		if ( ! $order ) {
-			wp_send_json_error( array( 'message' => 'Order not found' ) );
-		}
-		
-		$seniat_id = $order->get_meta( '_wcvs_invoice_seniat_id' );
-		
-		if ( ! $seniat_id ) {
-			wp_send_json_error( array( 'message' => 'SENIAT ID not found' ) );
-		}
-		
-		// This would validate with SENIAT
-		$validation_result = array(
-			'valid' => true,
-			'message' => 'Invoice validated successfully'
+	private function validate_cedula( $cedula ) {
+		return preg_match( '/^[V]-[0-9]{7,8}$/', $cedula );
+	}
+
+	/**
+	 * Get billing summary
+	 *
+	 * @param WC_Order $order
+	 * @return array
+	 */
+	public function get_billing_summary( $order ) {
+		$summary = array(
+			'company_rif' => $order->get_meta( '_wcvs_company_rif' ),
+			'company_name' => $order->get_meta( '_wcvs_company_name' ),
+			'customer_rif' => $order->get_meta( '_billing_rif' ),
+			'customer_cedula' => $order->get_meta( '_billing_cedula' ),
+			'invoice_number' => $order->get_meta( '_wcvs_invoice_number' ),
+			'invoice_generated' => $order->get_meta( '_wcvs_invoice_generated' ),
+			'electronic_billing' => $order->get_meta( '_wcvs_electronic_billing_order' )
 		);
+
+		return $summary;
+	}
+
+	/**
+	 * Get current billing settings
+	 *
+	 * @return array
+	 */
+	public function get_current_billing_settings() {
+		return array(
+			'electronic_billing' => $this->settings['electronic_billing'],
+			'company_rif' => $this->settings['company_rif'],
+			'company_name' => $this->settings['company_name']
+		);
+	}
+
+	/**
+	 * Create invoices table
+	 */
+	public function create_invoices_table() {
+		global $wpdb;
 		
-		wp_send_json_success( $validation_result );
+		$table_name = $wpdb->prefix . 'wcvs_invoices';
+		
+		$charset_collate = $wpdb->get_charset_collate();
+		
+		$sql = "CREATE TABLE $table_name (
+			id mediumint(9) NOT NULL AUTO_INCREMENT,
+			order_id bigint(20) NOT NULL,
+			invoice_number varchar(50) NOT NULL,
+			invoice_data longtext NOT NULL,
+			created_at datetime DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (id),
+			UNIQUE KEY invoice_number (invoice_number),
+			KEY order_id (order_id)
+		) $charset_collate;";
+		
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		dbDelta( $sql );
 	}
 
 	/**
-	 * Initialize SENIAT API
+	 * Drop invoices table
 	 */
-	public function init_seniat_api() {
-		// Initialize SENIAT API connection
-		// This would set up the API client
-	}
-
-	/**
-	 * Initialize frontend functionality
-	 */
-	public function init_frontend() {
-		// Add electronic billing specific frontend functionality
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_scripts' ) );
-	}
-
-	/**
-	 * Enqueue frontend scripts
-	 */
-	public function enqueue_frontend_scripts() {
-		if ( is_checkout() ) {
-			wp_enqueue_script(
-				'wcvs-electronic-billing',
-				WCVS_PLUGIN_URL . 'modules/electronic-billing/js/electronic-billing.js',
-				array( 'jquery' ),
-				WCVS_VERSION,
-				true
-			);
-
-			wp_localize_script( 'wcvs-electronic-billing', 'wcvs_electronic_billing', array(
-				'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'nonce' => wp_create_nonce( 'wcvs_electronic_billing' ),
-				'strings' => array(
-					'rif_required' => __( 'RIF es requerido', 'woocommerce-venezuela-pro-2025' ),
-					'cedula_required' => __( 'Cédula es requerida', 'woocommerce-venezuela-pro-2025' ),
-					'invalid_rif' => __( 'RIF inválido', 'woocommerce-venezuela-pro-2025' ),
-					'invalid_cedula' => __( 'Cédula inválida', 'woocommerce-venezuela-pro-2025' )
-				)
-			));
-		}
+	public function drop_invoices_table() {
+		global $wpdb;
+		
+		$table_name = $wpdb->prefix . 'wcvs_invoices';
+		$wpdb->query( "DROP TABLE IF EXISTS $table_name" );
 	}
 }

@@ -345,8 +345,137 @@ class WCVS_Admin {
 								</tr>
 							</table>
 						</div>
-						
-						<!-- Other tabs content would go here -->
+
+						<div id="currency" class="wcvs-tab-panel">
+							<h2><?php _e( 'Configuración de Moneda', 'woocommerce-venezuela-pro-2025' ); ?></h2>
+							<table class="form-table">
+								<tr>
+									<th scope="row"><?php _e( 'Moneda Base', 'woocommerce-venezuela-pro-2025' ); ?></th>
+									<td>
+										<select name="currency[base_currency]">
+											<option value="VES" <?php selected( $settings['currency']['base_currency'], 'VES' ); ?>>VES - Bolívar Venezolano</option>
+											<option value="USD" <?php selected( $settings['currency']['base_currency'], 'USD' ); ?>>USD - Dólar Estadounidense</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<th scope="row"><?php _e( 'Mostrar Precios Duales', 'woocommerce-venezuela-pro-2025' ); ?></th>
+									<td>
+										<label>
+											<input type="checkbox" name="currency[dual_pricing]" value="1" <?php checked( isset( $settings['currency']['dual_pricing'] ) ? $settings['currency']['dual_pricing'] : false ); ?>>
+											<?php _e( 'Mostrar precios en ambas monedas', 'woocommerce-venezuela-pro-2025' ); ?>
+										</label>
+									</td>
+								</tr>
+								<tr>
+									<th scope="row"><?php _e( 'Tasa de Cambio Manual', 'woocommerce-venezuela-pro-2025' ); ?></th>
+									<td>
+										<input type="number" name="currency[manual_rate]" value="<?php echo esc_attr( isset( $settings['currency']['manual_rate'] ) ? $settings['currency']['manual_rate'] : 0 ); ?>" step="0.01" min="0">
+										<p class="description"><?php _e( 'Tasa manual USD/VES (se usa si BCV no está disponible)', 'woocommerce-venezuela-pro-2025' ); ?></p>
+									</td>
+								</tr>
+								<tr>
+									<th scope="row"><?php _e( 'Estado BCV Dólar Tracker', 'woocommerce-venezuela-pro-2025' ); ?></th>
+									<td>
+										<?php 
+										$bcv_status = $this->core->bcv_integration->get_bcv_status();
+										if ( $bcv_status['available'] ): ?>
+											<span style="color: green;">✓ <?php _e( 'Plugin BCV disponible', 'woocommerce-venezuela-pro-2025' ); ?></span><br>
+											<strong><?php _e( 'Tasa actual:', 'woocommerce-venezuela-pro-2025' ); ?></strong> <?php echo $bcv_status['current_rate'] ? number_format( $bcv_status['current_rate'], 2 ) . ' VES/USD' : __( 'No disponible', 'woocommerce-venezuela-pro-2025' ); ?>
+										<?php else: ?>
+											<span style="color: red;">✗ <?php _e( 'Plugin BCV no disponible', 'woocommerce-venezuela-pro-2025' ); ?></span><br>
+											<a href="<?php echo admin_url( 'plugin-install.php?s=bcv+dolar+tracker&tab=search&type=term' ); ?>" class="button button-secondary">
+												<?php _e( 'Instalar BCV Dólar Tracker', 'woocommerce-venezuela-pro-2025' ); ?>
+											</a>
+										<?php endif; ?>
+									</td>
+								</tr>
+							</table>
+						</div>
+
+						<div id="tax" class="wcvs-tab-panel">
+							<h2><?php _e( 'Configuración de Impuestos', 'woocommerce-venezuela-pro-2025' ); ?></h2>
+							<table class="form-table">
+								<tr>
+									<th scope="row"><?php _e( 'Tasa de IVA', 'woocommerce-venezuela-pro-2025' ); ?></th>
+									<td>
+										<input type="number" name="tax[iva_rate]" value="<?php echo esc_attr( $settings['tax']['iva_rate'] ); ?>" step="0.01" min="0" max="100">
+										<span>%</span>
+										<p class="description"><?php _e( 'Configura el IVA en WooCommerce > Configuración > Impuestos', 'woocommerce-venezuela-pro-2025' ); ?></p>
+									</td>
+								</tr>
+								<tr>
+									<th scope="row"><?php _e( 'Tasa de IGTF', 'woocommerce-venezuela-pro-2025' ); ?></th>
+									<td>
+										<input type="number" name="tax[igtf_rate]" value="<?php echo esc_attr( $settings['tax']['igtf_rate'] ); ?>" step="0.01" min="0" max="100">
+										<span>%</span>
+										<p class="description"><?php _e( 'Impuesto a las Grandes Transacciones Financieras', 'woocommerce-venezuela-pro-2025' ); ?></p>
+									</td>
+								</tr>
+								<tr>
+									<th scope="row"><?php _e( 'Aplicar IGTF a Pagos en USD', 'woocommerce-venezuela-pro-2025' ); ?></th>
+									<td>
+										<label>
+											<input type="checkbox" name="tax[apply_igtf_usd]" value="1" <?php checked( isset( $settings['tax']['apply_igtf_usd'] ) ? $settings['tax']['apply_igtf_usd'] : false ); ?>>
+											<?php _e( 'Aplicar IGTF cuando el pago sea en dólares', 'woocommerce-venezuela-pro-2025' ); ?>
+										</label>
+									</td>
+								</tr>
+							</table>
+						</div>
+
+						<div id="notifications" class="wcvs-tab-panel">
+							<h2><?php _e( 'Configuración de Notificaciones', 'woocommerce-venezuela-pro-2025' ); ?></h2>
+							<table class="form-table">
+								<tr>
+									<th scope="row"><?php _e( 'Notificaciones por Email', 'woocommerce-venezuela-pro-2025' ); ?></th>
+									<td>
+										<label>
+											<input type="checkbox" name="notifications[email_notifications]" value="1" <?php checked( $settings['notifications']['email_notifications'] ); ?>>
+											<?php _e( 'Enviar notificaciones por email', 'woocommerce-venezuela-pro-2025' ); ?>
+										</label>
+									</td>
+								</tr>
+								<tr>
+									<th scope="row"><?php _e( 'Notificaciones de Cambio de Tasa', 'woocommerce-venezuela-pro-2025' ); ?></th>
+									<td>
+										<label>
+											<input type="checkbox" name="notifications[rate_change_notifications]" value="1" <?php checked( isset( $settings['notifications']['rate_change_notifications'] ) ? $settings['notifications']['rate_change_notifications'] : false ); ?>>
+											<?php _e( 'Notificar cambios significativos en la tasa de cambio', 'woocommerce-venezuela-pro-2025' ); ?>
+										</label>
+									</td>
+								</tr>
+							</table>
+						</div>
+
+						<div id="billing" class="wcvs-tab-panel">
+							<h2><?php _e( 'Configuración de Facturación', 'woocommerce-venezuela-pro-2025' ); ?></h2>
+							<table class="form-table">
+								<tr>
+									<th scope="row"><?php _e( 'Facturación Electrónica', 'woocommerce-venezuela-pro-2025' ); ?></th>
+									<td>
+										<label>
+											<input type="checkbox" name="billing[electronic_billing]" value="1" <?php checked( $settings['billing']['electronic_billing'] ); ?>>
+											<?php _e( 'Activar facturación electrónica', 'woocommerce-venezuela-pro-2025' ); ?>
+										</label>
+									</td>
+								</tr>
+								<tr>
+									<th scope="row"><?php _e( 'RIF de la Empresa', 'woocommerce-venezuela-pro-2025' ); ?></th>
+									<td>
+										<input type="text" name="billing[company_rif]" value="<?php echo esc_attr( isset( $settings['billing']['company_rif'] ) ? $settings['billing']['company_rif'] : '' ); ?>" placeholder="J-12345678-9">
+										<p class="description"><?php _e( 'RIF de la empresa para facturación', 'woocommerce-venezuela-pro-2025' ); ?></p>
+									</td>
+								</tr>
+								<tr>
+									<th scope="row"><?php _e( 'Nombre de la Empresa', 'woocommerce-venezuela-pro-2025' ); ?></th>
+									<td>
+										<input type="text" name="billing[company_name]" value="<?php echo esc_attr( isset( $settings['billing']['company_name'] ) ? $settings['billing']['company_name'] : '' ); ?>">
+										<p class="description"><?php _e( 'Nombre de la empresa para facturación', 'woocommerce-venezuela-pro-2025' ); ?></p>
+									</td>
+								</tr>
+							</table>
+						</div>
 					</div>
 				</div>
 				

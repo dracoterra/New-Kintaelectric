@@ -107,5 +107,17 @@ function wcvs_init_plugin() {
 	$plugin->init();
 }
 
-// Initialize plugin after WooCommerce is loaded
-add_action( 'woocommerce_loaded', 'wcvs_init_plugin' );
+// Declare HPOS compatibility early
+add_action( 'before_woocommerce_init', 'wcvs_declare_hpos_compatibility' );
+
+/**
+ * Declare HPOS compatibility
+ */
+function wcvs_declare_hpos_compatibility() {
+	if ( class_exists( '\Automattic\WooCommerce\Utilities\FeaturesUtil' ) ) {
+		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility( 'custom_order_tables', WCVS_PLUGIN_FILE, true );
+	}
+}
+
+// Initialize plugin after WordPress is loaded
+add_action( 'init', 'wcvs_init_plugin' );
