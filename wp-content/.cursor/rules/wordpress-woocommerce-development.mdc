@@ -1,0 +1,205 @@
+---
+globs: plugins/**/*.php,themes/**/*.php
+description: Reglas generales para desarrollo de WordPress y WooCommerce
+---
+
+# WordPress y WooCommerce Development Rules
+
+## Estructura de Plugins WordPress
+
+### Bootstrap del Plugin
+- Siempre incluir verificación de seguridad: `if ( ! defined( 'WPINC' ) ) { die; }`
+- Definir constantes de versión al inicio
+- Registrar hooks de activación/desactivación
+- Cargar la clase principal al final
+
+### Arquitectura Recomendada
+```
+plugin-name/
+├── plugin-name.php          # Bootstrap principal
+├── includes/                # Clases core
+│   ├── class-plugin-name.php
+│   ├── class-plugin-name-loader.php
+│   ├── class-plugin-name-i18n.php
+│   ├── class-plugin-name-activator.php
+│   └── class-plugin-name-deactivator.php
+├── admin/                   # Funcionalidad admin
+├── public/                  # Funcionalidad frontend
+├── languages/              # Traducciones
+└── assets/                 # CSS, JS, imágenes
+```
+
+## Convenciones de Código
+
+### Nomenclatura
+- **Clases**: PascalCase con prefijo único del plugin
+- **Funciones**: snake_case con prefijo único
+- **Constantes**: UPPER_SNAKE_CASE con prefijo único
+- **Variables**: snake_case
+- **Hooks**: snake_case con prefijo único
+
+### Documentación
+- Usar PHPDoc para todas las clases y métodos públicos
+- Incluir `@since` con versión
+- Documentar parámetros y valores de retorno
+- Usar `@package` y `@subpackage` para organización
+
+## Seguridad WordPress
+
+### Validación y Sanitización
+```php
+// Entrada de usuario
+$value = sanitize_text_field( $_POST['field'] );
+
+// Verificación de nonce
+if ( ! wp_verify_nonce( $_POST['nonce'], 'action_name' ) ) {
+    wp_die( 'Security check failed' );
+}
+
+// Verificación de permisos
+if ( ! current_user_can( 'manage_options' ) ) {
+    wp_die( 'Insufficient permissions' );
+}
+```
+
+### Escapado de Output
+```php
+// HTML
+echo esc_html( $variable );
+
+// URLs
+echo esc_url( $url );
+
+// Atributos
+echo esc_attr( $attribute );
+
+// JavaScript
+echo esc_js( $js_string );
+```
+
+## WooCommerce Específico
+
+### Verificación de Dependencias
+```php
+// Verificar que WooCommerce esté activo
+if ( ! class_exists( 'WooCommerce' ) ) {
+    add_action( 'admin_notices', 'woocommerce_missing_notice' );
+    return;
+}
+```
+
+### Hooks Comunes
+- `woocommerce_before_single_product_summary` - Antes del resumen del producto
+- `woocommerce_after_single_product_summary` - Después del resumen del producto
+- `woocommerce_checkout_process` - Durante el proceso de checkout
+- `woocommerce_payment_complete` - Cuando se completa el pago
+
+### Customización de Templates
+- Usar `woocommerce_locate_template()` para localizar templates
+- Crear templates en `woocommerce/` dentro del tema
+- Usar hooks en lugar de sobrescribir templates cuando sea posible
+
+## Performance
+
+### Enqueue de Assets
+```php
+// CSS
+wp_enqueue_style( 
+    'plugin-style', 
+    plugin_dir_url( __FILE__ ) . 'assets/css/style.css',
+    array(),
+    $this->version,
+    'all'
+);
+
+// JavaScript
+wp_enqueue_script(
+    'plugin-script',
+    plugin_dir_url( __FILE__ ) . 'assets/js/script.js',
+    array( 'jquery' ),
+    $this->version,
+    true
+);
+```
+
+### Consultas de Base de Datos
+- Usar `$wpdb` para consultas personalizadas
+- Siempre preparar statements para prevenir SQL injection
+- Usar `wp_cache_*` para caching cuando sea apropiado
+
+### Optimización
+- Minimizar consultas de base de datos
+- Usar transients para datos que no cambian frecuentemente
+- Implementar lazy loading para recursos pesados
+
+## Internacionalización
+
+### Preparación de Strings
+```php
+// Texto simple
+__( 'Hello World', 'text-domain' );
+
+// Texto con contexto
+_x( 'Post', 'verb', 'text-domain' );
+
+// Texto plural
+_n( 'One item', '%s items', $count, 'text-domain' );
+
+// Escapado HTML
+esc_html__( 'Safe HTML', 'text-domain' );
+```
+
+### Carga de Traducciones
+```php
+add_action( 'plugins_loaded', array( $this, 'load_plugin_textdomain' ) );
+
+public function load_plugin_textdomain() {
+    load_plugin_textdomain(
+        'text-domain',
+        false,
+        dirname( plugin_basename( __FILE__ ) ) . '/languages/'
+    );
+}
+```
+
+## Testing y Debugging
+
+### Debugging
+```php
+// Logging personalizado
+if ( WP_DEBUG ) {
+    error_log( 'Debug message: ' . print_r( $data, true ) );
+}
+
+// Debug de consultas
+if ( defined( 'SAVEQUERIES' ) && SAVEQUERIES ) {
+    global $wpdb;
+    error_log( 'Query: ' . $wpdb->last_query );
+}
+```
+
+### Testing
+- Probar en diferentes versiones de WordPress/WooCommerce
+- Validar en diferentes temas
+- Verificar compatibilidad con otros plugins populares
+- Probar en diferentes configuraciones de servidor
+
+## Mejores Prácticas
+
+### Código Limpio
+- Seguir PSR-12 para estilo de código
+- Usar nombres descriptivos para variables y funciones
+- Comentar código complejo
+- Mantener funciones pequeñas y enfocadas
+
+### Manejo de Errores
+- Usar try-catch para operaciones que pueden fallar
+- Implementar logging de errores
+- Proporcionar mensajes de error útiles al usuario
+- Fallar de manera elegante cuando sea posible
+
+### Mantenimiento
+- Documentar cambios importantes
+- Mantener changelog actualizado
+- Versionar usando Semantic Versioning
+- Proporcionar migración de datos cuando sea necesario

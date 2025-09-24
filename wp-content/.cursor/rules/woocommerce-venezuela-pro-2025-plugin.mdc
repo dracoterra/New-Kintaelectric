@@ -1,0 +1,101 @@
+---
+globs: plugins/woocommerce-venezuela-pro-2025/**/*
+description: Reglas específicas para el plugin WooCommerce Venezuela Pro 2025
+---
+
+# WooCommerce Venezuela Pro 2025 - Plugin Rules
+
+## Estructura del Plugin
+
+Este plugin sigue la arquitectura estándar de WordPress con las siguientes características:
+
+### Archivos Principales
+- **Plugin Bootstrap**: [woocommerce-venezuela-pro-2025.php](mdc:plugins/woocommerce-venezuela-pro-2025/woocommerce-venezuela-pro-2025.php) - Punto de entrada principal
+- **Clase Core**: [class-woocommerce-venezuela-pro-2025.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-woocommerce-venezuela-pro-2025.php) - Funcionalidad principal
+- **Admin**: [class-woocommerce-venezuela-pro-2025-admin.php](mdc:plugins/woocommerce-venezuela-pro-2025/admin/class-woocommerce-venezuela-pro-2025-admin.php) - Funcionalidad del admin
+- **Public**: [class-woocommerce-venezuela-pro-2025-public.php](mdc:plugins/woocommerce-venezuela-pro-2025/public/class-woocommerce-venezuela-pro-2025-public.php) - Funcionalidad pública
+
+### Convenciones de Nomenclatura
+
+1. **Clases**: Usar prefijo `Woocommerce_Venezuela_Pro_2025_` seguido del propósito
+2. **Constantes**: Usar `WOOCOMMERCE_VENEZUELA_PRO_2025_` como prefijo
+3. **Funciones**: Usar snake_case con prefijo `woocommerce_venezuela_pro_2025_`
+4. **Hooks**: Usar `woocommerce_venezuela_pro_2025_` como prefijo
+
+### Estructura de Directorios
+
+```
+woocommerce-venezuela-pro-2025/
+├── admin/           # Funcionalidad del área de administración
+├── includes/        # Clases principales del plugin
+├── public/          # Funcionalidad del frontend
+├── languages/       # Archivos de traducción
+└── assets/          # CSS, JS y otros recursos
+```
+
+## Reglas de Desarrollo
+
+### 1. Seguridad
+- Siempre verificar `! defined( 'WPINC' )` antes de ejecutar código
+- Usar `wp_nonce_field()` para formularios del admin
+- Sanitizar todas las entradas de usuario con `sanitize_text_field()`, `sanitize_email()`, etc.
+- Validar permisos con `current_user_can()`
+
+### 2. Hooks y Filtros
+- Registrar hooks en el constructor de las clases correspondientes
+- Usar el Loader para gestionar todos los hooks: `$this->loader->add_action()`
+- Prefijo de hooks: `woocommerce_venezuela_pro_2025_`
+
+### 3. Internacionalización
+- Usar `__()`, `_e()`, `esc_html__()` para strings traducibles
+- Text domain: `woocommerce-venezuela-pro-2025`
+- Cargar traducciones en `plugins_loaded`
+
+### 4. WooCommerce Integration
+- Verificar que WooCommerce esté activo antes de ejecutar funcionalidad específica
+- Usar hooks de WooCommerce cuando sea apropiado
+- Seguir las convenciones de WooCommerce para customización
+
+### 5. Assets (CSS/JS)
+- Enqueue scripts/styles en las clases Admin y Public correspondientes
+- Usar versioning para cache busting: `$this->version`
+- Minificar assets en producción
+
+### 6. Base de Datos
+- Usar `$wpdb` para consultas directas
+- Crear tablas en el activador si es necesario
+- Limpiar datos en el desactivador
+
+### 7. Logging y Debug
+- Usar `error_log()` para debugging
+- Implementar sistema de logging personalizado si es necesario
+- No dejar código de debug en producción
+
+## Funcionalidades Específicas para Venezuela
+
+### Moneda y Precios
+- Manejar conversión de monedas (USD/VES)
+- Integrar con APIs de tipo de cambio
+- Mostrar precios en múltiples monedas
+
+### Métodos de Pago
+- Implementar métodos de pago locales venezolanos
+- Integrar con bancos venezolanos
+- Manejar transferencias bancarias locales
+
+### Envíos
+- Configurar zonas de envío para Venezuela
+- Integrar con servicios de envío locales
+- Calcular costos de envío según ubicación
+
+## Testing y Debugging
+
+### Herramientas de Desarrollo
+- Usar `WP_DEBUG` para debugging
+- Implementar logs específicos del plugin
+- Crear funciones de testing para funcionalidades críticas
+
+### Validación
+- Probar en diferentes versiones de WordPress/WooCommerce
+- Validar compatibilidad con temas populares
+- Verificar funcionamiento en diferentes configuraciones de servidor

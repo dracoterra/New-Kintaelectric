@@ -1,0 +1,168 @@
+---
+alwaysApply: true
+description: Reglas específicas para el proyecto Kinta Electric - Tienda online venezolana
+---
+
+# Kinta Electric - Proyecto de E-commerce Venezolano
+
+## Contexto del Proyecto
+
+Este es un proyecto de comercio electrónico especializado en productos eléctricos para el mercado venezolano, desarrollado con WordPress y WooCommerce.
+
+### Estructura Principal
+- **Tema**: [kintaelectric](mdc:themes/kintaelectric/) - Tema personalizado basado en Electro
+- **Plugin Principal**: [woocommerce-venezuela-pro-2025](mdc:plugins/woocommerce-venezuela-pro-2025/) - Funcionalidades específicas para Venezuela
+- **Plugin de Precios**: [bcv-dolar-tracker](mdc:plugins/bcv-dolar-tracker/) - Seguimiento de tipo de cambio BCV
+- **Plugin de Elementos**: [kinta-electronic-elementor](mdc:plugins/kinta-electronic-elementor/) - Widgets personalizados
+
+## Especificidades del Mercado Venezolano
+
+### Moneda y Conversión
+- **Moneda Principal**: Bolívares Venezolanos (VES)
+- **Moneda de Referencia**: Dólares Americanos (USD)
+- **Fuente de Cambio**: Banco Central de Venezuela (BCV)
+- **Actualización**: Automática mediante scraping del BCV
+
+### Consideraciones Técnicas
+- **Inflación**: Implementar actualización frecuente de precios
+- **Reducción de Decimales**: Manejar redondeo apropiado para VES
+- **Cache**: Implementar cache inteligente para conversiones
+- **Fallback**: Sistema de respaldo cuando BCV no esté disponible
+
+## Arquitectura de Plugins
+
+### Plugin BCV Dólar Tracker
+- **Propósito**: Obtener y almacenar tipos de cambio del BCV
+- **Frecuencia**: Actualización cada 30 minutos
+- **Almacenamiento**: Base de datos con timestamp
+- **API**: Endpoint para consultar último cambio disponible
+
+### Plugin WooCommerce Venezuela Pro 2025
+- **Funcionalidades**:
+  - Conversión automática de precios USD a VES
+  - Métodos de pago locales (transferencias bancarias)
+  - Zonas de envío específicas de Venezuela
+  - Integración con servicios de envío locales
+  - Manejo de impuestos venezolanos
+
+### Plugin Kinta Electronic Elementor
+- **Widgets Especializados**:
+  - Mostrador de productos eléctricos
+  - Calculadora de precios en tiempo real
+  - Comparador de productos
+  - Widget de tipo de cambio en vivo
+
+## Reglas de Desarrollo Específicas
+
+### 1. Manejo de Precios
+```php
+// Siempre usar la clase de conversión del plugin BCV
+$converted_price = BCV_Dolar_Tracker::convert_usd_to_ves( $usd_price );
+
+// Verificar disponibilidad del tipo de cambio
+if ( ! BCV_Dolar_Tracker::is_rate_available() ) {
+    // Usar último cambio conocido o mostrar mensaje
+}
+```
+
+### 2. Formateo de Moneda
+```php
+// Formatear precios en VES sin decimales excesivos
+function format_ves_price( $amount ) {
+    return number_format( $amount, 2, ',', '.' ) . ' VES';
+}
+```
+
+### 3. Validación de Datos Venezolanos
+```php
+// Validar RIF venezolano
+function validate_venezuelan_rif( $rif ) {
+    // Implementar validación específica para Venezuela
+}
+
+// Validar números telefónicos venezolanos
+function validate_venezuelan_phone( $phone ) {
+    // Formato: +58-XXX-XXXXXXX
+}
+```
+
+### 4. Zonas de Envío
+- **Estados**: Configurar todos los estados de Venezuela
+- **Ciudades Principales**: Caracas, Maracaibo, Valencia, Barquisimeto, etc.
+- **Costos**: Diferentes tarifas según distancia y peso
+- **Tiempos**: Estimaciones realistas de entrega
+
+### 5. Métodos de Pago Locales
+- **Transferencias Bancarias**: Banesco, Mercantil, BBVA, etc.
+- **Pago Móvil**: Integración con servicios locales
+- **Efectivo**: Para entregas locales
+- **Criptomonedas**: Bitcoin, USDT (opcional)
+
+## Integración con Tema Electro
+
+### Personalizaciones del Tema
+- **Colores**: Mantener paleta de colores corporativos
+- **Tipografía**: Fuentes legibles para productos técnicos
+- **Layout**: Optimizado para catálogo de productos eléctricos
+- **Responsive**: Adaptado para dispositivos móviles
+
+### Templates Personalizados
+- **Productos**: Mostrar especificaciones técnicas destacadas
+- **Categorías**: Filtros específicos para productos eléctricos
+- **Checkout**: Campos adicionales para datos venezolanos
+- **Mi Cuenta**: Información relevante para clientes locales
+
+## Performance y Optimización
+
+### Cache Strategy
+- **Precios**: Cache de conversiones por 30 minutos
+- **Productos**: Cache de catálogo con invalidación inteligente
+- **Imágenes**: Optimización automática de imágenes de productos
+- **CDN**: Considerar CDN para assets estáticos
+
+### Base de Datos
+- **Índices**: Optimizar consultas de productos y precios
+- **Limpieza**: Limpiar datos antiguos de conversiones
+- **Backup**: Backup automático de configuraciones críticas
+
+## Testing y QA
+
+### Casos de Prueba Específicos
+- **Conversión de Moneda**: Verificar cálculos con diferentes valores
+- **Actualización de Precios**: Probar con cambios de BCV
+- **Métodos de Pago**: Validar todos los métodos locales
+- **Envíos**: Probar cálculo de costos para diferentes estados
+- **Responsive**: Verificar en dispositivos móviles populares en Venezuela
+
+### Datos de Prueba
+- **Productos**: Crear productos de prueba con diferentes categorías
+- **Clientes**: Datos de prueba con información venezolana realista
+- **Pedidos**: Simular pedidos con diferentes combinaciones de envío/pago
+
+## Monitoreo y Mantenimiento
+
+### Logs Importantes
+- **Conversiones BCV**: Registrar todas las actualizaciones de cambio
+- **Errores de Pago**: Monitorear fallos en métodos de pago locales
+- **Performance**: Tracking de tiempos de carga y consultas
+- **Errores**: Logging de errores específicos del contexto venezolano
+
+### Alertas
+- **BCV No Disponible**: Alertar cuando no se pueda obtener tipo de cambio
+- **Pagos Fallidos**: Notificar errores en métodos de pago críticos
+- **Performance**: Alertar sobre degradación de rendimiento
+- **Stock**: Notificar productos con stock bajo
+
+## Consideraciones de Negocio
+
+### Experiencia del Usuario
+- **Precios Claros**: Mostrar siempre precios en VES
+- **Información Local**: Datos de contacto y ubicación en Venezuela
+- **Soporte**: Chat en español con horarios locales
+- **Garantía**: Políticas de garantía adaptadas al mercado local
+
+### Cumplimiento Legal
+- **Impuestos**: Manejar IVA venezolano correctamente
+- **Datos Personales**: Cumplir con regulaciones locales de privacidad
+- **Términos**: Términos y condiciones específicos para Venezuela
+- **Facturación**: Sistema de facturación compatible con regulaciones locales
