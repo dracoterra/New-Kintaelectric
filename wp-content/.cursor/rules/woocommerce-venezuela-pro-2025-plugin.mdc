@@ -1,9 +1,24 @@
 ---
 globs: plugins/woocommerce-venezuela-pro-2025/**/*
-description: Reglas específicas para el plugin WooCommerce Venezuela Pro 2025
+description: Reglas específicas para el plugin WooCommerce Venezuela Suite (Pro 2025)
 ---
 
-# WooCommerce Venezuela Pro 2025 - Plugin Rules
+# WooCommerce Venezuela Suite - Plugin Rules
+
+## Visión del Proyecto
+
+**WooCommerce Venezuela Suite 2025** es un plugin completamente modular donde cada funcionalidad es un componente independiente que puede activarse/desactivarse desde el panel de administración. Esto facilita el debugging, mantenimiento y permite a los usuarios personalizar exactamente lo que necesitan.
+
+## Documentación del Proyecto
+
+- **Plan Integral**: [COMPREHENSIVE-PLAN.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/COMPREHENSIVE-PLAN.md)
+- **Hallazgos de Investigación**: [RESEARCH-FINDINGS.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/RESEARCH-FINDINGS.md)
+- **Plan Modular**: [MODULAR-PLAN.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/MODULAR-PLAN.md)
+- **Plan Mejorado**: [IMPROVED-PLAN.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/IMPROVED-PLAN.md)
+- **Estructura MVP**: [MVP-STRUCTURE.md](mdc:plugins/woocommerce-venezuela-pro-2025/MVP-STRUCTURE.md)
+- **Project Brief**: [PROJECT-BRIEF.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/PROJECT-BRIEF.md)
+- **Arquitectura Técnica**: [TECHNICAL-ARCHITECTURE.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/TECHNICAL-ARCHITECTURE.md)
+- **Reglas de Cursor**: [CURSOR-DEVELOPMENT-RULES.md](mdc:plugins/woocommerce-venezuela-pro-2025/docs/CURSOR-DEVELOPMENT-RULES.md)
 
 ## Estructura del Plugin
 
@@ -71,31 +86,136 @@ woocommerce-venezuela-pro-2025/
 - Implementar sistema de logging personalizado si es necesario
 - No dejar código de debug en producción
 
-## Funcionalidades Específicas para Venezuela
+## Arquitectura Modular
 
-### Moneda y Precios
-- Manejar conversión de monedas (USD/VES)
-- Integrar con APIs de tipo de cambio
-- Mostrar precios en múltiples monedas
+### Sistema de Módulos Activables/Desactivables
+- **Gestión Independiente**: Cada módulo puede activarse/desactivarse desde el admin
+- **Carga Condicional**: Solo se cargan los módulos activos
+- **Debugging Simplificado**: Aislar problemas por módulo
+- **Configuración Individual**: Cada módulo tiene su propia configuración
 
-### Métodos de Pago
-- Implementar métodos de pago locales venezolanos
-- Integrar con bancos venezolanos
-- Manejar transferencias bancarias locales
+### Módulos MVP (Mínimo Viable)
 
-### Envíos
-- Configurar zonas de envío para Venezuela
-- Integrar con servicios de envío locales
-- Calcular costos de envío según ubicación
+#### Módulo 1: Gestor de Moneda Inteligente 💵
+- **Conversión Automática**: USD → VES usando tasa BCV
+- **Visualización Dual**: Precios en ambas monedas
+- **Selector de Moneda**: Cliente elige moneda de pago
+- **Cache Inteligente**: Sistema de cache para conversiones
+- **Integración WooCommerce**: Configuración de moneda base
+
+#### Módulo 2: Pasarelas de Pago Locales 💳
+- **Pago Móvil (C2P)**: Con validación de referencia
+- **Zelle**: Pasarela informativa con confirmación
+- **Transferencias Bancarias**: Múltiples cuentas venezolanas
+- **Integración WooCommerce**: Métodos de pago nativos
+
+#### Módulo 3: Sistema de Impuestos Venezolanos 🧾
+- **IVA Configurable**: Integrado con sistema nativo de WooCommerce (no hardcodeado)
+- **IGTF Dinámico**: Configurable y actualizable automáticamente desde fuentes oficiales
+- **Actualización Automática**: Tasas desde APIs oficiales (SENIAT, BCV)
+- **Campos Personalizados**: Cédula/RIF en checkout con validación
+- **Notificaciones**: Alertas de cambios en tasas fiscales
+
+#### Módulo 4: Envíos Nacionales 🚚
+- **MRW**: Tarifas por peso y destino
+- **Zoom**: Integración con API
+- **Tealca**: Método configurable
+- **Integración WooCommerce**: Métodos de envío nativos
+
+### Módulos Opcionales (Post-MVP)
+- **Integración BCV Dólar Tracker**: Conexión con plugin existente
+- **Sistema de Actualización Automática**: Tasas desde fuentes oficiales
+- **Notificaciones WhatsApp**: Confirmaciones automáticas
+- **Reportes y Analytics**: Estadísticas avanzadas
+- **Campos de Checkout Personalizados**: Validación venezolana
+
+### Sistema de Actualización Automática
+- **Tasas Dinámicas**: IVA e IGTF desde APIs oficiales (SENIAT, BCV)
+- **Cron Jobs**: Actualización automática configurable (hora/día/semana)
+- **Notificaciones**: Alertas por email de cambios significativos
+- **Fallback Manual**: Tasas manuales cuando no hay conexión
+- **Historial**: Registro de cambios de tasas fiscales
+
+## Hallazgos de Investigación
+
+### Mercado Venezolano 2024-2025
+- **E-commerce**: Crecimiento del 35% anual
+- **Pago Móvil**: 78% de preferencia en transacciones
+- **Criptomonedas**: USDT y BTC en crecimiento (30% uso)
+- **Facturación Electrónica**: Obligatoria desde 2024
+- **Delivery Local**: Más demandado que envíos nacionales
+
+### Métodos de Pago Populares
+1. **Pago Móvil (C2P)**: 78% de preferencia
+2. **Transferencias Bancarias**: 65% de uso
+3. **Zelle**: 45% para pagos en USD
+4. **Binance Pay**: 30% para criptomonedas
+5. **Cashea**: 25% para financiamiento
+
+### Empresas de Envío Principales
+1. **MRW**: 40% del mercado nacional
+2. **Zoom**: 25% del mercado
+3. **Tealca**: 15% del mercado
+4. **Domesa**: 10% del mercado
+
+### Regulaciones Fiscales Críticas
+- **Providencias 00102 y 00121**: Facturación electrónica obligatoria
+- **Firma Digital**: Requerida para facturas electrónicas
+- **IVA Variable**: No fijo, según producto/servicio
+- **IGTF**: 3% solo para divisas extranjeras
+- **Protección de Datos**: Ley de Infogobierno obligatoria
+
+## Integración con Ecosistema
+
+### BCV Dólar Tracker
+- **API Integration**: Uso de la API existente
+- **Fallback System**: Respaldo cuando no esté disponible
+- **Cache Sharing**: Aprovechar cache del plugin BCV
+
+### Tema Electro
+- **Compatibilidad**: Funcionamiento óptimo garantizado
+- **Personalizaciones**: Adaptado para productos eléctricos
+- **Responsive**: Optimizado para móviles
+
+### Plugin Kinta Electronic Elementor
+- **Widgets**: Integración con widgets especializados
+- **Elementos**: Compatibilidad con elementos personalizados
+
+## Sistema de Ayuda Integrado
+
+### Ayuda por Módulo
+- **¿Qué hace?**: Explicación clara de cada funcionalidad
+- **¿Cómo configurar?**: Pasos específicos en WooCommerce
+- **¿Dónde encontrar?**: Enlaces directos a configuraciones
+- **¿Problemas comunes?**: Soluciones frecuentes
+- **¿Dependencias?**: Qué otros módulos necesita
+
+### Enlaces Directos a WooCommerce
+- **Configuración de Moneda**: WooCommerce > Configuración > General
+- **Métodos de Pago**: WooCommerce > Configuración > Pagos
+- **Sistema de Impuestos**: WooCommerce > Configuración > Impuestos
+- **Métodos de Envío**: WooCommerce > Configuración > Envíos
+- **Campos de Checkout**: WooCommerce > Configuración > Avanzado
+
+### Guías de Configuración
+- **IVA Configurable**: Integrar con sistema nativo de WooCommerce (no hardcodeado)
+- **IGTF Dinámico**: Configurable y actualizable automáticamente desde fuentes oficiales
+- **Actualización Automática**: Configurar frecuencia de actualización de tasas
+- **Moneda VES**: Establecer como moneda base
+- **Zonas de Envío**: Crear zonas para estados venezolanos
+- **Métodos de Pago**: Activar pasarelas locales
+- **Notificaciones**: Configurar alertas de cambios en tasas fiscales
 
 ## Testing y Debugging
 
 ### Herramientas de Desarrollo
-- Usar `WP_DEBUG` para debugging
-- Implementar logs específicos del plugin
-- Crear funciones de testing para funcionalidades críticas
+- **Módulos Independientes**: Activar/desactivar para debugging
+- **Logs Específicos**: Por módulo para identificar problemas
+- **Testing Incremental**: Probar cada módulo por separado
+- **WP_DEBUG**: Para debugging general
 
 ### Validación
-- Probar en diferentes versiones de WordPress/WooCommerce
-- Validar compatibilidad con temas populares
-- Verificar funcionamiento en diferentes configuraciones de servidor
+- **Compatibilidad WooCommerce**: Probar con diferentes versiones
+- **Temas Populares**: Verificar funcionamiento
+- **Otros Plugins**: Evitar conflictos
+- **Configuraciones Servidor**: Diferentes entornos

@@ -1,21 +1,63 @@
-=== Plugin Name ===
-Contributors: (this should be a list of wordpress.org userid's)
-Donate link: https://https://artifexcodes.com//
-Tags: comments, spam
-Requires at least: 3.0.1
-Tested up to: 3.4
-Stable tag: 4.3
+=== WooCommerce Venezuela Suite ===
+Contributors: ronaldalvarez
+Donate link: https://artifexcodes.com/
+Tags: woocommerce, venezuela, ecommerce, payment-gateways, shipping, currency, taxes
+Requires at least: 5.0
+Tested up to: 6.4
+Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Here is a short description of the plugin.  This should be no more than 150 characters.  No markup here.
+Solución completa para localizar WooCommerce al mercado venezolano con módulos de moneda, pagos locales, impuestos y envíos.
 
 == Description ==
 
-This is the long description.  No limit, and you can use Markdown (as well as in the following sections).
+**WooCommerce Venezuela Suite** es la solución "todo en uno" definitiva para localizar una tienda WooCommerce a la normatividad y realidad comercial de Venezuela.
 
-For backwards compatibility, if this section is missing, the full length of the short description will be used, and
-Markdown parsed.
+## 🎯 Misión
+
+Ser la solución integral que permita a cualquier tienda online operar eficientemente en Venezuela, integrando todas las funcionalidades necesarias en un único plugin modular, bien documentado y siguiendo las mejores prácticas de desarrollo para WordPress y WooCommerce.
+
+## 🚀 Características Principales
+
+### 💵 Módulo de Multi-Moneda Inteligente
+* Sincronización automática con la tasa BCV
+* Visualización dual de precios (VES/USD)
+* Selector de moneda en checkout
+* Sistema de fallback para cuando BCV no esté disponible
+
+### 💳 Pasarelas de Pago Locales
+* **Pago Móvil (C2P)**: Integración completa con validación
+* **Zelle**: Pasarela informativa con confirmación
+* **Transferencias Bancarias**: Múltiples cuentas venezolanas
+* **Depósito en Efectivo**: Coordinación de pagos USD
+
+### 🧾 Impuestos y Cumplimiento Fiscal
+* Cálculo automático de IVA (16%)
+* Gestión de IGTF (3%) para pagos en divisas
+* Campos personalizados para Cédula/RIF
+* Validación de formatos venezolanos
+
+### 🚚 Integración de Envíos Nacionales
+* **MRW**: Tarifas basadas en peso/destino
+* **Zoom**: Integración completa
+* **Tealca**: Método de envío configurable
+* **Delivery Local**: Tarifas por zonas urbanas
+
+## 🏗️ Arquitectura Modular
+
+El plugin utiliza un sistema de módulos activables/desactivables desde el panel de administración, permitiendo:
+
+* **Mejor rendimiento**: Solo cargar funcionalidades necesarias
+* **Flexibilidad**: Adaptar la tienda a necesidades específicas
+* **Mantenimiento**: Actualizaciones independientes por módulo
+* **Escalabilidad**: Fácil adición de nuevas funcionalidades
+
+## 🔧 Integración con Ecosistema
+
+* **BCV Dólar Tracker**: Sincronización automática de tipos de cambio
+* **Kinta Electronic Elementor**: Widgets especializados
+* **Tema Electro**: Optimización para productos eléctricos
 
 A few notes about the sections above:
 
@@ -39,23 +81,59 @@ you put the stable version, in order to eliminate any doubt.
 
 == Installation ==
 
-This section describes how to install the plugin and get it working.
+### Requisitos Previos
 
-e.g.
+1. **WordPress**: Versión 5.0 o superior
+2. **WooCommerce**: Versión 5.0 o superior
+3. **PHP**: Versión 7.4 o superior
+4. **Plugin BCV Dólar Tracker**: Recomendado para sincronización automática de tipos de cambio
 
-1. Upload `woocommerce-venezuela-pro-2025.php` to the `/wp-content/plugins/` directory
-1. Activate the plugin through the 'Plugins' menu in WordPress
-1. Place `<?php do_action('plugin_name_hook'); ?>` in your templates
+### Pasos de Instalación
+
+1. **Subir el Plugin**: 
+   * Sube la carpeta `woocommerce-venezuela-pro-2025` al directorio `/wp-content/plugins/`
+   * O instala directamente desde el repositorio de WordPress
+
+2. **Activar el Plugin**:
+   * Ve a `Plugins > Plugins Instalados` en tu panel de administración
+   * Busca "WooCommerce Venezuela Suite" y haz clic en "Activar"
+
+3. **Configuración Inicial**:
+   * Ve a `WooCommerce > Configuración > Venezuela Suite`
+   * Activa los módulos que necesites
+   * Configura las pasarelas de pago locales
+   * Establece las zonas de envío venezolanas
+
+4. **Configurar Moneda**:
+   * Ve a `WooCommerce > Configuración > General`
+   * Establece Bolívares Venezolanos (VES) como moneda principal
+   * Configura el formato de moneda venezolano
 
 == Frequently Asked Questions ==
 
-= A question that someone might have =
+= ¿Es compatible con mi tema actual? =
 
-An answer to that question.
+Sí, el plugin está diseñado para ser compatible con cualquier tema de WordPress que siga las mejores prácticas. Sin embargo, para una experiencia óptima, recomendamos usar el tema Electro o temas compatibles con WooCommerce.
 
-= What about foo bar? =
+= ¿Cómo funciona la sincronización con BCV? =
 
-Answer to foo bar dilemma.
+El plugin se integra automáticamente con el plugin BCV Dólar Tracker para obtener la tasa de cambio oficial del Banco Central de Venezuela. Si este plugin no está disponible, puedes configurar una tasa manual o usar una API externa.
+
+= ¿Puedo usar solo algunos módulos? =
+
+¡Absolutamente! El plugin está diseñado con una arquitectura modular. Puedes activar solo los módulos que necesites desde el panel de administración, mejorando el rendimiento de tu sitio.
+
+= ¿Qué métodos de pago están disponibles? =
+
+Incluimos los métodos más populares en Venezuela: Pago Móvil (C2P), Zelle, Transferencias Bancarias Nacionales y Depósito en Efectivo USD. Cada uno está optimizado para el mercado venezolano.
+
+= ¿Cómo maneja los impuestos venezolanos? =
+
+El plugin calcula automáticamente el IVA (16%) y el IGTF (3%) según corresponda. El IGTF se aplica únicamente cuando se seleccionan métodos de pago en divisas extranjeras.
+
+= ¿Es seguro para transacciones reales? =
+
+Sí, el plugin sigue todas las mejores prácticas de seguridad de WordPress y WooCommerce, incluyendo sanitización de datos, validación de nonces y encriptación de información sensible.
 
 == Screenshots ==
 
@@ -67,20 +145,28 @@ directory take precedence. For example, `/assets/screenshot-1.png` would win ove
 
 == Changelog ==
 
-= 1.0 =
-* A change since the previous version.
-* Another change.
+= 1.0.0 (En Desarrollo) =
+* **Módulo de Multi-Moneda**: Sincronización automática con BCV
+* **Pasarelas de Pago**: Pago Móvil, Zelle, Transferencias Bancarias
+* **Sistema de Impuestos**: IVA e IGTF automáticos
+* **Envíos Nacionales**: MRW, Zoom, Tealca integrados
+* **Arquitectura Modular**: Sistema de módulos activables
+* **Integración BCV**: Compatibilidad con BCV Dólar Tracker
+* **Seguridad**: Implementación de mejores prácticas WordPress
 
-= 0.5 =
-* List versions from most recent at top to oldest at bottom.
+= 0.9.0 (Beta) =
+* Estructura base del plugin
+* Sistema de activación/desactivación
+* Configuración inicial de módulos
+* Documentación técnica completa
 
 == Upgrade Notice ==
 
-= 1.0 =
-Upgrade notices describe the reason a user should upgrade.  No more than 300 characters.
+= 1.0.0 =
+Primera versión estable con todas las funcionalidades principales para el mercado venezolano. Recomendado para tiendas en producción.
 
-= 0.5 =
-This version fixes a security related bug.  Upgrade immediately.
+= 0.9.0 =
+Versión beta para testing. No recomendada para sitios en producción.
 
 == Arbitrary section ==
 
