@@ -6,7 +6,7 @@
  * A class definition that includes attributes and functions used across both the
  * public-facing side of the site and the admin area.
  *
- * @link       https://https://artifexcodes.com/
+ * @link       https://kintaelectric.com
  * @since      1.0.0
  *
  * @package    Woocommerce_Venezuela_Pro_2025
@@ -25,7 +25,7 @@
  * @since      1.0.0
  * @package    Woocommerce_Venezuela_Pro_2025
  * @subpackage Woocommerce_Venezuela_Pro_2025/includes
- * @author     ronald alvarez <ronaldalv2025@gmail.com>
+ * @author     Kinta Electric <info@kintaelectric.com>
  */
 class Woocommerce_Venezuela_Pro_2025 {
 
@@ -58,6 +58,24 @@ class Woocommerce_Venezuela_Pro_2025 {
 	protected $version;
 
 	/**
+	 * The dependency injection container.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      WVP_Dependency_Container    $container    Manages dependencies.
+	 */
+	protected $container;
+
+	/**
+	 * The module manager.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      WVP_Module_Manager    $module_manager    Manages plugin modules.
+	 */
+	protected $module_manager;
+
+	/**
 	 * Define the core functionality of the plugin.
 	 *
 	 * Set the plugin name and the plugin version that can be used throughout the plugin.
@@ -75,10 +93,12 @@ class Woocommerce_Venezuela_Pro_2025 {
 		$this->plugin_name = 'woocommerce-venezuela-pro-2025';
 
 		$this->load_dependencies();
+		$this->init_container();
+		$this->init_module_manager();
 		$this->set_locale();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
-
+		$this->define_woocommerce_hooks();
 	}
 
 	/**
@@ -89,7 +109,7 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 * - Woocommerce_Venezuela_Pro_2025_Loader. Orchestrates the hooks of the plugin.
 	 * - Woocommerce_Venezuela_Pro_2025_i18n. Defines internationalization functionality.
 	 * - Woocommerce_Venezuela_Pro_2025_Admin. Defines all hooks for the admin area.
-	 * - Woocommerce_Venezuela_Pro_2025_Public. Defines all hooks for the public side of the site.
+	 * - Woocommerce_Venezuela_Pro_2025_Public. Defines all hooks for the public-facing side of the site.
 	 *
 	 * Create an instance of the loader which will be used to register the hooks
 	 * with WordPress.
@@ -112,6 +132,16 @@ class Woocommerce_Venezuela_Pro_2025 {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-woocommerce-venezuela-pro-2025-i18n.php';
 
 		/**
+		 * The class responsible for dependency injection.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wvp-dependency-container.php';
+
+		/**
+		 * The class responsible for module management.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wvp-module-manager.php';
+
+		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-woocommerce-venezuela-pro-2025-admin.php';
@@ -127,6 +157,32 @@ class Woocommerce_Venezuela_Pro_2025 {
 	}
 
 	/**
+	 * Initialize the dependency injection container.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function init_container() {
+		$this->container = new WVP_Dependency_Container();
+		
+		// Register core dependencies
+		$this->container->register( 'plugin_name', $this->plugin_name );
+		$this->container->register( 'version', $this->version );
+		$this->container->register( 'loader', $this->loader );
+	}
+
+	/**
+	 * Initialize the module manager.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function init_module_manager() {
+		$this->module_manager = new WVP_Module_Manager( $this->container );
+		$this->container->register( 'module_manager', $this->module_manager );
+	}
+
+	/**
 	 * Define the locale for this plugin for internationalization.
 	 *
 	 * Uses the Woocommerce_Venezuela_Pro_2025_i18n class in order to set the domain and to register the hook
@@ -139,7 +195,7 @@ class Woocommerce_Venezuela_Pro_2025 {
 
 		$plugin_i18n = new Woocommerce_Venezuela_Pro_2025_i18n();
 
-		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
+		$this->loader->add_action( 'wp_loaded', $plugin_i18n, 'load_plugin_textdomain' );
 
 	}
 
@@ -156,6 +212,7 @@ class Woocommerce_Venezuela_Pro_2025 {
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+		$this->loader->add_action( 'admin_menu', $plugin_admin, 'add_admin_menu' );
 
 	}
 
@@ -173,6 +230,49 @@ class Woocommerce_Venezuela_Pro_2025 {
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 
+	}
+
+	/**
+	 * Register all of the hooks related to WooCommerce functionality.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 */
+	private function define_woocommerce_hooks() {
+		// Only register WooCommerce hooks if WooCommerce is active
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			return;
+		}
+
+		// Hook into WooCommerce initialization
+		$this->loader->add_action( 'woocommerce_init', $this, 'init_woocommerce_features' );
+		
+		// Hook into WooCommerce loaded
+		$this->loader->add_action( 'woocommerce_loaded', $this, 'on_woocommerce_loaded' );
+	}
+
+	/**
+	 * Initialize WooCommerce-specific features.
+	 *
+	 * @since    1.0.0
+	 */
+	public function init_woocommerce_features() {
+		// Initialize modules that depend on WooCommerce
+		$this->module_manager->init_woocommerce_modules();
+		
+		// Debug: Log module initialization
+		error_log( 'WVP: Initializing WooCommerce features' );
+		error_log( 'WVP: Active modules: ' . print_r( $this->module_manager->get_active_modules(), true ) );
+	}
+
+	/**
+	 * Handle WooCommerce loaded event.
+	 *
+	 * @since    1.0.0
+	 */
+	public function on_woocommerce_loaded() {
+		// Perform any initialization that requires WooCommerce to be fully loaded
+		do_action( 'wvp_woocommerce_loaded' );
 	}
 
 	/**
@@ -199,7 +299,7 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 * The reference to the class that orchestrates the hooks with the plugin.
 	 *
 	 * @since     1.0.0
-	 * @return    Woocommerce_Venezuela_Pro_2025_Loader    Orchestrates the hooks of the plugin.
+	 * @return    Woocommerce_Venezuela_Pro_2025_Loader    Orchestrates hooks of the plugin.
 	 */
 	public function get_loader() {
 		return $this->loader;
@@ -213,6 +313,26 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 */
 	public function get_version() {
 		return $this->version;
+	}
+
+	/**
+	 * Get the dependency injection container.
+	 *
+	 * @since     1.0.0
+	 * @return    WVP_Dependency_Container    The dependency container.
+	 */
+	public function get_container() {
+		return $this->container;
+	}
+
+	/**
+	 * Get the module manager.
+	 *
+	 * @since     1.0.0
+	 * @return    WVP_Module_Manager    The module manager.
+	 */
+	public function get_module_manager() {
+		return $this->module_manager;
 	}
 
 }

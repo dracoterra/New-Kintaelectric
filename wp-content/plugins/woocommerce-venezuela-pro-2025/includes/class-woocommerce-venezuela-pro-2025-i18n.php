@@ -33,13 +33,16 @@ class Woocommerce_Venezuela_Pro_2025_i18n {
 	 * @since    1.0.0
 	 */
 	public function load_plugin_textdomain() {
-
-		load_plugin_textdomain(
-			'woocommerce-venezuela-pro-2025',
-			false,
-			dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/'
-		);
-
+		// Temporarily disable text domain loading to avoid early loading warnings
+		// This will be re-enabled in a future version when the plugin is more stable
+		return;
+		
+		// Future implementation:
+		// load_plugin_textdomain(
+		//     'woocommerce-venezuela-pro-2025',
+		//     false,
+		//     dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/'
+		// );
 	}
 
 

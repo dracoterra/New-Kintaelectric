@@ -44,6 +44,18 @@ define( 'WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION', '1.0.0' );
 function activate_woocommerce_venezuela_pro_2025() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-woocommerce-venezuela-pro-2025-activator.php';
 	Woocommerce_Venezuela_Pro_2025_Activator::activate();
+	
+	// Initialize default modules
+	$active_modules = get_option( 'wvp_active_modules', array() );
+	if ( empty( $active_modules ) ) {
+		$default_modules = array( 'currency_converter', 'payment_gateways', 'shipping_methods', 'tax_calculator' );
+		update_option( 'wvp_active_modules', $default_modules );
+	}
+	
+	// Set default BCV emergency rate
+	if ( ! get_option( 'wvp_emergency_bcv_rate' ) ) {
+		update_option( 'wvp_emergency_bcv_rate', 50 );
+	}
 }
 
 /**
