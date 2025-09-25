@@ -1,205 +1,272 @@
 ---
-globs: plugins/**/*.php,themes/**/*.php
+globs: *.php
 description: Reglas generales para desarrollo de WordPress y WooCommerce
 ---
 
-# WordPress y WooCommerce Development Rules
+# WordPress & WooCommerce Development Rules
 
-## Estructura de Plugins WordPress
+## Estándares de WordPress
 
-### Bootstrap del Plugin
-- Siempre incluir verificación de seguridad: `if ( ! defined( 'WPINC' ) ) { die; }`
-- Definir constantes de versión al inicio
-- Registrar hooks de activación/desactivación
-- Cargar la clase principal al final
-
-### Arquitectura Recomendada
-```
-plugin-name/
-├── plugin-name.php          # Bootstrap principal
-├── includes/                # Clases core
-│   ├── class-plugin-name.php
-│   ├── class-plugin-name-loader.php
-│   ├── class-plugin-name-i18n.php
-│   ├── class-plugin-name-activator.php
-│   └── class-plugin-name-deactivator.php
-├── admin/                   # Funcionalidad admin
-├── public/                  # Funcionalidad frontend
-├── languages/              # Traducciones
-└── assets/                 # CSS, JS, imágenes
-```
-
-## Convenciones de Código
+### Estructura de Archivos PHP
+- Siempre usar `<?php` al inicio de archivos PHP
+- Incluir `if ( ! defined( 'ABSPATH' ) ) { exit; }` para seguridad
+- Usar indentación de 4 espacios (no tabs)
+- Líneas máximo 120 caracteres
 
 ### Nomenclatura
-- **Clases**: PascalCase con prefijo único del plugin
-- **Funciones**: snake_case con prefijo único
-- **Constantes**: UPPER_SNAKE_CASE con prefijo único
-- **Variables**: snake_case
-- **Hooks**: snake_case con prefijo único
+- **Funciones**: `snake_case` con prefijo único del plugin
+- **Clases**: `PascalCase` con prefijo único
+- **Constantes**: `UPPER_CASE` con prefijo único
+- **Variables**: `snake_case` descriptivo
 
-### Documentación
-- Usar PHPDoc para todas las clases y métodos públicos
-- Incluir `@since` con versión
-- Documentar parámetros y valores de retorno
-- Usar `@package` y `@subpackage` para organización
-
-## Seguridad WordPress
-
-### Validación y Sanitización
+### Hooks y Filtros
 ```php
-// Entrada de usuario
-$value = sanitize_text_field( $_POST['field'] );
+// Actions
+add_action( 'hook_name', 'callback_function', priority, accepted_args );
 
-// Verificación de nonce
-if ( ! wp_verify_nonce( $_POST['nonce'], 'action_name' ) ) {
-    wp_die( 'Security check failed' );
-}
+// Filters
+add_filter( 'filter_name', 'callback_function', priority, accepted_args );
 
-// Verificación de permisos
-if ( ! current_user_can( 'manage_options' ) ) {
-    wp_die( 'Insufficient permissions' );
-}
-```
-
-### Escapado de Output
-```php
-// HTML
-echo esc_html( $variable );
-
-// URLs
-echo esc_url( $url );
-
-// Atributos
-echo esc_attr( $attribute );
-
-// JavaScript
-echo esc_js( $js_string );
+// Remover hooks
+remove_action( 'hook_name', 'callback_function', priority );
+remove_filter( 'filter_name', 'callback_function', priority );
 ```
 
 ## WooCommerce Específico
 
-### Verificación de Dependencias
+### Productos
 ```php
-// Verificar que WooCommerce esté activo
-if ( ! class_exists( 'WooCommerce' ) ) {
-    add_action( 'admin_notices', 'woocommerce_missing_notice' );
-    return;
+// Obtener producto
+$product = wc_get_product( $product_id );
+
+// Crear producto
+$product = new WC_Product_Simple();
+$product->set_name( 'Nombre del producto' );
+$product->set_price( 100 );
+$product->save();
+```
+
+### Carrito y Checkout
+```php
+// Agregar al carrito
+WC()->cart->add_to_cart( $product_id, $quantity );
+
+// Obtener carrito
+$cart_items = WC()->cart->get_cart();
+
+// Calcular totales
+WC()->cart->calculate_totals();
+```
+
+### Órdenes
+```php
+// Crear orden
+$order = wc_create_order();
+
+// Agregar producto a orden
+$order->add_product( $product, $quantity );
+
+// Calcular totales
+$order->calculate_totals();
+$order->save();
+```
+
+### Métodos de Pago
+```php
+// Registrar gateway
+add_filter( 'woocommerce_payment_gateways', 'add_custom_gateway' );
+
+function add_custom_gateway( $gateways ) {
+    $gateways[] = 'WC_Custom_Gateway';
+    return $gateways;
 }
 ```
 
-### Hooks Comunes
-- `woocommerce_before_single_product_summary` - Antes del resumen del producto
-- `woocommerce_after_single_product_summary` - Después del resumen del producto
-- `woocommerce_checkout_process` - Durante el proceso de checkout
-- `woocommerce_payment_complete` - Cuando se completa el pago
+### Métodos de Envío
+```php
+// Registrar método de envío
+add_action( 'woocommerce_shipping_init', 'custom_shipping_method_init' );
 
-### Customización de Templates
-- Usar `woocommerce_locate_template()` para localizar templates
-- Crear templates en `woocommerce/` dentro del tema
-- Usar hooks en lugar de sobrescribir templates cuando sea posible
+function custom_shipping_method_init() {
+    if ( ! class_exists( 'WC_Custom_Shipping_Method' ) ) {
+        class WC_Custom_Shipping_Method extends WC_Shipping_Method {
+            // Implementación
+        }
+    }
+}
+```
+
+## Base de Datos
+
+### Consultas Seguras
+```php
+// Usar $wpdb para consultas personalizadas
+global $wpdb;
+
+$results = $wpdb->get_results(
+    $wpdb->prepare(
+        "SELECT * FROM {$wpdb->prefix}table WHERE column = %s",
+        $value
+    )
+);
+```
+
+### Meta Data
+```php
+// Product meta
+$product->get_meta( 'custom_field' );
+$product->update_meta_data( 'custom_field', $value );
+
+// Order meta
+$order->get_meta( 'custom_field' );
+$order->update_meta_data( 'custom_field', $value );
+```
+
+## Seguridad
+
+### Validación y Sanitización
+```php
+// Validar datos
+$email = is_email( $email ) ? $email : false;
+$url = esc_url_raw( $url );
+$text = sanitize_text_field( $text );
+
+// Nonces
+wp_nonce_field( 'action_name', 'nonce_name' );
+wp_verify_nonce( $_POST['nonce_name'], 'action_name' );
+```
+
+### Permisos
+```php
+// Verificar permisos
+if ( ! current_user_can( 'manage_woocommerce' ) ) {
+    wp_die( 'No tienes permisos suficientes' );
+}
+```
+
+### Escape de Output
+```php
+// HTML
+echo esc_html( $text );
+
+// Atributos
+echo esc_attr( $attribute );
+
+// URLs
+echo esc_url( $url );
+
+// JavaScript
+echo esc_js( $javascript );
+```
 
 ## Performance
 
-### Enqueue de Assets
+### Transients
 ```php
-// CSS
-wp_enqueue_style( 
-    'plugin-style', 
-    plugin_dir_url( __FILE__ ) . 'assets/css/style.css',
-    array(),
-    $this->version,
-    'all'
-);
+// Guardar datos temporales
+set_transient( 'cache_key', $data, HOUR_IN_SECONDS );
 
-// JavaScript
-wp_enqueue_script(
-    'plugin-script',
-    plugin_dir_url( __FILE__ ) . 'assets/js/script.js',
-    array( 'jquery' ),
-    $this->version,
-    true
-);
+// Obtener datos temporales
+$data = get_transient( 'cache_key' );
+
+// Eliminar transients
+delete_transient( 'cache_key' );
 ```
 
-### Consultas de Base de Datos
-- Usar `$wpdb` para consultas personalizadas
-- Siempre preparar statements para prevenir SQL injection
-- Usar `wp_cache_*` para caching cuando sea apropiado
+### Cache
+```php
+// Usar wp_cache
+wp_cache_set( 'key', $data, 'group', 3600 );
+$data = wp_cache_get( 'key', 'group' );
+```
 
-### Optimización
-- Minimizar consultas de base de datos
-- Usar transients para datos que no cambian frecuentemente
-- Implementar lazy loading para recursos pesados
+### Consultas Optimizadas
+```php
+// Usar WP_Query con parámetros específicos
+$query = new WP_Query( array(
+    'post_type' => 'product',
+    'posts_per_page' => 10,
+    'meta_query' => array(
+        array(
+            'key' => 'custom_field',
+            'value' => $value,
+            'compare' => '='
+        )
+    )
+) );
+```
 
 ## Internacionalización
 
-### Preparación de Strings
+### Text Domain
 ```php
-// Texto simple
-__( 'Hello World', 'text-domain' );
+// Definir text domain
+load_plugin_textdomain( 'plugin-textdomain', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 
-// Texto con contexto
-_x( 'Post', 'verb', 'text-domain' );
-
-// Texto plural
-_n( 'One item', '%s items', $count, 'text-domain' );
-
-// Escapado HTML
-esc_html__( 'Safe HTML', 'text-domain' );
+// Usar funciones de traducción
+__( 'Texto', 'plugin-textdomain' );
+_e( 'Texto', 'plugin-textdomain' );
+_x( 'Texto', 'contexto', 'plugin-textdomain' );
+_n( 'Singular', 'Plural', $count, 'plugin-textdomain' );
 ```
 
-### Carga de Traducciones
-```php
-add_action( 'plugins_loaded', array( $this, 'load_plugin_textdomain' ) );
+## AJAX
 
-public function load_plugin_textdomain() {
-    load_plugin_textdomain(
-        'text-domain',
-        false,
-        dirname( plugin_basename( __FILE__ ) ) . '/languages/'
-    );
+### Admin AJAX
+```php
+// Registrar AJAX
+add_action( 'wp_ajax_action_name', 'callback_function' );
+add_action( 'wp_ajax_nopriv_action_name', 'callback_function' );
+
+// En JavaScript
+jQuery.post( ajaxurl, {
+    action: 'action_name',
+    data: data
+}, function( response ) {
+    // Manejar respuesta
+});
+```
+
+## Formularios
+
+### Formularios Seguros
+```php
+// Formulario HTML
+<form method="post">
+    <?php wp_nonce_field( 'form_action', 'form_nonce' ); ?>
+    <input type="text" name="field_name" value="<?php echo esc_attr( $value ); ?>" />
+    <input type="submit" value="Enviar" />
+</form>
+
+// Procesar formulario
+if ( isset( $_POST['form_nonce'] ) && wp_verify_nonce( $_POST['form_nonce'], 'form_action' ) ) {
+    $field_value = sanitize_text_field( $_POST['field_name'] );
+    // Procesar datos
 }
 ```
 
-## Testing y Debugging
+## Logging y Debugging
 
-### Debugging
+### Debug
 ```php
-// Logging personalizado
-if ( WP_DEBUG ) {
+// Usar WP_DEBUG
+if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
     error_log( 'Debug message: ' . print_r( $data, true ) );
 }
 
-// Debug de consultas
-if ( defined( 'SAVEQUERIES' ) && SAVEQUERIES ) {
-    global $wpdb;
-    error_log( 'Query: ' . $wpdb->last_query );
-}
+// Usar WooCommerce logger
+$logger = wc_get_logger();
+$logger->info( 'Log message', array( 'source' => 'plugin-name' ) );
 ```
 
-### Testing
-- Probar en diferentes versiones de WordPress/WooCommerce
-- Validar en diferentes temas
-- Verificar compatibilidad con otros plugins populares
-- Probar en diferentes configuraciones de servidor
+## Testing
 
-## Mejores Prácticas
+### Unit Testing
+- Usar PHPUnit para tests unitarios
+- Mockear dependencias externas
+- Testear casos edge y errores
 
-### Código Limpio
-- Seguir PSR-12 para estilo de código
-- Usar nombres descriptivos para variables y funciones
-- Comentar código complejo
-- Mantener funciones pequeñas y enfocadas
-
-### Manejo de Errores
-- Usar try-catch para operaciones que pueden fallar
-- Implementar logging de errores
-- Proporcionar mensajes de error útiles al usuario
-- Fallar de manera elegante cuando sea posible
-
-### Mantenimiento
-- Documentar cambios importantes
-- Mantener changelog actualizado
-- Versionar usando Semantic Versioning
-- Proporcionar migración de datos cuando sea necesario
+### Integration Testing
+- Testear integración con WooCommerce
+- Verificar hooks y filtros
+- Testear con diferentes configuraciones
