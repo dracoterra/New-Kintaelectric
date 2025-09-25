@@ -1,0 +1,367 @@
+/**
+ * Estilos Elegantes - WooCommerce Venezuela Suite
+ * Estilo: Elegante
+ * 
+ * @package WooCommerce_Venezuela_Suite
+ * @since 1.0.0
+ */
+
+/* ==========================================================================
+   Estilo Elegante - Visualización de Precios
+   ========================================================================== */
+
+.wcvs-price-display.wcvs-style-elegant {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    margin: 20px 0;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-elegant-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-elegant {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 20px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-elegant::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+    pointer-events: none;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-main {
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-symbol {
+    font-size: 24px;
+    font-weight: 300;
+    color: #2c3e50;
+    margin-right: 4px;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-amount {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 8px;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-currency {
+    font-size: 14px;
+    font-weight: 600;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-secondary {
+    position: relative;
+    z-index: 1;
+    padding-top: 16px;
+    border-top: 1px solid rgba(44, 62, 80, 0.1);
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-secondary .wcvs-price-amount {
+    font-size: 20px;
+    font-weight: 600;
+    color: #34495e;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-secondary .wcvs-price-currency {
+    font-size: 12px;
+    color: #95a5a6;
+    margin-left: 4px;
+}
+
+/* Selector de Moneda Elegante */
+.wcvs-price-display.wcvs-style-elegant .wcvs-currency-switcher {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-currency-buttons {
+    display: flex;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-currency-btn {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #7f8c8d;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-currency-btn:hover {
+    color: #2c3e50;
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-currency-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Contextos Específicos */
+.wcvs-price-display.wcvs-style-elegant.wcvs-context-single_product {
+    margin: 25px 0;
+}
+
+.wcvs-price-display.wcvs-style-elegant.wcvs-context-shop_loop {
+    margin: 15px 0;
+}
+
+.wcvs-price-display.wcvs-style-elegant.wcvs-context-cart {
+    margin: 10px 0;
+}
+
+.wcvs-price-display.wcvs-style-elegant.wcvs-context-widget {
+    margin: 15px 0;
+}
+
+/* Compatibilidad con Temas Populares */
+
+/* Astra */
+.ast-single-product .wcvs-price-display.wcvs-style-elegant {
+    margin: 20px 0;
+}
+
+/* Storefront */
+.single-product .wcvs-price-display.wcvs-style-elegant {
+    margin: 25px 0;
+}
+
+/* OceanWP */
+.single-product .wcvs-price-display.wcvs-style-elegant {
+    margin: 22px 0;
+}
+
+/* Flatsome */
+.product-info .wcvs-price-display.wcvs-style-elegant {
+    margin: 20px 0;
+}
+
+/* Electro */
+.single-product .wcvs-price-display.wcvs-style-elegant {
+    margin: 25px 0;
+}
+
+/* Woodmart */
+.product-details .wcvs-price-display.wcvs-style-elegant {
+    margin: 22px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wcvs-price-display.wcvs-style-elegant .wcvs-elegant-container {
+        max-width: 100%;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-elegant {
+        padding: 20px;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-amount {
+        font-size: 28px;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-secondary .wcvs-price-amount {
+        font-size: 18px;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-currency-buttons {
+        flex-direction: column;
+        gap: 6px;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-currency-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-elegant {
+        padding: 16px;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-amount {
+        font-size: 24px;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-symbol {
+        font-size: 20px;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-secondary .wcvs-price-amount {
+        font-size: 16px;
+    }
+}
+
+/* Estados de Carga */
+.wcvs-price-display.wcvs-style-elegant .wcvs-loading {
+    opacity: 0.8;
+    position: relative;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 3px solid rgba(44, 62, 80, 0.2);
+    border-top: 3px solid #2c3e50;
+    border-radius: 50%;
+    animation: wcvs-spin 1s linear infinite;
+}
+
+@keyframes wcvs-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Estados de Error */
+.wcvs-price-display.wcvs-style-elegant .wcvs-error {
+    color: #e74c3c;
+    font-size: 13px;
+    margin-top: 12px;
+    text-align: center;
+    background: rgba(231, 76, 60, 0.1);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+/* Animaciones Suaves */
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-elegant {
+    transition: all 0.3s ease;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-currency-btn {
+    transition: all 0.3s ease;
+}
+
+/* Efectos de Hover */
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-elegant:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-elegant:hover .wcvs-price-amount {
+    transform: scale(1.02);
+    transition: transform 0.3s ease;
+}
+
+/* Accesibilidad */
+.wcvs-price-display.wcvs-style-elegant .wcvs-currency-btn:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-currency-btn:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Modo Oscuro */
+@media (prefers-color-scheme: dark) {
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-elegant {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-symbol,
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-amount {
+        color: #ffffff;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-currency {
+        color: #bdc3c7;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-secondary {
+        border-top-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-secondary .wcvs-price-amount {
+        color: #ecf0f1;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-price-secondary .wcvs-price-currency {
+        color: #95a5a6;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-currency-buttons {
+        background: rgba(44, 62, 80, 0.8);
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-currency-btn {
+        color: #bdc3c7;
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-currency-btn:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .wcvs-price-display.wcvs-style-elegant .wcvs-currency-btn.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+    }
+}
+
+/* Efectos de Partículas Elegantes */
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-elegant.wcvs-animated {
+    position: relative;
+    overflow: hidden;
+}
+
+.wcvs-price-display.wcvs-style-elegant .wcvs-price-elegant.wcvs-animated::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: rotate(45deg);
+    animation: wcvs-elegant-shine 4s infinite;
+}
+
+@keyframes wcvs-elegant-shine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}

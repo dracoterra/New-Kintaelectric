@@ -1,0 +1,306 @@
+/**
+ * Estilos Compactos - WooCommerce Venezuela Suite
+ * Estilo: Compacto
+ * 
+ * @package WooCommerce_Venezuela_Suite
+ * @since 1.0.0
+ */
+
+/* ==========================================================================
+   Estilo Compacto - Visualización de Precios
+   ========================================================================== */
+
+.wcvs-price-display.wcvs-style-compact {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 8px 0;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-compact-container {
+    display: inline-block;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-price-compact {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.2;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-price-usd {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-price-divider {
+    color: #6c757d;
+    font-weight: 300;
+    font-size: 12px;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-price-ves {
+    color: #7f8c8d;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+/* Selector de Moneda Compacto */
+.wcvs-price-display.wcvs-style-compact .wcvs-currency-switcher {
+    margin-top: 8px;
+    display: inline-block;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-currency-buttons {
+    display: inline-flex;
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-currency-btn {
+    background: transparent;
+    border: none;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-right: 1px solid #dee2e6;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-currency-btn:last-child {
+    border-right: none;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-currency-btn:hover {
+    background: #f8f9fa;
+    color: #495057;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-currency-btn.active {
+    background: #007cba;
+    color: #ffffff;
+}
+
+/* Contextos Específicos */
+.wcvs-price-display.wcvs-style-compact.wcvs-context-single_product {
+    margin: 12px 0;
+}
+
+.wcvs-price-display.wcvs-style-compact.wcvs-context-shop_loop {
+    margin: 6px 0;
+}
+
+.wcvs-price-display.wcvs-style-compact.wcvs-context-cart {
+    margin: 4px 0;
+}
+
+.wcvs-price-display.wcvs-style-compact.wcvs-context-widget {
+    margin: 6px 0;
+}
+
+/* Compatibilidad con Temas Populares */
+
+/* Astra */
+.ast-single-product .wcvs-price-display.wcvs-style-compact {
+    margin: 10px 0;
+}
+
+/* Storefront */
+.single-product .wcvs-price-display.wcvs-style-compact {
+    margin: 12px 0;
+}
+
+/* OceanWP */
+.single-product .wcvs-price-display.wcvs-style-compact {
+    margin: 10px 0;
+}
+
+/* Flatsome */
+.product-info .wcvs-price-display.wcvs-style-compact {
+    margin: 8px 0;
+}
+
+/* Electro */
+.single-product .wcvs-price-display.wcvs-style-compact {
+    margin: 12px 0;
+}
+
+/* Woodmart */
+.product-details .wcvs-price-display.wcvs-style-compact {
+    margin: 10px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wcvs-price-display.wcvs-style-compact .wcvs-price-compact {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 8px 12px;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-price-divider {
+        display: none;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-currency-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-currency-btn {
+        width: 100%;
+        text-align: center;
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-currency-btn:last-child {
+        border-bottom: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .wcvs-price-display.wcvs-style-compact .wcvs-price-compact {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-price-ves {
+        font-size: 12px;
+    }
+}
+
+/* Estados de Carga */
+.wcvs-price-display.wcvs-style-compact .wcvs-loading {
+    opacity: 0.6;
+    position: relative;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007cba;
+    border-radius: 50%;
+    animation: wcvs-spin 1s linear infinite;
+}
+
+@keyframes wcvs-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Estados de Error */
+.wcvs-price-display.wcvs-style-compact .wcvs-error {
+    color: #dc3545;
+    font-size: 11px;
+    margin-top: 4px;
+    background: rgba(220, 53, 69, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+/* Animaciones Suaves */
+.wcvs-price-display.wcvs-style-compact .wcvs-price-compact {
+    transition: all 0.2s ease;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-currency-btn {
+    transition: all 0.2s ease;
+}
+
+/* Efectos de Hover */
+.wcvs-price-display.wcvs-style-compact .wcvs-price-compact:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+}
+
+/* Accesibilidad */
+.wcvs-price-display.wcvs-style-compact .wcvs-currency-btn:focus {
+    outline: 2px solid #007cba;
+    outline-offset: 1px;
+}
+
+.wcvs-price-display.wcvs-style-compact .wcvs-currency-btn:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Modo Oscuro */
+@media (prefers-color-scheme: dark) {
+    .wcvs-price-display.wcvs-style-compact .wcvs-price-compact {
+        background: #2d2d2d;
+        border-color: #404040;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-price-usd {
+        color: #ffffff;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-price-ves {
+        color: #b0b0b0;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-price-divider {
+        color: #666666;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-currency-buttons {
+        background: #2d2d2d;
+        border-color: #404040;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-currency-btn {
+        color: #b0b0b0;
+        border-right-color: #404040;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-currency-btn:hover {
+        background: #404040;
+        color: #ffffff;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-currency-btn.active {
+        background: #007cba;
+        color: #ffffff;
+    }
+    
+    .wcvs-price-display.wcvs-style-compact .wcvs-price-compact:hover {
+        background: #404040;
+        border-color: #555555;
+    }
+}
+
+/* Variaciones de Color */
+.wcvs-price-display.wcvs-style-compact.wcvs-color-primary .wcvs-price-compact {
+    background: #e3f2fd;
+    border-color: #bbdefb;
+}
+
+.wcvs-price-display.wcvs-style-compact.wcvs-color-success .wcvs-price-compact {
+    background: #e8f5e8;
+    border-color: #c8e6c9;
+}
+
+.wcvs-price-display.wcvs-style-compact.wcvs-color-warning .wcvs-price-compact {
+    background: #fff3e0;
+    border-color: #ffcc02;
+}
+
+.wcvs-price-display.wcvs-style-compact.wcvs-color-info .wcvs-price-compact {
+    background: #e0f2f1;
+    border-color: #b2dfdb;
+}
