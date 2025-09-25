@@ -39,31 +39,6 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         wvpExportInvoices();
     });
-    
-    // Manejar botón de vista previa
-    $(document).on('click', 'button[onclick="wvpPreviewSalesBook()"]', function(e) {
-        e.preventDefault();
-        wvpPreviewSalesBook();
-    });
-    
-    // Manejar cierre de modal
-    $(document).on('click', '.wvp-modal-close', function(e) {
-        e.preventDefault();
-        wvpClosePreview();
-    });
-    
-    // Manejar botón de exportar desde vista previa
-    $(document).on('click', 'button[onclick="wvpExportFromPreview()"]', function(e) {
-        e.preventDefault();
-        wvpExportFromPreview();
-    });
-    
-    // Cerrar modal al hacer clic fuera
-    $(document).on('click', '.wvp-modal', function(e) {
-        if (e.target === this) {
-            wvpClosePreview();
-        }
-    });
 });
 
 function wvpExportSalesBook() {
@@ -97,47 +72,6 @@ function wvpExportSalesBook() {
         wvpHideLoading();
         console.error('Error:', error);
         alert('Error al generar el reporte: ' + error.message);
-    });
-}
-
-function wvpPreviewSalesBook() {
-    const form = document.getElementById('wvp-sales-book-form');
-    if (!form) {
-        alert('Formulario no encontrado');
-        return;
-    }
-    
-    const formData = new FormData(form);
-    formData.append('action', 'wvp_export_seniat');
-    formData.append('export_type', 'sales_book');
-    formData.append('preview', 'true');
-    formData.append('nonce', wvp_seniat_ajax.nonce);
-    
-    wvpShowLoading('Generando vista previa...');
-    
-    fetch(wvp_seniat_ajax.ajax_url, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        wvpHideLoading();
-        if (data.success) {
-            const previewContent = document.getElementById('wvp-preview-content');
-            const previewModal = document.getElementById('wvp-preview-modal');
-            
-            if (previewContent && previewModal) {
-                previewContent.innerHTML = data.data.preview;
-                previewModal.style.display = 'block';
-            }
-        } else {
-            alert('Error: ' + (data.data.message || 'Error desconocido'));
-        }
-    })
-    .catch(error => {
-        wvpHideLoading();
-        console.error('Error:', error);
-        alert('Error al generar vista previa: ' + error.message);
     });
 }
 
@@ -291,16 +225,4 @@ function wvpHideLoading() {
     if (loadingOverlay) {
         loadingOverlay.style.display = 'none';
     }
-}
-
-function wvpClosePreview() {
-    const previewModal = document.getElementById('wvp-preview-modal');
-    if (previewModal) {
-        previewModal.style.display = 'none';
-    }
-}
-
-function wvpExportFromPreview() {
-    wvpClosePreview();
-    wvpExportSalesBook();
 }

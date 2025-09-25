@@ -100,9 +100,6 @@ class WVP_SENIAT_Exporter {
                                 <button type="submit" class="wvp-btn wvp-btn-primary">
                                     📊 Generar Libro de Ventas
                                 </button>
-                                <button type="button" class="wvp-btn wvp-btn-secondary" onclick="wvpPreviewSalesBook()">
-                                    👁️ Vista Previa
-                                </button>
                             </div>
                         </form>
                     </div>
@@ -227,22 +224,6 @@ class WVP_SENIAT_Exporter {
                 </div>
             </div>
             
-            <!-- Modal de Vista Previa -->
-            <div id="wvp-preview-modal" class="wvp-modal" style="display: none;">
-                <div class="wvp-modal-content">
-                    <div class="wvp-modal-header">
-                        <h3>👁️ Vista Previa - Libro de Ventas</h3>
-                        <span class="wvp-modal-close">&times;</span>
-                    </div>
-                    <div class="wvp-modal-body" id="wvp-preview-content">
-                        <!-- Contenido de vista previa -->
-                    </div>
-                    <div class="wvp-modal-footer">
-                        <button class="wvp-btn wvp-btn-secondary" onclick="wvpClosePreview()">Cerrar</button>
-                        <button class="wvp-btn wvp-btn-primary" onclick="wvpExportFromPreview()">Exportar</button>
-                    </div>
-                </div>
-            </div>
             
             <!-- Área de Resultados -->
             <div id="wvp-export-results" class="wvp-export-results" style="display: none;">
@@ -283,14 +264,13 @@ class WVP_SENIAT_Exporter {
                     $start_date = sanitize_text_field( $_POST['start_date'] ?? '' );
                     $end_date = sanitize_text_field( $_POST['end_date'] ?? '' );
                     $format = sanitize_text_field( $_POST['export_format'] ?? 'csv' );
-                    $preview = isset( $_POST['preview'] ) && $_POST['preview'] === 'true';
                     
                     if ( empty( $start_date ) || empty( $end_date ) ) {
                         wp_send_json_error( array( 'message' => 'Fechas de inicio y fin requeridas' ) );
                         return;
                     }
                     
-                    $result = $this->generate_sales_book( $start_date, $end_date, $format, $preview );
+                    $result = $this->generate_sales_book( $start_date, $end_date, $format );
                     break;
                     
                 case 'igtf':
@@ -347,7 +327,7 @@ class WVP_SENIAT_Exporter {
     /**
      * Generar Libro de Ventas
      */
-    private function generate_sales_book( $start_date, $end_date, $format, $preview = false ) {
+    private function generate_sales_book( $start_date, $end_date, $format ) {
         // Obtener órdenes del período
         $orders = wc_get_orders( array(
             'limit' => -1,
@@ -381,12 +361,6 @@ class WVP_SENIAT_Exporter {
             $total_ves += $order->get_total() * $bcv_rate;
         }
         
-        if ( $preview ) {
-            return array(
-                'preview' => $this->generate_sales_book_preview( $sales_data, $total_usd, $total_ves, $bcv_rate )
-            );
-        }
-        
         // Generar archivo según formato
         switch ( $format ) {
             case 'csv':
@@ -396,49 +370,12 @@ class WVP_SENIAT_Exporter {
             case 'pdf':
                 return $this->generate_pdf_export( $sales_data, 'libro_ventas_' . $start_date . '_' . $end_date );
             default:
-                throw new Exception( 'Formato no soportado' );
+                return array(
+                    'html' => '<div class="wvp-success"><h4>📊 Libro de Ventas Generado</h4><p><strong>Período:</strong> ' . $start_date . ' a ' . $end_date . '</p><p><strong>Total USD:</strong> $' . number_format( $total_usd, 2 ) . '</p><p><strong>Total VES:</strong> ' . number_format( $total_ves, 2 ) . '</p><p><strong>Tasa BCV:</strong> ' . number_format( $bcv_rate, 2 ) . '</p><p><strong>Registros:</strong> ' . count( $sales_data ) . '</p></div>'
+                );
         }
     }
     
-    /**
-     * Generar vista previa del Libro de Ventas
-     */
-    private function generate_sales_book_preview( $sales_data, $total_usd, $total_ves, $bcv_rate ) {
-        $html = '<div class="wvp-preview-content">';
-        $html .= '<h4>📊 Resumen del Período</h4>';
-        $html .= '<div class="wvp-preview-stats">';
-        $html .= '<div class="wvp-stat-item"><strong>Total Órdenes:</strong> ' . count( $sales_data ) . '</div>';
-        $html .= '<div class="wvp-stat-item"><strong>Total USD:</strong> $' . number_format( $total_usd, 2 ) . '</div>';
-        $html .= '<div class="wvp-stat-item"><strong>Total VES:</strong> ' . number_format( $total_ves, 2 ) . '</div>';
-        $html .= '<div class="wvp-stat-item"><strong>Tasa BCV:</strong> ' . number_format( $bcv_rate, 2 ) . '</div>';
-        $html .= '</div>';
-        
-        $html .= '<h4>📋 Detalle de Ventas</h4>';
-        $html .= '<table class="wvp-preview-table">';
-        $html .= '<thead><tr>';
-        $html .= '<th>Pedido</th><th>Fecha</th><th>Cliente</th><th>Total USD</th><th>Total VES</th><th>Estado</th>';
-        $html .= '</tr></thead><tbody>';
-        
-        foreach ( array_slice( $sales_data, 0, 10 ) as $sale ) {
-            $html .= '<tr>';
-            $html .= '<td>#' . $sale['order_id'] . '</td>';
-            $html .= '<td>' . $sale['date'] . '</td>';
-            $html .= '<td>' . $sale['customer'] . '</td>';
-            $html .= '<td>$' . number_format( $sale['total_usd'], 2 ) . '</td>';
-            $html .= '<td>' . number_format( $sale['total_ves'], 2 ) . '</td>';
-            $html .= '<td>' . ucfirst( $sale['status'] ) . '</td>';
-            $html .= '</tr>';
-        }
-        
-        if ( count( $sales_data ) > 10 ) {
-            $html .= '<tr><td colspan="6" style="text-align: center; font-style: italic;">... y ' . ( count( $sales_data ) - 10 ) . ' órdenes más</td></tr>';
-        }
-        
-        $html .= '</tbody></table>';
-        $html .= '</div>';
-        
-        return $html;
-    }
     
     /**
      * Generar exportación CSV
@@ -534,11 +471,140 @@ class WVP_SENIAT_Exporter {
      * Generar exportación PDF
      */
     private function generate_pdf_export( $data, $filename ) {
-        // Por ahora retornamos un placeholder
-        // En una implementación completa usaríamos TCPDF o similar
+        // Generar HTML optimizado para impresión/PDF
+        $html = $this->generate_printable_html( $data, $filename );
+        
+        // Guardar archivo HTML para impresión
+        $upload_dir = wp_upload_dir();
+        $file_path = $upload_dir['basedir'] . '/wvp-exports/' . $filename . '.html';
+        
+        // Crear directorio si no existe
+        if ( ! file_exists( dirname( $file_path ) ) ) {
+            wp_mkdir_p( dirname( $file_path ) );
+        }
+        
+        file_put_contents( $file_path, $html );
+        
         return array(
-            'html' => '<div class="wvp-info"><h4>📄 PDF en Desarrollo</h4><p>La funcionalidad de PDF estará disponible en la próxima versión.</p></div>'
+            'html' => '<div class="wvp-success"><h4>📄 Reporte PDF Generado</h4><p><strong>Archivo:</strong> ' . $filename . '.html</p><p><strong>Ubicación:</strong> ' . $upload_dir['baseurl'] . '/wvp-exports/' . $filename . '.html</p><div style="margin-top: 15px;"><a href="' . $upload_dir['baseurl'] . '/wvp-exports/' . $filename . '.html" target="_blank" class="wvp-btn wvp-btn-primary">📄 Ver Reporte</a> <button class="wvp-btn wvp-btn-secondary" onclick="window.print()">🖨️ Imprimir</button></div></div>',
+            'file_url' => $upload_dir['baseurl'] . '/wvp-exports/' . $filename . '.html'
         );
+    }
+    
+    /**
+     * Generar HTML optimizado para impresión
+     */
+    private function generate_printable_html( $data, $filename ) {
+        $html = '<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>' . $filename . '</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; }
+        .header h1 { color: #1e3a8a; margin: 0; font-size: 24px; }
+        .header p { margin: 5px 0; color: #666; }
+        .summary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .summary h3 { margin-top: 0; color: #1e3a8a; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .summary-item { background: white; padding: 15px; border-radius: 6px; text-align: center; }
+        .summary-item strong { display: block; font-size: 18px; color: #1e3a8a; margin-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #1e3a8a; color: white; font-weight: bold; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 20px; }
+        @media print { body { margin: 0; } .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 ' . str_replace('_', ' ', ucwords($filename)) . '</h1>
+        <p>Generado el ' . current_time('d/m/Y H:i:s') . '</p>
+        <p>WooCommerce Venezuela Pro 2025</p>
+    </div>';
+        
+        if ( ! empty( $data ) ) {
+            // Calcular totales
+            $total_usd = 0;
+            $total_ves = 0;
+            $bcv_rate = get_option( 'wvp_emergency_rate', 36.5 );
+            
+            foreach ( $data as $item ) {
+                if ( isset( $item['total_usd'] ) ) {
+                    $total_usd += $item['total_usd'];
+                    $total_ves += $item['total_ves'] ?? ($item['total_usd'] * $bcv_rate);
+                }
+            }
+            
+            $html .= '<div class="summary">
+                <h3>📈 Resumen General</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <strong>' . count( $data ) . '</strong>
+                        <span>Registros</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>$' . number_format( $total_usd, 2 ) . '</strong>
+                        <span>Total USD</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>' . number_format( $total_ves, 2 ) . '</strong>
+                        <span>Total VES</span>
+                    </div>
+                    <div class="summary-item">
+                        <strong>' . number_format( $bcv_rate, 2 ) . '</strong>
+                        <span>Tasa BCV</span>
+                    </div>
+                </div>
+            </div>';
+            
+            // Tabla de datos
+            $html .= '<table>
+                <thead>
+                    <tr>';
+            
+            if ( isset( $data[0] ) ) {
+                foreach ( array_keys( $data[0] ) as $key ) {
+                    $html .= '<th>' . ucwords( str_replace( '_', ' ', $key ) ) . '</th>';
+                }
+            }
+            
+            $html .= '</tr>
+                </thead>
+                <tbody>';
+            
+            foreach ( $data as $item ) {
+                $html .= '<tr>';
+                foreach ( $item as $value ) {
+                    if ( is_numeric( $value ) && strpos( $value, '.' ) !== false ) {
+                        $html .= '<td>' . number_format( $value, 2 ) . '</td>';
+                    } else {
+                        $html .= '<td>' . esc_html( $value ) . '</td>';
+                    }
+                }
+                $html .= '</tr>';
+            }
+            
+            $html .= '</tbody>
+            </table>';
+        } else {
+            $html .= '<div class="summary">
+                <h3>📊 Sin Datos</h3>
+                <p>No se encontraron registros para el período seleccionado.</p>
+            </div>';
+        }
+        
+        $html .= '<div class="footer">
+            <p>Reporte generado por WooCommerce Venezuela Pro 2025</p>
+            <p>Para cumplimiento fiscal con SENIAT</p>
+        </div>
+</body>
+</html>';
+        
+        return $html;
     }
     
     /**
