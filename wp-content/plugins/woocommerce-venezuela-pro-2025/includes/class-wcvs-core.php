@@ -69,6 +69,41 @@ class WCVS_Core {
 	public $logger;
 
 	/**
+	 * SENIAT Reports instance
+	 *
+	 * @var WCVS_SENIAT_Reports
+	 */
+	public $seniat_reports;
+
+	/**
+	 * Electronic Invoice instance
+	 *
+	 * @var WCVS_Electronic_Invoice
+	 */
+	public $electronic_invoice;
+
+	/**
+	 * Quick Config instance
+	 *
+	 * @var WCVS_Quick_Config
+	 */
+	public $quick_config;
+
+	/**
+	 * Statistics instance
+	 *
+	 * @var WCVS_Statistics
+	 */
+	public $statistics;
+
+	/**
+	 * Initialization flag
+	 *
+	 * @var bool
+	 */
+	private $initialized = false;
+
+	/**
 	 * HPOS Compatibility instance
 	 *
 	 * @var WCVS_HPOS_Compatibility
@@ -129,7 +164,7 @@ class WCVS_Core {
 	 * Initialize hooks
 	 */
 	private function init_hooks() {
-		add_action( 'init', array( $this, 'init' ) );
+		add_action( 'plugins_loaded', array( $this, 'init' ) );
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		add_action( 'wp_loaded', array( $this, 'public_init' ) );
 	}
@@ -138,6 +173,11 @@ class WCVS_Core {
 	 * Initialize the plugin
 	 */
 	public function init() {
+		// Prevent multiple initialization
+		if (isset($this->initialized) && $this->initialized) {
+			return;
+		}
+		
 		// Load text domain
 		$this->load_textdomain();
 
@@ -147,6 +187,19 @@ class WCVS_Core {
 		// Initialize BCV integration
 		require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-bcv-integration.php';
 		$this->bcv_integration = new WCVS_BCV_Integration();
+
+		// Initialize SENIAT system
+		$this->seniat_reports = new WCVS_SENIAT_Reports();
+		$this->electronic_invoice = new WCVS_Electronic_Invoice();
+		
+		// Initialize Quick Config
+		$this->quick_config = new WCVS_Quick_Config();
+		
+		// Initialize Statistics
+		$this->statistics = new WCVS_Statistics();
+		
+		// Initialize Dashboard Handlers
+		new WCVS_Dashboard_Handlers();
 
 		// Initialize admin
 		if ( is_admin() ) {
@@ -159,11 +212,17 @@ class WCVS_Core {
 		// Register modules
 		$this->register_core_modules();
 
+		// Activate default modules
+		$this->activate_default_modules();
+		
 		// Load active modules
 		$this->load_active_modules();
 
 		// Log initialization
 		$this->logger->log( 'Plugin initialized successfully', 'info' );
+		
+		// Mark as initialized
+		$this->initialized = true;
 	}
 
 	/**
@@ -187,6 +246,115 @@ class WCVS_Core {
 		if ( $this->public ) {
 			$this->public->init();
 		}
+	}
+
+	/**
+	 * Register core modules
+	 */
+	private function register_core_modules() {
+		// Register Payment Gateways module
+		$this->module_manager->register_module( 'payment-gateways', array(
+			'name' => 'Pasarelas de Pago Locales',
+			'description' => 'Pago Móvil, Zelle, Binance Pay y transferencias bancarias',
+			'version' => '1.0.0',
+			'class' => 'WCVS_Payment_Gateways',
+			'file' => 'modules/payment-gateways/class-wcvs-payment-gateways.php',
+			'dependencies' => array(),
+			'conflicts' => array(),
+			'priority' => 10,
+			'category' => 'core',
+			'icon' => 'dashicons-money-alt',
+			'help_url' => '',
+			'woocommerce_settings' => array()
+		));
+
+		// Register Shipping Methods module
+		$this->module_manager->register_module( 'shipping-methods', array(
+			'name' => 'Envíos Nacionales',
+			'description' => 'MRW, Zoom, Tealca y delivery local',
+			'version' => '1.0.0',
+			'class' => 'WCVS_Shipping_Methods',
+			'file' => 'modules/shipping-methods/class-wcvs-shipping-methods.php',
+			'dependencies' => array(),
+			'conflicts' => array(),
+			'priority' => 10,
+			'category' => 'core',
+			'icon' => 'dashicons-truck',
+			'help_url' => '',
+			'woocommerce_settings' => array()
+		));
+
+		// Register Currency Manager module
+		$this->module_manager->register_module( 'currency-manager', array(
+			'name' => 'Gestor de Moneda Inteligente',
+			'description' => 'Sistema dual USD/VES con actualización automática',
+			'version' => '1.0.0',
+			'class' => 'WCVS_Currency_Manager',
+			'file' => 'modules/currency-manager/class-wcvs-currency-manager.php',
+			'dependencies' => array(),
+			'conflicts' => array(),
+			'priority' => 10,
+			'category' => 'core',
+			'icon' => 'dashicons-money',
+			'help_url' => '',
+			'woocommerce_settings' => array()
+		));
+
+		// Register Tax System module
+		$this->module_manager->register_module( 'tax-system', array(
+			'name' => 'Sistema Fiscal Venezolano',
+			'description' => 'IVA dinámico, IGTF configurable y facturación electrónica',
+			'version' => '1.0.0',
+			'class' => 'WCVS_Tax_System',
+			'file' => 'modules/tax-system/class-wcvs-tax-system.php',
+			'dependencies' => array(),
+			'conflicts' => array(),
+			'priority' => 10,
+			'category' => 'core',
+			'icon' => 'dashicons-calculator',
+			'help_url' => '',
+			'woocommerce_settings' => array()
+		));
+
+		// Register Electronic Billing module
+		$this->module_manager->register_module( 'electronic-billing', array(
+			'name' => 'Sistema de Facturación Electrónica',
+			'description' => 'Cumplimiento SENIAT con firma digital',
+			'version' => '1.0.0',
+			'class' => 'WCVS_Electronic_Billing',
+			'file' => 'modules/electronic-billing/class-wcvs-electronic-billing.php',
+			'dependencies' => array(),
+			'conflicts' => array(),
+			'priority' => 10,
+			'category' => 'core',
+			'icon' => 'dashicons-media-document',
+			'help_url' => '',
+			'woocommerce_settings' => array()
+		));
+	}
+
+	/**
+	 * Activate default modules
+	 */
+	private function activate_default_modules() {
+		$active_modules = get_option( 'wcvs_active_modules', array() );
+		
+		// Default modules to activate
+		$default_modules = array(
+			'payment-gateways',
+			'shipping-methods',
+			'currency-manager',
+			'tax-system',
+			'electronic-billing'
+		);
+		
+		foreach ( $default_modules as $module_id ) {
+			if ( ! isset( $active_modules[ $module_id ] ) ) {
+				$active_modules[ $module_id ] = true;
+			}
+		}
+		
+		update_option( 'wcvs_active_modules', $active_modules );
 	}
 
 	/**

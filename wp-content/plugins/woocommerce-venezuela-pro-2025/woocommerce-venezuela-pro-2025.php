@@ -103,6 +103,25 @@ function wcvs_init_plugin() {
 	// Load HPOS compatibility
 	require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-hpos-compatibility.php';
 	
+	// Load SENIAT system classes
+	require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-seniat-reports.php';
+	require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-electronic-invoice.php';
+	
+	// Load Quick Config class
+	require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-quick-config.php';
+	
+	// Load Statistics class
+	require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-statistics.php';
+	
+	// Load Dashboard Handlers class
+	require_once WCVS_PLUGIN_DIR . 'includes/class-wcvs-dashboard-handlers.php';
+	
+	// Load Admin class
+	require_once WCVS_PLUGIN_DIR . 'admin/class-wcvs-admin.php';
+	
+	// Load Public class
+	require_once WCVS_PLUGIN_DIR . 'public/class-wcvs-public.php';
+	
 	$plugin = WCVS_Core::get_instance();
 	$plugin->init();
 }

@@ -442,7 +442,7 @@ class WCVS_Currency_Manager {
 	public function ajax_update_currency_display() {
 		check_ajax_referer( 'wcvs_currency_manager_nonce', 'nonce' );
 
-		$currency = sanitize_text_field( $_POST['currency'] );
+		$currency = isset($_POST['currency']) ? sanitize_text_field( $_POST['currency'] ) : 'USD';
 		$rate = $this->core->bcv_integration->get_current_rate();
 
 		wp_send_json_success( array(

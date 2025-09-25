@@ -45,13 +45,17 @@ class WCVS_BCV_Integration {
 	 * Check if BCV plugin is available
 	 */
 	private function check_bcv_availability() {
-		$this->bcv_available = class_exists( 'BCV_Dolar_Tracker' );
-		
-		if ( $this->bcv_available ) {
-			$this->core->logger->info( 'BCV Dólar Tracker plugin detected and available' );
-		} else {
-			$this->core->logger->warning( 'BCV Dólar Tracker plugin not available' );
-		}
+		// Check if BCV Dólar Tracker plugin is active
+		$this->bcv_available = is_plugin_active( 'bcv-dolar-tracker/bcv-dolar-tracker.php' );
+	}
+
+	/**
+	 * Check if BCV integration is available
+	 *
+	 * @return bool
+	 */
+	public function is_available() {
+		return $this->bcv_available;
 	}
 
 	/**
@@ -73,6 +77,10 @@ class WCVS_BCV_Integration {
 
 		// Add admin notices
 		add_action( 'admin_notices', array( $this, 'admin_notices' ) );
+		
+		// Add AJAX hooks for rate refresh
+		add_action( 'wp_ajax_wcvs_refresh_rate', array( $this, 'ajax_refresh_rate' ) );
+		add_action( 'wp_ajax_wcvs_get_rate_stats', array( $this, 'ajax_get_rate_stats' ) );
 	}
 
 	/**
@@ -85,10 +93,34 @@ class WCVS_BCV_Integration {
 			return $this->get_fallback_rate();
 		}
 
-		$rate = BCV_Dolar_Tracker::get_rate();
+		// Try to get rate from BCV plugin
+		$rate = false;
+		
+		// Method 1: Try BCV_Dolar_Tracker class
+		if ( class_exists( 'BCV_Dolar_Tracker' ) ) {
+			$rate = BCV_Dolar_Tracker::get_rate();
+		}
+		
+		// Method 2: Try BCV_Dolar_Tracker function
+		if ( ! $rate && function_exists( 'bcv_get_rate' ) ) {
+			$rate = bcv_get_rate();
+		}
+		
+		// Method 3: Try BCV_Dolar_Tracker option
+		if ( ! $rate ) {
+			$rate = get_option( 'bcv_dolar_rate', false );
+		}
+		
+		// Method 4: Try BCV_Dolar_Tracker transient
+		if ( ! $rate ) {
+			$rate = get_transient( 'bcv_dolar_rate' );
+		}
 		
 		if ( $rate && $rate > 0 ) {
 			$this->core->logger->info( 'BCV rate obtained: ' . $rate );
+			// Update last successful rate
+			update_option( 'wcvs_last_successful_rate', $rate );
+			update_option( 'wcvs_last_rate_update', current_time( 'mysql' ) );
 			return $rate;
 		}
 
@@ -338,7 +370,7 @@ class WCVS_BCV_Integration {
 	public function enqueue_frontend_scripts() {
 		wp_enqueue_script(
 			'wcvs-currency-converter',
-			WCVS_PLUGIN_URL . 'includes/js/currency-converter.js',
+			WCVS_PLUGIN_URL . 'admin/js/currency-converter.js',
 			array( 'jquery' ),
 			WCVS_VERSION,
 			true
@@ -364,5 +396,122 @@ class WCVS_BCV_Integration {
 			'rate' => $rate,
 			'timestamp' => current_time( 'mysql' )
 		));
+	}
+
+	/**
+	 * Get rate display widget HTML
+	 *
+	 * @return string HTML for rate display widget
+	 */
+	public function get_rate_display_widget() {
+		$rate = $this->get_current_rate();
+		$status = $this->get_bcv_status();
+		$last_update = $status['last_update'];
+		
+		$widget_html = '<div class="wcvs-rate-widget">';
+		$widget_html .= '<div class="wcvs-rate-header">';
+		$widget_html .= '<h3>' . __('Dólar del Día', 'woocommerce-venezuela-pro-2025') . '</h3>';
+		
+		if ($status['available']) {
+			$widget_html .= '<span class="wcvs-status-badge wcvs-status-success">' . __('BCV Activo', 'woocommerce-venezuela-pro-2025') . '</span>';
+		} else {
+			$widget_html .= '<span class="wcvs-status-badge wcvs-status-warning">' . __('Modo Respaldo', 'woocommerce-venezuela-pro-2025') . '</span>';
+		}
+		
+		$widget_html .= '</div>';
+		
+		if ($rate) {
+			$widget_html .= '<div class="wcvs-rate-display">';
+			$widget_html .= '<div class="wcvs-rate-value">' . number_format($rate, 2, ',', '.') . '</div>';
+			$widget_html .= '<div class="wcvs-rate-currency">Bs./USD</div>';
+			$widget_html .= '</div>';
+			
+			if ($last_update) {
+				$widget_html .= '<div class="wcvs-rate-info">';
+				$widget_html .= '<span class="wcvs-rate-label">' . __('Última actualización:', 'woocommerce-venezuela-pro-2025') . '</span>';
+				$widget_html .= '<span class="wcvs-rate-time">' . date('d/m/Y H:i', strtotime($last_update)) . '</span>';
+				$widget_html .= '</div>';
+			}
+		} else {
+			$widget_html .= '<div class="wcvs-rate-error">';
+			$widget_html .= '<span class="dashicons dashicons-warning"></span>';
+			$widget_html .= __('Tasa no disponible', 'woocommerce-venezuela-pro-2025');
+			$widget_html .= '</div>';
+		}
+		
+		$widget_html .= '<div class="wcvs-rate-actions">';
+		$widget_html .= '<button type="button" class="button button-secondary" onclick="wcvsRefreshRate()">';
+		$widget_html .= '<span class="dashicons dashicons-update"></span> ';
+		$widget_html .= __('Actualizar', 'woocommerce-venezuela-pro-2025');
+		$widget_html .= '</button>';
+		$widget_html .= '</div>';
+		
+		$widget_html .= '</div>';
+		
+		return $widget_html;
+	}
+
+	/**
+	 * Refresh rate manually
+	 */
+	public function refresh_rate() {
+		if ($this->bcv_available) {
+			// Try to trigger BCV plugin refresh
+			if (class_exists('BCV_Dolar_Tracker')) {
+				BCV_Dolar_Tracker::sync_with_wvp();
+			}
+		}
+		
+		// Clear any cached rates
+		delete_transient('wcvs_current_rate');
+		
+		// Get fresh rate
+		$rate = $this->get_current_rate();
+		
+		return $rate;
+	}
+
+	/**
+	 * AJAX refresh rate
+	 */
+	public function ajax_refresh_rate() {
+		check_ajax_referer('wcvs_currency_nonce', 'nonce');
+		
+		$rate = $this->refresh_rate();
+		
+		wp_send_json_success(array(
+			'rate' => $rate,
+			'formatted_rate' => $rate ? number_format($rate, 2, ',', '.') : false,
+			'timestamp' => current_time('mysql')
+		));
+	}
+
+	/**
+	 * Get rate statistics
+	 *
+	 * @return array Rate statistics
+	 */
+	public function get_rate_statistics() {
+		$stats = array(
+			'current_rate' => $this->get_current_rate(),
+			'fallback_rate' => get_option('wcvs_fallback_usd_rate', false),
+			'last_update' => get_option('wcvs_last_rate_update', false),
+			'last_successful_rate' => get_option('wcvs_last_successful_rate', false),
+			'bcv_available' => $this->bcv_available,
+			'next_sync' => wp_next_scheduled('wcvs_bcv_sync')
+		);
+		
+		return $stats;
+	}
+
+	/**
+	 * AJAX get rate statistics
+	 */
+	public function ajax_get_rate_stats() {
+		check_ajax_referer('wcvs_currency_nonce', 'nonce');
+		
+		$stats = $this->get_rate_statistics();
+		
+		wp_send_json_success($stats);
 	}
 }

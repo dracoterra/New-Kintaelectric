@@ -343,6 +343,32 @@ class WCVS_Module_Manager {
 	}
 
 	/**
+	 * Load active modules
+	 */
+	public function load_active_modules() {
+		$active_modules = $this->get_active_modules();
+		
+		foreach ( $active_modules as $module_id => $is_active ) {
+			if ( $is_active && isset( $this->modules[ $module_id ] ) ) {
+				$module_config = $this->modules[ $module_id ];
+				
+				// Load module file if specified
+				if ( ! empty( $module_config['file'] ) ) {
+					$module_file = WCVS_PLUGIN_DIR . $module_config['file'];
+					if ( file_exists( $module_file ) ) {
+						require_once $module_file;
+					}
+				}
+				
+				// Initialize module class if specified
+				if ( ! empty( $module_config['class'] ) && class_exists( $module_config['class'] ) ) {
+					$this->loaded_modules[ $module_id ] = new $module_config['class']();
+				}
+			}
+		}
+	}
+
+	/**
 	 * AJAX handler for toggling modules
 	 */
 	public function ajax_toggle_module() {

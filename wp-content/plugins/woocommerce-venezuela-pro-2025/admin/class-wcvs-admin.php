@@ -122,6 +122,30 @@ class WCVS_Admin {
 			WCVS_VERSION
 		);
 
+		// Enqueue simplified dashboard CSS for dashboard page
+		if ( $hook === 'venezuela-suite_page_wcvs-dashboard' ) {
+			wp_enqueue_style(
+				'wcvs-dashboard-simplified',
+				WCVS_PLUGIN_URL . 'admin/css/dashboard-simplified.css',
+				array(),
+				WCVS_VERSION
+			);
+
+			// Enqueue dashboard functions
+			wp_enqueue_script(
+				'wcvs-dashboard-functions',
+				WCVS_PLUGIN_URL . 'admin/js/dashboard-functions.js',
+				array( 'jquery' ),
+				WCVS_VERSION,
+				true
+			);
+
+			wp_localize_script( 'wcvs-dashboard-functions', 'wcvs_admin', array(
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce' => wp_create_nonce( 'wcvs_admin_nonce' )
+			));
+		}
+
 		wp_enqueue_script(
 			'wcvs-admin',
 			WCVS_PLUGIN_URL . 'admin/js/wcvs-admin.js',
@@ -129,6 +153,62 @@ class WCVS_Admin {
 			WCVS_VERSION,
 			true
 		);
+
+		// Enqueue BCV rate widget script for dashboard
+		if ( $hook === 'venezuela-suite_page_wcvs-dashboard' ) {
+			wp_enqueue_script(
+				'wcvs-bcv-rate-widget',
+				WCVS_PLUGIN_URL . 'admin/js/bcv-rate-widget.js',
+				array( 'jquery' ),
+				WCVS_VERSION,
+				true
+			);
+
+			wp_localize_script( 'wcvs-bcv-rate-widget', 'wcvs_bcv_rate', array(
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce' => wp_create_nonce( 'wcvs_currency_nonce' )
+			));
+
+			// Enqueue Quick Config script
+			wp_enqueue_script(
+				'wcvs-quick-config',
+				WCVS_PLUGIN_URL . 'admin/js/quick-config.js',
+				array( 'jquery' ),
+				WCVS_VERSION,
+				true
+			);
+
+			wp_localize_script( 'wcvs-quick-config', 'wcvs_quick_config', array(
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce' => wp_create_nonce( 'wcvs_quick_config_nonce' ),
+				'reset_nonce' => wp_create_nonce( 'wcvs_reset_config_nonce' ),
+				'status_nonce' => wp_create_nonce( 'wcvs_config_status_nonce' ),
+				'i18n' => array(
+					'configuring' => __('Configurando WooCommerce...', 'woocommerce-venezuela-pro-2025'),
+					'success' => __('Configuración completada exitosamente', 'woocommerce-venezuela-pro-2025'),
+					'error' => __('Error en la configuración', 'woocommerce-venezuela-pro-2025'),
+					'reset_success' => __('Configuración reseteada', 'woocommerce-venezuela-pro-2025')
+				)
+			));
+
+			// Enqueue Statistics script
+			wp_enqueue_script(
+				'wcvs-statistics-dashboard',
+				WCVS_PLUGIN_URL . 'admin/js/statistics-dashboard.js',
+				array( 'jquery' ),
+				WCVS_VERSION,
+				true
+			);
+
+			wp_localize_script( 'wcvs-statistics-dashboard', 'wcvs_statistics_dashboard', array(
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce' => wp_create_nonce( 'wcvs_dashboard_stats_nonce' ),
+				'i18n' => array(
+					'loading' => __('Cargando estadísticas...', 'woocommerce-venezuela-pro-2025'),
+					'error' => __('Error al cargar estadísticas', 'woocommerce-venezuela-pro-2025')
+				)
+			));
+		}
 
 		wp_localize_script( 'wcvs-admin', 'wcvs_admin', array(
 			'ajax_url' => admin_url( 'admin-ajax.php' ),
@@ -185,67 +265,253 @@ class WCVS_Admin {
 		$settings = $this->core->settings->get_all_settings();
 		?>
 		<div class="wrap wcvs-dashboard">
-			<h1><?php _e( '🇻🇪 WooCommerce Venezuela Suite 2025 - Dashboard', 'woocommerce-venezuela-pro-2025' ); ?></h1>
+			<div class="wcvs-dashboard-header">
+				<h1><?php _e( '🇻🇪 WooCommerce Venezuela Suite 2025', 'woocommerce-venezuela-pro-2025' ); ?></h1>
+				<p class="wcvs-dashboard-subtitle"><?php _e('Tu tienda venezolana completamente configurada y lista para vender', 'woocommerce-venezuela-pro-2025'); ?></p>
+			</div>
+			
+			<!-- Estado General del Sistema -->
+			<div class="wcvs-system-status">
+				<div class="wcvs-status-item">
+					<span class="wcvs-status-icon dashicons dashicons-yes-alt"></span>
+					<span class="wcvs-status-text"><?php _e('Plugin Activo', 'woocommerce-venezuela-pro-2025'); ?></span>
+				</div>
+				<div class="wcvs-status-item">
+					<span class="wcvs-status-icon dashicons dashicons-yes-alt"></span>
+					<span class="wcvs-status-text"><?php _e('WooCommerce Integrado', 'woocommerce-venezuela-pro-2025'); ?></span>
+				</div>
+				<div class="wcvs-status-item">
+					<span class="wcvs-status-icon dashicons dashicons-warning"></span>
+					<span class="wcvs-status-text"><?php _e('BCV Dólar Tracker', 'woocommerce-venezuela-pro-2025'); ?></span>
+				</div>
+			</div>
 			
 			<div class="wcvs-dashboard-grid">
-				<!-- Resumen Ejecutivo -->
-				<div class="wcvs-dashboard-card">
-					<h2><?php _e( '📊 Resumen Ejecutivo', 'woocommerce-venezuela-pro-2025' ); ?></h2>
-					<div class="wcvs-stats">
-						<div class="wcvs-stat">
-							<span class="wcvs-stat-label"><?php _e( 'Módulos Activos', 'woocommerce-venezuela-pro-2025' ); ?></span>
-							<span class="wcvs-stat-value"><?php echo count( $active_modules ); ?></span>
+				<!-- Columna Principal -->
+				<div class="wcvs-main-column">
+					<!-- Widget de Dólar del Día Simplificado -->
+					<div class="wcvs-dashboard-card wcvs-rate-card">
+						<div class="wcvs-card-header">
+							<h2><?php _e('💵 Dólar del Día', 'woocommerce-venezuela-pro-2025'); ?></h2>
 						</div>
-						<div class="wcvs-stat">
-							<span class="wcvs-stat-label"><?php _e( 'Versión', 'woocommerce-venezuela-pro-2025' ); ?></span>
-							<span class="wcvs-stat-value"><?php echo WCVS_VERSION; ?></span>
+						<div class="wcvs-rate-display-simple">
+							<div class="wcvs-rate-value"><?php echo $this->get_current_rate_display(); ?></div>
+							<div class="wcvs-rate-status"><?php echo $this->get_rate_status(); ?></div>
+							<button type="button" class="button button-secondary wcvs-refresh-rate" onclick="wcvsRefreshRate()">
+								<span class="dashicons dashicons-update"></span>
+								<?php _e('Actualizar', 'woocommerce-venezuela-pro-2025'); ?>
+							</button>
+						</div>
+					</div>
+
+					<!-- Widget de Configuración Simplificado -->
+					<div class="wcvs-dashboard-card wcvs-config-card">
+						<div class="wcvs-card-header">
+							<h2><?php _e('⚡ Configuración Rápida', 'woocommerce-venezuela-pro-2025'); ?></h2>
+						</div>
+						<div class="wcvs-config-progress">
+							<div class="wcvs-progress-bar">
+								<div class="wcvs-progress-fill" style="width: 83%"></div>
+							</div>
+							<div class="wcvs-progress-text">5 de 6 configuraciones completadas</div>
+						</div>
+						<div class="wcvs-config-actions">
+							<button type="button" class="button button-primary wcvs-quick-config-button" onclick="wcvsQuickConfigure()">
+								<span class="dashicons dashicons-admin-settings"></span>
+								<?php _e('Completar Configuración', 'woocommerce-venezuela-pro-2025'); ?>
+							</button>
+							<a href="<?php echo admin_url('admin.php?page=wcvs-settings'); ?>" class="button button-secondary">
+								<span class="dashicons dashicons-admin-generic"></span>
+								<?php _e('Configuración Avanzada', 'woocommerce-venezuela-pro-2025'); ?>
+							</a>
+						</div>
+					</div>
+
+					<!-- Widget de Estadísticas Simplificado -->
+					<div class="wcvs-dashboard-card wcvs-stats-card">
+						<div class="wcvs-card-header">
+							<h2><?php _e('📊 Resumen de Ventas', 'woocommerce-venezuela-pro-2025'); ?></h2>
+						</div>
+						<div class="wcvs-stats-grid">
+							<div class="wcvs-stat-item">
+								<div class="wcvs-stat-value" id="today-sales">$0.00</div>
+								<div class="wcvs-stat-label"><?php _e('Hoy', 'woocommerce-venezuela-pro-2025'); ?></div>
+							</div>
+							<div class="wcvs-stat-item">
+								<div class="wcvs-stat-value" id="month-sales">$0.00</div>
+								<div class="wcvs-stat-label"><?php _e('Este Mes', 'woocommerce-venezuela-pro-2025'); ?></div>
+							</div>
+							<div class="wcvs-stat-item">
+								<div class="wcvs-stat-value" id="total-orders">0</div>
+								<div class="wcvs-stat-label"><?php _e('Pedidos', 'woocommerce-venezuela-pro-2025'); ?></div>
+							</div>
+						</div>
+						<div class="wcvs-stats-actions">
+							<a href="<?php echo admin_url('admin.php?page=wcvs-statistics'); ?>" class="button button-secondary">
+								<span class="dashicons dashicons-chart-bar"></span>
+								<?php _e('Ver Estadísticas Completas', 'woocommerce-venezuela-pro-2025'); ?>
+							</a>
 						</div>
 					</div>
 				</div>
 
-				<!-- Módulos Activos -->
-				<div class="wcvs-dashboard-card">
-					<h2><?php _e( '📦 Módulos Activos', 'woocommerce-venezuela-pro-2025' ); ?></h2>
-					<div class="wcvs-modules-list">
-						<?php foreach ( $active_modules as $module_id => $is_active ): ?>
-							<?php if ( $is_active && isset( $modules[ $module_id ] ) ): ?>
-								<div class="wcvs-module-item">
-									<div class="wcvs-module-info">
-										<h3><?php echo esc_html( $modules[ $module_id ]['name'] ); ?></h3>
-										<p><?php echo esc_html( $modules[ $module_id ]['description'] ); ?></p>
+				<!-- Columna Lateral -->
+				<div class="wcvs-sidebar-column">
+					<!-- Módulos Activos -->
+					<div class="wcvs-dashboard-card wcvs-modules-card">
+						<div class="wcvs-card-header">
+							<h2><?php _e('📦 Módulos Activos', 'woocommerce-venezuela-pro-2025'); ?></h2>
+						</div>
+						<div class="wcvs-modules-list">
+							<?php foreach ( $active_modules as $module_id => $is_active ): ?>
+								<?php if ( $is_active && isset( $modules[ $module_id ] ) ): ?>
+									<div class="wcvs-module-item">
+										<div class="wcvs-module-icon">
+											<span class="dashicons dashicons-yes-alt"></span>
+										</div>
+										<div class="wcvs-module-info">
+											<div class="wcvs-module-name"><?php echo esc_html( $modules[ $module_id ]['name'] ); ?></div>
+											<div class="wcvs-module-status"><?php _e('Activo', 'woocommerce-venezuela-pro-2025'); ?></div>
+										</div>
 									</div>
-									<div class="wcvs-module-actions">
-										<a href="<?php echo admin_url( 'admin.php?page=wcvs-modules' ); ?>" class="button button-secondary">
-											<?php _e( 'Configurar', 'woocommerce-venezuela-pro-2025' ); ?>
-										</a>
-										<a href="#" class="wcvs-help-link" data-module="<?php echo esc_attr( $module_id ); ?>">
-											<?php _e( 'Ayuda', 'woocommerce-venezuela-pro-2025' ); ?>
-										</a>
-									</div>
-								</div>
-							<?php endif; ?>
-						<?php endforeach; ?>
+								<?php endif; ?>
+							<?php endforeach; ?>
+						</div>
+						<div class="wcvs-modules-actions">
+							<a href="<?php echo admin_url('admin.php?page=wcvs-modules'); ?>" class="button button-secondary">
+								<span class="dashicons dashicons-admin-settings"></span>
+								<?php _e('Gestionar Módulos', 'woocommerce-venezuela-pro-2025'); ?>
+							</a>
+						</div>
+					</div>
+
+					<!-- Acciones Rápidas -->
+					<div class="wcvs-dashboard-card wcvs-actions-card">
+						<div class="wcvs-card-header">
+							<h2><?php _e('🚀 Acciones Rápidas', 'woocommerce-venezuela-pro-2025'); ?></h2>
+						</div>
+						<div class="wcvs-actions-list">
+							<a href="<?php echo admin_url('admin.php?page=wcvs-statistics'); ?>" class="wcvs-action-item">
+								<span class="dashicons dashicons-chart-bar"></span>
+								<span class="wcvs-action-text"><?php _e('Ver Estadísticas', 'woocommerce-venezuela-pro-2025'); ?></span>
+							</a>
+							<a href="<?php echo admin_url('admin.php?page=wcvs-seniat-reports'); ?>" class="wcvs-action-item">
+								<span class="dashicons dashicons-media-document"></span>
+								<span class="wcvs-action-text"><?php _e('Reportes SENIAT', 'woocommerce-venezuela-pro-2025'); ?></span>
+							</a>
+							<a href="<?php echo admin_url('admin.php?page=wcvs-help'); ?>" class="wcvs-action-item">
+								<span class="dashicons dashicons-editor-help"></span>
+								<span class="wcvs-action-text"><?php _e('Ayuda y Soporte', 'woocommerce-venezuela-pro-2025'); ?></span>
+							</a>
+						</div>
 					</div>
 				</div>
+			</div>
 
-				<!-- Configuración Rápida -->
-				<div class="wcvs-dashboard-card">
-					<h2><?php _e( '🔧 Configuración Rápida', 'woocommerce-venezuela-pro-2025' ); ?></h2>
-					<div class="wcvs-quick-actions">
-						<a href="<?php echo admin_url( 'admin.php?page=wc-settings&tab=general' ); ?>" class="button button-primary">
-							<?php _e( 'Configurar WooCommerce', 'woocommerce-venezuela-pro-2025' ); ?>
-						</a>
-						<a href="<?php echo admin_url( 'admin.php?page=wcvs-help' ); ?>" class="button button-secondary">
-							<?php _e( 'Ver Ayuda Completa', 'woocommerce-venezuela-pro-2025' ); ?>
-						</a>
-						<a href="<?php echo admin_url( 'admin.php?page=wcvs-settings' ); ?>" class="button button-secondary">
-							<?php _e( 'Configuración Avanzada', 'woocommerce-venezuela-pro-2025' ); ?>
-						</a>
+			<!-- Configuración Paso a Paso -->
+			<div class="wcvs-dashboard-card">
+				<h2><?php _e( '🔧 Configuración Paso a Paso', 'woocommerce-venezuela-pro-2025' ); ?></h2>
+				<div class="wcvs-step-config">
+					<div class="wcvs-step-item">
+						<div class="wcvs-step-number">1</div>
+						<div class="wcvs-step-content">
+							<h3><?php _e( 'Moneda Base', 'woocommerce-venezuela-pro-2025' ); ?></h3>
+							<p><?php _e( 'Configurar moneda a USD y formato venezolano', 'woocommerce-venezuela-pro-2025' ); ?></p>
+							<button type="button" class="button button-secondary" onclick="wcvsConfigureCurrency()">
+								<?php _e( 'Configurar Moneda Base', 'woocommerce-venezuela-pro-2025' ); ?>
+							</button>
+						</div>
+					</div>
+					<div class="wcvs-step-item">
+						<div class="wcvs-step-number">2</div>
+						<div class="wcvs-step-content">
+							<h3><?php _e( 'Impuestos', 'woocommerce-venezuela-pro-2025' ); ?></h3>
+							<p><?php _e( 'Configurar IVA (16%) e IGTF (3%)', 'woocommerce-venezuela-pro-2025' ); ?></p>
+							<button type="button" class="button button-secondary" onclick="wcvsConfigureTaxes()">
+								<?php _e( 'Configurar Impuestos', 'woocommerce-venezuela-pro-2025' ); ?>
+							</button>
+						</div>
+					</div>
+					<div class="wcvs-step-item">
+						<div class="wcvs-step-number">3</div>
+						<div class="wcvs-step-content">
+							<h3><?php _e( 'Métodos de Pago', 'woocommerce-venezuela-pro-2025' ); ?></h3>
+							<p><?php _e( 'Habilitar transferencia bancaria y pago contra entrega', 'woocommerce-venezuela-pro-2025' ); ?></p>
+							<button type="button" class="button button-secondary" onclick="wcvsConfigurePayments()">
+								<?php _e( 'Configurar Métodos de Pago', 'woocommerce-venezuela-pro-2025' ); ?>
+							</button>
+						</div>
+					</div>
+					<div class="wcvs-step-item">
+						<div class="wcvs-step-number">4</div>
+						<div class="wcvs-step-content">
+							<h3><?php _e( 'Métodos de Envío', 'woocommerce-venezuela-pro-2025' ); ?></h3>
+							<p><?php _e( 'Configurar envío gratuito y estándar', 'woocommerce-venezuela-pro-2025' ); ?></p>
+							<button type="button" class="button button-secondary" onclick="wcvsConfigureShipping()">
+								<?php _e( 'Configurar Métodos de Envío', 'woocommerce-venezuela-pro-2025' ); ?>
+							</button>
+						</div>
+					</div>
+					<div class="wcvs-step-item">
+						<div class="wcvs-step-number">5</div>
+						<div class="wcvs-step-content">
+							<h3><?php _e( 'Ubicación', 'woocommerce-venezuela-pro-2025' ); ?></h3>
+							<p><?php _e( 'Configurar Venezuela como país base', 'woocommerce-venezuela-pro-2025' ); ?></p>
+							<button type="button" class="button button-secondary" onclick="wcvsConfigureLocation()">
+								<?php _e( 'Configurar Ubicación', 'woocommerce-venezuela-pro-2025' ); ?>
+							</button>
+						</div>
+					</div>
+					<div class="wcvs-step-item">
+						<div class="wcvs-step-number">6</div>
+						<div class="wcvs-step-content">
+							<h3><?php _e( 'Páginas', 'woocommerce-venezuela-pro-2025' ); ?></h3>
+							<p><?php _e( 'Crear páginas necesarias de WooCommerce', 'woocommerce-venezuela-pro-2025' ); ?></p>
+							<button type="button" class="button button-secondary" onclick="wcvsConfigurePages()">
+								<?php _e( 'Configurar Páginas', 'woocommerce-venezuela-pro-2025' ); ?>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Resumen Ejecutivo -->
+			<div class="wcvs-dashboard-card">
+				<h2><?php _e( '📊 Resumen Ejecutivo', 'woocommerce-venezuela-pro-2025' ); ?></h2>
+				<div class="wcvs-stats">
+					<div class="wcvs-stat">
+						<span class="wcvs-stat-label"><?php _e( 'Módulos Activos', 'woocommerce-venezuela-pro-2025' ); ?></span>
+						<span class="wcvs-stat-value"><?php echo count( array_filter( $active_modules ) ); ?></span>
+					</div>
+					<div class="wcvs-stat">
+						<span class="wcvs-stat-label"><?php _e( 'Versión', 'woocommerce-venezuela-pro-2025' ); ?></span>
+						<span class="wcvs-stat-value"><?php echo WCVS_VERSION; ?></span>
 					</div>
 				</div>
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Get current rate display
+	 */
+	private function get_current_rate_display() {
+		$rate = $this->core->bcv_integration->get_current_rate();
+		if ( $rate && $rate > 0 ) {
+			return '<span class="wcvs-rate-number">' . number_format( $rate, 2, ',', '.' ) . '</span> <span class="wcvs-rate-currency">VES</span>';
+		}
+		return '<span class="wcvs-rate-unavailable">' . __( 'No disponible', 'woocommerce-venezuela-pro-2025' ) . '</span>';
+	}
+
+	/**
+	 * Get rate status
+	 */
+	private function get_rate_status() {
+		if ( $this->core->bcv_integration->is_available() ) {
+			return '<span class="wcvs-status-online">' . __( 'BCV Activo', 'woocommerce-venezuela-pro-2025' ) . '</span>';
+		}
+		return '<span class="wcvs-status-offline">' . __( 'Modo Respaldo', 'woocommerce-venezuela-pro-2025' ) . '</span>';
 	}
 
 	/**
