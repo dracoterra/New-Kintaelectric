@@ -27,6 +27,30 @@ class WVP_Admin_Dashboard {
 		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 		add_action( 'wp_ajax_wvp_get_dashboard_stats', array( $this, 'ajax_get_dashboard_stats' ) );
+		add_action( 'admin_init', array( $this, 'register_settings' ) );
+	}
+	
+	/**
+	 * Register settings
+	 */
+	public function register_settings() {
+		register_setting( 'wvp_settings', 'wvp_emergency_rate', array(
+			'type' => 'number',
+			'default' => '36.5',
+			'sanitize_callback' => 'floatval'
+		));
+		
+		register_setting( 'wvp_settings', 'wvp_iva_rate', array(
+			'type' => 'number',
+			'default' => '16',
+			'sanitize_callback' => 'floatval'
+		));
+		
+		register_setting( 'wvp_settings', 'wvp_igtf_rate', array(
+			'type' => 'number',
+			'default' => '3',
+			'sanitize_callback' => 'floatval'
+		));
 	}
 	
 	/**
@@ -209,6 +233,10 @@ class WVP_Admin_Dashboard {
 	 * Settings page
 	 */
 	public function settings_page() {
+		// Show success message if settings were saved
+		if ( isset( $_GET['settings-updated'] ) && $_GET['settings-updated'] ) {
+			echo '<div class="notice notice-success is-dismissible"><p>Configuración guardada exitosamente.</p></div>';
+		}
 		?>
 		<div class="wrap wvp-settings">
 			<h1 class="wvp-page-title">
@@ -226,7 +254,7 @@ class WVP_Admin_Dashboard {
 							<tr>
 								<th scope="row">Tasa BCV de Emergencia</th>
 								<td>
-									<input type="number" name="wvp_emergency_rate" value="<?php echo get_option( 'wvp_emergency_rate', '36.5' ); ?>" step="0.01" />
+									<input type="number" name="wvp_emergency_rate" value="<?php echo esc_attr( get_option( 'wvp_emergency_rate', '36.5' ) ); ?>" step="0.01" min="0" />
 									<p class="description">Tasa de cambio USD a VES cuando BCV no esté disponible</p>
 								</td>
 							</tr>
@@ -239,14 +267,14 @@ class WVP_Admin_Dashboard {
 							<tr>
 								<th scope="row">Tasa de IVA (%)</th>
 								<td>
-									<input type="number" name="wvp_iva_rate" value="<?php echo get_option( 'wvp_iva_rate', '16' ); ?>" min="0" max="50" step="0.01" />
+									<input type="number" name="wvp_iva_rate" value="<?php echo esc_attr( get_option( 'wvp_iva_rate', '16' ) ); ?>" min="0" max="50" step="0.01" />
 									<p class="description">Tasa de IVA venezolano (por defecto 16%)</p>
 								</td>
 							</tr>
 							<tr>
 								<th scope="row">Tasa de IGTF (%)</th>
 								<td>
-									<input type="number" name="wvp_igtf_rate" value="<?php echo get_option( 'wvp_igtf_rate', '3' ); ?>" min="0" max="10" step="0.01" />
+									<input type="number" name="wvp_igtf_rate" value="<?php echo esc_attr( get_option( 'wvp_igtf_rate', '3' ) ); ?>" min="0" max="10" step="0.01" />
 									<p class="description">Tasa de IGTF venezolano (por defecto 3%)</p>
 								</td>
 							</tr>
@@ -256,6 +284,13 @@ class WVP_Admin_Dashboard {
 				
 				<?php submit_button( 'Guardar Configuración' ); ?>
 			</form>
+			
+			<div class="wvp-settings-info">
+				<h3>Información de Configuración</h3>
+				<p><strong>Tasa BCV Actual:</strong> <?php echo get_option( 'wvp_emergency_rate', '36.5' ); ?> VES por USD</p>
+				<p><strong>IVA Configurado:</strong> <?php echo get_option( 'wvp_iva_rate', '16' ); ?>%</p>
+				<p><strong>IGTF Configurado:</strong> <?php echo get_option( 'wvp_igtf_rate', '3' ); ?>%</p>
+			</div>
 		</div>
 		<?php
 	}

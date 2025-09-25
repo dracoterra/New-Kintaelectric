@@ -323,3 +323,26 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* Settings Info */
+.wvp-settings-info {
+    background: #f0f6fc;
+    border: 1px solid #c3c4c7;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.wvp-settings-info h3 {
+    margin-top: 0;
+    color: #0073aa;
+}
+
+.wvp-settings-info p {
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+.wvp-settings-info strong {
+    color: #0073aa;
+}
