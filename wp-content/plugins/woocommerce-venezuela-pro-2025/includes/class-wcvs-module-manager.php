@@ -220,17 +220,23 @@ class WCVS_Module_Manager {
             'priority' => 999
         ));
 
-        // Guardar en base de datos
-        $this->save_module_to_database($key, $this->modules[$key]);
+        // No guardar en base de datos inmediatamente para evitar consumo de memoria
+        // Se guardará cuando sea necesario
     }
 
     /**
      * Cargar módulos activos
      */
     public function load_active_modules() {
+        // Solo cargar módulos esenciales inicialmente para evitar consumo de memoria
+        $essential_modules = array('currency_manager', 'payment_gateways', 'shipping_methods');
+        
         foreach ($this->modules as $key => $module) {
             if ($module['enabled'] && $this->check_dependencies($key)) {
-                $this->load_module($key);
+                // Solo cargar módulos esenciales o si se solicita específicamente
+                if (in_array($key, $essential_modules) || $this->is_module_requested($key)) {
+                    $this->load_module($key);
+                }
             }
         }
 
@@ -239,11 +245,28 @@ class WCVS_Module_Manager {
     }
 
     /**
+     * Verificar si un módulo es solicitado específicamente
+     *
+     * @param string $key Clave del módulo
+     * @return bool
+     */
+    private function is_module_requested($key) {
+        // Verificar si se está accediendo a una página específica del módulo
+        if (is_admin()) {
+            $current_page = $_GET['page'] ?? '';
+            return strpos($current_page, 'wcvs-' . $key) !== false;
+        }
+        
+        // Verificar si se está usando una funcionalidad específica del módulo
+        return false;
+    }
+
+    /**
      * Cargar un módulo específico
      *
      * @param string $key Clave del módulo
      */
-    private function load_module($key) {
+    public function load_module($key) {
         if (!isset($this->modules[$key])) {
             return;
         }
@@ -548,6 +571,39 @@ class WCVS_Module_Manager {
     }
 
     /**
+     * Crear tabla de módulos
+     */
+    private function create_modules_table() {
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'wcvs_modules';
+        
+        // Verificar si la tabla existe
+        if ($wpdb->get_var("SHOW TABLES LIKE '{$table_name}'") !== $table_name) {
+            $charset_collate = $wpdb->get_charset_collate();
+            
+            $sql = "CREATE TABLE {$table_name} (
+                id bigint(20) NOT NULL AUTO_INCREMENT,
+                module_key varchar(100) NOT NULL,
+                module_name varchar(255) NOT NULL,
+                module_description text,
+                module_class varchar(255) NOT NULL,
+                module_file varchar(500) NOT NULL,
+                is_active tinyint(1) DEFAULT 0,
+                settings longtext,
+                created_at datetime DEFAULT CURRENT_TIMESTAMP,
+                updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (id),
+                UNIQUE KEY module_key (module_key),
+                KEY is_active (is_active)
+            ) {$charset_collate};";
+            
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+            dbDelta($sql);
+        }
+    }
+
+    /**
      * Guardar módulo en base de datos
      *
      * @param string $key Clave del módulo
@@ -557,6 +613,9 @@ class WCVS_Module_Manager {
         global $wpdb;
         
         $table_name = $wpdb->prefix . 'wcvs_modules';
+        
+        // Crear tabla si no existe
+        $this->create_modules_table();
         
         $data = array(
             'module_key' => $key,

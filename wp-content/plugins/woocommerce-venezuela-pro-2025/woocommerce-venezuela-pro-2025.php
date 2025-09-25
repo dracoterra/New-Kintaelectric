@@ -78,7 +78,7 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-wcvs-core.php';
  */
 function run_wcvs() {
 
-	$plugin = new WCVS_Core();
+	$plugin = WCVS_Core::get_instance();
 	$plugin->run();
 
 }

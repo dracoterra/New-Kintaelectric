@@ -41,8 +41,8 @@ class WCVS_Currency_Manager {
      * Constructor
      */
     public function __construct() {
-        $this->plugin = WCVS_Core::get_instance();
-        $this->settings = $this->plugin->get_settings()->get('currency', array());
+        // Evitar referencia circular
+        $this->settings = get_option('wcvs_settings', array());
         
         $this->init_hooks();
         $this->load_conversion_cache();

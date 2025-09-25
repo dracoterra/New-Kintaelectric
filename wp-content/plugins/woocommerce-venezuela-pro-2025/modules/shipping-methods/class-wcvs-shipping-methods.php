@@ -79,8 +79,8 @@ class WCVS_Shipping_Methods {
      * Constructor
      */
     public function __construct() {
-        $this->plugin = WCVS_Core::get_instance();
-        $this->settings = $this->plugin->get_settings()->get('shipping', array());
+        // Evitar referencia circular
+        $this->settings = get_option('wcvs_settings', array());
         
         $this->init_hooks();
         $this->init_tracking_system();

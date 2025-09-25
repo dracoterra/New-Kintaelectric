@@ -99,6 +99,7 @@ class WCVS_Core {
         require_once WCVS_PLUGIN_PATH . 'includes/class-wcvs-bcv-integration.php';
         require_once WCVS_PLUGIN_PATH . 'includes/class-wcvs-logger.php';
         require_once WCVS_PLUGIN_PATH . 'includes/class-wcvs-help.php';
+        require_once WCVS_PLUGIN_PATH . 'includes/class-wcvs-i18n.php';
         require_once WCVS_PLUGIN_PATH . 'includes/class-wcvs-activator.php';
         require_once WCVS_PLUGIN_PATH . 'includes/class-wcvs-deactivator.php';
 
@@ -110,12 +111,13 @@ class WCVS_Core {
         // Cargar clases públicas
         require_once WCVS_PLUGIN_PATH . 'public/class-wcvs-public.php';
 
-        // Inicializar instancias
+        // Inicializar instancias básicas
         $this->loader = new WCVS_Loader();
         $this->settings = new WCVS_Settings();
         $this->module_manager = new WCVS_Module_Manager();
-        $this->bcv_integration = new WCVS_BCV_Integration();
-        $this->logger = new WCVS_Logger();
+        
+        // Inicializar componentes adicionales de manera diferida
+        add_action('wp_loaded', array($this, 'init_additional_components'));
     }
 
     /**
@@ -170,13 +172,24 @@ class WCVS_Core {
      * Inicializar módulos del plugin
      */
     private function init_modules() {
-        // Registrar módulos disponibles
+        // Registrar solo módulos esenciales inicialmente para evitar consumo de memoria
+        $this->register_essential_modules();
+        
+        // Registrar módulos adicionales cuando sea necesario
+        add_action('wp_loaded', array($this, 'register_additional_modules'));
+    }
+
+    /**
+     * Registrar módulos esenciales
+     */
+    private function register_essential_modules() {
         $this->module_manager->register_module('currency_manager', array(
             'name' => 'Gestor de Moneda',
             'description' => 'Conversión automática USD a VES usando tasa BCV',
             'class' => 'WCVS_Currency_Manager',
             'file' => 'modules/currency-manager/class-wcvs-currency-manager.php',
-            'enabled' => true
+            'enabled' => true,
+            'priority' => 1
         ));
 
         $this->module_manager->register_module('payment_gateways', array(
@@ -184,7 +197,8 @@ class WCVS_Core {
             'description' => 'Pasarelas de pago locales para Venezuela',
             'class' => 'WCVS_Payment_Gateways',
             'file' => 'modules/payment-gateways/class-wcvs-payment-gateways.php',
-            'enabled' => true
+            'enabled' => true,
+            'priority' => 2
         ));
 
         $this->module_manager->register_module('shipping_methods', array(
@@ -192,15 +206,30 @@ class WCVS_Core {
             'description' => 'Métodos de envío locales para Venezuela',
             'class' => 'WCVS_Shipping_Methods',
             'file' => 'modules/shipping-methods/class-wcvs-shipping-methods.php',
-            'enabled' => true
+            'enabled' => true,
+            'priority' => 3
         ));
+    }
 
+    /**
+     * Inicializar componentes adicionales
+     */
+    public function init_additional_components() {
+        $this->bcv_integration = new WCVS_BCV_Integration();
+        $this->logger = new WCVS_Logger();
+    }
+
+    /**
+     * Registrar módulos adicionales
+     */
+    public function register_additional_modules() {
         $this->module_manager->register_module('tax_system', array(
             'name' => 'Sistema Fiscal',
             'description' => 'Sistema fiscal venezolano (IVA, IGTF)',
             'class' => 'WCVS_Tax_System',
             'file' => 'modules/tax-system/class-wcvs-tax-system.php',
-            'enabled' => true
+            'enabled' => true,
+            'priority' => 4
         ));
 
         $this->module_manager->register_module('electronic_billing', array(
@@ -208,7 +237,8 @@ class WCVS_Core {
             'description' => 'Facturación electrónica para SENIAT',
             'class' => 'WCVS_Electronic_Billing',
             'file' => 'modules/electronic-billing/class-wcvs-electronic-billing.php',
-            'enabled' => true
+            'enabled' => true,
+            'priority' => 5
         ));
 
         $this->module_manager->register_module('seniat_reports', array(
@@ -216,7 +246,8 @@ class WCVS_Core {
             'description' => 'Reportes fiscales para SENIAT',
             'class' => 'WCVS_SENIAT_Reports',
             'file' => 'modules/seniat-reports/class-wcvs-seniat-reports.php',
-            'enabled' => true
+            'enabled' => true,
+            'priority' => 6
         ));
 
         $this->module_manager->register_module('price_display', array(
@@ -224,7 +255,8 @@ class WCVS_Core {
             'description' => 'Sistema avanzado de visualización de precios',
             'class' => 'WCVS_Price_Display',
             'file' => 'modules/price-display/class-wcvs-price-display.php',
-            'enabled' => true
+            'enabled' => true,
+            'priority' => 7
         ));
 
         $this->module_manager->register_module('onboarding', array(
@@ -232,7 +264,8 @@ class WCVS_Core {
             'description' => 'Wizard de configuración rápida',
             'class' => 'WCVS_Onboarding',
             'file' => 'modules/onboarding/class-wcvs-onboarding.php',
-            'enabled' => true
+            'enabled' => true,
+            'priority' => 8
         ));
 
         $this->module_manager->register_module('help_system', array(
@@ -240,7 +273,8 @@ class WCVS_Core {
             'description' => 'Sistema de ayuda integrado',
             'class' => 'WCVS_Help_System',
             'file' => 'modules/help-system/class-wcvs-help-system.php',
-            'enabled' => true
+            'enabled' => true,
+            'priority' => 9
         ));
 
         $this->module_manager->register_module('notifications', array(
@@ -248,7 +282,8 @@ class WCVS_Core {
             'description' => 'Sistema de notificaciones automáticas',
             'class' => 'WCVS_Notifications',
             'file' => 'modules/notifications/class-wcvs-notifications.php',
-            'enabled' => true
+            'enabled' => true,
+            'priority' => 10
         ));
     }
 
@@ -258,12 +293,14 @@ class WCVS_Core {
     public function init_woocommerce_integration() {
         // Verificar que WooCommerce esté activo
         if (!class_exists('WooCommerce')) {
-            $this->logger->error('WooCommerce no está activo. WooCommerce Venezuela Suite requiere WooCommerce.');
+            WCVS_Logger::error(WCVS_Logger::CONTEXT_CORE, 'WooCommerce no está activo. WooCommerce Venezuela Suite requiere WooCommerce.');
             return;
         }
 
-        // Inicializar integración BCV
-        $this->bcv_integration->init();
+        // Inicializar integración BCV si está disponible
+        if ($this->bcv_integration && method_exists($this->bcv_integration, 'init')) {
+            $this->bcv_integration->init();
+        }
 
         // Cargar módulos activos
         $this->module_manager->load_active_modules();
@@ -271,7 +308,7 @@ class WCVS_Core {
         // Registrar hooks de WooCommerce
         $this->register_woocommerce_hooks();
 
-        $this->logger->info('Integración con WooCommerce inicializada correctamente');
+        WCVS_Logger::info(WCVS_Logger::CONTEXT_CORE, 'Integración con WooCommerce inicializada correctamente');
     }
 
     /**
@@ -303,14 +340,16 @@ class WCVS_Core {
         // Inicializar configuración
         $this->settings->init();
 
-        // Inicializar logging
-        $this->logger->init();
+        // Inicializar logging si está disponible
+        if ($this->logger && method_exists($this->logger, 'init')) {
+            $this->logger->init();
+        }
 
         // Registrar hooks de inicialización
         $this->loader->add_action('wp_loaded', $this, 'wp_loaded');
         $this->loader->add_action('admin_init', $this, 'admin_init');
 
-        $this->logger->info('Plugin WooCommerce Venezuela Suite inicializado');
+        WCVS_Logger::info(WCVS_Logger::CONTEXT_CORE, 'Plugin WooCommerce Venezuela Suite inicializado');
     }
 
     /**
@@ -332,7 +371,7 @@ class WCVS_Core {
         }
 
         if (!empty($missing)) {
-            $this->logger->error('Dependencias faltantes: ' . implode(', ', $missing));
+            WCVS_Logger::error(WCVS_Logger::CONTEXT_CORE, 'Dependencias faltantes: ' . implode(', ', $missing));
             add_action('admin_notices', array($this, 'dependency_notice'));
             return false;
         }
@@ -356,7 +395,7 @@ class WCVS_Core {
      */
     public function wp_loaded() {
         // Sincronizar configuración BCV si es necesario
-        if ($this->bcv_integration->is_available()) {
+        if ($this->bcv_integration && $this->bcv_integration->is_available()) {
             $this->bcv_integration->sync_settings();
         }
 
@@ -377,7 +416,7 @@ class WCVS_Core {
         }
 
         // Sincronizar configuración BCV
-        if ($this->bcv_integration->is_available()) {
+        if ($this->bcv_integration && $this->bcv_integration->is_available()) {
             $this->bcv_integration->sync_settings();
         }
     }
@@ -398,10 +437,13 @@ class WCVS_Core {
 
         // Ejecutar onboarding si está disponible
         if ($this->module_manager->is_module_active('onboarding')) {
-            $this->module_manager->get_module('onboarding')->start_onboarding();
+            $onboarding_module = $this->module_manager->get_module_instance('onboarding');
+            if ($onboarding_module && method_exists($onboarding_module, 'init')) {
+                $onboarding_module->init();
+            }
         }
 
-        $this->logger->info('Primera activación del plugin completada');
+        WCVS_Logger::info(WCVS_Logger::CONTEXT_CORE, 'Primera activación del plugin completada');
     }
 
     /**
@@ -473,6 +515,47 @@ class WCVS_Core {
     }
 
     /**
+     * Cargar módulo bajo demanda
+     *
+     * @param string $module_key Clave del módulo
+     * @return bool
+     */
+    public function load_module_on_demand($module_key) {
+        if ($this->module_manager->is_module_active($module_key)) {
+            $module_instance = $this->module_manager->get_module_instance($module_key);
+            if (!$module_instance) {
+                $this->module_manager->load_module($module_key);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Obtener instancia del plugin de manera segura
+     *
+     * @return WCVS_Core|null
+     */
+    public static function get_safe_instance() {
+        if (self::$instance === null) {
+            return null;
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Obtener configuración de manera segura
+     *
+     * @param string $key Clave de configuración
+     * @param mixed $default Valor por defecto
+     * @return mixed
+     */
+    public static function get_safe_setting($key, $default = null) {
+        $settings = get_option('wcvs_settings', array());
+        return isset($settings[$key]) ? $settings[$key] : $default;
+    }
+
+    /**
      * Obtener versión del plugin
      *
      * @return string
@@ -511,7 +594,7 @@ class WCVS_Core {
     /**
      * Obtener integración BCV
      *
-     * @return WCVS_BCV_Integration
+     * @return WCVS_BCV_Integration|null
      */
     public function get_bcv_integration() {
         return $this->bcv_integration;

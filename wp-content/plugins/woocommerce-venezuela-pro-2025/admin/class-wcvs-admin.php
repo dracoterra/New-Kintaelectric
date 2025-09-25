@@ -24,31 +24,19 @@ class WCVS_Admin {
     private $version;
 
     /**
-     * Instancia del plugin
-     *
-     * @var WCVS_Core
-     */
-    private $plugin;
-
-    /**
      * Constructor
      *
      * @param string $version Versión del plugin
      */
     public function __construct($version) {
         $this->version = $version;
-        $this->plugin = WCVS_Core::get_instance();
     }
 
     /**
      * Registrar hooks de administración
      */
     public function init() {
-        add_action('admin_menu', array($this, 'add_admin_menu'));
-        add_action('admin_enqueue_scripts', array($this, 'enqueue_styles'));
-        add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts'));
-        add_action('admin_init', array($this, 'register_settings'));
-        add_action('admin_notices', array($this, 'admin_notices'));
+        // Los hooks ya se registran en WCVS_Core, no duplicar aquí
     }
 
     /**

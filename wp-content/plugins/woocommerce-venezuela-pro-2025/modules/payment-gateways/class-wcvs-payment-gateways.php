@@ -52,8 +52,8 @@ class WCVS_Payment_Gateways {
      * Constructor
      */
     public function __construct() {
-        $this->plugin = WCVS_Core::get_instance();
-        $this->settings = $this->plugin->get_settings()->get('payments', array());
+        // Evitar referencia circular
+        $this->settings = get_option('wcvs_settings', array());
         
         $this->init_hooks();
     }
