@@ -346,3 +346,56 @@
 .wvp-settings-info strong {
     color: #0073aa;
 }
+
+/* Detailed Statistics */
+.wvp-detailed-stats {
+    margin-top: 20px;
+}
+
+.wvp-stats-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.wvp-stats-section {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.wvp-stats-section h3 {
+    margin-top: 0;
+    color: #0073aa;
+    border-bottom: 2px solid #0073aa;
+    padding-bottom: 10px;
+}
+
+.wvp-stats-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.wvp-stats-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wvp-stats-list li:last-child {
+    border-bottom: none;
+}
+
+.wvp-method-name {
+    color: #1d2327;
+    font-weight: 500;
+}
+
+.wvp-stats-list strong {
+    color: #0073aa;
+    font-weight: 600;
+}

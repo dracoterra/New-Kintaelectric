@@ -137,8 +137,38 @@ class WVP_Admin_Dashboard {
 						<span class="dashicons dashicons-money"></span>
 					</div>
 					<div class="wvp-stat-content">
-						<h3><?php echo wc_price( $stats['total_revenue'] ); ?></h3>
-						<p>Ingresos Totales</p>
+						<h3>$<?php echo number_format( $stats['total_revenue_usd'], 2 ); ?></h3>
+						<p>Ingresos USD</p>
+					</div>
+				</div>
+				
+				<div class="wvp-stat-card">
+					<div class="wvp-stat-icon">
+						<span class="dashicons dashicons-money-alt"></span>
+					</div>
+					<div class="wvp-stat-content">
+						<h3><?php echo number_format( $stats['total_revenue_ves'], 2 ); ?></h3>
+						<p>Ingresos VES</p>
+					</div>
+				</div>
+				
+				<div class="wvp-stat-card">
+					<div class="wvp-stat-icon">
+						<span class="dashicons dashicons-groups"></span>
+					</div>
+					<div class="wvp-stat-content">
+						<h3><?php echo $stats['total_customers']; ?></h3>
+						<p>Clientes Totales</p>
+					</div>
+				</div>
+				
+				<div class="wvp-stat-card">
+					<div class="wvp-stat-icon">
+						<span class="dashicons dashicons-update"></span>
+					</div>
+					<div class="wvp-stat-content">
+						<h3><?php echo $stats['currency_conversions']; ?></h3>
+						<p>Conversiones</p>
 					</div>
 				</div>
 				
@@ -147,8 +177,8 @@ class WVP_Admin_Dashboard {
 						<span class="dashicons dashicons-chart-line"></span>
 					</div>
 					<div class="wvp-stat-content">
-						<h3><?php echo $stats['conversion_rate']; ?>%</h3>
-						<p>Tasa de Conversión</p>
+						<h3><?php echo $stats['bcv_rate']; ?></h3>
+						<p>Tasa BCV</p>
 					</div>
 				</div>
 				
@@ -322,9 +352,43 @@ class WVP_Admin_Dashboard {
 			'status' => array( 'wc-completed', 'wc-processing' )
 		));
 		
-		$total_revenue = 0;
+		$total_revenue_usd = 0;
+		$total_revenue_ves = 0;
+		$currency_conversions = 0;
+		$payment_methods = array();
+		$shipping_methods = array();
+		$monthly_stats = array();
+		
 		foreach ( $orders as $order ) {
-			$total_revenue += $order->get_total();
+			$total_revenue_usd += $order->get_total();
+			
+			// Simular conversión a VES (en producción vendría del BCV)
+			$bcv_rate = get_option( 'wvp_emergency_rate', 36.5 );
+			$total_revenue_ves += $order->get_total() * $bcv_rate;
+			
+			// Contar métodos de pago
+			$payment_method = $order->get_payment_method();
+			if ( ! isset( $payment_methods[$payment_method] ) ) {
+				$payment_methods[$payment_method] = 0;
+			}
+			$payment_methods[$payment_method]++;
+			
+			// Contar métodos de envío
+			$shipping_method = $order->get_shipping_method();
+			if ( ! isset( $shipping_methods[$shipping_method] ) ) {
+				$shipping_methods[$shipping_method] = 0;
+			}
+			$shipping_methods[$shipping_method]++;
+			
+			// Estadísticas mensuales
+			$month = $order->get_date_created()->format( 'Y-m' );
+			if ( ! isset( $monthly_stats[$month] ) ) {
+				$monthly_stats[$month] = array( 'orders' => 0, 'revenue' => 0 );
+			}
+			$monthly_stats[$month]['orders']++;
+			$monthly_stats[$month]['revenue'] += $order->get_total();
+			
+			$currency_conversions++;
 		}
 		
 		$customers = get_users( array(
@@ -334,9 +398,15 @@ class WVP_Admin_Dashboard {
 		
 		return array(
 			'total_orders' => count( $orders ),
-			'total_revenue' => $total_revenue,
+			'total_revenue_usd' => $total_revenue_usd,
+			'total_revenue_ves' => $total_revenue_ves,
 			'total_customers' => count( $customers ),
-			'conversion_rate' => '85' // Placeholder
+			'currency_conversions' => $currency_conversions,
+			'bcv_rate' => get_option( 'wvp_emergency_rate', 36.5 ),
+			'payment_methods' => $payment_methods,
+			'shipping_methods' => $shipping_methods,
+			'monthly_stats' => $monthly_stats,
+			'last_update' => current_time( 'Y-m-d H:i:s' )
 		);
 	}
 	
@@ -383,5 +453,90 @@ class WVP_Admin_Dashboard {
 		
 		$stats = $this->get_dashboard_stats();
 		wp_send_json_success( $stats );
+	}
+	
+	/**
+	 * Display payment methods statistics
+	 */
+	private function display_payment_methods_stats( $payment_methods ) {
+		if ( empty( $payment_methods ) ) {
+			echo '<p>No hay datos de métodos de pago disponibles.</p>';
+			return;
+		}
+		
+		echo '<ul class="wvp-stats-list">';
+		foreach ( $payment_methods as $method => $count ) {
+			$method_name = $this->get_payment_method_name( $method );
+			echo '<li><span class="wvp-method-name">' . esc_html( $method_name ) . '</span>: <strong>' . $count . '</strong> pedidos</li>';
+		}
+		echo '</ul>';
+	}
+	
+	/**
+	 * Display shipping methods statistics
+	 */
+	private function display_shipping_methods_stats( $shipping_methods ) {
+		if ( empty( $shipping_methods ) ) {
+			echo '<p>No hay datos de métodos de envío disponibles.</p>';
+			return;
+		}
+		
+		echo '<ul class="wvp-stats-list">';
+		foreach ( $shipping_methods as $method => $count ) {
+			$method_name = $this->get_shipping_method_name( $method );
+			echo '<li><span class="wvp-method-name">' . esc_html( $method_name ) . '</span>: <strong>' . $count . '</strong> pedidos</li>';
+		}
+		echo '</ul>';
+	}
+	
+	/**
+	 * Display monthly statistics
+	 */
+	private function display_monthly_stats( $monthly_stats ) {
+		if ( empty( $monthly_stats ) ) {
+			echo '<p>No hay datos mensuales disponibles.</p>';
+			return;
+		}
+		
+		// Ordenar por mes (más reciente primero)
+		krsort( $monthly_stats );
+		
+		echo '<ul class="wvp-stats-list">';
+		foreach ( $monthly_stats as $month => $data ) {
+			$month_name = date( 'F Y', strtotime( $month . '-01' ) );
+			echo '<li><span class="wvp-method-name">' . esc_html( $month_name ) . '</span>: <strong>' . $data['orders'] . '</strong> pedidos, <strong>$' . number_format( $data['revenue'], 2 ) . '</strong></li>';
+		}
+		echo '</ul>';
+	}
+	
+	/**
+	 * Get payment method display name
+	 */
+	private function get_payment_method_name( $method ) {
+		$methods = array(
+			'wvp_pago_movil' => 'Pago Móvil',
+			'bacs' => 'Transferencia Bancaria',
+			'cod' => 'Contra Reembolso',
+			'stripe' => 'Stripe',
+			'paypal' => 'PayPal'
+		);
+		
+		return isset( $methods[$method] ) ? $methods[$method] : ucfirst( str_replace( '_', ' ', $method ) );
+	}
+	
+	/**
+	 * Get shipping method display name
+	 */
+	private function get_shipping_method_name( $method ) {
+		$methods = array(
+			'wvp_mrw' => 'MRW Venezuela',
+			'wvp_zoom' => 'Zoom Envíos',
+			'wvp_menssajero' => 'Menssajero',
+			'wvp_local_delivery' => 'Entrega Local',
+			'flat_rate' => 'Tarifa Fija',
+			'free_shipping' => 'Envío Gratis'
+		);
+		
+		return isset( $methods[$method] ) ? $methods[$method] : ucfirst( str_replace( '_', ' ', $method ) );
 	}
 }
