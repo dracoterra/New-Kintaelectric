@@ -120,10 +120,29 @@ class WVP_Simple_Currency_Converter {
  */
 function wvp_init_minimal() {
 	if ( class_exists( 'WooCommerce' ) ) {
+		// Load additional classes
+		require_once WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR . 'includes/class-wvp-venezuelan-taxes.php';
+		require_once WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR . 'includes/class-wvp-pago-movil-gateway.php';
+		require_once WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR . 'includes/class-wvp-admin-dashboard.php';
+		
+		// Initialize core functionality
 		WVP_Simple_Currency_Converter::get_instance();
+		WVP_Venezuelan_Taxes::get_instance();
+		WVP_Admin_Dashboard::get_instance();
+		
+		// Add Pago Móvil gateway
+		add_filter( 'woocommerce_payment_gateways', 'wvp_add_pago_movil_gateway' );
 	}
 }
 add_action( 'plugins_loaded', 'wvp_init_minimal' );
+
+/**
+ * Add Pago Móvil gateway to WooCommerce
+ */
+function wvp_add_pago_movil_gateway( $gateways ) {
+	$gateways[] = 'WVP_Pago_Movil_Gateway';
+	return $gateways;
+}
 
 /**
  * Activation hook
