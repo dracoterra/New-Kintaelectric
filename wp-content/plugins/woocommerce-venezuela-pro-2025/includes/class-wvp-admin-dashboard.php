@@ -24,7 +24,7 @@ class WVP_Admin_Dashboard {
 	}
 	
 	private function init_hooks() {
-		add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+		add_action( 'admin_menu', array( $this, 'add_admin_menu' ), 10 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 		add_action( 'wp_ajax_wvp_get_dashboard_stats', array( $this, 'ajax_get_dashboard_stats' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
@@ -101,7 +101,18 @@ class WVP_Admin_Dashboard {
 	public function enqueue_admin_scripts( $hook ) {
 		if ( strpos( $hook, 'wvp-' ) !== false ) {
 			wp_enqueue_style( 'wvp-admin', WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_URL . 'admin/css/wvp-admin.css', array(), WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION );
+			wp_enqueue_style( 'wvp-seniat', WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_URL . 'admin/css/wvp-seniat.css', array(), WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION );
 			wp_enqueue_script( 'wvp-admin', WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_URL . 'admin/js/wvp-admin.js', array( 'jquery' ), WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION, true );
+			
+			// Cargar JavaScript específico para SENIAT
+			if ( strpos( $hook, 'wvp-seniat' ) !== false ) {
+				wp_enqueue_script( 'wvp-seniat', WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_URL . 'admin/js/wvp-seniat.js', array( 'jquery' ), WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION, true );
+				wp_localize_script( 'wvp-seniat', 'wvp_seniat_ajax', array(
+					'ajax_url' => admin_url( 'admin-ajax.php' ),
+					'nonce' => wp_create_nonce( 'wvp_seniat_nonce' )
+				));
+			}
+			
 			wp_localize_script( 'wvp-admin', 'wvp_ajax', array(
 				'ajax_url' => admin_url( 'admin-ajax.php' ),
 				'nonce' => wp_create_nonce( 'wvp_dashboard' )

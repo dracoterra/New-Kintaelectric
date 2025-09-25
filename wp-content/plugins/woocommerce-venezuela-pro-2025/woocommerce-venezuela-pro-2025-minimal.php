@@ -126,6 +126,7 @@ function wvp_init_minimal() {
 		require_once WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR . 'includes/class-wvp-admin-dashboard.php';
 		require_once WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR . 'includes/class-wvp-venezuelan-shipping.php';
 		require_once WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR . 'includes/class-wvp-product-display.php';
+		require_once WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR . 'includes/class-wvp-seniat-exporter.php';
 		
 		// Initialize core functionality
 		WVP_Simple_Currency_Converter::get_instance();
@@ -133,6 +134,11 @@ function wvp_init_minimal() {
 		WVP_Admin_Dashboard::get_instance();
 		WVP_Venezuelan_Shipping::get_instance();
 		WVP_Product_Display::get_instance();
+		
+		// Initialize SENIAT after dashboard to ensure menu hierarchy
+		add_action( 'admin_menu', function() {
+			WVP_SENIAT_Exporter::get_instance();
+		}, 15 );
 		
 		// Add Pago Móvil gateway
 		add_filter( 'woocommerce_payment_gateways', 'wvp_add_pago_movil_gateway' );
