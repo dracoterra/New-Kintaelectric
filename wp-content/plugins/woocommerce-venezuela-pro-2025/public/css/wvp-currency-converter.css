@@ -34,15 +34,95 @@
 
 /* Currency Switcher */
 .wvp-currency-switcher {
-    margin: 15px 0;
-    padding: 15px;
-    background: #f8f9fa;
-    border: 1px solid #e1e5e9;
-    border-radius: 4px;
+    margin: 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    border: 2px solid #e1e5e9;
+    border-radius: 12px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: center;
+    gap: 15px;
     flex-wrap: wrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.wvp-currency-switcher::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0073aa, #28a745);
+}
+
+.wvp-currency-switcher h4 {
+    margin: 0 0 15px 0;
+    color: #0073aa;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    width: 100%;
+}
+
+/* Currency Switcher Buttons */
+.wvp-currency-switcher .wvp-currency-btn {
+    background: #fff;
+    border: 2px solid #ddd;
+    padding: 12px 20px;
+    margin-right: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    min-width: 120px;
+    text-align: center;
+}
+
+.wvp-currency-switcher .wvp-currency-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* USD Button States */
+.wvp-currency-switcher .wvp-currency-btn[data-currency="USD"] {
+    border-color: #0073aa;
+    color: #0073aa;
+}
+
+.wvp-currency-switcher .wvp-currency-btn[data-currency="USD"]:hover {
+    background: rgba(0,115,170,0.1);
+    border-color: #005177;
+}
+
+.wvp-currency-switcher .wvp-currency-btn[data-currency="USD"].active {
+    background: #0073aa;
+    color: white;
+    border-color: #0073aa;
+    box-shadow: 0 4px 12px rgba(0,115,170,0.3);
+}
+
+/* VES Button States */
+.wvp-currency-switcher .wvp-currency-btn[data-currency="VES"] {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.wvp-currency-switcher .wvp-currency-btn[data-currency="VES"]:hover {
+    background: rgba(40,167,69,0.1);
+    border-color: #1e7e34;
+}
+
+.wvp-currency-switcher .wvp-currency-btn[data-currency="VES"].active {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+    box-shadow: 0 4px 12px rgba(40,167,69,0.3);
 }
 
 .wvp-currency-switcher label {
@@ -144,13 +224,15 @@
 @media (max-width: 768px) {
     .wvp-currency-switcher {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
     }
     
-    .wvp-currency-switcher select {
+    .wvp-currency-switcher .wvp-currency-btn {
         width: 100%;
         max-width: 200px;
+        margin: 5px 0;
     }
     
     .wvp-dual-price {

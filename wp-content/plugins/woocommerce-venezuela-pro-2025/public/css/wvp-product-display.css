@@ -1,0 +1,391 @@
+/* WooCommerce Venezuela Pro 2025 - Product Display Styles */
+
+/* Dual Price Display - Single Product */
+.wvp-dual-price-display {
+    margin: 20px 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    border: 2px solid #e1e5e9;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.wvp-dual-price-display::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0073aa, #28a745);
+}
+
+.wvp-price-comparison {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.wvp-price-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+    min-width: 100px;
+    text-align: center;
+    background: #fff;
+    border: 2px solid #ddd;
+    transition: all 0.3s ease;
+}
+
+.wvp-price-item.usd {
+    border-color: #0073aa;
+}
+
+.wvp-price-item.ves {
+    border-color: #28a745;
+}
+
+.wvp-price-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.wvp-currency-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    opacity: 0.8;
+}
+
+.wvp-price-item.usd .wvp-currency-label {
+    color: #0073aa;
+}
+
+.wvp-price-item.ves .wvp-currency-label {
+    color: #28a745;
+}
+
+.wvp-price-value {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.wvp-price-item.usd .wvp-price-value {
+    color: #0073aa;
+}
+
+.wvp-price-item.ves .wvp-price-value {
+    color: #28a745;
+}
+
+.wvp-separator {
+    font-size: 20px;
+    color: #6c757d;
+    font-weight: 300;
+    margin: 0 8px;
+}
+
+.wvp-rate-info {
+    text-align: center;
+    color: #6c757d;
+    font-size: 13px;
+    margin-top: 10px;
+}
+
+.wvp-rate-info small {
+    background: linear-gradient(135deg, #0073aa, #005177);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Shop Loop Dual Price */
+.wvp-shop-dual-price {
+    margin: 8px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border-left: 3px solid #0073aa;
+}
+
+.wvp-shop-price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wvp-shop-price-usd {
+    font-size: 16px;
+    font-weight: bold;
+    color: #0073aa;
+}
+
+.wvp-shop-price-ves {
+    font-size: 14px;
+    color: #28a745;
+    font-weight: 500;
+}
+
+/* Cart Dual Price */
+.wvp-cart-dual-price {
+    margin-top: 5px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    border-left: 2px solid #0073aa;
+}
+
+.wvp-cart-price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wvp-cart-price-usd {
+    font-size: 14px;
+    font-weight: bold;
+    color: #0073aa;
+}
+
+.wvp-cart-price-ves {
+    font-size: 12px;
+    color: #28a745;
+}
+
+/* Cart Subtotal Dual */
+.wvp-cart-subtotal-dual {
+    margin-top: 5px;
+    padding: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+}
+
+.wvp-cart-subtotal-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wvp-cart-subtotal-usd {
+    font-size: 14px;
+    font-weight: bold;
+    color: #0073aa;
+}
+
+.wvp-cart-subtotal-ves {
+    font-size: 12px;
+    color: #28a745;
+}
+
+/* Cart Total Dual */
+.wvp-cart-total-dual {
+    margin-top: 10px;
+    padding: 15px;
+    background: linear-gradient(135deg, #0073aa, #005177);
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.wvp-cart-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wvp-cart-total-usd {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.wvp-cart-total-ves {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+/* Checkout Total Dual */
+.wvp-checkout-total-dual {
+    margin-top: 15px;
+    padding: 20px;
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.wvp-checkout-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wvp-checkout-total-usd {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.wvp-checkout-total-ves {
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .wvp-price-row {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+    
+    .wvp-price-separator {
+        display: none;
+    }
+    
+    .wvp-shop-price-row {
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
+    }
+    
+    .wvp-cart-price-row,
+    .wvp-cart-subtotal-row,
+    .wvp-cart-total-row,
+    .wvp-checkout-total-row {
+        flex-direction: column;
+        gap: 4px;
+        text-align: center;
+    }
+    
+    .wvp-dual-price-display {
+        padding: 12px;
+    }
+    
+    .wvp-price-comparison {
+        gap: 10px;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .wvp-price-item {
+        min-width: 120px;
+        padding: 12px 16px;
+        margin: 5px 0;
+    }
+    
+    .wvp-price-value {
+        font-size: 18px;
+    }
+    
+    .wvp-separator {
+        font-size: 16px;
+        margin: 5px 0;
+    }
+    
+    .wvp-rate-info {
+        font-size: 12px;
+    }
+    
+    .wvp-cart-total-dual,
+    .wvp-checkout-total-dual {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .wvp-dual-price-display {
+        padding: 10px;
+    }
+    
+    .wvp-price-item {
+        min-width: 100px;
+        padding: 10px 12px;
+    }
+    
+    .wvp-price-value {
+        font-size: 16px;
+    }
+    
+    .wvp-currency-label {
+        font-size: 11px;
+    }
+    
+    .wvp-separator {
+        font-size: 14px;
+    }
+}
+
+/* Animation Effects */
+.wvp-dual-price-display {
+    animation: wvp-fadeIn 0.5s ease-in;
+}
+
+@keyframes wvp-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Hover Effects */
+.wvp-dual-price-display:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+.wvp-shop-dual-price:hover {
+    background: #e9ecef;
+    transition: background 0.3s ease;
+}
+
+/* Currency Switcher Integration */
+.wvp-currency-switcher + .wvp-dual-price-display {
+    margin-top: 20px;
+}
+
+/* Integration with WooCommerce themes */
+.woocommerce div.product .wvp-dual-price-display {
+    margin: 20px 0;
+}
+
+.woocommerce ul.products li.product .wvp-shop-dual-price {
+    margin: 10px 0;
+}
+
+.woocommerce-cart .wvp-cart-dual-price,
+.woocommerce-cart .wvp-cart-subtotal-dual {
+    margin: 5px 0;
+}
+
+.woocommerce-checkout .wvp-checkout-total-dual {
+    margin: 15px 0;
+}
+
+/* Print Styles */
+@media print {
+    .wvp-dual-price-display,
+    .wvp-shop-dual-price,
+    .wvp-cart-dual-price,
+    .wvp-cart-subtotal-dual,
+    .wvp-cart-total-dual,
+    .wvp-checkout-total-dual {
+        background: white !important;
+        color: black !important;
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+}

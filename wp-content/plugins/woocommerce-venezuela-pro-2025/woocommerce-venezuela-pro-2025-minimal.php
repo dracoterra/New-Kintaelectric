@@ -80,7 +80,7 @@ class WVP_Simple_Currency_Converter {
 		$price_usd = $product->get_price();
 		$price_ves = $price_usd * $this->bcv_rate;
 		
-		echo '<div class="wvp-currency-switcher" style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">';
+		echo '<div class="wvp-currency-switcher">';
 		echo '<h4>Seleccionar Moneda:</h4>';
 		echo '<button class="wvp-currency-btn active" data-currency="USD">USD $' . number_format( $price_usd, 2 ) . '</button>';
 		echo '<button class="wvp-currency-btn" data-currency="VES">VES ' . number_format( $price_ves, 2 ) . '</button>';
@@ -124,11 +124,15 @@ function wvp_init_minimal() {
 		require_once WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR . 'includes/class-wvp-venezuelan-taxes.php';
 		require_once WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR . 'includes/class-wvp-pago-movil-gateway.php';
 		require_once WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR . 'includes/class-wvp-admin-dashboard.php';
+		require_once WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR . 'includes/class-wvp-venezuelan-shipping.php';
+		require_once WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR . 'includes/class-wvp-product-display.php';
 		
 		// Initialize core functionality
 		WVP_Simple_Currency_Converter::get_instance();
 		WVP_Venezuelan_Taxes::get_instance();
 		WVP_Admin_Dashboard::get_instance();
+		WVP_Venezuelan_Shipping::get_instance();
+		WVP_Product_Display::get_instance();
 		
 		// Add Pago Móvil gateway
 		add_filter( 'woocommerce_payment_gateways', 'wvp_add_pago_movil_gateway' );
