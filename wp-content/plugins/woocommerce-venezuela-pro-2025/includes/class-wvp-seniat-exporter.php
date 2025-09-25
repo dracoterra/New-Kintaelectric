@@ -977,9 +977,169 @@ class WVP_SENIAT_Exporter {
      * Generar exportación PDF para facturas (placeholder)
      */
     private function generate_invoice_pdf_export( $data, $start_date, $end_date ) {
+        // Generar HTML optimizado para impresión de facturas
+        $html = $this->generate_invoice_printable_html( $data, $start_date, $end_date );
+        
+        // Guardar archivo HTML para impresión
+        $upload_dir = wp_upload_dir();
+        $filename = 'facturas_' . $start_date . '_' . $end_date;
+        $file_path = $upload_dir['basedir'] . '/wvp-exports/' . $filename . '.html';
+        
+        // Crear directorio si no existe
+        if ( ! file_exists( dirname( $file_path ) ) ) {
+            wp_mkdir_p( dirname( $file_path ) );
+        }
+        
+        file_put_contents( $file_path, $html );
+        
         return array(
-            'html' => '<div class="wvp-info"><h4>📄 Facturas PDF</h4><p>La funcionalidad de PDF estará disponible en la próxima versión.</p><p><strong>Total Facturas:</strong> ' . count( $data ) . '</p></div>'
+            'html' => '<div class="wvp-success"><h4>📄 Facturas PDF Generadas</h4><p><strong>Período:</strong> ' . $start_date . ' a ' . $end_date . '</p><p><strong>Total Facturas:</strong> ' . count( $data ) . '</p><p><strong>Archivo:</strong> ' . $filename . '.html</p><div style="margin-top: 15px;"><a href="' . $upload_dir['baseurl'] . '/wvp-exports/' . $filename . '.html" target="_blank" class="wvp-btn wvp-btn-primary">📄 Ver Facturas</a> <button class="wvp-btn wvp-btn-secondary" onclick="window.print()">🖨️ Imprimir</button></div></div>',
+            'file_url' => $upload_dir['baseurl'] . '/wvp-exports/' . $filename . '.html'
         );
+    }
+    
+    /**
+     * Generar HTML optimizado para impresión de facturas
+     */
+    private function generate_invoice_printable_html( $data, $start_date, $end_date ) {
+        $html = '<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturas - ' . $start_date . ' a ' . $end_date . '</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; }
+        .header h1 { color: #1e3a8a; margin: 0; font-size: 24px; }
+        .header p { margin: 5px 0; color: #666; }
+        .invoice { page-break-after: always; margin-bottom: 40px; border: 1px solid #ddd; padding: 20px; }
+        .invoice:last-child { page-break-after: avoid; }
+        .invoice-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .invoice-info { flex: 1; }
+        .invoice-number { font-size: 18px; font-weight: bold; color: #1e3a8a; }
+        .customer-info { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .items-table th, .items-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .items-table th { background: #1e3a8a; color: white; font-weight: bold; }
+        .totals { display: flex; justify-content: flex-end; }
+        .totals-table { width: 300px; }
+        .totals-table td { padding: 8px; border-bottom: 1px solid #ddd; }
+        .totals-table .total-row { font-weight: bold; background: #f8f9fa; }
+        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 20px; }
+        @media print { body { margin: 0; } .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📄 Facturas Generadas</h1>
+        <p>Período: ' . $start_date . ' a ' . $end_date . '</p>
+        <p>WooCommerce Venezuela Pro 2025</p>
+    </div>';
+        
+        if ( ! empty( $data ) ) {
+            $bcv_rate = get_option( 'wvp_emergency_rate', 36.5 );
+            
+            foreach ( $data as $invoice ) {
+                $html .= '<div class="invoice">
+                    <div class="invoice-header">
+                        <div class="invoice-info">
+                            <div class="invoice-number">' . $invoice['invoice_number'] . '</div>
+                            <div>Fecha: ' . $invoice['date'] . '</div>
+                        </div>
+                        <div class="invoice-info">
+                            <div><strong>Estado:</strong> ' . ucfirst( $invoice['status'] ) . '</div>
+                            <div><strong>Método de Pago:</strong> ' . $invoice['payment_method'] . '</div>
+                        </div>
+                    </div>
+                    
+                    <div class="customer-info">
+                        <h3>Datos del Cliente</h3>
+                        <p><strong>Nombre:</strong> ' . $invoice['customer_name'] . '</p>
+                        <p><strong>RIF:</strong> ' . $invoice['customer_rif'] . '</p>
+                        <p><strong>Dirección:</strong> ' . $invoice['customer_address'] . '</p>
+                    </div>';
+                
+                // Items de la factura
+                if ( ! empty( $invoice['items'] ) ) {
+                    $html .= '<table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Precio USD</th>
+                                <th>Precio VES</th>
+                                <th>Total USD</th>
+                                <th>Total VES</th>
+                            </tr>
+                        </thead>
+                        <tbody>';
+                    
+                    foreach ( $invoice['items'] as $item ) {
+                        $html .= '<tr>
+                            <td>' . $item['name'] . '</td>
+                            <td>' . $item['quantity'] . '</td>
+                            <td>$' . number_format( $item['price'], 2 ) . '</td>
+                            <td>' . number_format( $item['price'] * $bcv_rate, 2 ) . '</td>
+                            <td>$' . number_format( $item['total'], 2 ) . '</td>
+                            <td>' . number_format( $item['total'] * $bcv_rate, 2 ) . '</td>
+                        </tr>';
+                    }
+                    
+                    $html .= '</tbody>
+                    </table>';
+                }
+                
+                // Totales
+                $html .= '<div class="totals">
+                    <table class="totals-table">
+                        <tr>
+                            <td>Subtotal USD:</td>
+                            <td>$' . number_format( $invoice['subtotal_usd'], 2 ) . '</td>
+                        </tr>
+                        <tr>
+                            <td>Subtotal VES:</td>
+                            <td>' . number_format( $invoice['subtotal_ves'], 2 ) . '</td>
+                        </tr>
+                        <tr>
+                            <td>IVA USD:</td>
+                            <td>$' . number_format( $invoice['tax_usd'], 2 ) . '</td>
+                        </tr>
+                        <tr>
+                            <td>IVA VES:</td>
+                            <td>' . number_format( $invoice['tax_ves'], 2 ) . '</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>Total USD:</td>
+                            <td>$' . number_format( $invoice['total_usd'], 2 ) . '</td>
+                        </tr>
+                        <tr class="total-row">
+                            <td>Total VES:</td>
+                            <td>' . number_format( $invoice['total_ves'], 2 ) . '</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 20px; text-align: center; font-size: 12px; color: #666;">
+                    <p>Tasa BCV: 1 USD = ' . number_format( $bcv_rate, 2 ) . ' VES</p>
+                </div>
+            </div>';
+            }
+        } else {
+            $html .= '<div style="text-align: center; padding: 40px; color: #666;">
+                <h3>📊 Sin Facturas</h3>
+                <p>No se encontraron facturas para el período seleccionado.</p>
+            </div>';
+        }
+        
+        $html .= '<div class="footer">
+            <p>Facturas generadas por WooCommerce Venezuela Pro 2025</p>
+            <p>Para cumplimiento fiscal con SENIAT</p>
+        </div>
+</body>
+</html>';
+        
+        return $html;
     }
     
     /**

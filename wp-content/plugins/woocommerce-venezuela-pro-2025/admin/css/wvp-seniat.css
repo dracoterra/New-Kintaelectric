@@ -23,7 +23,7 @@
 }
 
 .wrap p {
-    color: #fff;
+    color: #6b7280;
     font-size: 16px;
     margin-bottom: 30px;
     text-align: center;
@@ -404,4 +404,44 @@
     .wvp-form-group select {
         padding: 10px 12px;
     }
+}
+
+/* Estilos para mensajes de resultado */
+.wvp-success {
+    background: #d1fae5 !important;
+    border: 1px solid #10b981 !important;
+    border-left: 4px solid #10b981 !important;
+    color: #065f46 !important;
+}
+
+.wvp-error {
+    background: #fee2e2 !important;
+    border: 1px solid #ef4444 !important;
+    border-left: 4px solid #ef4444 !important;
+    color: #991b1b !important;
+}
+
+.wvp-info {
+    background: #dbeafe !important;
+    border: 1px solid #3b82f6 !important;
+    border-left: 4px solid #3b82f6 !important;
+    color: #1e40af !important;
+}
+
+.wvp-success h4,
+.wvp-success p,
+.wvp-success strong {
+    color: #065f46 !important;
+}
+
+.wvp-error h4,
+.wvp-error p,
+.wvp-error strong {
+    color: #991b1b !important;
+}
+
+.wvp-info h4,
+.wvp-info p,
+.wvp-info strong {
+    color: #1e40af !important;
 }
