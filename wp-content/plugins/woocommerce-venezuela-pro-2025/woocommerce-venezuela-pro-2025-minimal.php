@@ -20,10 +20,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Define plugin constants
-define( 'WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION', '1.0.0' );
-define( 'WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+// Use constants from main file if not already defined
+if ( ! defined( 'WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION' ) ) {
+	define( 'WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION', '1.0.0' );
+}
+if ( ! defined( 'WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR' ) ) {
+	define( 'WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
+}
+if ( ! defined( 'WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_URL' ) ) {
+	define( 'WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+}
 
 /**
  * Simple currency converter class
