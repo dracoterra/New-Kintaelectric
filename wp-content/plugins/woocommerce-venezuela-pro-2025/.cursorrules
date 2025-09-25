@@ -1,0 +1,263 @@
+# WooCommerce Venezuela Suite - Reglas para Cursor AI
+
+## Contexto del Proyecto
+Desarrollo del plugin "WooCommerce Venezuela Suite" - solución todo-en-uno para localizar WooCommerce a Venezuela. Plugin modular con arquitectura limpia, sin dependencias externas, optimizado para performance.
+
+## Arquitectura Obligatoria
+
+### Estructura de Archivos
+```
+woocommerce-venezuela-suite/
+├── woocommerce-venezuela-suite.php          # Plugin principal
+├── includes/
+│   ├── class-wcvs-main.php                   # Clase principal (Singleton)
+│   ├── class-wcvs-module-manager.php         # Gestor de módulos
+│   ├── class-wcvs-settings-manager.php       # Gestor de configuraciones
+│   └── class-wcvs-security.php              # Seguridad y validaciones
+├── modules/
+│   ├── [module-name]/
+│   │   ├── class-wcvs-[module-name].php      # Clase principal del módulo
+│   │   └── [module-name]-hooks.php           # Hooks específicos del módulo
+├── admin/
+├── public/
+└── languages/
+```
+
+### Convenciones de Nomenclatura
+- **Clases**: `WCVS_[Module]_[Function]` (ej: `WCVS_BCV_Sync`, `WCVS_Gateway_PagoMovil`)
+- **Métodos**: `snake_case` para privados, `camelCase` para públicos
+- **Variables**: `snake_case` (ej: `$bcv_rate`, `$payment_gateways`)
+- **Constantes**: `WCVS_UPPER_CASE` (ej: `WCVS_VERSION`, `WCVS_PLUGIN_PATH`)
+
+## Reglas de Desarrollo
+
+### 1. Generación Atómica
+- Generar UNA función/método a la vez
+- Explicar la lógica después de cada generación
+- Revisar y validar antes de continuar
+- NO generar clases completas de una vez
+
+### 2. Prompts Específicos
+Usar prompts detallados con:
+- Nombre exacto de la clase
+- Métodos específicos requeridos
+- Parámetros exactos
+- Hooks de WooCommerce a usar
+- Requisitos de seguridad
+
+### 3. Documentación Obligatoria
+Cada clase debe tener:
+```php
+/**
+ * Clase para [descripción específica]
+ * 
+ * @package WooCommerce_Venezuela_Suite
+ * @subpackage [Module]
+ * @since 1.0.0
+ * @author Kinta Electric
+ */
+```
+
+Cada método debe tener:
+```php
+/**
+ * [Descripción del método]
+ * 
+ * @since 1.0.0
+ * @param string $param1 Descripción del parámetro
+ * @return bool|WP_Error True en éxito, WP_Error en caso de error
+ */
+```
+
+### 4. Seguridad Obligatoria
+- Nonces para todas las acciones AJAX
+- Verificación de permisos (`current_user_can`)
+- Sanitización de inputs (`sanitize_text_field`, `sanitize_email`)
+- Escape de outputs (`esc_html`, `esc_attr`)
+
+### 5. Manejo de Errores
+```php
+try {
+    // Operación crítica
+    $result = $this->critical_operation();
+    return $result;
+} catch (Exception $e) {
+    error_log('WCVS Error: ' . $e->getMessage());
+    return new WP_Error('wcvs_error', $e->getMessage());
+}
+```
+
+### 6. Hooks de WooCommerce
+- Usar hooks nativos de WooCommerce
+- Verificar contexto (admin/frontend) antes de registrar hooks
+- Prioridad 99 para hooks de formateo
+- Documentar qué hook hace qué
+
+## Funcionalidades Principales
+
+### 1. Integración BCV (Core - Siempre Activa)
+- Scraping multi-fuente del BCV cada 2 horas
+- Cache inteligente con fallback manual
+- API REST para integraciones externas
+- Factor de ajuste configurable
+
+### 2. Visualización de Precios (Core - Siempre Activa)
+- Precios en formato dual (USD | VES)
+- Estilos personalizables (Minimalista, Moderno, Elegante, Compacto)
+- Compatibilidad con temas
+- Hooks: `woocommerce_get_price_html`, `woocommerce_cart_item_price`, `woocommerce_cart_subtotal`, `woocommerce_cart_total`
+
+### 3. Pasarelas de Pago Venezolanas
+- Pago Móvil (C2P) con validación RIF
+- Zelle con confirmación
+- Transferencia Bancaria VES múltiples cuentas
+- Binance Pay para criptomonedas
+- Cash Deposit USD
+
+### 4. Métodos de Envío Locales
+- MRW con API integration
+- Zoom con cálculo automático
+- Tealca configurable
+- Local Delivery por zonas
+
+### 5. Sistema Fiscal Completo
+- IVA configurable (16%)
+- IGTF dinámico (3%) por pasarela
+- Actualización automática de tasas
+- Reportes fiscales
+
+### 6. Reportes SENIAT
+- Generación de reportes fiscales para SENIAT
+- Exportación en formatos requeridos
+- Validación de datos
+- Dashboard de reportes
+
+### 7. Facturación Electrónica
+- Generación automática de facturas
+- Códigos QR automáticos
+- Integración SENIAT
+- Validación RIF
+
+### 8. Configuración Rápida (Onboarding)
+- Wizard de configuración paso a paso
+- Configuración automática de WooCommerce
+- Validación de configuraciones
+- Pruebas automáticas
+
+### 9. Sistema de Ayuda Integrado
+- Ayuda contextual por funcionalidad
+- Guías paso a paso
+- FAQ y videos tutoriales
+- Soporte técnico integrado
+
+### 10. Sistema de Notificaciones
+- WhatsApp Business API
+- Telegram Bot
+- Email automático
+- SMS para confirmaciones críticas
+
+## Proceso de Desarrollo
+
+### Fase 1: Core del Plugin
+1. Clase principal WCVS_Main (Singleton)
+2. Gestor de módulos
+3. Módulo BCV Sync integrado
+4. Panel de administración básico
+
+### Fase 2: Visualización de Precios
+1. Módulo Price Display
+2. Hooks de WooCommerce
+3. Formateo dual de precios
+4. Configuración avanzada
+
+### Fase 3: Pasarelas de Pago
+1. Implementación de gateways
+2. Sistema de validación
+3. Estados de pedido automáticos
+4. Formularios de referencia
+
+### Fase 4: IGTF y Envíos
+1. Módulo Fees IGTF
+2. Módulo Shipping Methods
+3. Configuración por pasarela
+4. Cálculo de tarifas
+
+### Fase 5: Testing y Optimización
+1. Testing completo
+2. Optimización de performance
+3. Documentación
+4. Preparación para producción
+
+## Checklist de Calidad
+
+### Antes de Continuar
+- [ ] Código funciona sin errores
+- [ ] Documentación PHPDoc completa
+- [ ] Seguridad implementada
+- [ ] Manejo de errores robusto
+- [ ] Hooks de WooCommerce correctos
+- [ ] Performance optimizada
+
+### Antes de Commit
+- [ ] WordPress Coding Standards
+- [ ] Sin código muerto
+- [ ] Variables no utilizadas eliminadas
+- [ ] Logs de debug removidos
+- [ ] Documentación actualizada
+
+## Errores Comunes a Evitar
+
+### ❌ NO Hacer
+- Generar clases completas de una vez
+- Código muerto o comentado
+- Dependencias circulares
+- Hooks incorrectos (admin en frontend)
+- Falta de validación de seguridad
+- Variables no utilizadas
+- Funciones no llamadas
+
+### ✅ Hacer
+- Generación atómica de código
+- Documentación completa
+- Seguridad en todas las operaciones
+- Manejo robusto de errores
+- Optimización de performance
+- Código limpio y mantenible
+
+## Objetivos de Calidad
+
+### Estabilidad
+- Plugin funciona sin errores críticos
+- Manejo robusto de fallos de API
+- Fallbacks para operaciones críticas
+- Logging detallado
+
+### Mantenibilidad
+- Código limpio y documentado
+- Arquitectura modular clara
+- Separación de responsabilidades
+- Tests automatizados
+
+### Usabilidad
+- Configuración intuitiva
+- Interfaz clara
+- Documentación completa
+- Soporte eficiente
+
+## Métricas de Éxito
+
+### Técnicas
+- Tiempo de carga < 200ms
+- Uso de memoria < 50MB
+- 0 errores críticos
+- 99.9% uptime de scraping BCV
+
+### Negocio
+- Configuración completa en < 15 minutos
+- Reducción de tickets de soporte en 80%
+- Aumento de conversiones
+- Satisfacción del usuario > 90%
+
+---
+
+**Recuerda**: Cada fase debe ser completamente funcional antes de continuar. La calidad es más importante que la velocidad. Siempre explicar la lógica después de generar código.
