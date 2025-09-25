@@ -86,9 +86,8 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-woocommerce-venezuela-pro-
  * @since    1.0.0
  */
 function run_woocommerce_venezuela_pro_2025() {
-
-	$plugin = new Woocommerce_Venezuela_Pro_2025();
-	$plugin->run();
-
+	return Woocommerce_Venezuela_Pro_2025::get_instance();
 }
-run_woocommerce_venezuela_pro_2025();
+
+// Load minimal version instead
+require_once plugin_dir_path( __FILE__ ) . 'woocommerce-venezuela-pro-2025-minimal.php';

@@ -30,6 +30,15 @@
 class Woocommerce_Venezuela_Pro_2025 {
 
 	/**
+	 * The single instance of the class.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      Woocommerce_Venezuela_Pro_2025    $instance    The single instance of the class.
+	 */
+	protected static $instance = null;
+
+	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
 	 * the plugin.
 	 *
@@ -58,6 +67,15 @@ class Woocommerce_Venezuela_Pro_2025 {
 	protected $version;
 
 	/**
+	 * Whether the plugin has been initialized.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      boolean    $initialized    Whether the plugin has been initialized.
+	 */
+	protected $initialized = false;
+
+	/**
 	 * The dependency injection container.
 	 *
 	 * @since    1.0.0
@@ -76,6 +94,19 @@ class Woocommerce_Venezuela_Pro_2025 {
 	protected $module_manager;
 
 	/**
+	 * Get the single instance of the class.
+	 *
+	 * @since    1.0.0
+	 * @return   Woocommerce_Venezuela_Pro_2025    The single instance of the class.
+	 */
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
 	 * Define the core functionality of the plugin.
 	 *
 	 * Set the plugin name and the plugin version that can be used throughout the plugin.
@@ -84,7 +115,12 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 *
 	 * @since    1.0.0
 	 */
-	public function __construct() {
+	private function __construct() {
+		// Prevent multiple initializations
+		if ( $this->initialized ) {
+			return;
+		}
+		
 		if ( defined( 'WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION' ) ) {
 			$this->version = WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION;
 		} else {
@@ -95,10 +131,15 @@ class Woocommerce_Venezuela_Pro_2025 {
 		$this->load_dependencies();
 		$this->init_container();
 		$this->init_module_manager();
-		$this->set_locale();
+		// Internationalization disabled to prevent multiple initialization issues
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
 		$this->define_woocommerce_hooks();
+		
+		$this->initialized = true;
+		
+		// Run the plugin
+		$this->run();
 	}
 
 	/**
@@ -129,7 +170,7 @@ class Woocommerce_Venezuela_Pro_2025 {
 		 * The class responsible for defining internationalization functionality
 		 * of the plugin.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-woocommerce-venezuela-pro-2025-i18n.php';
+		// Internationalization class loading removed to prevent multiple initialization issues
 
 		/**
 		 * The class responsible for dependency injection.
@@ -191,13 +232,7 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 * @since    1.0.0
 	 * @access   private
 	 */
-	private function set_locale() {
-
-		$plugin_i18n = new Woocommerce_Venezuela_Pro_2025_i18n();
-
-		$this->loader->add_action( 'wp_loaded', $plugin_i18n, 'load_plugin_textdomain' );
-
-	}
+	// Internationalization method removed to prevent multiple initialization issues
 
 	/**
 	 * Register all of the hooks related to the admin area functionality
@@ -239,12 +274,7 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 * @access   private
 	 */
 	private function define_woocommerce_hooks() {
-		// Only register WooCommerce hooks if WooCommerce is active
-		if ( ! class_exists( 'WooCommerce' ) ) {
-			return;
-		}
-
-		// Hook into WooCommerce initialization
+		// Hook into WooCommerce initialization only
 		$this->loader->add_action( 'woocommerce_init', $this, 'init_woocommerce_features' );
 		
 		// Hook into WooCommerce loaded
@@ -257,12 +287,13 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 * @since    1.0.0
 	 */
 	public function init_woocommerce_features() {
+		// Only initialize if WooCommerce is available
+		if ( ! class_exists( 'WooCommerce' ) ) {
+			return;
+		}
+		
 		// Initialize modules that depend on WooCommerce
 		$this->module_manager->init_woocommerce_modules();
-		
-		// Debug: Log module initialization
-		error_log( 'WVP: Initializing WooCommerce features' );
-		error_log( 'WVP: Active modules: ' . print_r( $this->module_manager->get_active_modules(), true ) );
 	}
 
 	/**
@@ -281,6 +312,13 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 * @since    1.0.0
 	 */
 	public function run() {
+		// Prevent multiple runs
+		static $run_once = false;
+		if ( $run_once ) {
+			return;
+		}
+		$run_once = true;
+		
 		$this->loader->run();
 	}
 

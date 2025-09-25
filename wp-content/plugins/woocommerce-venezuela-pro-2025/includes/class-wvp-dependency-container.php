@@ -44,6 +44,15 @@ class WVP_Dependency_Container {
 	protected $factories = array();
 
 	/**
+	 * Whether the container has been initialized.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      boolean    $initialized    Whether the container has been initialized.
+	 */
+	protected $initialized = false;
+
+	/**
 	 * Register a dependency in the container.
 	 *
 	 * @since    1.0.0
@@ -52,6 +61,11 @@ class WVP_Dependency_Container {
 	 * @param    boolean   $singleton   Whether this should be treated as a singleton.
 	 */
 	public function register( $name, $dependency, $singleton = true ) {
+		// Prevent multiple registrations
+		if ( $this->initialized && isset( $this->dependencies[ $name ] ) ) {
+			return;
+		}
+		
 		if ( is_callable( $dependency ) ) {
 			$this->factories[ $name ] = array(
 				'factory'  => $dependency,
@@ -60,6 +74,8 @@ class WVP_Dependency_Container {
 		} else {
 			$this->dependencies[ $name ] = $dependency;
 		}
+		
+		$this->initialized = true;
 	}
 
 	/**

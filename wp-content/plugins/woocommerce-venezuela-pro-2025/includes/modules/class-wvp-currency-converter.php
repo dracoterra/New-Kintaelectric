@@ -44,6 +44,15 @@ class WVP_Currency_Converter {
 	protected $bcv_fallback;
 
 	/**
+	 * Whether the module has been initialized.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      boolean    $initialized    Whether the module has been initialized.
+	 */
+	protected $initialized = false;
+
+	/**
 	 * Initialize the currency converter.
 	 *
 	 * @since    1.0.0
@@ -62,7 +71,7 @@ class WVP_Currency_Converter {
 	 */
 	private function init_bcv_fallback() {
 		// Load BCV fallback manager
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . '../class-wvp-bcv-fallback-manager.php';
+		require_once plugin_dir_path( dirname( dirname( __FILE__ ) ) ) . 'includes/class-wvp-bcv-fallback-manager.php';
 		$this->bcv_fallback = new WVP_BCV_Fallback_Manager();
 	}
 
@@ -72,10 +81,17 @@ class WVP_Currency_Converter {
 	 * @since    1.0.0
 	 */
 	public function init() {
+		// Prevent multiple initializations
+		if ( $this->initialized ) {
+			return;
+		}
+		
 		// Only initialize if WooCommerce is active
 		if ( ! class_exists( 'WooCommerce' ) ) {
 			return;
 		}
+
+		$this->initialized = true;
 
 		// Register hooks for currency conversion
 		add_filter( 'woocommerce_product_get_price', array( $this, 'convert_product_price' ), 10, 2 );
@@ -98,6 +114,8 @@ class WVP_Currency_Converter {
 		
 		// Add scripts and styles
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		
+		error_log( 'WVP: Currency Converter module init completed' );
 	}
 
 	/**
@@ -147,7 +165,7 @@ class WVP_Currency_Converter {
 		}
 
 		// Use fallback manager
-		return $this->bcv_fallback->get_safe_rate();
+		return $this->bcv_fallback->get_bcv_rate();
 	}
 
 	/**
@@ -276,8 +294,13 @@ class WVP_Currency_Converter {
 	 * @param    boolean   $compound    Whether this is a compound total.
 	 * @return   string                 The modified subtotal HTML.
 	 */
-	public function display_cart_subtotal_dual( $subtotal, $cart, $compound ) {
+	public function display_cart_subtotal_dual( $subtotal, $compound, $cart ) {
 		if ( ! $this->should_show_dual_currency() ) {
+			return $subtotal;
+		}
+
+		// Check if cart is a valid WC_Cart object
+		if ( ! is_object( $cart ) || ! method_exists( $cart, 'get_subtotal' ) ) {
 			return $subtotal;
 		}
 
@@ -313,6 +336,10 @@ class WVP_Currency_Converter {
 		}
 
 		$cart = WC()->cart;
+		if ( ! $cart || ! is_object( $cart ) || ! method_exists( $cart, 'get_total' ) ) {
+			return $total;
+		}
+
 		$usd_total = $cart->get_total( 'raw' );
 		$ves_total = $this->convert_usd_to_ves( $usd_total );
 		$bcv_rate = $this->get_bcv_rate();
@@ -341,6 +368,13 @@ class WVP_Currency_Converter {
 		if ( ! $this->should_show_currency_switcher() ) {
 			return;
 		}
+
+		// Prevent multiple renderings
+		static $rendered = false;
+		if ( $rendered ) {
+			return;
+		}
+		$rendered = true;
 
 		$current_currency = $this->get_current_display_currency();
 		$bcv_rate = $this->get_bcv_rate();

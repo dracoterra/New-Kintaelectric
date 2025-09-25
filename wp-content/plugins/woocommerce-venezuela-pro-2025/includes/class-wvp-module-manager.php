@@ -75,8 +75,8 @@ class WVP_Module_Manager {
 			'currency_converter' => array(
 				'name' => 'Currency Converter',
 				'description' => 'Converts USD prices to VES using BCV rates',
-				'class' => 'WVP_Currency_Converter',
-				'file' => 'modules/class-wvp-currency-converter.php',
+				'class' => 'WVP_Currency_Converter_Improved',
+				'file' => 'modules/class-wvp-currency-converter-improved.php',
 				'dependencies' => array(),
 				'woocommerce_required' => true,
 			),
@@ -174,6 +174,7 @@ class WVP_Module_Manager {
 
 		// Load module file
 		$file_path = plugin_dir_path( dirname( __FILE__ ) ) . 'includes/' . $module['file'];
+		
 		if ( file_exists( $file_path ) ) {
 			require_once $file_path;
 			
