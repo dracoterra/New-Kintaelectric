@@ -9,124 +9,128 @@ jQuery(document).ready(function($) {
     
     console.log('WVP Cart Currency Converter: JavaScript loaded successfully');
     
+    // Flag to prevent multiple executions
+    var conversionsApplied = false;
+    
     // Add VES conversions to cart items
     function addVesConversionsToCart() {
         console.log('WVP Cart Currency Converter: Adding VES conversions to cart');
         
-        // Only target cart-specific tables
-        var cartTableSelectors = [
-            '.woocommerce-cart-form table tbody tr',
-            '.shop_table tbody tr',
-            '.cart tbody tr'
-        ];
+        // Remove existing conversions first to avoid duplicates
+        $('.wvp-ves-conversion').remove();
         
-        cartTableSelectors.forEach(function(selector) {
-            $(selector).each(function() {
-                var $row = $(this);
+        var conversionsAdded = 0;
+        
+        // Find all table rows that contain prices
+        $('table tbody tr').each(function() {
+            var $row = $(this);
+            
+            // Skip header row
+            if ($row.find('th').length > 0) {
+                return;
+            }
+            
+            // Find cells that contain prices - be more specific
+            $row.find('td').each(function() {
+                var $cell = $(this);
+                var text = $cell.text().trim();
                 
-                // Skip header row
-                if ($row.find('th').length > 0) {
-                    return;
+                // Look for price patterns like $20.00 but avoid cells that already have VES conversions
+                var priceMatch = text.match(/\$([0-9,]+\.?[0-9]*)/);
+                
+                if (priceMatch && !text.includes('VES') && !$cell.find('.wvp-ves-conversion').length) {
+                    var usdPrice = parseFloat(priceMatch[1].replace(',', ''));
+                    var vesPrice = usdPrice * wvp_cart_converter_ajax.rate;
+                    var vesFormatted = vesPrice.toLocaleString('es-VE', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    
+                    // Add VES conversion to price
+                    $cell.append('<br><small class="wvp-ves-conversion" style="color: #27ae60;">(' + vesFormatted + ' VES)</small>');
+                    conversionsAdded++;
+                    console.log('WVP Cart Currency Converter: Added VES conversion to price:', usdPrice, '->', vesFormatted);
                 }
-                
-                // Only target price-related cells
-                var $priceCells = $row.find('td').filter(function() {
-                    var $cell = $(this);
-                    var text = $cell.text();
-                    var hasPrice = text.includes('$') && text.match(/\$([0-9,]+\.?[0-9]*)/);
-                    var isPriceCell = $cell.hasClass('product-price') || 
-                                    $cell.hasClass('product-subtotal') ||
-                                    text.match(/^\$[0-9,]+\.?[0-9]*$/);
-                    return hasPrice && isPriceCell;
-                });
-                
-                $priceCells.each(function() {
-                    var $priceElement = $(this);
-                    
-                    // Skip if already has VES conversion
-                    if ($priceElement.find('.wvp-ves-conversion').length > 0) {
-                        return;
-                    }
-                    
-                    // Extract USD price from text
-                    var priceText = $priceElement.text();
-                    var priceMatch = priceText.match(/\$([0-9,]+\.?[0-9]*)/);
-                    
-                    if (priceMatch) {
-                        var usdPrice = parseFloat(priceMatch[1].replace(',', ''));
-                        var vesPrice = usdPrice * wvp_cart_converter_ajax.rate;
-                        var vesFormatted = vesPrice.toLocaleString('es-VE', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-                        
-                        // Add VES conversion to price
-                        $priceElement.append('<br><small class="wvp-ves-conversion" style="color: #27ae60;">(' + vesFormatted + ' VES)</small>');
-                        console.log('WVP Cart Currency Converter: Added VES conversion to price:', usdPrice, '->', vesFormatted);
-                    }
-                });
             });
         });
+        
+        return conversionsAdded;
     }
     
     // Add VES conversions to cart totals
     function addVesConversionsToTotals() {
         console.log('WVP Cart Currency Converter: Adding VES conversions to cart totals');
         
-        // Only target specific cart/checkout elements
-        var cartSelectors = [
-            '.cart_totals td',
-            '.shop_table td',
-            '.woocommerce-cart-form td',
-            '.cart-subtotal td',
-            '.cart-total td',
-            '.order-total td'
-        ];
+        var conversionsAdded = 0;
         
-        cartSelectors.forEach(function(selector) {
-            $(selector).each(function() {
-                var $element = $(this);
-                
-                // Skip if already has VES conversion
-                if ($element.find('.wvp-ves-conversion').length > 0) {
-                    return;
-                }
-                
-                var text = $element.text();
-                var match = text.match(/\$([0-9,]+\.?[0-9]*)/);
-                
-                if (match) {
-                    var usdTotal = parseFloat(match[1].replace(',', ''));
-                    var vesTotal = usdTotal * wvp_cart_converter_ajax.rate;
-                    var vesFormatted = vesTotal.toLocaleString('es-VE', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
-                    
-                    $element.append('<br><small class="wvp-ves-conversion" style="color: #27ae60;">(' + vesFormatted + ' VES)</small>');
-                    console.log('WVP Cart Currency Converter: Added VES conversion to total:', usdTotal, '->', vesFormatted);
-                }
-            });
+        // Find the Cart totals section
+        var cartTotalsHeading = $('h2').filter(function() {
+            return $(this).text().includes('Cart totals');
         });
+        
+        if (cartTotalsHeading.length > 0) {
+            var totalsContainer = cartTotalsHeading.next();
+            if (totalsContainer.length > 0) {
+                totalsContainer.find('td').each(function() {
+                    var $element = $(this);
+                    var text = $element.text().trim();
+                    
+                    // Skip if already has VES conversion or doesn't contain price or already has conversion element
+                    if (text.includes('VES') || !text.includes('$') || $element.find('.wvp-ves-conversion').length > 0) {
+                        return;
+                    }
+                    
+                    var match = text.match(/\$([0-9,]+\.?[0-9]*)/);
+                    
+                    if (match) {
+                        var usdTotal = parseFloat(match[1].replace(',', ''));
+                        var vesTotal = usdTotal * wvp_cart_converter_ajax.rate;
+                        var vesFormatted = vesTotal.toLocaleString('es-VE', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                        
+                        $element.append('<br><small class="wvp-ves-conversion" style="color: #27ae60;">(' + vesFormatted + ' VES)</small>');
+                        conversionsAdded++;
+                        console.log('WVP Cart Currency Converter: Added VES conversion to total:', usdTotal, '->', vesFormatted);
+                    }
+                });
+            }
+        }
+        
+        return conversionsAdded;
+    }
+    
+    // Main function to apply conversions
+    function applyConversions() {
+        // Always remove existing conversions first
+        $('.wvp-ves-conversion').remove();
+        
+        console.log('WVP Cart Currency Converter: Applying conversions...');
+        
+        var cartConversions = addVesConversionsToCart();
+        var totalConversions = addVesConversionsToTotals();
+        
+        if (cartConversions > 0 || totalConversions > 0) {
+            conversionsApplied = true;
+            console.log('WVP Cart Currency Converter: Conversions applied successfully - Cart:', cartConversions, 'Totals:', totalConversions);
+        } else {
+            console.log('WVP Cart Currency Converter: No conversions applied, retrying...');
+        }
     }
     
     // Run on cart page
     if ($('body').hasClass('woocommerce-cart')) {
         console.log('WVP Cart Currency Converter: On cart page, adding conversions');
         
-        // Wait for cart to load completely
-        setTimeout(function() {
-            addVesConversionsToCart();
-            addVesConversionsToTotals();
-        }, 500);
+        // Single execution with delay to ensure DOM is ready
+        setTimeout(applyConversions, 1000);
         
         // Re-run when cart updates
         $(document.body).on('updated_cart_totals', function() {
             console.log('WVP Cart Currency Converter: Cart updated, re-adding conversions');
-            setTimeout(function() {
-                addVesConversionsToCart();
-                addVesConversionsToTotals();
-            }, 100);
+            conversionsApplied = false; // Reset flag
+            setTimeout(applyConversions, 500);
         });
     }
     
@@ -134,19 +138,14 @@ jQuery(document).ready(function($) {
     if ($('body').hasClass('woocommerce-checkout')) {
         console.log('WVP Cart Currency Converter: On checkout page, adding conversions');
         
-        // Wait for checkout to load completely
-        setTimeout(function() {
-            addVesConversionsToCart();
-            addVesConversionsToTotals();
-        }, 500);
+        // Single execution with delay to ensure DOM is ready
+        setTimeout(applyConversions, 1000);
         
         // Re-run when checkout updates (e.g., shipping method change)
         $(document.body).on('updated_checkout', function() {
             console.log('WVP Cart Currency Converter: Checkout updated, re-adding conversions');
-            setTimeout(function() {
-                addVesConversionsToCart();
-                addVesConversionsToTotals();
-            }, 100);
+            conversionsApplied = false; // Reset flag
+            setTimeout(applyConversions, 500);
         });
     }
 });
