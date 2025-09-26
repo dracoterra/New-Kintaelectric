@@ -15,6 +15,15 @@ class WVP_Pago_Movil_Gateway extends WC_Payment_Gateway {
 	public $cedula;
 	public $bank;
 	
+	private static $instance = null;
+	
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+	
 	public function __construct() {
 		$this->id = 'wvp_pago_movil';
 		$this->icon = '';

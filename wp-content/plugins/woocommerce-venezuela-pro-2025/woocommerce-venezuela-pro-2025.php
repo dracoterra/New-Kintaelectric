@@ -178,17 +178,17 @@ class WVP_Simple_Currency_Converter {
  */
 function wvp_init_plugin() {
 	if ( class_exists( 'WooCommerce' ) ) {
-        // Initialize the currency converter - DISABLED FOR NOW
-        /*
-        try {
-            require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-simple-currency-converter.php';
-            if ( class_exists( 'WVP_Simple_Currency_Converter' ) ) {
-                WVP_Simple_Currency_Converter::get_instance();
-            }
-        } catch ( Exception $e ) {
-            error_log( 'WVP Simple Currency Converter error: ' . $e->getMessage() );
-        }
-        */
+		// Initialize the currency converter - DESACTIVADO TEMPORALMENTE
+		/*
+		try {
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-simple-currency-converter.php';
+			if ( class_exists( 'WVP_Simple_Currency_Converter' ) ) {
+				WVP_Simple_Currency_Converter::get_instance();
+			}
+		} catch ( Exception $e ) {
+			error_log( 'WVP Simple Currency Converter error: ' . $e->getMessage() );
+		}
+		*/
 		
 		// Load classes one by one to identify the problematic one
 		try {
@@ -239,7 +239,7 @@ function wvp_init_plugin() {
 		try {
 			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-seniat-exporter.php';
 			if ( class_exists( 'WVP_SENIAT_Exporter' ) ) {
-				// WVP_SENIAT_Exporter::get_instance();
+				WVP_SENIAT_Exporter::get_instance();
 			}
 		} catch ( Exception $e ) {
 			error_log( 'WVP SENIAT Exporter error: ' . $e->getMessage() );
