@@ -1,6 +1,6 @@
 <?php
 /**
- * Simple Currency Converter - Minimal Version
+ * Simple Currency Converter - Clean Version
  * Handles USD to VES conversion using BCV rates
  */
 
@@ -27,20 +27,20 @@ class WVP_Simple_Currency_Converter {
 	}
 	
 	private function init_hooks() {
-		// Solo hooks esenciales para evitar conflictos
+		// Hooks esenciales
 		add_action( 'wp_ajax_wvp_convert_price', array( $this, 'ajax_convert_price' ) );
 		add_action( 'wp_ajax_nopriv_wvp_convert_price', array( $this, 'ajax_convert_price' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		
-		// Hooks adicionales se activarán gradualmente
-		// add_action( 'woocommerce_single_product_summary', array( $this, 'add_currency_switcher' ), 25 );
-		// add_filter( 'woocommerce_cart_item_price', array( $this, 'display_cart_item_price' ), 10, 3 );
-		// add_filter( 'woocommerce_cart_item_subtotal', array( $this, 'display_cart_item_subtotal' ), 10, 3 );
-		// add_action( 'woocommerce_cart_totals_after_order_total', array( $this, 'display_converted_total' ) );
-		// add_action( 'woocommerce_review_order_after_order_total', array( $this, 'display_converted_total' ) );
-		// add_filter( 'woocommerce_currency_symbol', array( $this, 'custom_currency_symbol' ), 10, 2 );
-		// add_filter( 'woocommerce_price_format', array( $this, 'custom_price_format' ), 10, 2 );
-		// add_filter( 'woocommerce_get_price_html', array( $this, 'display_dual_price' ), 10, 2 );
+        // Hooks de WooCommerce - PROBANDO woocommerce_cart_item_subtotal
+        add_action( 'woocommerce_single_product_summary', array( $this, 'add_currency_switcher' ), 25 );
+        // add_filter( 'woocommerce_cart_item_price', array( $this, 'display_cart_item_price' ), 999, 3 );
+        add_filter( 'woocommerce_cart_item_subtotal', array( $this, 'display_cart_item_subtotal' ), 9999, 3 );
+        add_action( 'woocommerce_cart_totals_after_order_total', array( $this, 'display_converted_total' ) );
+        add_action( 'woocommerce_review_order_after_order_total', array( $this, 'display_converted_total' ) );
+        // add_filter( 'woocommerce_currency_symbol', array( $this, 'custom_currency_symbol' ), 999, 2 );
+        // add_filter( 'woocommerce_price_format', array( $this, 'custom_price_format' ), 999, 2 );
+        // add_filter( 'woocommerce_get_price_html', array( $this, 'display_dual_price' ), 999, 2 );
 	}
 	
 	/**
@@ -80,6 +80,13 @@ class WVP_Simple_Currency_Converter {
 		}
 		
 		return $price;
+	}
+	
+	/**
+	 * Convert USD to VES (alias method)
+	 */
+	public function convert_usd_to_ves( $usd_amount ) {
+		return $this->convert_price( $usd_amount, 'USD', 'VES' );
 	}
 	
 	/**
@@ -125,20 +132,6 @@ class WVP_Simple_Currency_Converter {
 	}
 	
 	/**
-	 * Convert price from USD to VES (alias for convert_usd_to_ves)
-	 */
-	public function convert_price( $usd_amount ) {
-		return $this->convert_usd_to_ves( $usd_amount );
-	}
-	
-	/**
-	 * Get current BCV rate
-	 */
-	public function get_bcv_rate() {
-		return $this->bcv_rate;
-	}
-	
-	/**
 	 * Check if BCV rate is available
 	 */
 	public function is_rate_available() {
@@ -164,12 +157,26 @@ class WVP_Simple_Currency_Converter {
 	 */
 	public function add_currency_switcher() {
 		if ( is_product() ) {
+			global $product;
+			if ( ! $product ) return;
+			
+			$price_usd = $product->get_price();
+			$price_ves = $this->convert_price( $price_usd, 'USD', 'VES' );
+			$rate = $this->get_bcv_rate();
+			
 			echo '<div class="wvp-currency-switcher">';
-			echo '<label for="wvp-currency-select">Moneda: </label>';
-			echo '<select id="wvp-currency-select">';
-			echo '<option value="USD">USD</option>';
-			echo '<option value="VES">VES</option>';
-			echo '</select>';
+			echo '<h4>Cambiar Moneda:</h4>';
+			echo '<div class="wvp-currency-buttons">';
+			echo '<button class="wvp-currency-btn active" data-currency="usd">USD</button>';
+			echo '<button class="wvp-currency-btn" data-currency="ves">VES</button>';
+			echo '</div>';
+			echo '<div class="wvp-price-display">';
+			echo '<span class="wvp-price-usd">$' . number_format( $price_usd, 2 ) . ' USD</span>';
+			echo '<span class="wvp-price-ves" style="display: none;">' . number_format( $price_ves, 2 ) . ' VES</span>';
+			echo '</div>';
+			echo '<div class="wvp-rate-info">';
+			echo '<small>Tipo de cambio: 1 USD = ' . number_format( $rate, 2 ) . ' VES</small>';
+			echo '</div>';
 			echo '</div>';
 		}
 	}
@@ -177,31 +184,59 @@ class WVP_Simple_Currency_Converter {
 	/**
 	 * Display cart item price with conversion
 	 */
-	public function display_cart_item_price( $price, $cart_item, $cart_item_key ) {
-		if ( $this->is_rate_available() ) {
-			$product = $cart_item['data'];
-			$usd_price = $product->get_price();
-			$ves_price = $this->convert_usd_to_ves( $usd_price );
-			
-			$price .= '<br><small>(' . $this->format_ves_price( $ves_price ) . ')</small>';
-		}
-		return $price;
-	}
+    public function display_cart_item_price( $price, $cart_item, $cart_item_key ) {
+        try {
+            error_log( 'WVP Currency Converter: display_cart_item_price ejecutado - Precio original: ' . $price );
+            
+            if ( $this->is_rate_available() && isset($cart_item['data']) && is_object($cart_item['data']) ) {
+                $product = $cart_item['data'];
+                $usd_price = $product->get_price();
+                
+                if ( $usd_price && $usd_price > 0 ) {
+                    $ves_price = $this->convert_price( $usd_price, 'USD', 'VES' );
+                    $modified_price = $price . '<br><small style="color: #27ae60;">(' . $this->format_ves_price( $ves_price ) . ')</small>';
+                    error_log( 'WVP Currency Converter: Precio modificado: ' . $modified_price );
+                    return $modified_price;
+                }
+            }
+            
+            error_log( 'WVP Currency Converter: Tasa no disponible o datos inválidos, retornando precio original' );
+            return $price;
+        } catch ( Exception $e ) {
+            error_log( 'WVP Currency Converter ERROR en display_cart_item_price: ' . $e->getMessage() );
+            return $price;
+        }
+    }
 	
 	/**
 	 * Display cart item subtotal with conversion
 	 */
-	public function display_cart_item_subtotal( $subtotal, $cart_item, $cart_item_key ) {
-		if ( $this->is_rate_available() ) {
-			$product = $cart_item['data'];
-			$quantity = $cart_item['quantity'];
-			$usd_subtotal = $product->get_price() * $quantity;
-			$ves_subtotal = $this->convert_usd_to_ves( $usd_subtotal );
-			
-			$subtotal .= '<br><small>(' . $this->format_ves_price( $ves_subtotal ) . ')</small>';
-		}
-		return $subtotal;
-	}
+    public function display_cart_item_subtotal( $subtotal, $cart_item, $cart_item_key ) {
+        try {
+            error_log( 'WVP Currency Converter: display_cart_item_subtotal ejecutado - Subtotal original: ' . $subtotal );
+            error_log( 'WVP Currency Converter: Cart item data: ' . print_r($cart_item, true) );
+            
+            if ( $this->is_rate_available() && isset($cart_item['data']) && is_object($cart_item['data']) && isset($cart_item['quantity']) ) {
+                $product = $cart_item['data'];
+                $quantity = $cart_item['quantity'];
+                $usd_price = $product->get_price();
+                
+                if ( $usd_price && $usd_price > 0 && $quantity > 0 ) {
+                    $usd_subtotal = $usd_price * $quantity;
+                    $ves_subtotal = $this->convert_price( $usd_subtotal, 'USD', 'VES' );
+                    $modified_subtotal = $subtotal . '<br><small style="color: #27ae60;">(' . $this->format_ves_price( $ves_subtotal ) . ')</small>';
+                    error_log( 'WVP Currency Converter: Subtotal modificado: ' . $modified_subtotal );
+                    return $modified_subtotal;
+                }
+            }
+            
+            error_log( 'WVP Currency Converter: Tasa no disponible o datos inválidos, retornando subtotal original' );
+            return $subtotal;
+        } catch ( Exception $e ) {
+            error_log( 'WVP Currency Converter ERROR en display_cart_item_subtotal: ' . $e->getMessage() );
+            return $subtotal;
+        }
+    }
 	
 	/**
 	 * Display converted total in cart and checkout
@@ -241,10 +276,30 @@ class WVP_Simple_Currency_Converter {
 	public function display_dual_price( $price_html, $product ) {
 		if ( $this->is_rate_available() && is_product() ) {
 			$usd_price = $product->get_price();
-			$ves_price = $this->convert_usd_to_ves( $usd_price );
+			$ves_price = $this->convert_price( $usd_price, 'USD', 'VES' );
 			
-			$price_html .= '<br><small class="wvp-ves-price">' . $this->format_ves_price( $ves_price ) . '</small>';
+			$price_html .= '<br><small class="wvp-ves-price" style="color: #27ae60;">' . $this->format_ves_price( $ves_price ) . '</small>';
 		}
 		return $price_html;
+	}
+	
+	/**
+	 * Enqueue scripts and styles
+	 */
+	public function enqueue_scripts() {
+		// Cargar en páginas de WooCommerce y productos
+		if ( is_woocommerce() || is_product() || is_shop() || is_cart() || is_checkout() ) {
+			$plugin_url = plugin_dir_url( dirname( __FILE__ ) );
+			$plugin_version = '1.0.0';
+
+			wp_enqueue_style( 'wvp-simple-converter', $plugin_url . 'public/css/wvp-simple-converter.css', array(), $plugin_version );
+			wp_enqueue_script( 'wvp-simple-converter', $plugin_url . 'public/js/wvp-simple-converter.js', array( 'jquery' ), $plugin_version, true );
+			
+			wp_localize_script( 'wvp-simple-converter', 'wvp_converter_ajax', array(
+				'ajax_url' => admin_url( 'admin-ajax.php' ),
+				'nonce' => wp_create_nonce( 'wvp_convert_nonce' ),
+				'rate' => $this->get_bcv_rate()
+			));
+		}
 	}
 }
