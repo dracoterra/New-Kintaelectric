@@ -141,6 +141,50 @@ class WVP_Notification_System {
         add_action( 'wp_ajax_wvp_send_test_notification', array( $this, 'ajax_send_test_notification' ) );
         add_action( 'wp_ajax_wvp_save_notification_settings', array( $this, 'ajax_save_notification_settings' ) );
         add_action( 'admin_menu', array( $this, 'add_notification_admin_menu' ), 55 );
+        add_action( 'admin_init', array( $this, 'register_notification_settings' ) );
+    }
+    
+    /**
+     * Register notification settings
+     */
+    public function register_notification_settings() {
+        // Register the settings group
+        register_setting( 'wvp_notification_settings', 'wvp_notifications_email', array(
+            'type' => 'boolean',
+            'default' => true,
+            'sanitize_callback' => 'rest_sanitize_boolean'
+        ) );
+        
+        register_setting( 'wvp_notification_settings', 'wvp_notifications_whatsapp', array(
+            'type' => 'boolean',
+            'default' => false,
+            'sanitize_callback' => 'rest_sanitize_boolean'
+        ) );
+        
+        register_setting( 'wvp_notification_settings', 'wvp_notifications_sms', array(
+            'type' => 'boolean',
+            'default' => false,
+            'sanitize_callback' => 'rest_sanitize_boolean'
+        ) );
+        
+        register_setting( 'wvp_notification_settings', 'wvp_notifications_push', array(
+            'type' => 'boolean',
+            'default' => false,
+            'sanitize_callback' => 'rest_sanitize_boolean'
+        ) );
+        
+        // Register additional notification settings
+        register_setting( 'wvp_notification_settings', 'wvp_notification_email_from', array(
+            'type' => 'string',
+            'default' => get_option( 'admin_email' ),
+            'sanitize_callback' => 'sanitize_email'
+        ) );
+        
+        register_setting( 'wvp_notification_settings', 'wvp_notification_email_from_name', array(
+            'type' => 'string',
+            'default' => get_option( 'blogname' ),
+            'sanitize_callback' => 'sanitize_text_field'
+        ) );
     }
     
     /**

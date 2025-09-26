@@ -210,6 +210,16 @@ function wvp_init_plugin() {
 		error_log( 'WVP Currency Modules Manager error: ' . $e->getMessage() );
 	}
 	
+	// SIMPLE CURRENCY CONVERTER - REACTIVADO
+	try {
+		require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-simple-currency-converter.php';
+		if ( class_exists( 'WVP_Simple_Currency_Converter' ) ) {
+			WVP_Simple_Currency_Converter::get_instance();
+		}
+	} catch ( Exception $e ) {
+		error_log( 'WVP Simple Currency Converter error: ' . $e->getMessage() );
+	}
+	
 	// STEP 2 - VENEZUELAN TAXES - REACTIVADO
 	try {
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-venezuelan-taxes.php';
@@ -365,7 +375,9 @@ function wvp_remove_duplicate_analytics_menu() {
 	global $submenu;
 	if ( isset( $submenu['woocommerce'] ) ) {
 		foreach ( $submenu['woocommerce'] as $key => $item ) {
-			if ( strpos( $item[0], 'Análisis' ) !== false && strpos( $item[2], 'wc-admin' ) !== false ) {
+			if ( isset( $item[0] ) && isset( $item[2] ) && 
+				 strpos( $item[0], 'Análisis' ) !== false && 
+				 strpos( $item[2], 'wc-admin' ) !== false ) {
 				unset( $submenu['woocommerce'][$key] );
 			}
 		}
