@@ -100,13 +100,16 @@ class WVP_Admin_Dashboard {
 	 */
 	public function enqueue_admin_scripts( $hook ) {
 		if ( strpos( $hook, 'wvp-' ) !== false ) {
-			wp_enqueue_style( 'wvp-admin', WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_URL . 'admin/css/wvp-admin.css', array(), WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION );
-			wp_enqueue_style( 'wvp-seniat', WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_URL . 'admin/css/wvp-seniat.css', array(), WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION );
-			wp_enqueue_script( 'wvp-admin', WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_URL . 'admin/js/wvp-admin.js', array( 'jquery' ), WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION, true );
+			$plugin_url = plugin_dir_url( dirname( __FILE__ ) );
+			$plugin_version = '1.0.0';
+			
+			wp_enqueue_style( 'wvp-admin', $plugin_url . 'admin/css/wvp-admin.css', array(), $plugin_version );
+			wp_enqueue_style( 'wvp-seniat', $plugin_url . 'admin/css/wvp-seniat.css', array(), $plugin_version );
+			wp_enqueue_script( 'wvp-admin', $plugin_url . 'admin/js/wvp-admin.js', array( 'jquery' ), $plugin_version, true );
 			
 			// Cargar JavaScript específico para SENIAT
 			if ( strpos( $hook, 'wvp-seniat' ) !== false ) {
-				wp_enqueue_script( 'wvp-seniat', WOOCOMMERCE_VENEZUELA_PRO_2025_PLUGIN_URL . 'admin/js/wvp-seniat.js', array( 'jquery' ), WOOCOMMERCE_VENEZUELA_PRO_2025_VERSION, true );
+				wp_enqueue_script( 'wvp-seniat', $plugin_url . 'admin/js/wvp-seniat.js', array( 'jquery' ), $plugin_version, true );
 				wp_localize_script( 'wvp-seniat', 'wvp_seniat_ajax', array(
 					'ajax_url' => admin_url( 'admin-ajax.php' ),
 					'nonce' => wp_create_nonce( 'wvp_seniat_nonce' )

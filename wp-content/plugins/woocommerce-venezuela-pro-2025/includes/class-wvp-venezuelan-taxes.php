@@ -155,4 +155,97 @@ class WVP_Venezuelan_Taxes {
 			'igtf_rate' => get_option( 'wvp_igtf_rate', $this->igtf_rate )
 		);
 	}
+	
+	/**
+	 * Calculate IVA amount
+	 */
+	public function calculate_iva( $amount ) {
+		$iva_rate = get_option( 'wvp_iva_rate', $this->iva_rate );
+		return round( ( $amount * $iva_rate ) / 100, 2 );
+	}
+	
+	/**
+	 * Calculate IGTF amount
+	 */
+	public function calculate_igtf( $amount ) {
+		$igtf_rate = get_option( 'wvp_igtf_rate', $this->igtf_rate );
+		
+		// IGTF only applies to amounts over $200 USD
+		if ( $amount <= 200 ) {
+			return 0;
+		}
+		
+		return round( ( $amount * $igtf_rate ) / 100, 2 );
+	}
+	
+	/**
+	 * Calculate total taxes (IVA + IGTF)
+	 */
+	public function calculate_total_taxes( $amount ) {
+		$iva = $this->calculate_iva( $amount );
+		$igtf = $this->calculate_igtf( $amount );
+		
+		return $iva + $igtf;
+	}
+	
+	/**
+	 * Get tax breakdown for an amount
+	 */
+	public function get_tax_breakdown( $amount ) {
+		return array(
+			'subtotal' => $amount,
+			'iva' => $this->calculate_iva( $amount ),
+			'igtf' => $this->calculate_igtf( $amount ),
+			'total_taxes' => $this->calculate_total_taxes( $amount ),
+			'total' => $amount + $this->calculate_total_taxes( $amount )
+		);
+	}
+	
+	/**
+	 * Format tax amount for display
+	 */
+	public function format_tax_amount( $amount, $currency = 'USD' ) {
+		if ( function_exists( 'wc_price' ) ) {
+			return wc_price( $amount );
+		}
+		
+		return '$' . number_format( $amount, 2 );
+	}
+	
+	/**
+	 * Check if IGTF applies to amount
+	 */
+	public function is_igtf_applicable( $amount ) {
+		return $amount > 200;
+	}
+	
+	/**
+	 * Get IVA rate
+	 */
+	public function get_iva_rate() {
+		return get_option( 'wvp_iva_rate', $this->iva_rate );
+	}
+	
+	/**
+	 * Get IGTF rate
+	 */
+	public function get_igtf_rate() {
+		return get_option( 'wvp_igtf_rate', $this->igtf_rate );
+	}
+	
+	/**
+	 * Set IVA rate
+	 */
+	public function set_iva_rate( $rate ) {
+		$this->iva_rate = $rate;
+		update_option( 'wvp_iva_rate', $rate );
+	}
+	
+	/**
+	 * Set IGTF rate
+	 */
+	public function set_igtf_rate( $rate ) {
+		$this->igtf_rate = $rate;
+		update_option( 'wvp_igtf_rate', $rate );
+	}
 }
