@@ -62,7 +62,7 @@ class WVP_Dependency_Container {
 	 */
 	public function register( $name, $dependency, $singleton = true ) {
 		// Prevent multiple registrations
-		if ( isset( $this->dependencies[ $name ] ) ) {
+		if ( $this->initialized && isset( $this->dependencies[ $name ] ) ) {
 			return;
 		}
 		
@@ -74,6 +74,8 @@ class WVP_Dependency_Container {
 		} else {
 			$this->dependencies[ $name ] = $dependency;
 		}
+		
+		$this->initialized = true;
 	}
 
 	/**
@@ -94,7 +96,12 @@ class WVP_Dependency_Container {
 		if ( isset( $this->factories[ $name ] ) ) {
 			$factory_data = $this->factories[ $name ];
 			
-			// Create the instance using the factory
+			// If it's a singleton and already instantiated, return the cached instance
+			if ( $factory_data['singleton'] && isset( $this->dependencies[ $name ] ) ) {
+				return $this->dependencies[ $name ];
+			}
+
+			// Create the instance
 			$instance = call_user_func( $factory_data['factory'], $this );
 			
 			// If it's a singleton, cache it
