@@ -1,0 +1,516 @@
+/**
+ * Estilos para el Sistema de Control de Visualización
+ * WooCommerce Venezuela Pro 2025
+ */
+
+/* ==========================================================================
+   Variables CSS
+   ========================================================================== */
+
+:root {
+    --wvp-primary-color: #0073aa;
+    --wvp-secondary-color: #00a0d2;
+    --wvp-success-color: #46b450;
+    --wvp-error-color: #dc3232;
+    --wvp-text-color: #333333;
+    --wvp-background-color: #ffffff;
+    --wvp-border-color: #dddddd;
+    --wvp-hover-color: #005177;
+    --wvp-active-color: #0085ba;
+    --wvp-border-radius: 4px;
+    --wvp-transition: all 0.3s ease;
+    --wvp-font-size: 14px;
+    --wvp-font-weight: normal;
+}
+
+/* ==========================================================================
+   Base Styles - Currency Switcher
+   ========================================================================== */
+
+.wvp-currency-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: var(--wvp-font-size);
+    line-height: 1.5;
+}
+
+.wvp-currency-switcher * {
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Button Style Switcher
+   ========================================================================== */
+
+.wvp-currency-buttons {
+    display: flex;
+    gap: 4px;
+    border-radius: var(--wvp-border-radius);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.wvp-currency-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border: 1px solid var(--wvp-border-color);
+    background: var(--wvp-background-color);
+    color: var(--wvp-text-color);
+    font-size: inherit;
+    font-weight: var(--wvp-font-weight);
+    cursor: pointer;
+    transition: var(--wvp-transition);
+    text-decoration: none;
+    outline: none;
+}
+
+.wvp-currency-btn:first-child {
+    border-right: none;
+}
+
+.wvp-currency-btn:hover {
+    background: var(--wvp-hover-color);
+    color: #ffffff;
+    border-color: var(--wvp-hover-color);
+}
+
+.wvp-currency-btn.active {
+    background: var(--wvp-active-color);
+    color: #ffffff;
+    border-color: var(--wvp-active-color);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.wvp-currency-btn:focus {
+    box-shadow: 0 0 0 2px var(--wvp-primary-color);
+    z-index: 1;
+}
+
+/* ==========================================================================
+   Dropdown Style Switcher
+   ========================================================================== */
+
+.wvp-currency-dropdown {
+    padding: 8px 12px;
+    border: 1px solid var(--wvp-border-color);
+    border-radius: var(--wvp-border-radius);
+    background: var(--wvp-background-color);
+    color: var(--wvp-text-color);
+    font-size: inherit;
+    cursor: pointer;
+    transition: var(--wvp-transition);
+    outline: none;
+    min-width: 100px;
+}
+
+.wvp-currency-dropdown:hover,
+.wvp-currency-dropdown:focus {
+    border-color: var(--wvp-primary-color);
+    box-shadow: 0 0 0 1px var(--wvp-primary-color);
+}
+
+/* ==========================================================================
+   Toggle Style Switcher
+   ========================================================================== */
+
+.wvp-currency-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wvp-toggle-input {
+    display: none;
+}
+
+.wvp-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.wvp-toggle-slider {
+    position: relative;
+    width: 50px;
+    height: 24px;
+    background: var(--wvp-border-color);
+    border-radius: 12px;
+    transition: var(--wvp-transition);
+}
+
+.wvp-toggle-slider::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: #ffffff;
+    border-radius: 50%;
+    transition: var(--wvp-transition);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.wvp-toggle-input:checked + .wvp-toggle-label .wvp-toggle-slider {
+    background: var(--wvp-primary-color);
+}
+
+.wvp-toggle-input:checked + .wvp-toggle-label .wvp-toggle-slider::before {
+    transform: translateX(26px);
+}
+
+/* ==========================================================================
+   Inline Style Switcher
+   ========================================================================== */
+
+.wvp-currency-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: inherit;
+}
+
+.wvp-currency-current {
+    font-weight: bold;
+    color: var(--wvp-primary-color);
+}
+
+.wvp-currency-switch-link {
+    color: var(--wvp-secondary-color);
+    cursor: pointer;
+    text-decoration: none;
+    transition: var(--wvp-transition);
+}
+
+.wvp-currency-switch-link:hover {
+    color: var(--wvp-hover-color);
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   Rate Display
+   ========================================================================== */
+
+.wvp-rate-display {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.wvp-bcv-rate {
+    display: inline-block;
+    font-size: inherit;
+}
+
+.wvp-bcv-rate.wvp-bcv-default {
+    color: var(--wvp-text-color);
+}
+
+.wvp-bcv-rate.wvp-bcv-minimal {
+    font-size: 12px;
+    color: #666;
+}
+
+.wvp-bcv-rate.wvp-bcv-highlight {
+    padding: 4px 8px;
+    background: var(--wvp-primary-color);
+    color: #ffffff;
+    border-radius: var(--wvp-border-radius);
+    font-weight: bold;
+}
+
+.wvp-bcv-detailed {
+    text-align: center;
+}
+
+.wvp-bcv-title {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.wvp-bcv-rate-main {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--wvp-primary-color);
+    margin: 4px 0;
+}
+
+.wvp-bcv-date {
+    font-size: 11px;
+    color: #666;
+}
+
+/* ==========================================================================
+   Size Variations
+   ========================================================================== */
+
+.wvp-currency-switcher.wvp-size-small {
+    font-size: 12px;
+}
+
+.wvp-currency-switcher.wvp-size-small .wvp-currency-btn {
+    padding: 6px 10px;
+}
+
+.wvp-currency-switcher.wvp-size-small .wvp-currency-dropdown {
+    padding: 6px 10px;
+}
+
+.wvp-currency-switcher.wvp-size-large {
+    font-size: 16px;
+}
+
+.wvp-currency-switcher.wvp-size-large .wvp-currency-btn {
+    padding: 10px 16px;
+}
+
+.wvp-currency-switcher.wvp-size-large .wvp-currency-dropdown {
+    padding: 10px 16px;
+}
+
+/* ==========================================================================
+   Theme Variations
+   ========================================================================== */
+
+/* Minimal Theme */
+.wvp-currency-switcher.wvp-theme-minimal .wvp-currency-btn {
+    border: none;
+    background: transparent;
+    color: var(--wvp-text-color);
+    text-decoration: underline;
+}
+
+.wvp-currency-switcher.wvp-theme-minimal .wvp-currency-btn:hover {
+    background: transparent;
+    color: var(--wvp-primary-color);
+}
+
+.wvp-currency-switcher.wvp-theme-minimal .wvp-currency-btn.active {
+    background: transparent;
+    color: var(--wvp-primary-color);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* Modern Theme */
+.wvp-currency-switcher.wvp-theme-modern .wvp-currency-btn {
+    border-radius: 20px;
+    border: 2px solid var(--wvp-border-color);
+    font-weight: 500;
+}
+
+.wvp-currency-switcher.wvp-theme-modern .wvp-currency-buttons {
+    gap: 8px;
+    box-shadow: none;
+}
+
+.wvp-currency-switcher.wvp-theme-modern .wvp-currency-btn:first-child {
+    border-right: 2px solid var(--wvp-border-color);
+}
+
+/* Elegant Theme */
+.wvp-currency-switcher.wvp-theme-elegant .wvp-currency-btn {
+    border: 1px solid var(--wvp-primary-color);
+    color: var(--wvp-primary-color);
+    background: transparent;
+}
+
+.wvp-currency-switcher.wvp-theme-elegant .wvp-currency-btn:hover {
+    background: var(--wvp-primary-color);
+    color: #ffffff;
+}
+
+.wvp-currency-switcher.wvp-theme-elegant .wvp-currency-btn.active {
+    background: var(--wvp-primary-color);
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   Price Converter Components
+   ========================================================================== */
+
+.wvp-price-converter {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: inherit;
+    margin: 4px 0;
+}
+
+.wvp-converter-input {
+    width: 80px;
+    padding: 4px 8px;
+    border: 1px solid var(--wvp-border-color);
+    border-radius: var(--wvp-border-radius);
+    font-size: inherit;
+}
+
+.wvp-price-original {
+    color: #666;
+}
+
+.wvp-price-separator {
+    color: var(--wvp-primary-color);
+    font-weight: bold;
+}
+
+.wvp-price-converted {
+    color: var(--wvp-primary-color);
+    font-weight: bold;
+}
+
+/* ==========================================================================
+   Loop Integration (Shop/Category Pages)
+   ========================================================================== */
+
+.wvp-loop-converter {
+    margin-top: 4px;
+    font-size: 12px;
+}
+
+.wvp-loop-converter .wvp-currency-switcher {
+    margin: 0;
+    font-size: inherit;
+}
+
+/* ==========================================================================
+   Cart Integration
+   ========================================================================== */
+
+.wvp-cart-converter-row th,
+.wvp-cart-converter-row td {
+    border-top: 1px solid var(--wvp-border-color);
+    padding: 8px;
+    font-weight: bold;
+    color: var(--wvp-primary-color);
+}
+
+.wvp-mini-cart-converter {
+    padding: 8px 0;
+    border-top: 1px solid var(--wvp-border-color);
+    text-align: center;
+}
+
+/* ==========================================================================
+   Error States
+   ========================================================================== */
+
+.wvp-currency-error,
+.wvp-bcv-error {
+    color: var(--wvp-error-color);
+    font-style: italic;
+    font-size: 12px;
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+.wvp-currency-switcher.wvp-animation-fade .wvp-price-converted {
+    transition: opacity 0.3s ease;
+}
+
+.wvp-currency-switcher.wvp-animation-slide .wvp-price-converted {
+    transition: transform 0.3s ease;
+}
+
+.wvp-currency-switcher.wvp-animation-bounce .wvp-price-converted {
+    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .wvp-currency-switcher.wvp-responsive-mobile-compact {
+        font-size: 12px;
+    }
+    
+    .wvp-currency-switcher.wvp-responsive-mobile-compact .wvp-currency-btn {
+        padding: 6px 8px;
+    }
+    
+    .wvp-currency-switcher.wvp-responsive-mobile-hidden {
+        display: none;
+    }
+    
+    .wvp-currency-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .wvp-currency-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .wvp-currency-switcher {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .wvp-price-converter {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
+
+/* ==========================================================================
+   Accessibility
+   ========================================================================== */
+
+.wvp-currency-btn:focus,
+.wvp-currency-dropdown:focus,
+.wvp-toggle-input:focus + .wvp-toggle-label .wvp-toggle-slider {
+    outline: 2px solid var(--wvp-primary-color);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wvp-currency-switcher *,
+    .wvp-currency-btn,
+    .wvp-toggle-slider,
+    .wvp-toggle-slider::before {
+        transition: none;
+    }
+}
+
+/* ==========================================================================
+   High Contrast Mode Support
+   ========================================================================== */
+
+@media (prefers-contrast: high) {
+    .wvp-currency-btn {
+        border-width: 2px;
+    }
+    
+    .wvp-currency-btn.active {
+        border-width: 3px;
+    }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    .wvp-currency-switcher {
+        display: none;
+    }
+    
+    .wvp-price-converted {
+        display: inline;
+        font-weight: bold;
+    }
+}

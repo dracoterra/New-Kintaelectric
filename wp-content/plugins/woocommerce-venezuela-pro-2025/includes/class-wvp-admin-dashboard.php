@@ -28,6 +28,11 @@ class WVP_Admin_Dashboard {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 		add_action( 'wp_ajax_wvp_get_dashboard_stats', array( $this, 'ajax_get_dashboard_stats' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		
+		// AJAX handlers para configuración de conversores
+		add_action( 'wp_ajax_wvp_save_currency_settings', array( $this, 'ajax_save_currency_settings' ) );
+		add_action( 'wp_ajax_wvp_reset_currency_settings', array( $this, 'ajax_reset_currency_settings' ) );
+		add_action( 'wp_ajax_wvp_preview_currency_converter', array( $this, 'ajax_preview_currency_converter' ) );
 	}
 	
 	/**
@@ -87,6 +92,15 @@ class WVP_Admin_Dashboard {
 		
 		add_submenu_page(
 			'wvp-dashboard',
+			'Conversores de Moneda',
+			'Conversores de Moneda',
+			'manage_woocommerce',
+			'wvp-currency-settings',
+			array( $this, 'currency_settings_page' )
+		);
+		
+		add_submenu_page(
+			'wvp-dashboard',
 			'Reportes',
 			'Reportes',
 			'manage_woocommerce',
@@ -105,6 +119,7 @@ class WVP_Admin_Dashboard {
 			
 			wp_enqueue_style( 'wvp-admin', $plugin_url . 'admin/css/wvp-admin.css', array(), $plugin_version );
 			wp_enqueue_style( 'wvp-seniat', $plugin_url . 'admin/css/wvp-seniat.css', array(), $plugin_version );
+			wp_enqueue_style( 'wvp-currency-admin', $plugin_url . 'admin/css/wvp-currency-admin.css', array(), $plugin_version );
 			wp_enqueue_script( 'wvp-admin', $plugin_url . 'admin/js/wvp-admin.js', array( 'jquery' ), $plugin_version, true );
 			
 			// Cargar JavaScript específico para SENIAT
@@ -350,6 +365,14 @@ class WVP_Admin_Dashboard {
 	}
 	
 	/**
+	 * Currency Settings page
+	 */
+	public function currency_settings_page() {
+		// Incluir la página de configuración de conversores
+		include_once plugin_dir_path( __FILE__ ) . '../admin/partials/currency-config/currency-settings.php';
+	}
+	
+	/**
 	 * Reports page
 	 */
 	public function reports_page() {
@@ -572,5 +595,148 @@ class WVP_Admin_Dashboard {
 		);
 		
 		return isset( $methods[$method] ) ? $methods[$method] : ucfirst( str_replace( '_', ' ', $method ) );
+	}
+	
+	/**
+	 * AJAX: Guardar configuración de conversores
+	 */
+	public function ajax_save_currency_settings() {
+		// Verificar nonce
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'wvp_currency_settings_ajax' ) ) {
+			wp_send_json_error( 'Nonce inválido' );
+		}
+		
+		// Verificar permisos
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Permisos insuficientes' );
+		}
+		
+		// Procesar datos del formulario
+		$settings = array();
+		
+		// Configuración general
+		if ( isset( $_POST['settings']['general'] ) ) {
+			$settings['general'] = array_map( 'sanitize_text_field', $_POST['settings']['general'] );
+		}
+		
+		// Ubicaciones de visualización
+		if ( isset( $_POST['settings']['display_locations'] ) ) {
+			$settings['display_locations'] = array();
+			foreach ( $_POST['settings']['display_locations'] as $location => $value ) {
+				$settings['display_locations'][$location] = (bool) $value;
+			}
+		}
+		
+		// Configuración de apariencia
+		if ( isset( $_POST['settings']['appearance'] ) ) {
+			$settings['appearance'] = array_map( 'sanitize_text_field', $_POST['settings']['appearance'] );
+		}
+		
+		// Configuración de estilos
+		if ( isset( $_POST['settings']['styling'] ) ) {
+			$settings['styling'] = $_POST['settings']['styling'];
+			// Sanitizar colores
+			foreach ( $settings['styling'] as $key => $value ) {
+				if ( strpos( $key, 'color' ) !== false ) {
+					$settings['styling'][$key] = sanitize_hex_color( $value );
+				} else {
+					$settings['styling'][$key] = sanitize_text_field( $value );
+				}
+			}
+		}
+		
+		// Configuración responsiva
+		if ( isset( $_POST['settings']['responsive'] ) ) {
+			$settings['responsive'] = array_map( 'sanitize_text_field', $_POST['settings']['responsive'] );
+		}
+		
+		// Configuración avanzada
+		if ( isset( $_POST['settings']['advanced'] ) ) {
+			$settings['advanced'] = array_map( 'sanitize_text_field', $_POST['settings']['advanced'] );
+		}
+		
+		// Guardar configuración
+		if ( update_option( 'wvp_display_settings', $settings ) ) {
+			wp_send_json_success( 'Configuración guardada correctamente' );
+		} else {
+			wp_send_json_error( 'Error al guardar la configuración' );
+		}
+	}
+	
+	/**
+	 * AJAX: Resetear configuración de conversores
+	 */
+	public function ajax_reset_currency_settings() {
+		// Verificar nonce
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'wvp_currency_settings_ajax' ) ) {
+			wp_send_json_error( 'Nonce inválido' );
+		}
+		
+		// Verificar permisos
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Permisos insuficientes' );
+		}
+		
+		// Obtener configuración por defecto
+		if ( class_exists( 'WVP_Display_Settings' ) ) {
+			$default_settings = WVP_Display_Settings::get_instance()->get_default_settings();
+			
+			if ( update_option( 'wvp_display_settings', $default_settings ) ) {
+				wp_send_json_success( 'Configuración restaurada correctamente' );
+			} else {
+				wp_send_json_error( 'Error al restaurar la configuración' );
+			}
+		} else {
+			wp_send_json_error( 'Sistema de configuraciones no disponible' );
+		}
+	}
+	
+	/**
+	 * AJAX: Vista previa del conversor
+	 */
+	public function ajax_preview_currency_converter() {
+		// Verificar nonce
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'wvp_currency_settings_ajax' ) ) {
+			wp_send_json_error( 'Nonce inválido' );
+		}
+		
+		// Verificar permisos
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( 'Permisos insuficientes' );
+		}
+		
+		// Generar vista previa
+		$preview_html = '<div class="wvp-preview-demo">';
+		$preview_html .= '<h4>Vista Previa del Conversor</h4>';
+		$preview_html .= '<div class="wvp-preview-examples">';
+		
+		// Ejemplo con botones
+		$preview_html .= '<div class="wvp-preview-item">';
+		$preview_html .= '<h5>Estilo Botones:</h5>';
+		$preview_html .= do_shortcode( '[wvp_currency_switcher style="buttons" theme="default" size="medium"]' );
+		$preview_html .= '</div>';
+		
+		// Ejemplo con dropdown
+		$preview_html .= '<div class="wvp-preview-item">';
+		$preview_html .= '<h5>Estilo Dropdown:</h5>';
+		$preview_html .= do_shortcode( '[wvp_currency_switcher style="dropdown" theme="default" size="medium"]' );
+		$preview_html .= '</div>';
+		
+		// Ejemplo con toggle
+		$preview_html .= '<div class="wvp-preview-item">';
+		$preview_html .= '<h5>Estilo Toggle:</h5>';
+		$preview_html .= do_shortcode( '[wvp_currency_switcher style="toggle" theme="default" size="medium"]' );
+		$preview_html .= '</div>';
+		
+		// Ejemplo con inline
+		$preview_html .= '<div class="wvp-preview-item">';
+		$preview_html .= '<h5>Estilo Inline:</h5>';
+		$preview_html .= do_shortcode( '[wvp_currency_switcher style="inline" theme="default" size="medium"]' );
+		$preview_html .= '</div>';
+		
+		$preview_html .= '</div>';
+		$preview_html .= '</div>';
+		
+		wp_send_json_success( $preview_html );
 	}
 }

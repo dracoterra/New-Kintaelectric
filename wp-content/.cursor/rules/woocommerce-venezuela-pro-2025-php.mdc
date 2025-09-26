@@ -1,0 +1,247 @@
+---
+globs: plugins/woocommerce-venezuela-pro-2025/**/*.php
+description: Reglas específicas para archivos PHP del plugin WooCommerce Venezuela Pro 2025
+---
+
+# WooCommerce Venezuela Pro 2025 - PHP Development Rules
+
+## Estructura de Archivos PHP
+
+### Clases Principales del Plugin
+- **Core Classes**: Ubicadas en [includes/](mdc:plugins/woocommerce-venezuela-pro-2025/includes/)
+- **Admin Classes**: Ubicadas en [admin/](mdc:plugins/woocommerce-venezuela-pro-2025/admin/)
+- **Public Classes**: Ubicadas en [public/](mdc:plugins/woocommerce-venezuela-pro-2025/public/)
+
+### Clases Especializadas por Funcionalidad
+
+#### Conversión de Monedas
+- [class-wvp-simple-currency-converter.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wvp-simple-currency-converter.php) - Conversor principal
+- [class-wvp-currency-modules-manager.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wvp-currency-modules-manager.php) - Gestor de módulos
+- [class-wvp-bcv-fallback-manager.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wvp-bcv-fallback-manager.php) - Gestor de respaldo BCV
+
+#### Métodos de Pago Venezolanos
+- [class-wvp-pago-movil-gateway.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wvp-pago-movil-gateway.php) - Pago Móvil
+- [class-wvp-zelle-gateway.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wvp-zelle-gateway.php) - Zelle
+- [class-wvp-bank-transfer-gateway.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wvp-bank-transfer-gateway.php) - Transferencias bancarias
+
+#### Envíos Venezolanos
+- [class-wvp-mrw-shipping.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wvp-mrw-shipping.php) - MRW
+- [class-wvp-zoom-shipping.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wvp-zoom-shipping.php) - Zoom
+- [class-wvp-local-delivery-shipping.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wvp-local-delivery-shipping.php) - Entrega local
+
+#### Impuestos y Cumplimiento Fiscal
+- [class-wvp-venezuelan-taxes.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wvp-venezuelan-taxes.php) - Cálculo de impuestos
+- [class-wvp-seniat-exporter.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wvp-seniat-exporter.php) - Exportador SENIAT
+- [class-wvp-venezuelan-validator.php](mdc:plugins/woocommerce-venezuela-pro-2025/includes/class-wvp-venezuelan-validator.php) - Validaciones venezolanas
+
+## Patrones de Desarrollo
+
+### Singleton Pattern
+```php
+class WVP_Example {
+    private static $instance = null;
+    
+    public static function get_instance() {
+        if ( self::$instance === null ) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    private function __construct() {
+        // Constructor privado
+    }
+}
+```
+
+### Hook Registration
+```php
+class WVP_Example {
+    public function __construct() {
+        add_action( 'init', array( $this, 'init' ) );
+        add_filter( 'woocommerce_product_data_tabs', array( $this, 'add_tab' ) );
+    }
+    
+    public function init() {
+        // Inicialización
+    }
+}
+```
+
+### AJAX Handlers
+```php
+class WVP_Example {
+    public function __construct() {
+        add_action( 'wp_ajax_wvp_action', array( $this, 'handle_ajax' ) );
+        add_action( 'wp_ajax_nopriv_wvp_action', array( $this, 'handle_ajax' ) );
+    }
+    
+    public function handle_ajax() {
+        check_ajax_referer( 'wvp_nonce', 'nonce' );
+        
+        // Procesar AJAX
+        wp_send_json_success( $data );
+    }
+}
+```
+
+## Manejo de Errores
+
+### Try-Catch Blocks
+```php
+try {
+    $result = $this->risky_operation();
+} catch ( Exception $e ) {
+    error_log( 'WVP Error: ' . $e->getMessage() );
+    return false;
+}
+```
+
+### Error Logging
+```php
+if ( WP_DEBUG ) {
+    error_log( 'WVP Debug: ' . print_r( $data, true ) );
+}
+```
+
+## Integración con WooCommerce
+
+### Payment Gateway Integration
+```php
+class WVP_Payment_Gateway extends WC_Payment_Gateway {
+    
+    public function __construct() {
+        $this->id = 'wvp_payment';
+        $this->method_title = __( 'WVP Payment', 'woocommerce-venezuela-pro-2025' );
+        $this->method_description = __( 'Payment method description', 'woocommerce-venezuela-pro-2025' );
+        
+        $this->init_form_fields();
+        $this->init_settings();
+        
+        add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
+    }
+}
+```
+
+### Shipping Method Integration
+```php
+class WVP_Shipping_Method extends WC_Shipping_Method {
+    
+    public function __construct( $instance_id = 0 ) {
+        $this->id = 'wvp_shipping';
+        $this->instance_id = absint( $instance_id );
+        $this->method_title = __( 'WVP Shipping', 'woocommerce-venezuela-pro-2025' );
+        $this->method_description = __( 'Shipping method description', 'woocommerce-venezuela-pro-2025' );
+        
+        $this->supports = array(
+            'shipping-zones',
+            'instance-settings',
+            'instance-settings-modal',
+        );
+        
+        $this->init();
+    }
+}
+```
+
+## Base de Datos
+
+### Custom Tables
+```php
+class WVP_Database {
+    
+    public static function create_tables() {
+        global $wpdb;
+        
+        $charset_collate = $wpdb->get_charset_collate();
+        
+        $sql = "CREATE TABLE {$wpdb->prefix}wvp_currency_rates (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            currency_from varchar(3) NOT NULL,
+            currency_to varchar(3) NOT NULL,
+            rate decimal(10,4) NOT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id)
+        ) $charset_collate;";
+        
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        dbDelta( $sql );
+    }
+}
+```
+
+### Options Management
+```php
+class WVP_Options {
+    
+    public static function get_option( $key, $default = false ) {
+        return get_option( 'wvp_' . $key, $default );
+    }
+    
+    public static function update_option( $key, $value ) {
+        return update_option( 'wvp_' . $key, $value );
+    }
+    
+    public static function delete_option( $key ) {
+        return delete_option( 'wvp_' . $key );
+    }
+}
+```
+
+## Cache y Performance
+
+### Transients Usage
+```php
+class WVP_Cache {
+    
+    public static function get( $key, $default = false ) {
+        return get_transient( 'wvp_' . $key );
+    }
+    
+    public static function set( $key, $value, $expiration = HOUR_IN_SECONDS ) {
+        return set_transient( 'wvp_' . $key, $value, $expiration );
+    }
+    
+    public static function delete( $key ) {
+        return delete_transient( 'wvp_' . $key );
+    }
+}
+```
+
+## Validaciones Específicas de Venezuela
+
+### RIF Validation
+```php
+class WVP_Validator {
+    
+    public static function validate_rif( $rif ) {
+        $rif = strtoupper( trim( $rif ) );
+        
+        if ( ! preg_match( '/^[VEJPG]-[0-9]{8}-[0-9]$/', $rif ) ) {
+            return false;
+        }
+        
+        // Implementar algoritmo de validación RIF
+        return true;
+    }
+}
+```
+
+### Phone Number Validation
+```php
+class WVP_Validator {
+    
+    public static function validate_phone( $phone ) {
+        $phone = preg_replace( '/[^0-9]/', '', $phone );
+        
+        if ( strlen( $phone ) === 11 && substr( $phone, 0, 2 ) === '58' ) {
+            return true;
+        }
+        
+        if ( strlen( $phone ) === 10 && substr( $phone, 0, 1 ) === '0' ) {
+            return true;
+        }
+        
+        return false;
+    }
+}
