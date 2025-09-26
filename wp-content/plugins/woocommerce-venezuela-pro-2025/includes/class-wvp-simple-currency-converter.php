@@ -1,6 +1,6 @@
 <?php
 /**
- * Simple Currency Converter - Simplified Version
+ * Simple Currency Converter - Minimal Version
  * Handles USD to VES conversion using BCV rates
  */
 
@@ -23,8 +23,7 @@ class WVP_Simple_Currency_Converter {
 	
 	private function __construct() {
 		$this->load_bcv_rate();
-		// Only register essential hooks for now
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		// Only register AJAX hooks for now
 		add_action( 'wp_ajax_wvp_convert_price', array( $this, 'ajax_convert_price' ) );
 		add_action( 'wp_ajax_nopriv_wvp_convert_price', array( $this, 'ajax_convert_price' ) );
 	}
@@ -66,25 +65,6 @@ class WVP_Simple_Currency_Converter {
 		}
 		
 		return $price;
-	}
-	
-	/**
-	 * Enqueue scripts and styles
-	 */
-	public function enqueue_scripts() {
-		if ( is_woocommerce() ) {
-			$plugin_url = plugin_dir_url( dirname( __FILE__ ) );
-			$plugin_version = '1.0.0';
-			
-			wp_enqueue_style( 'wvp-simple-converter', $plugin_url . 'public/css/wvp-simple-converter.css', array(), $plugin_version );
-			wp_enqueue_script( 'wvp-simple-converter', $plugin_url . 'public/js/wvp-simple-converter.js', array( 'jquery' ), $plugin_version, true );
-			
-			wp_localize_script( 'wvp-simple-converter', 'wvp_ajax', array(
-				'ajax_url' => admin_url( 'admin-ajax.php' ),
-				'nonce' => wp_create_nonce( 'wvp_convert_nonce' ),
-				'current_rate' => $this->get_bcv_rate()
-			));
-		}
 	}
 	
 	/**
