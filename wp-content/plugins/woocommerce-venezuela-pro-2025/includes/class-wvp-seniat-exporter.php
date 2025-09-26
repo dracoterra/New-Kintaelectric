@@ -1176,6 +1176,187 @@ class WVP_SENIAT_Exporter {
         
         return array( 'html' => $html );
     }
+
+    /**
+     * AJAX handler para generar facturas SENIAT
+     */
+    public function ajax_generate_invoice() {
+        // Verificar nonce
+        if ( ! wp_verify_nonce( $_POST['nonce'], 'wvp_seniat_nonce' ) ) {
+            wp_die( 'Error de seguridad' );
+        }
+
+        try {
+            $start_date = sanitize_text_field( $_POST['start_date'] );
+            $end_date = sanitize_text_field( $_POST['end_date'] );
+            $format = sanitize_text_field( $_POST['format'] );
+
+            // Obtener órdenes
+            $orders = wc_get_orders( array(
+                'status' => array( 'completed', 'processing' ),
+                'date_created' => $start_date . '...' . $end_date,
+                'limit' => -1
+            ));
+
+            if ( empty( $orders ) ) {
+                wp_send_json_error( array(
+                    'message' => 'No se encontraron órdenes para el período seleccionado'
+                ));
+                return;
+            }
+
+            // Generar reporte simple
+            $html = $this->generate_simple_seniat_report( $orders, $start_date, $end_date );
+
+            // Crear archivo
+            $upload_dir = wp_upload_dir();
+            $export_dir = $upload_dir['basedir'] . '/wvp-exports/seniat/';
+            
+            if ( ! file_exists( $export_dir ) ) {
+                wp_mkdir_p( $export_dir );
+            }
+            
+            $filename = 'reporte_seniat_' . $start_date . '_' . $end_date . '.html';
+            $file_path = $export_dir . $filename;
+            $file_url = $upload_dir['baseurl'] . '/wvp-exports/seniat/' . $filename;
+            
+            file_put_contents( $file_path, $html );
+
+            // Calcular totales
+            $total_usd = 0;
+            foreach ( $orders as $order ) {
+                $total_usd += $order->get_total();
+            }
+            $bcv_rate = get_option( 'wvp_emergency_rate', 36.5 );
+            $total_ves = $total_usd * $bcv_rate;
+
+            wp_send_json_success( array(
+                'message' => 'Reporte SENIAT generado exitosamente',
+                'file' => array(
+                    'filename' => $filename,
+                    'url' => $file_url,
+                    'size' => filesize( $file_path )
+                ),
+                'summary' => array(
+                    'period' => $start_date . ' a ' . $end_date,
+                    'total_orders' => count( $orders ),
+                    'total_usd' => number_format( $total_usd, 2 ),
+                    'total_ves' => number_format( $total_ves, 2 ),
+                    'bcv_rate' => $bcv_rate,
+                    'format' => 'PDF Completo'
+                )
+            ));
+
+        } catch ( Exception $e ) {
+            wp_send_json_error( array(
+                'message' => 'Error al generar reporte: ' . $e->getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Generar reporte SENIAT simple
+     */
+    private function generate_simple_seniat_report( $orders, $start_date, $end_date ) {
+        $bcv_rate = get_option( 'wvp_emergency_rate', 36.5 );
+        $total_usd = 0;
+        $total_iva = 0;
+        $total_igtf = 0;
+        
+        foreach ( $orders as $order ) {
+            $order_total = $order->get_total();
+            $total_usd += $order_total;
+            $total_iva += $order_total * 0.16;
+            $total_igtf += $order_total * 0.03;
+        }
+        
+        $total_ves = $total_usd * $bcv_rate;
+        
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte SENIAT - ' . $start_date . ' a ' . $end_date . '</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; background: #2c3e50; color: white; padding: 20px; }
+        .summary { background: #ecf0f1; padding: 15px; margin: 20px 0; }
+        .orders-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .orders-table th, .orders-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .orders-table th { background: #34495e; color: white; }
+        .totals { background: #d5f4e6; padding: 15px; margin: 20px 0; }
+        .footer { text-align: center; color: #666; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏛️ REPORTE FISCAL SENIAT</h1>
+        <h2>Período: ' . $start_date . ' a ' . $end_date . '</h2>
+    </div>
+    
+    <div class="summary">
+        <h3>📊 Resumen del Período</h3>
+        <p><strong>Total Órdenes:</strong> ' . count( $orders ) . '</p>
+        <p><strong>Total USD:</strong> $' . number_format( $total_usd, 2 ) . '</p>
+        <p><strong>Total VES:</strong> ' . number_format( $total_ves, 2 ) . ' VES</p>
+        <p><strong>Tasa BCV:</strong> ' . $bcv_rate . '</p>
+    </div>
+    
+    <table class="orders-table">
+        <thead>
+            <tr>
+                <th># Orden</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Total USD</th>
+                <th>Total VES</th>
+                <th>IVA</th>
+                <th>IGTF</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>';
+        
+        foreach ( $orders as $order ) {
+            $order_total = $order->get_total();
+            $order_ves = $order_total * $bcv_rate;
+            $order_iva = $order_total * 0.16;
+            $order_igtf = $order_total * 0.03;
+            
+            $html .= '<tr>
+                <td>#' . $order->get_id() . '</td>
+                <td>' . $order->get_date_created()->format( 'd/m/Y' ) . '</td>
+                <td>' . $order->get_billing_first_name() . ' ' . $order->get_billing_last_name() . '</td>
+                <td>$' . number_format( $order_total, 2 ) . '</td>
+                <td>' . number_format( $order_ves, 2 ) . '</td>
+                <td>$' . number_format( $order_iva, 2 ) . '</td>
+                <td>$' . number_format( $order_igtf, 2 ) . '</td>
+                <td>' . ucfirst( $order->get_status() ) . '</td>
+            </tr>';
+        }
+        
+        $html .= '</tbody>
+    </table>
+    
+    <div class="totals">
+        <h3>💰 Totales Fiscales</h3>
+        <p><strong>Total Ventas USD:</strong> $' . number_format( $total_usd, 2 ) . '</p>
+        <p><strong>Total Ventas VES:</strong> ' . number_format( $total_ves, 2 ) . ' VES</p>
+        <p><strong>Total IVA:</strong> $' . number_format( $total_iva, 2 ) . '</p>
+        <p><strong>Total IGTF:</strong> $' . number_format( $total_igtf, 2 ) . '</p>
+        <p><strong>Total a Declarar:</strong> $' . number_format( $total_iva + $total_igtf, 2 ) . '</p>
+    </div>
+    
+    <div class="footer">
+        <p><strong>Reporte generado por WooCommerce Venezuela Pro 2025</strong></p>
+        <p>Fecha de generación: ' . current_time( 'Y-m-d H:i:s' ) . '</p>
+        <p>Para uso exclusivo de SENIAT - Cumplimiento fiscal venezolano</p>
+    </div>
+</body>
+</html>';
+        
+        return $html;
+    }
 }
 
 // Inicializar el exportador SENIAT
