@@ -89,5 +89,4 @@ function run_woocommerce_venezuela_pro_2025() {
 	return Woocommerce_Venezuela_Pro_2025::get_instance();
 }
 
-// Load minimal version instead
-require_once plugin_dir_path( __FILE__ ) . 'woocommerce-venezuela-pro-2025-minimal.php';
+run_woocommerce_venezuela_pro_2025();

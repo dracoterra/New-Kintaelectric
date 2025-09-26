@@ -48,6 +48,7 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 */
 	protected $loader;
 
+
 	/**
 	 * The unique identifier of this plugin.
 	 *
@@ -129,9 +130,7 @@ class Woocommerce_Venezuela_Pro_2025 {
 		$this->plugin_name = 'woocommerce-venezuela-pro-2025';
 
 		$this->load_dependencies();
-		$this->init_container();
-		$this->init_module_manager();
-		// Internationalization disabled to prevent multiple initialization issues
+		// Simplified initialization - remove complex container and module manager
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
 		$this->define_woocommerce_hooks();
@@ -175,17 +174,17 @@ class Woocommerce_Venezuela_Pro_2025 {
 		/**
 		 * The class responsible for dependency injection.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wvp-dependency-container.php';
+		// require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wvp-dependency-container.php';
 
 		/**
 		 * The class responsible for module management.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wvp-module-manager.php';
+		// require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-wvp-module-manager.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-woocommerce-venezuela-pro-2025-admin.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-wvp-simple-admin.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the public-facing
@@ -197,20 +196,7 @@ class Woocommerce_Venezuela_Pro_2025 {
 
 	}
 
-	/**
-	 * Initialize the dependency injection container.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 */
-	private function init_container() {
-		$this->container = new WVP_Dependency_Container();
-		
-		// Register core dependencies
-		$this->container->register( 'plugin_name', $this->plugin_name );
-		$this->container->register( 'version', $this->version );
-		$this->container->register( 'loader', $this->loader );
-	}
+
 
 	/**
 	 * Initialize the module manager.
@@ -218,10 +204,17 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 * @since    1.0.0
 	 * @access   private
 	 */
+	/*
 	private function init_module_manager() {
+		// Create a simple container for the module manager
+		$this->container = new stdClass();
+		$this->container->plugin_name = $this->plugin_name;
+		$this->container->version = $this->version;
+		$this->container->loader = $this->loader;
+		
 		$this->module_manager = new WVP_Module_Manager( $this->container );
-		$this->container->register( 'module_manager', $this->module_manager );
 	}
+	*/
 
 	/**
 	 * Define the locale for this plugin for internationalization.
@@ -243,7 +236,7 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 */
 	private function define_admin_hooks() {
 
-		$plugin_admin = new Woocommerce_Venezuela_Pro_2025_Admin( $this->get_plugin_name(), $this->get_version() );
+		$plugin_admin = new WVP_Simple_Admin( $this->get_plugin_name(), $this->get_version() );
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
@@ -292,8 +285,8 @@ class Woocommerce_Venezuela_Pro_2025 {
 			return;
 		}
 		
-		// Initialize modules that depend on WooCommerce
-		$this->module_manager->init_woocommerce_modules();
+		// Simplified initialization - module manager commented out
+		// $this->module_manager->init_woocommerce_modules();
 	}
 
 	/**
@@ -359,9 +352,12 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 * @since     1.0.0
 	 * @return    WVP_Dependency_Container    The dependency container.
 	 */
+	// Commented out complex getter methods
+	/*
 	public function get_container() {
 		return $this->container;
 	}
+	*/
 
 	/**
 	 * Get the module manager.
@@ -369,8 +365,11 @@ class Woocommerce_Venezuela_Pro_2025 {
 	 * @since     1.0.0
 	 * @return    WVP_Module_Manager    The module manager.
 	 */
+	// Commented out complex getter methods
+	/*
 	public function get_module_manager() {
 		return $this->module_manager;
 	}
+	*/
 
 }
