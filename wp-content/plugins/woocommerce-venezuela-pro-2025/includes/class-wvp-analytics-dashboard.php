@@ -34,6 +34,9 @@ class WVP_Analytics_Dashboard {
         add_action( 'wp_ajax_wvp_save_analytics_settings', array( $this, 'ajax_save_analytics_settings' ) );
         add_action( 'admin_menu', array( $this, 'add_analytics_admin_menu' ), 60 );
         
+        // Eliminar menús duplicados de WooCommerce Analytics
+        add_action( 'admin_menu', array( $this, 'remove_duplicate_analytics_menu' ), 999 );
+        
         // Schedule daily analytics update
         add_action( 'wvp_daily_analytics_update', array( $this, 'update_daily_analytics' ) );
         
@@ -168,25 +171,48 @@ class WVP_Analytics_Dashboard {
     private function get_sales_data( $start_date, $end_date ) {
         global $wpdb;
         
-        $orders_table = $wpdb->prefix . 'posts';
-        $meta_table = $wpdb->prefix . 'postmeta';
+        // Verificar si HPOS está habilitado
+        $hpos_enabled = get_option( 'woocommerce_custom_orders_table_enabled' );
         
-        $query = $wpdb->prepare(
-            "SELECT 
-                DATE(p.post_date) as date,
-                SUM(CAST(pm.meta_value AS DECIMAL(10,2))) as total_sales,
-                COUNT(DISTINCT p.ID) as order_count
-            FROM {$orders_table} p
-            INNER JOIN {$meta_table} pm ON p.ID = pm.post_id
-            WHERE p.post_type = 'shop_order'
-            AND p.post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
-            AND pm.meta_key = '_order_total'
-            AND DATE(p.post_date) BETWEEN %s AND %s
-            GROUP BY DATE(p.post_date)
-            ORDER BY date ASC",
-            $start_date,
-            $end_date
-        );
+        if ( $hpos_enabled ) {
+            // Usar tabla HPOS
+            $orders_table = $wpdb->prefix . 'wc_orders';
+            
+            $query = $wpdb->prepare(
+                "SELECT 
+                    DATE(date_created_gmt) as date,
+                    SUM(total_amount) as total_sales,
+                    COUNT(*) as order_count
+                FROM {$orders_table}
+                WHERE status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND DATE(date_created_gmt) BETWEEN %s AND %s
+                GROUP BY DATE(date_created_gmt)
+                ORDER BY date ASC",
+                $start_date,
+                $end_date
+            );
+        } else {
+            // Usar tabla posts tradicional
+            $orders_table = $wpdb->prefix . 'posts';
+            $meta_table = $wpdb->prefix . 'postmeta';
+            
+            $query = $wpdb->prepare(
+                "SELECT 
+                    DATE(p.post_date) as date,
+                    SUM(CAST(pm.meta_value AS DECIMAL(10,2))) as total_sales,
+                    COUNT(DISTINCT p.ID) as order_count
+                FROM {$orders_table} p
+                INNER JOIN {$meta_table} pm ON p.ID = pm.post_id
+                WHERE p.post_type = 'shop_order'
+                AND p.post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND pm.meta_key = '_order_total'
+                AND DATE(p.post_date) BETWEEN %s AND %s
+                GROUP BY DATE(p.post_date)
+                ORDER BY date ASC",
+                $start_date,
+                $end_date
+            );
+        }
         
         $results = $wpdb->get_results( $query );
         
@@ -223,21 +249,43 @@ class WVP_Analytics_Dashboard {
     private function get_orders_data( $start_date, $end_date ) {
         global $wpdb;
         
-        $orders_table = $wpdb->prefix . 'posts';
+        // Verificar si HPOS está habilitado
+        $hpos_enabled = get_option( 'woocommerce_custom_orders_table_enabled' );
         
-        $query = $wpdb->prepare(
-            "SELECT 
-                DATE(post_date) as date,
-                COUNT(*) as order_count,
-                post_status
-            FROM {$orders_table}
-            WHERE post_type = 'shop_order'
-            AND DATE(post_date) BETWEEN %s AND %s
-            GROUP BY DATE(post_date), post_status
-            ORDER BY date ASC",
-            $start_date,
-            $end_date
-        );
+        if ( $hpos_enabled ) {
+            // Usar tabla HPOS
+            $orders_table = $wpdb->prefix . 'wc_orders';
+            
+            $query = $wpdb->prepare(
+                "SELECT 
+                    DATE(date_created_gmt) as date,
+                    COUNT(*) as order_count,
+                    status as post_status
+                FROM {$orders_table}
+                WHERE DATE(date_created_gmt) BETWEEN %s AND %s
+                GROUP BY DATE(date_created_gmt), status
+                ORDER BY date ASC",
+                $start_date,
+                $end_date
+            );
+        } else {
+            // Usar tabla posts tradicional
+            $orders_table = $wpdb->prefix . 'posts';
+            
+            $query = $wpdb->prepare(
+                "SELECT 
+                    DATE(post_date) as date,
+                    COUNT(*) as order_count,
+                    post_status
+                FROM {$orders_table}
+                WHERE post_type = 'shop_order'
+                AND DATE(post_date) BETWEEN %s AND %s
+                GROUP BY DATE(post_date), post_status
+                ORDER BY date ASC",
+                $start_date,
+                $end_date
+            );
+        }
         
         $results = $wpdb->get_results( $query );
         
@@ -351,9 +399,7 @@ class WVP_Analytics_Dashboard {
             FROM {$products_table}
             WHERE post_type = 'product'
             AND post_status IN ('publish', 'private')
-            GROUP BY post_status",
-            $start_date,
-            $end_date
+            GROUP BY post_status"
         );
         
         $results = $wpdb->get_results( $query );
@@ -503,22 +549,92 @@ class WVP_Analytics_Dashboard {
     /**
      * Helper methods
      */
+    /**
+     * Get previous period sales data (without recursion)
+     */
     private function get_previous_period_sales( $start_date, $end_date ) {
+        global $wpdb;
+        
         $days = ( strtotime( $end_date ) - strtotime( $start_date ) ) / ( 60 * 60 * 24 );
         $prev_start = date( 'Y-m-d', strtotime( $start_date . ' -' . $days . ' days' ) );
         $prev_end = date( 'Y-m-d', strtotime( $start_date . ' -1 day' ) );
         
-        $sales_data = $this->get_sales_data( $prev_start, $prev_end );
-        return $sales_data['total'];
+        // Verificar si HPOS está habilitado
+        $hpos_enabled = get_option( 'woocommerce_custom_orders_table_enabled' );
+        
+        if ( $hpos_enabled ) {
+            // Usar tabla HPOS
+            $orders_table = $wpdb->prefix . 'wc_orders';
+            
+            $query = $wpdb->prepare(
+                "SELECT SUM(total_amount) as total_sales
+                FROM {$orders_table}
+                WHERE status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND DATE(date_created_gmt) BETWEEN %s AND %s",
+                $prev_start,
+                $prev_end
+            );
+        } else {
+            // Usar tabla posts tradicional
+            $orders_table = $wpdb->prefix . 'posts';
+            $meta_table = $wpdb->prefix . 'postmeta';
+            
+            $query = $wpdb->prepare(
+                "SELECT SUM(CAST(pm.meta_value AS DECIMAL(10,2))) as total_sales
+                FROM {$orders_table} p
+                INNER JOIN {$meta_table} pm ON p.ID = pm.post_id
+                WHERE p.post_type = 'shop_order'
+                AND p.post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND pm.meta_key = '_order_total'
+                AND DATE(p.post_date) BETWEEN %s AND %s",
+                $prev_start,
+                $prev_end
+            );
+        }
+        
+        $result = $wpdb->get_var( $query );
+        return $result ? floatval( $result ) : 0;
     }
     
     private function get_previous_period_orders( $start_date, $end_date ) {
+        global $wpdb;
+        
         $days = ( strtotime( $end_date ) - strtotime( $start_date ) ) / ( 60 * 60 * 24 );
         $prev_start = date( 'Y-m-d', strtotime( $start_date . ' -' . $days . ' days' ) );
         $prev_end = date( 'Y-m-d', strtotime( $start_date . ' -1 day' ) );
         
-        $orders_data = $this->get_orders_data( $prev_start, $prev_end );
-        return $orders_data['total'];
+        // Verificar si HPOS está habilitado
+        $hpos_enabled = get_option( 'woocommerce_custom_orders_table_enabled' );
+        
+        if ( $hpos_enabled ) {
+            // Usar tabla HPOS
+            $orders_table = $wpdb->prefix . 'wc_orders';
+            
+            $query = $wpdb->prepare(
+                "SELECT COUNT(*) as order_count
+                FROM {$orders_table}
+                WHERE status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND DATE(date_created_gmt) BETWEEN %s AND %s",
+                $prev_start,
+                $prev_end
+            );
+        } else {
+            // Usar tabla posts tradicional
+            $orders_table = $wpdb->prefix . 'posts';
+            
+            $query = $wpdb->prepare(
+                "SELECT COUNT(*) as order_count
+                FROM {$orders_table} p
+                WHERE p.post_type = 'shop_order'
+                AND p.post_status IN ('wc-completed', 'wc-processing', 'wc-on-hold')
+                AND DATE(p.post_date) BETWEEN %s AND %s",
+                $prev_start,
+                $prev_end
+            );
+        }
+        
+        $result = $wpdb->get_var( $query );
+        return $result ? intval( $result ) : 0;
     }
     
     private function get_total_orders_in_period( $start_date, $end_date ) {
@@ -609,14 +725,26 @@ class WVP_Analytics_Dashboard {
     }
     
     /**
+     * Remove duplicate analytics menu from WooCommerce
+     */
+    public function remove_duplicate_analytics_menu() {
+        // Remover el menú de Analytics de WooCommerce que puede estar duplicado
+        remove_submenu_page( 'woocommerce', 'wc-admin&path=/analytics/overview' );
+        remove_submenu_page( 'woocommerce', 'wc-admin&path=/analytics' );
+        
+        // También remover si está como menú principal
+        remove_menu_page( 'wc-admin&path=/analytics/overview' );
+    }
+    
+    /**
      * Add analytics admin menu
      */
     public function add_analytics_admin_menu() {
         add_submenu_page(
             'wvp-dashboard',
-            'Analytics y Reportes',
-            'Analytics',
-            'manage_options',
+            'Análisis y Reportes',
+            'Análisis',
+            'manage_woocommerce',
             'wvp-analytics',
             array( $this, 'analytics_admin_page' )
         );
@@ -912,7 +1040,7 @@ class WVP_Analytics_Dashboard {
                             currency: data.currency || 'USD'
                         }).format(data.total || data.value || 0);
                     case 'bcv_rate':
-                        return data.current_rate ? data.current_rate.toFixed(2) + ' VES' : 'N/A';
+                        return data.current_rate ? parseFloat(data.current_rate).toFixed(2) + ' VES' : 'N/A';
                     case 'conversion_rate':
                         return (data.rate || 0).toFixed(2) + '%';
                     default:
@@ -934,6 +1062,16 @@ class WVP_Analytics_Dashboard {
                 
                 if (charts.sales) {
                     charts.sales.destroy();
+                }
+                
+                // Verificar si hay datos
+                if (!salesData.daily_data || salesData.daily_data.length === 0) {
+                    // Mostrar mensaje de no hay datos
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = '#666';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('No hay datos de ventas para mostrar', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                    return;
                 }
                 
                 charts.sales = new Chart(ctx, {
@@ -1012,6 +1150,43 @@ class WVP_Analytics_Dashboard {
                     charts.bcv.destroy();
                 }
                 
+                // Verificar si hay datos históricos
+                if (!bcvData.daily_data || bcvData.daily_data.length === 0) {
+                    // Mostrar tasa actual como gráfica de barras simple
+                    charts.bcv = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Tasa BCV Actual'],
+                            datasets: [{
+                                label: 'Tasa BCV',
+                                data: [bcvData.current_rate || 0],
+                                backgroundColor: '#1abc9c',
+                                borderColor: '#16a085',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value.toFixed(2) + ' VES';
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                    return;
+                }
+                
                 charts.bcv = new Chart(ctx, {
                     type: 'line',
                     data: {
@@ -1046,6 +1221,16 @@ class WVP_Analytics_Dashboard {
                 
                 if (charts.tax) {
                     charts.tax.destroy();
+                }
+                
+                // Verificar si hay datos
+                if (!taxData.daily_data || taxData.daily_data.length === 0) {
+                    // Mostrar mensaje de no hay datos
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = '#666';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('No hay datos de impuestos para mostrar', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                    return;
                 }
                 
                 charts.tax = new Chart(ctx, {
@@ -1121,6 +1306,33 @@ class WVP_Analytics_Dashboard {
     }
     
     /**
+     * Generate demo data when no real data exists
+     */
+    private function generate_demo_sales_data( $start_date, $end_date ) {
+        $data = array(
+            'total' => rand( 5000, 15000 ), // Total aleatorio entre $5,000-$15,000
+            'growth' => rand( 5, 25 ),     // Crecimiento aleatorio entre 5%-25%
+            'daily_data' => array(),
+            'currency' => 'USD'
+        );
+        
+        $current_date = strtotime( $start_date );
+        $end_timestamp = strtotime( $end_date );
+        
+        while ( $current_date <= $end_timestamp ) {
+            $date = date( 'Y-m-d', $current_date );
+            $data['daily_data'][] = array(
+                'date' => $date,
+                'value' => rand( 100, 800 ), // Ventas diarias aleatorias
+                'orders' => rand( 1, 10 )    // Pedidos diarios aleatorios
+            );
+            $current_date = strtotime( '+1 day', $current_date );
+        }
+        
+        return $data;
+    }
+    
+    /**
      * AJAX get analytics data
      */
     public function ajax_get_analytics_data() {
@@ -1131,10 +1343,96 @@ class WVP_Analytics_Dashboard {
         }
         
         $period = sanitize_text_field( $_POST['period'] );
+        
+        // Obtener datos reales
         $data = $this->get_analytics_data( $period );
+        
+        // Si no hay datos reales, mostrar ceros en lugar de datos de demostración
+        if ( empty( $data ) || $this->is_data_empty( $data ) ) {
+            // Datos vacíos con ceros
+            $data = array(
+                'sales' => array(
+                    'total' => 0,
+                    'previous_total' => 0,
+                    'change_percent' => 0,
+                    'daily_data' => array()
+                ),
+                'orders' => array(
+                    'total' => 0,
+                    'previous_total' => 0,
+                    'change_percent' => 0,
+                    'daily_data' => array()
+                ),
+                'customers' => array(
+                    'total' => 0,
+                    'previous_total' => 0,
+                    'change_percent' => 0
+                ),
+                'products' => array(
+                    'total' => 0,
+                    'published' => 0,
+                    'private' => 0
+                ),
+                'conversion_rate' => array(
+                    'current' => 0,
+                    'previous' => 0,
+                    'change_percent' => 0
+                ),
+                'average_order_value' => array(
+                    'current' => 0,
+                    'previous' => 0,
+                    'change_percent' => 0
+                ),
+                'bcv_rate' => array(
+                    'current' => 0,
+                    'previous' => 0,
+                    'change_percent' => 0,
+                    'daily_data' => array()
+                ),
+                'taxes_collected' => array(
+                    'total' => 0,
+                    'previous_total' => 0,
+                    'change_percent' => 0,
+                    'daily_data' => array()
+                ),
+                'top_products' => array(),
+                'order_statuses' => array(
+                    'completed' => 0,
+                    'processing' => 0,
+                    'pending' => 0,
+                    'cancelled' => 0
+                )
+            );
+        }
         
         wp_send_json_success( $data );
     }
+    
+    /**
+     * Check if analytics data is empty
+     */
+    private function is_data_empty( $data ) {
+        if ( empty( $data ) ) {
+            return true;
+        }
+        
+        // Check if sales data is empty
+        if ( isset( $data['sales'] ) && isset( $data['sales']['daily_data'] ) ) {
+            if ( empty( $data['sales']['daily_data'] ) ) {
+                return true;
+            }
+        }
+        
+        // Check if orders data is empty
+        if ( isset( $data['orders'] ) && isset( $data['orders']['daily_data'] ) ) {
+            if ( empty( $data['orders']['daily_data'] ) ) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
     
     /**
      * AJAX export analytics
@@ -1207,5 +1505,158 @@ class WVP_Analytics_Dashboard {
         update_option( 'wvp_analytics_settings', $settings );
         
         wp_send_json_success( 'Analytics settings saved successfully' );
+    }
+    
+    /**
+     * Generate complete demo analytics data
+     */
+    private function generate_demo_analytics_data( $period ) {
+        $data = array();
+        
+        // Generar datos de ventas
+        $data['sales'] = $this->generate_demo_sales_data( 
+            date( 'Y-m-d', strtotime( '-' . $this->get_period_days( $period ) . ' days' ) ),
+            date( 'Y-m-d' )
+        );
+        
+        // Generar datos de pedidos
+        $data['orders'] = array(
+            'total' => rand( 50, 200 ),
+            'growth' => rand( 10, 30 ),
+            'daily_data' => $this->generate_daily_data( $period, 'orders' ),
+            'status_breakdown' => array(
+                'completed' => rand( 20, 80 ),
+                'processing' => rand( 5, 20 ),
+                'pending' => rand( 3, 15 ),
+                'cancelled' => rand( 1, 5 )
+            )
+        );
+        
+        // Generar datos de clientes
+        $data['customers'] = array(
+            'total' => rand( 30, 150 ),
+            'growth' => rand( 5, 25 ),
+            'daily_data' => $this->generate_daily_data( $period, 'customers' ),
+            'new_customers' => rand( 10, 50 )
+        );
+        
+        // Generar datos de productos
+        $data['products'] = array(
+            'total' => rand( 20, 100 ),
+            'growth' => rand( 0, 15 ),
+            'top_selling' => $this->generate_top_products(),
+            'low_stock' => rand( 2, 10 )
+        );
+        
+        // Generar datos de conversión
+        $data['conversion_rate'] = array(
+            'rate' => rand( 2, 8 ),
+            'growth' => rand( 0, 20 ),
+            'daily_data' => $this->generate_daily_data( $period, 'conversion' )
+        );
+        
+        // Generar datos de valor promedio del pedido
+        $data['average_order_value'] = array(
+            'value' => rand( 50, 200 ),
+            'growth' => rand( 0, 15 ),
+            'daily_data' => $this->generate_daily_data( $period, 'aov' )
+        );
+        
+        // Generar datos de tasa BCV
+        $data['bcv_rate'] = array(
+            'rate' => rand( 35, 45 ),
+            'growth' => rand( -5, 5 ),
+            'daily_data' => $this->generate_daily_data( $period, 'bcv' )
+        );
+        
+        // Generar datos de impuestos
+        $data['tax_collected'] = array(
+            'total' => rand( 500, 2000 ),
+            'growth' => rand( 5, 20 ),
+            'daily_data' => $this->generate_daily_data( $period, 'tax' ),
+            'iva' => rand( 200, 800 ),
+            'igtf' => rand( 50, 200 )
+        );
+        
+        return $data;
+    }
+    
+    /**
+     * Get period days for demo data generation
+     */
+    private function get_period_days( $period ) {
+        switch ( $period ) {
+            case '7_days': return 7;
+            case '30_days': return 30;
+            case '90_days': return 90;
+            case '1_year': return 365;
+            default: return 30;
+        }
+    }
+    
+    /**
+     * Generate daily data for different metrics
+     */
+    private function generate_daily_data( $period, $type ) {
+        $days = $this->get_period_days( $period );
+        $data = array();
+        
+        for ( $i = $days; $i >= 0; $i-- ) {
+            $date = date( 'Y-m-d', strtotime( "-$i days" ) );
+            
+            switch ( $type ) {
+                case 'orders':
+                    $value = rand( 1, 8 );
+                    break;
+                case 'customers':
+                    $value = rand( 1, 5 );
+                    break;
+                case 'conversion':
+                    $value = rand( 1, 10 );
+                    break;
+                case 'aov':
+                    $value = rand( 50, 250 );
+                    break;
+                case 'bcv':
+                    $value = rand( 35, 45 );
+                    break;
+                case 'tax':
+                    $value = rand( 20, 100 );
+                    break;
+                default:
+                    $value = rand( 10, 50 );
+            }
+            
+            $data[] = array(
+                'date' => $date,
+                'value' => $value
+            );
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Generate top selling products demo data
+     */
+    private function generate_top_products() {
+        $products = array(
+            'Cable USB-C' => rand( 50, 200 ),
+            'Adaptador HDMI' => rand( 30, 150 ),
+            'Cargador Inalámbrico' => rand( 25, 120 ),
+            'Auriculares Bluetooth' => rand( 20, 100 ),
+            'Protector de Pantalla' => rand( 40, 180 )
+        );
+        
+        $data = array();
+        foreach ( $products as $name => $sales ) {
+            $data[] = array(
+                'name' => $name,
+                'sales' => $sales,
+                'revenue' => $sales * rand( 10, 50 )
+            );
+        }
+        
+        return $data;
     }
 }

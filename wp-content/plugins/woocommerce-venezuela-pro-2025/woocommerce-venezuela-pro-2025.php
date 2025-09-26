@@ -317,6 +317,9 @@ function wvp_init_plugin() {
 		error_log( 'WVP Analytics Dashboard error: ' . $e->getMessage() );
 	}
 	
+	// Eliminar menús duplicados de análisis
+	add_action( 'admin_menu', 'wvp_remove_duplicate_analytics_menu', 999 );
+	
 	/* STEP 8 - FINAL SYSTEMS
 	try {
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-final-optimizer.php';
@@ -346,6 +349,29 @@ function wvp_init_plugin() {
 	}
 	*/
 }
+/**
+ * Remove duplicate analytics menu
+ * Elimina menús duplicados de análisis que pueden causar confusión
+ */
+function wvp_remove_duplicate_analytics_menu() {
+	// Remover menús de WooCommerce Analytics que pueden estar duplicados
+	remove_submenu_page( 'woocommerce', 'wc-admin&path=/analytics/overview' );
+	remove_submenu_page( 'woocommerce', 'wc-admin&path=/analytics' );
+	
+	// Remover si está como menú principal
+	remove_menu_page( 'wc-admin&path=/analytics/overview' );
+	
+	// También remover cualquier submenú de análisis duplicado
+	global $submenu;
+	if ( isset( $submenu['woocommerce'] ) ) {
+		foreach ( $submenu['woocommerce'] as $key => $item ) {
+			if ( strpos( $item[0], 'Análisis' ) !== false && strpos( $item[2], 'wc-admin' ) !== false ) {
+				unset( $submenu['woocommerce'][$key] );
+			}
+		}
+	}
+}
+
 // Initialize the plugin - SIMPLIFIED VERSION ACTIVE
 add_action( 'plugins_loaded', 'wvp_init_plugin' );
 
