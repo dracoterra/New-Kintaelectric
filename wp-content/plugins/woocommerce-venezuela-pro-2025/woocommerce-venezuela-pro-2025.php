@@ -220,7 +220,7 @@ function wvp_init_plugin() {
 		error_log( 'WVP Venezuelan Taxes error: ' . $e->getMessage() );
 	}
 	
-	/* STEP 3 - VENEZUELAN SHIPPING MANAGER
+	// STEP 3 - VENEZUELAN SHIPPING MANAGER - REACTIVADO
 	try {
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-venezuelan-shipping.php';
 		if ( class_exists( 'WVP_Venezuelan_Shipping' ) ) {
@@ -229,7 +229,6 @@ function wvp_init_plugin() {
 	} catch ( Exception $e ) {
 		error_log( 'WVP Venezuelan Shipping error: ' . $e->getMessage() );
 	}
-	*/
 	
 	// STEP 4 - PRODUCT DISPLAY - REACTIVADO
 	try {
