@@ -231,7 +231,7 @@ function wvp_init_plugin() {
 	}
 	*/
 	
-	/* STEP 4 - PRODUCT DISPLAY
+	// STEP 4 - PRODUCT DISPLAY - REACTIVADO
 	try {
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-product-display.php';
 		if ( class_exists( 'WVP_Product_Display' ) ) {
@@ -240,7 +240,6 @@ function wvp_init_plugin() {
 	} catch ( Exception $e ) {
 		error_log( 'WVP Product Display error: ' . $e->getMessage() );
 	}
-	*/
 	
 	/* STEP 5 - OPTIMIZATION SYSTEMS
 	try {
@@ -291,7 +290,7 @@ function wvp_init_plugin() {
 	}
 	*/
 	
-	/* STEP 7 - ADDITIONAL SYSTEMS
+	// STEP 7 - ADDITIONAL SYSTEMS - REACTIVADO
 	try {
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-setup-wizard.php';
 		if ( class_exists( 'WVP_Setup_Wizard' ) ) {
@@ -318,7 +317,6 @@ function wvp_init_plugin() {
 	} catch ( Exception $e ) {
 		error_log( 'WVP Analytics Dashboard error: ' . $e->getMessage() );
 	}
-	*/
 	
 	/* STEP 8 - FINAL SYSTEMS
 	try {
