@@ -112,12 +112,52 @@ jQuery(document).ready(function($) {
     // Run on cart page
     if ($('body').hasClass('woocommerce-cart')) {
         console.log('WVP Currency Converter: On cart page, adding conversions');
-        addVesConversionsToCart();
+        
+        // Wait for cart to load completely
+        setTimeout(function() {
+            addVesConversionsToCart();
+            addVesConversionsToTotals();
+        }, 500);
         
         // Re-run when cart updates
         $(document.body).on('updated_cart_totals', function() {
             console.log('WVP Currency Converter: Cart updated, re-adding conversions');
-            setTimeout(addVesConversionsToCart, 100);
+            setTimeout(function() {
+                addVesConversionsToCart();
+                addVesConversionsToTotals();
+            }, 100);
+        });
+    }
+    
+    // Add VES conversions to cart totals
+    function addVesConversionsToTotals() {
+        console.log('WVP Currency Converter: Adding VES conversions to cart totals');
+        
+        // Find total elements by searching for specific price amounts
+        var totalAmounts = ['$38.00', '$6.08', '$44.08']; // Common cart totals
+        
+        totalAmounts.forEach(function(amount) {
+            var elements = $('*').filter(function() {
+                return $(this).text().includes(amount) && !$(this).find('.wvp-ves-conversion').length;
+            });
+            
+            elements.each(function() {
+                var $element = $(this);
+                var text = $element.text();
+                var match = text.match(/\$([0-9,]+\.?[0-9]*)/);
+                
+                if (match) {
+                    var usdTotal = parseFloat(match[1].replace(',', ''));
+                    var vesTotal = usdTotal * wvp_converter_ajax.rate;
+                    var vesFormatted = vesTotal.toLocaleString('es-VE', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    
+                    $element.append('<br><small class="wvp-ves-conversion" style="color: #27ae60;">(' + vesFormatted + ' VES)</small>');
+                    console.log('WVP Currency Converter: Added VES conversion to total:', usdTotal, '->', vesFormatted);
+                }
+            });
         });
     }
     

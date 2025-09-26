@@ -25,7 +25,7 @@ class WVP_Product_Display {
 	}
 	
 	private function init_hooks() {
-		add_action( 'woocommerce_single_product_summary', array( $this, 'add_dual_price_display' ), 10 );
+		// DESACTIVADO: add_action( 'woocommerce_single_product_summary', array( $this, 'add_dual_price_display' ), 10 );
 		add_action( 'woocommerce_after_shop_loop_item_title', array( $this, 'add_shop_dual_price' ), 15 );
 		add_action( 'woocommerce_cart_item_price', array( $this, 'add_cart_dual_price' ), 10, 3 );
 		add_action( 'woocommerce_cart_item_subtotal', array( $this, 'add_cart_subtotal_dual' ), 10, 3 );

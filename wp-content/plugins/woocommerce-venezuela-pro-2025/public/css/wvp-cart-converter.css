@@ -1,0 +1,29 @@
+/* Cart Currency Converter Styles */
+.wvp-converted-total {
+    background: #f9f9f9;
+}
+
+.wvp-converted-total th {
+    color: #27ae60;
+    font-weight: bold;
+}
+
+.wvp-converted-total td {
+    color: #27ae60;
+    font-weight: bold;
+}
+
+/* Additional cart conversion styles */
+.wvp-cart-ves-conversion {
+    color: #27ae60;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.wvp-cart-ves-conversion::before {
+    content: "(";
+}
+
+.wvp-cart-ves-conversion::after {
+    content: ")";
+}

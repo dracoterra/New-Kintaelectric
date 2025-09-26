@@ -52,6 +52,13 @@ function activate_woocommerce_venezuela_pro_2025() {
 		update_option( 'wvp_active_modules', $default_modules );
 	}
 	
+	// Initialize default currency modules
+	$currency_modules = get_option( 'wvp_currency_modules', array() );
+	if ( empty( $currency_modules ) ) {
+		$default_currency_modules = array( 'visual_converter', 'button_converter', 'cart_converter' );
+		update_option( 'wvp_currency_modules', $default_currency_modules );
+	}
+	
 	// Set default BCV emergency rate
 	if ( ! get_option( 'wvp_emergency_bcv_rate' ) ) {
 		update_option( 'wvp_emergency_bcv_rate', 50 );
@@ -95,13 +102,42 @@ function run_woocommerce_venezuela_pro_2025() {
 function wvp_init_plugin() {
 	if ( class_exists( 'WooCommerce' ) ) {
 		// Initialize the currency converter - REACTIVANDO CON ARCHIVO LIMPIADO
+		// Load Currency Modules Manager
 		try {
-			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-simple-currency-converter.php';
-			if ( class_exists( 'WVP_Simple_Currency_Converter' ) ) {
-				WVP_Simple_Currency_Converter::get_instance();
+			require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-currency-modules-manager.php';
+			if ( class_exists( 'WVP_Currency_Modules_Manager' ) ) {
+				WVP_Currency_Modules_Manager::get_instance();
 			}
 		} catch ( Exception $e ) {
-			error_log( 'WVP Simple Currency Converter error: ' . $e->getMessage() );
+			error_log( 'WVP Currency Modules Manager error: ' . $e->getMessage() );
+		}
+		
+		// Load individual currency modules
+		try {
+			require_once plugin_dir_path( __FILE__ ) . 'includes/modules/class-wvp-visual-currency-converter.php';
+			if ( class_exists( 'WVP_Visual_Currency_Converter' ) ) {
+				WVP_Visual_Currency_Converter::get_instance();
+			}
+		} catch ( Exception $e ) {
+			error_log( 'WVP Visual Currency Converter error: ' . $e->getMessage() );
+		}
+		
+		try {
+			require_once plugin_dir_path( __FILE__ ) . 'includes/modules/class-wvp-button-currency-converter.php';
+			if ( class_exists( 'WVP_Button_Currency_Converter' ) ) {
+				WVP_Button_Currency_Converter::get_instance();
+			}
+		} catch ( Exception $e ) {
+			error_log( 'WVP Button Currency Converter error: ' . $e->getMessage() );
+		}
+		
+		try {
+			require_once plugin_dir_path( __FILE__ ) . 'includes/modules/class-wvp-cart-currency-converter.php';
+			if ( class_exists( 'WVP_Cart_Currency_Converter' ) ) {
+				WVP_Cart_Currency_Converter::get_instance();
+			}
+		} catch ( Exception $e ) {
+			error_log( 'WVP Cart Currency Converter error: ' . $e->getMessage() );
 		}
 		
 		// Load classes one by one to identify the problematic one
