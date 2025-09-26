@@ -250,7 +250,7 @@ function wvp_init_plugin() {
 		error_log( 'WVP Product Display error: ' . $e->getMessage() );
 	}
 	
-	/* STEP 5 - OPTIMIZATION SYSTEMS
+	/* STEP 5 - OPTIMIZATION SYSTEMS - TEMPORALMENTE COMENTADO
 	try {
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-cache-manager.php';
 		if ( class_exists( 'WVP_Cache_Manager' ) ) {
@@ -279,7 +279,7 @@ function wvp_init_plugin() {
 	}
 	*/
 	
-	/* STEP 6 - SECURITY SYSTEMS
+	/* STEP 6 - SECURITY SYSTEMS - TEMPORALMENTE COMENTADO
 	try {
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-security-manager.php';
 		if ( class_exists( 'WVP_Security_Manager' ) ) {
@@ -330,7 +330,8 @@ function wvp_init_plugin() {
 	// Eliminar menús duplicados de análisis
 	add_action( 'admin_menu', 'wvp_remove_duplicate_analytics_menu', 999 );
 	
-	/* STEP 8 - FINAL SYSTEMS
+	// STEP 8 - FINAL SYSTEMS - REACTIVADO PARCIALMENTE
+	/* OPTIMIZER COMENTADO - CAUSA PROBLEMAS
 	try {
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-final-optimizer.php';
 		if ( class_exists( 'WVP_Final_Optimizer' ) ) {
@@ -339,6 +340,7 @@ function wvp_init_plugin() {
 	} catch ( Exception $e ) {
 		error_log( 'WVP Final Optimizer error: ' . $e->getMessage() );
 	}
+	*/
 	
 	try {
 		require_once plugin_dir_path( __FILE__ ) . 'includes/class-wvp-testing-suite.php';
@@ -357,7 +359,6 @@ function wvp_init_plugin() {
 	} catch ( Exception $e ) {
 		error_log( 'WVP Documentation Generator error: ' . $e->getMessage() );
 	}
-	*/
 }
 /**
  * Remove duplicate analytics menu

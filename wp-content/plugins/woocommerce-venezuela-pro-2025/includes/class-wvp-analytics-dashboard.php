@@ -472,7 +472,20 @@ class WVP_Analytics_Dashboard {
      * Get BCV rate data
      */
     private function get_bcv_rate_data( $start_date, $end_date ) {
-        $current_rate = get_option( 'wvp_bcv_rate', 36.5 );
+        // Get current rate from Currency Converter
+        $current_rate = 36.5; // Default fallback
+        if ( class_exists( 'WVP_Simple_Currency_Converter' ) ) {
+            $converter = WVP_Simple_Currency_Converter::get_instance();
+            $current_rate = $converter->get_bcv_rate();
+        } elseif ( class_exists( 'BCV_Dolar_Tracker' ) ) {
+            $current_rate = BCV_Dolar_Tracker::get_rate();
+            if ( ! $current_rate ) {
+                $current_rate = get_option( 'wvp_bcv_rate', 36.5 );
+            }
+        } else {
+            $current_rate = get_option( 'wvp_bcv_rate', 36.5 );
+        }
+        
         $rate_history = get_option( 'wvp_bcv_rate_history', array() );
         
         $data = array(

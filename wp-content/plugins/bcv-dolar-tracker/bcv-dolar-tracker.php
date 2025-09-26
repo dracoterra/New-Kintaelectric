@@ -323,8 +323,8 @@ class BCV_Dolar_Tracker {
         // Obtener el precio más reciente
         $latest_price = $database->get_latest_price();
         
-        if ($latest_price && isset($latest_price->precio)) {
-            return floatval($latest_price->precio);
+        if ($latest_price && $latest_price > 0) {
+            return floatval($latest_price);
         }
         
         // Si no hay datos en la base de datos, intentar obtener de las opciones de WordPress

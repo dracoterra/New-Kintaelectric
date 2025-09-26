@@ -36,6 +36,121 @@ class WVP_Documentation_Generator {
     }
     
     /**
+     * Generate basic documentation without ReflectionClass
+     */
+    private function generate_basic_documentation() {
+        $docs = array();
+        
+        // Documentación técnica básica
+        $docs['technical'] = array(
+            'overview' => array(
+                'title' => 'Resumen Técnico',
+                'content' => 'WooCommerce Venezuela Pro 2025 es un plugin especializado para el mercado venezolano que incluye:
+
+- Conversión automática de monedas USD ↔ VES
+- Cálculo de impuestos venezolanos (IVA, IGTF)
+- Métodos de pago locales (Pago Móvil, Zelle, Transferencias)
+- Métodos de envío venezolanos (MRW, Zoom, Entrega Local)
+- Exportación de reportes SENIAT
+- Dashboard de análisis y reportes
+- Sistema de notificaciones
+- Suite de pruebas automatizadas'
+            ),
+            'architecture' => array(
+                'title' => 'Arquitectura',
+                'content' => 'El plugin está estructurado en módulos independientes:
+
+1. Currency Converter - Conversión de monedas
+2. Venezuelan Taxes - Cálculo de impuestos
+3. Payment Gateways - Métodos de pago locales
+4. Shipping Methods - Métodos de envío
+5. SENIAT Exporter - Reportes fiscales
+6. Admin Dashboard - Panel de administración
+7. Analytics Dashboard - Análisis y reportes
+8. Notification System - Sistema de notificaciones
+9. Testing Suite - Pruebas automatizadas
+10. Documentation Generator - Generación de documentación'
+            )
+        );
+        
+        // Documentación de usuario
+        $docs['user'] = array(
+            'installation' => array(
+                'title' => 'Instalación',
+                'content' => '1. Subir el plugin a /wp-content/plugins/
+2. Activar desde el panel de WordPress
+3. Configurar los tipos de cambio BCV
+4. Configurar métodos de pago locales
+5. Configurar métodos de envío
+6. Ejecutar el asistente de configuración'
+            ),
+            'configuration' => array(
+                'title' => 'Configuración',
+                'content' => 'Configuración básica requerida:
+
+- Tipo de cambio BCV (automático o manual)
+- Tasas de impuestos (IVA: 16%, IGTF: 3%)
+- Métodos de pago habilitados
+- Zonas de envío de Venezuela
+- Configuración de notificaciones
+- Configuración de reportes SENIAT'
+            )
+        );
+        
+        // Documentación de API
+        $docs['api'] = array(
+            'hooks' => array(
+                'title' => 'Hooks Disponibles',
+                'content' => 'Hooks principales del plugin:
+
+- wvp_currency_converted - Después de conversión de moneda
+- wvp_tax_calculated - Después de cálculo de impuestos
+- wvp_order_processed - Después de procesar pedido
+- wvp_seniat_report_generated - Después de generar reporte SENIAT
+- wvp_notification_sent - Después de enviar notificación'
+            ),
+            'filters' => array(
+                'title' => 'Filtros Disponibles',
+                'content' => 'Filtros principales:
+
+- wvp_currency_rate - Modificar tasa de cambio
+- wvp_tax_rate - Modificar tasa de impuestos
+- wvp_shipping_cost - Modificar costo de envío
+- wvp_payment_methods - Modificar métodos de pago
+- wvp_notification_channels - Modificar canales de notificación'
+            )
+        );
+        
+        // Guía de solución de problemas
+        $docs['troubleshooting'] = array(
+            'common_issues' => array(
+                'title' => 'Problemas Comunes',
+                'content' => 'Problemas frecuentes y soluciones:
+
+1. Error de memoria: Aumentar memory_limit en php.ini
+2. Conversión de moneda no funciona: Verificar conexión BCV
+3. Reportes SENIAT vacíos: Verificar datos de pedidos
+4. Notificaciones no se envían: Verificar configuración SMTP
+5. Gráficos de análisis vacíos: Verificar datos de pedidos'
+            ),
+            'debug_mode' => array(
+                'title' => 'Modo Debug',
+                'content' => 'Para activar el modo debug:
+
+1. Agregar WP_DEBUG = true en wp-config.php
+2. Revisar debug.log en /wp-content/
+3. Usar la suite de pruebas del plugin
+4. Verificar logs de errores del servidor'
+            )
+        );
+        
+        // Almacenar documentación
+        update_option( 'wvp_documentation', $docs );
+        
+        return $docs;
+    }
+    
+    /**
      * Generate comprehensive documentation
      */
     public function generate_documentation() {
@@ -776,8 +891,9 @@ define('WP_DEBUG_LOG', true);
     public function documentation_admin_page() {
         $docs = get_option( 'wvp_documentation', array() );
         
+        // Si no hay documentación, crear una básica sin usar ReflectionClass
         if ( empty( $docs ) ) {
-            $docs = $this->generate_documentation();
+            $docs = $this->generate_basic_documentation();
         }
         ?>
         <div class="wrap">

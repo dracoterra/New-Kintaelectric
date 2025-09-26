@@ -32,6 +32,9 @@ class WVP_Simple_Currency_Converter {
 		add_action( 'wp_ajax_nopriv_wvp_convert_price', array( $this, 'ajax_convert_price' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		
+		// Hook para escuchar actualizaciones del BCV
+		add_action( 'wvp_bcv_rate_updated', array( $this, 'refresh_bcv_rate' ), 10, 1 );
+		
         // Hooks de WooCommerce - PROBANDO woocommerce_cart_item_subtotal
         add_action( 'woocommerce_single_product_summary', array( $this, 'add_currency_switcher' ), 25 );
         // add_filter( 'woocommerce_cart_item_price', array( $this, 'display_cart_item_price' ), 999, 3 );
@@ -44,11 +47,28 @@ class WVP_Simple_Currency_Converter {
 	}
 	
 	/**
-	 * Load BCV rate from options or emergency rate
+	 * Load BCV rate from BCV Dólar Tracker plugin or fallback
 	 */
 	private function load_bcv_rate() {
+		// Try to get rate from BCV Dólar Tracker plugin first
+		if ( class_exists( 'BCV_Dolar_Tracker' ) ) {
+			$rate = BCV_Dolar_Tracker::get_rate();
+			if ( $rate && $rate > 0 ) {
+				$this->bcv_rate = $rate;
+				// Update our stored rate for fallback
+				update_option( 'wvp_bcv_rate', $rate );
+				return;
+			}
+		}
+		
+		// Fallback to stored rate
 		$this->bcv_rate = get_option( 'wvp_bcv_rate', $this->emergency_rate );
 		$this->emergency_rate = get_option( 'wvp_emergency_rate', 36.5 );
+		
+		// If still no valid rate, use emergency rate
+		if ( ! $this->bcv_rate || $this->bcv_rate <= 0 ) {
+			$this->bcv_rate = $this->emergency_rate;
+		}
 	}
 	
 	/**
@@ -59,6 +79,17 @@ class WVP_Simple_Currency_Converter {
 			$this->load_bcv_rate();
 		}
 		return $this->bcv_rate;
+	}
+	
+	/**
+	 * Refresh BCV rate when updated by BCV Dólar Tracker
+	 */
+	public function refresh_bcv_rate( $new_rate ) {
+		if ( $new_rate && $new_rate > 0 ) {
+			$this->bcv_rate = $new_rate;
+			update_option( 'wvp_bcv_rate', $new_rate );
+			error_log( 'WVP: BCV rate refreshed to ' . $new_rate );
+		}
 	}
 	
 	/**

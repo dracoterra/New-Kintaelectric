@@ -331,7 +331,17 @@ class WVP_Admin_Dashboard {
 			
 			<div class="wvp-settings-info">
 				<h3>Información de Configuración</h3>
-				<p><strong>Tasa BCV Actual:</strong> <?php echo get_option( 'wvp_emergency_rate', '36.5' ); ?> VES por USD</p>
+				<p><strong>Tasa BCV Actual:</strong> <?php 
+					// Obtener tasa BCV real del Currency Converter
+					if (class_exists('WVP_Simple_Currency_Converter')) {
+						$converter = WVP_Simple_Currency_Converter::get_instance();
+						echo number_format($converter->get_bcv_rate(), 4);
+					} elseif (class_exists('BCV_Dolar_Tracker')) {
+						echo number_format(BCV_Dolar_Tracker::get_rate(), 4);
+					} else {
+						echo get_option('wvp_bcv_rate', '36.5');
+					}
+				?> VES por USD</p>
 				<p><strong>IVA Configurado:</strong> <?php echo get_option( 'wvp_iva_rate', '16' ); ?>%</p>
 				<p><strong>IGTF Configurado:</strong> <?php echo get_option( 'wvp_igtf_rate', '3' ); ?>%</p>
 			</div>
@@ -376,8 +386,16 @@ class WVP_Admin_Dashboard {
 		foreach ( $orders as $order ) {
 			$total_revenue_usd += $order->get_total();
 			
-			// Simular conversión a VES (en producción vendría del BCV)
-			$bcv_rate = get_option( 'wvp_emergency_rate', 36.5 );
+			// Obtener tasa BCV real para conversión
+			$bcv_rate = 36.5; // Fallback
+			if (class_exists('WVP_Simple_Currency_Converter')) {
+				$converter = WVP_Simple_Currency_Converter::get_instance();
+				$bcv_rate = $converter->get_bcv_rate();
+			} elseif (class_exists('BCV_Dolar_Tracker')) {
+				$bcv_rate = BCV_Dolar_Tracker::get_rate();
+			} else {
+				$bcv_rate = get_option('wvp_bcv_rate', 36.5);
+			}
 			$total_revenue_ves += $order->get_total() * $bcv_rate;
 			
 			// Contar métodos de pago
@@ -416,7 +434,9 @@ class WVP_Admin_Dashboard {
 			'total_revenue_ves' => $total_revenue_ves,
 			'total_customers' => count( $customers ),
 			'currency_conversions' => $currency_conversions,
-			'bcv_rate' => get_option( 'wvp_emergency_rate', 36.5 ),
+			'bcv_rate' => (class_exists('WVP_Simple_Currency_Converter')) ? 
+				WVP_Simple_Currency_Converter::get_instance()->get_bcv_rate() : 
+				((class_exists('BCV_Dolar_Tracker')) ? BCV_Dolar_Tracker::get_rate() : get_option('wvp_bcv_rate', 36.5)),
 			'payment_methods' => $payment_methods,
 			'shipping_methods' => $shipping_methods,
 			'monthly_stats' => $monthly_stats,
