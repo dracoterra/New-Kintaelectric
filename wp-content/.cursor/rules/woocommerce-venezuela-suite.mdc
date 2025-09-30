@@ -1,0 +1,203 @@
+---
+globs: plugins/woocommerce-venezuela-suite/**/*
+description: Reglas específicas para el plugin WooCommerce Venezuela Suite
+---
+
+# WooCommerce Venezuela Suite - Plugin Development Rules
+
+## Estructura del Plugin
+
+Este plugin sigue la arquitectura estándar de WordPress con separación clara entre admin y frontend:
+
+### Archivos Principales
+- **Plugin Bootstrap**: [woocommerce-venezuela-suite.php](mdc:plugins/woocommerce-venezuela-suite/woocommerce-venezuela-suite.php) - Punto de entrada principal
+- **Clase Core**: [class-woocommerce-venezuela-suite.php](mdc:plugins/woocommerce-venezuela-suite/includes/class-woocommerce-venezuela-suite.php) - Funcionalidad principal
+- **Admin**: [class-woocommerce-venezuela-suite-admin.php](mdc:plugins/woocommerce-venezuela-suite/admin/class-woocommerce-venezuela-suite-admin.php) - Funcionalidad administrativa
+- **Public**: [class-woocommerce-venezuela-suite-public.php](mdc:plugins/woocommerce-venezuela-suite/public/class-woocommerce-venezuela-suite-public.php) - Funcionalidad pública
+
+### Directorios Estructura
+- `admin/` - Funcionalidad del panel de administración
+- `includes/` - Clases core del plugin
+- `public/` - Funcionalidad del frontend
+- `languages/` - Archivos de traducción
+- `assets/` - CSS y JavaScript (en admin/ y public/)
+
+## Convenciones de Nomenclatura
+
+### Clases
+- **Prefijo**: `Woocommerce_Venezuela_Suite_`
+- **Formato**: PascalCase con guiones bajos
+- **Ejemplos**:
+  - `Woocommerce_Venezuela_Suite_Admin`
+  - `Woocommerce_Venezuela_Suite_Public`
+  - `Woocommerce_Venezuela_Suite_Loader`
+
+### Funciones
+- **Prefijo**: `woocommerce_venezuela_suite_`
+- **Formato**: snake_case
+- **Ejemplos**:
+  - `activate_woocommerce_venezuela_suite()`
+  - `deactivate_woocommerce_venezuela_suite()`
+  - `run_woocommerce_venezuela_suite()`
+
+### Constantes
+- **Prefijo**: `WOOCOMMERCE_VENEZUELA_SUITE_`
+- **Formato**: UPPER_CASE
+- **Ejemplo**: `WOOCOMMERCE_VENEZUELA_SUITE_VERSION`
+
+## Estándares de Código
+
+### Documentación PHPDoc
+```php
+/**
+ * Descripción breve de la función/clase
+ *
+ * Descripción detallada si es necesaria.
+ *
+ * @since      1.0.0
+ * @param      string    $param_name    Descripción del parámetro.
+ * @return     mixed     Descripción del valor de retorno.
+ */
+```
+
+### Estructura de Clases
+```php
+class Woocommerce_Venezuela_Suite_Example {
+    
+    /**
+     * Propiedades privadas primero
+     */
+    private $plugin_name;
+    private $version;
+    
+    /**
+     * Constructor
+     */
+    public function __construct( $plugin_name, $version ) {
+        $this->plugin_name = $plugin_name;
+        $this->version = $version;
+    }
+    
+    /**
+     * Métodos públicos
+     */
+    public function public_method() {
+        // Implementación
+    }
+    
+    /**
+     * Métodos privados al final
+     */
+    private function private_method() {
+        // Implementación
+    }
+}
+```
+
+## Integración con WooCommerce
+
+### Hooks Específicos de WooCommerce
+- Usar `woocommerce_` prefijo para hooks relacionados
+- Implementar filtros para personalizar funcionalidad de WooCommerce
+- Usar actions para extender funcionalidad existente
+
+### Ejemplo de Integración
+```php
+// En el constructor de la clase principal
+$this->loader->add_action( 'woocommerce_init', $this, 'init_woocommerce_features' );
+$this->loader->add_filter( 'woocommerce_product_data_tabs', $this, 'add_custom_product_tab' );
+```
+
+## Manejo de Assets
+
+### CSS
+- **Admin**: `admin/css/woocommerce-venezuela-suite-admin.css`
+- **Public**: `public/css/woocommerce-venezuela-suite-public.css`
+- **Enqueue**: Usar `wp_enqueue_style()` con versioning
+
+### JavaScript
+- **Admin**: `admin/js/woocommerce-venezuela-suite-admin.js`
+- **Public**: `public/js/woocommerce-venezuela-suite-public.js`
+- **Dependencias**: jQuery como dependencia principal
+- **Enqueue**: Usar `wp_enqueue_script()` con versioning
+
+## Internacionalización
+
+### Text Domain
+- **Dominio**: `woocommerce-venezuela-suite`
+- **Archivo POT**: [woocommerce-venezuela-suite.pot](mdc:plugins/woocommerce-venezuela-suite/languages/woocommerce-venezuela-suite.pot)
+
+### Funciones de Traducción
+```php
+// Para strings simples
+__( 'Texto a traducir', 'woocommerce-venezuela-suite' )
+
+// Para strings con contexto
+_x( 'Texto', 'contexto', 'woocommerce-venezuela-suite' )
+
+// Para strings plurales
+_n( 'Singular', 'Plural', $count, 'woocommerce-venezuela-suite' )
+```
+
+## Seguridad
+
+### Validación de Datos
+- Siempre validar y sanitizar datos de entrada
+- Usar `wp_verify_nonce()` para formularios
+- Usar `current_user_can()` para verificar permisos
+
+### Escape de Output
+- Usar `esc_html()`, `esc_attr()`, `esc_url()` según corresponda
+- Nunca usar `echo` con datos sin escapar
+
+## Testing y Debugging
+
+### Logging
+- Usar `error_log()` para debugging
+- Implementar sistema de logs específico del plugin
+- Usar `WP_DEBUG` para desarrollo
+
+### Activación/Desactivación
+- Implementar limpieza en desactivación si es necesario
+- Usar [uninstall.php](mdc:plugins/woocommerce-venezuela-suite/uninstall.php) para limpieza completa
+
+## Especificidades para Venezuela
+
+### Moneda y Precios
+- Implementar conversión USD a VES
+- Usar formato de moneda venezolano
+- Integrar con BCV para tipos de cambio
+
+### Métodos de Pago
+- Transferencias bancarias locales
+- Pago móvil
+- Criptomonedas (opcional)
+
+### Zonas de Envío
+- Estados de Venezuela
+- Cálculo de costos locales
+- Tiempos de entrega realistas
+
+## Performance
+
+### Optimización
+- Usar transients para datos que cambian poco
+- Implementar cache para consultas pesadas
+- Minificar assets en producción
+
+### Base de Datos
+- Usar índices apropiados
+- Limpiar datos antiguos periódicamente
+- Usar prepared statements
+
+## Mantenimiento
+
+### Versionado
+- Seguir Semantic Versioning (SemVer)
+- Actualizar constantes de versión
+- Documentar cambios en changelog
+
+### Compatibilidad
+- Mantener compatibilidad con versiones anteriores
+- Testear con diferentes versiones de WordPress/WooCommerce
+- Usar feature detection cuando sea necesario
