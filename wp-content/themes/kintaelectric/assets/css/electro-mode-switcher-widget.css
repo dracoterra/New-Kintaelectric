@@ -1,0 +1,116 @@
+/* Electro Mode Switcher Widget Styles - Compact Design for Header */
+.electro-mode-switcher-widget {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+}
+
+.electro-mode-switcher-widget .toggle {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #e0e0e0;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 0 !important;
+}
+
+.electro-mode-switcher-widget .checkbox {
+  display: none;
+}
+
+.electro-mode-switcher-widget .icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  z-index: 2;
+  transition: all 0.3s ease;
+  color: #666;
+}
+
+.electro-mode-switcher-widget .icon--light {
+  left: 6px;
+}
+
+.electro-mode-switcher-widget .icon--dark {
+  right: 6px;
+  opacity: 0;
+}
+
+.electro-mode-switcher-widget .ball {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+/* ---- ---- Light Mode (Default) ---- ---- */
+.electro-mode-switcher-widget .toggle {
+  background: #e0e0e0;
+}
+
+.electro-mode-switcher-widget .icon--light {
+  color: #ccc634;
+  opacity: 1;
+}
+
+.electro-mode-switcher-widget .icon--dark {
+  color: #666;
+  opacity: 0;
+}
+
+.electro-mode-switcher-widget .ball {
+  background: #fff;
+  transform: translateX(0);
+}
+
+/* ---- ---- Dark Mode (electro-dark class) ---- ---- */
+body.electro-dark .electro-mode-switcher-widget .toggle {
+  background: #2c3e50;
+}
+
+body.electro-dark .electro-mode-switcher-widget .icon--light {
+  color: #666;
+  opacity: 0;
+}
+
+body.electro-dark .electro-mode-switcher-widget .icon--dark {
+  color: #ccc634;
+  opacity: 1;
+}
+
+body.electro-dark .electro-mode-switcher-widget .ball {
+  background: #34495e;
+  transform: translateX(26px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .electro-mode-switcher-widget .toggle {
+    width: 45px;
+    height: 22px;
+  }
+  
+  .electro-mode-switcher-widget .icon {
+    font-size: 11px;
+  }
+  
+  .electro-mode-switcher-widget .ball {
+    width: 16px;
+    height: 16px;
+    top: 3px;
+  }
+  
+  body.electro-dark .electro-mode-switcher-widget .ball {
+    transform: translateX(23px);
+  }
+}
