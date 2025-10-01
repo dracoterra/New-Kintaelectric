@@ -1,4 +1,4 @@
-# WooCommerce Venezuela Suite
+# Suite Venezuela para WooCommerce
 
 ## 📋 Descripción General
 

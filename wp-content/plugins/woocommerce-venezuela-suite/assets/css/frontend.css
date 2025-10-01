@@ -1,0 +1,191 @@
+/**
+ * Estilos del Frontend - WooCommerce Venezuela Suite
+ * 
+ * @package WooCommerce_Venezuela_Suite
+ * @since 1.0.0
+ */
+
+/* Variables CSS */
+:root {
+    --wvs-primary: #0073aa;
+    --wvs-secondary: #00a32a;
+    --wvs-accent: #ff6900;
+    --wvs-text: #333;
+    --wvs-text-light: #666;
+    --wvs-border: #ddd;
+    --wvs-bg-light: #f8f9fa;
+    --wvs-bg-white: #ffffff;
+    --wvs-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    --wvs-radius: 8px;
+    --wvs-spacing: 15px;
+}
+
+/* Precios en VES */
+.wvs-ves-price {
+    color: var(--wvs-text-light);
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+/* Información de moneda */
+.wvs-currency-info {
+    background: var(--wvs-bg-light);
+    padding: var(--wvs-spacing);
+    border-radius: var(--wvs-radius);
+    margin: var(--wvs-spacing) 0;
+    border-left: 4px solid var(--wvs-primary);
+}
+
+.wvs-currency-info p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--wvs-text);
+}
+
+/* Convertidor de moneda */
+.wvs-currency-converter {
+    background: var(--wvs-bg-white);
+    border: 1px solid var(--wvs-border);
+    border-radius: var(--wvs-radius);
+    padding: var(--wvs-spacing);
+    margin: var(--wvs-spacing) 0;
+    box-shadow: var(--wvs-shadow);
+}
+
+.wvs-converter-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.wvs-converter-input input,
+.wvs-converter-input select {
+    padding: 8px 12px;
+    border: 1px solid var(--wvs-border);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.wvs-converter-input input[type="number"] {
+    width: 120px;
+}
+
+.wvs-converter-input input[type="text"] {
+    width: 150px;
+    background: var(--wvs-bg-light);
+}
+
+.wvs-converter-input select {
+    width: 80px;
+}
+
+.wvs-converter-arrow {
+    font-size: 18px;
+    color: var(--wvs-primary);
+    font-weight: bold;
+}
+
+.wvs-converter-result {
+    text-align: center;
+    padding: var(--wvs-spacing);
+}
+
+.wvs-converter-result p {
+    margin: 0;
+    font-size: 16px;
+    color: var(--wvs-text);
+}
+
+.wvs-converter-result strong {
+    color: var(--wvs-primary);
+    font-size: 18px;
+}
+
+/* Tasa BCV */
+.wvs-bcv-rate {
+    background: var(--wvs-bg-white);
+    border: 1px solid var(--wvs-border);
+    border-radius: var(--wvs-radius);
+    padding: var(--wvs-spacing);
+    margin: var(--wvs-spacing) 0;
+    text-align: center;
+    box-shadow: var(--wvs-shadow);
+}
+
+.wvs-bcv-rate p {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    color: var(--wvs-text);
+}
+
+.wvs-bcv-rate strong {
+    color: var(--wvs-primary);
+    font-size: 18px;
+}
+
+.wvs-bcv-rate small {
+    color: var(--wvs-text-light);
+    font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wvs-converter-input {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .wvs-converter-input input,
+    .wvs-converter-input select {
+        width: 100%;
+    }
+    
+    .wvs-converter-arrow {
+        transform: rotate(90deg);
+    }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.wvs-currency-converter,
+.wvs-bcv-rate {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Estados de carga */
+.wvs-loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.wvs-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--wvs-border);
+    border-top-color: var(--wvs-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
