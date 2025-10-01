@@ -59,6 +59,12 @@ register_activation_hook( __FILE__, 'activate_woocommerce_venezuela_suite' );
 register_deactivation_hook( __FILE__, 'deactivate_woocommerce_venezuela_suite' );
 
 /**
+ * Load core classes first
+ */
+require plugin_dir_path( __FILE__ ) . 'includes/interface-module.php';
+require plugin_dir_path( __FILE__ ) . 'includes/abstract-module.php';
+
+/**
  * The core plugin class that is used to define internationalization,
  * admin-specific hooks, and public-facing site hooks.
  */

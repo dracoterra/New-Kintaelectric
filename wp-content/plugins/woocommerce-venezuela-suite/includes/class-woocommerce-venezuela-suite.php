@@ -122,6 +122,13 @@ class Woocommerce_Venezuela_Suite {
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-woocommerce-venezuela-suite-public.php';
 
+		/**
+		 * Núcleo modular: manager/loader/registry
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'core/class-module-manager.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'core/class-module-loader.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'core/class-module-registry.php';
+
 		$this->loader = new Woocommerce_Venezuela_Suite_Loader();
 
 	}
@@ -139,7 +146,7 @@ class Woocommerce_Venezuela_Suite {
 
 		$plugin_i18n = new Woocommerce_Venezuela_Suite_i18n();
 
-		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
+		$this->loader->add_action( 'init', $plugin_i18n, 'load_plugin_textdomain' );
 
 	}
 
@@ -156,6 +163,9 @@ class Woocommerce_Venezuela_Suite {
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+		$this->loader->add_action( 'admin_menu', $plugin_admin, 'add_admin_menu' );
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'init_settings' );
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'init_ajax_handlers' );
 
 	}
 
@@ -172,6 +182,9 @@ class Woocommerce_Venezuela_Suite {
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_styles' );
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
+		$this->loader->add_action( 'init', $plugin_public, 'init_frontend_hooks' );
+		$this->loader->add_action( 'wp_ajax_wvs_get_exchange_rate', $plugin_public, 'ajax_get_exchange_rate' );
+		$this->loader->add_action( 'wp_ajax_nopriv_wvs_get_exchange_rate', $plugin_public, 'ajax_get_exchange_rate' );
 
 	}
 
@@ -182,6 +195,8 @@ class Woocommerce_Venezuela_Suite {
 	 */
 	public function run() {
 		$this->loader->run();
+		// Arrancar la carga de módulos activos una vez que estén cargados los plugins.
+		add_action( 'init', array( Woocommerce_Venezuela_Suite_Module_Loader::get_instance(), 'boot' ) );
 	}
 
 	/**

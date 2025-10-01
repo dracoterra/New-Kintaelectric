@@ -1,4 +1,85 @@
-/**
- * All of the CSS for your public-facing functionality should be
- * included in this file.
- */
+/* WooCommerce Venezuela Suite - Public Styles */
+
+/* Price conversion display */
+.wvs-price-conversion,
+.wvs-cart-price-conversion,
+.wvs-cart-subtotal-conversion,
+.wvs-cart-total-conversion {
+    margin-top: 5px;
+}
+
+.wvs-ves-price {
+    color: #666;
+    font-size: 0.9em;
+    font-style: italic;
+    display: block;
+}
+
+/* Exchange rate info */
+.wvs-exchange-rate-info {
+    margin: 10px 0;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-left: 3px solid #007cba;
+    border-radius: 3px;
+}
+
+.wvs-rate-display {
+    color: #555;
+    font-size: 0.85em;
+    font-weight: 500;
+}
+
+/* Cart specific styles */
+.woocommerce-cart .wvs-cart-price-conversion,
+.woocommerce-cart .wvs-cart-subtotal-conversion,
+.woocommerce-cart .wvs-cart-total-conversion {
+    margin-top: 3px;
+}
+
+/* Product page styles */
+.single-product .wvs-price-conversion {
+    margin-top: 8px;
+}
+
+.single-product .wvs-exchange-rate-info {
+    margin: 15px 0;
+}
+
+/* Shop loop styles */
+.woocommerce-loop-product__title + .wvs-exchange-rate-info {
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .wvs-exchange-rate-info {
+        margin: 8px 0;
+        padding: 6px 10px;
+    }
+    
+    .wvs-rate-display {
+        font-size: 0.8em;
+    }
+    
+    .wvs-ves-price {
+        font-size: 0.85em;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .wvs-exchange-rate-info {
+        background: #2c2c2c;
+        border-left-color: #4a9eff;
+    }
+    
+    .wvs-rate-display {
+        color: #ccc;
+    }
+    
+    .wvs-ves-price {
+        color: #999;
+    }
+}
