@@ -540,7 +540,7 @@ class BCV_Database {
     public function get_latest_price() {
         global $wpdb;
         
-        $sql = "SELECT precio FROM {$this->table_name} ORDER BY fecha DESC LIMIT 1";
+        $sql = "SELECT precio FROM {$this->table_name} ORDER BY datatime DESC LIMIT 1";
         $result = $wpdb->get_var($sql);
         return $result ? floatval($result) : null;
     }
@@ -553,7 +553,7 @@ class BCV_Database {
     public function get_latest_record() {
         global $wpdb;
         
-        $sql = "SELECT * FROM {$this->table_name} ORDER BY fecha DESC LIMIT 1";
+        $sql = "SELECT * FROM {$this->table_name} ORDER BY datatime DESC LIMIT 1";
         return $wpdb->get_row($sql);
     }
     

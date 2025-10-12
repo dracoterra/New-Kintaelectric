@@ -55,18 +55,36 @@ do_action( 'woocommerce_before_main_content' );
 								'status' => 'publish'
 							));
 
+							// Filtrar productos válidos
+							$recommended_products = array_filter($recommended_products, function($product) {
+								return !empty($product) && is_object($product) && method_exists($product, 'get_id');
+							});
+
 							// Si no hay suficientes productos destacados, completar con productos recientes
 							if (count($recommended_products) < 12) {
 								$featured_count = count($recommended_products);
 								$remaining_count = 12 - $featured_count;
+								
+								// Obtener IDs de productos ya incluidos
+								$exclude_ids = array();
+								foreach ($recommended_products as $product) {
+									if ($product && method_exists($product, 'get_id')) {
+										$exclude_ids[] = $product->get_id();
+									}
+								}
 								
 								$recent_products = wc_get_products(array(
 									'limit' => $remaining_count,
 									'status' => 'publish',
 									'orderby' => 'date',
 									'order' => 'DESC',
-									'exclude' => array_map(function($product) { return $product->get_id(); }, $recommended_products)
+									'exclude' => $exclude_ids
 								));
+								
+								// Filtrar productos recientes válidos
+								$recent_products = array_filter($recent_products, function($product) {
+									return !empty($product) && is_object($product) && method_exists($product, 'get_id');
+								});
 								
 								// Combinar productos destacados con recientes
 								$recommended_products = array_merge($recommended_products, $recent_products);
@@ -85,21 +103,38 @@ do_action( 'woocommerce_before_main_content' );
 								<div id="products-carousel-recommended" class="owl-carousel">
 											<?php
 											foreach ($recommended_products as $product) {
+												// Verificar que el producto sea válido antes de usarlo
+												if (empty($product) || !is_object($product) || !method_exists($product, 'get_id')) {
+													continue;
+												}
+												
+												// Obtener el ID del producto y verificar que sea válido
+												$product_id = $product->get_id();
+												if (empty($product_id) || !is_numeric($product_id)) {
+													continue;
+												}
+												
 												// Configurar el producto global para el template
-												global $post, $product;
-												$post = get_post($product->get_id());
+												global $post;
+												$post = get_post($product_id);
+												
+												// Verificar que get_post devuelva un resultado válido
+												if (empty($post) || !is_object($post)) {
+													continue;
+												}
+												
 												setup_postdata($post);
 												
-												// Verificar visibilidad del producto
-												if ( empty( $product ) || ! $product->is_visible() ) {
+												// Verificar visibilidad del producto (usar la variable local $product, no la global)
+												if (! $product->is_visible() ) {
 													wp_reset_postdata();
 													continue;
 												}
 												
-												echo '<div class="product type-product post-' . $product->get_id() . ' status-publish instock';
+												echo '<div class="product type-product post-' . $product_id . ' status-publish instock';
 												
 												// Agregar clases de categorías
-												$categories = wp_get_post_terms($product->get_id(), 'product_cat');
+												$categories = wp_get_post_terms($product_id, 'product_cat');
 												if (!empty($categories)) {
 													foreach ($categories as $category) {
 														echo ' product_cat-' . $category->slug;
@@ -109,7 +144,7 @@ do_action( 'woocommerce_before_main_content' );
 												// Agregar clases adicionales
 												if ($product->is_featured()) echo ' featured';
 												if ($product->is_on_sale()) echo ' sale';
-												if (has_post_thumbnail($product->get_id())) echo ' has-post-thumbnail';
+												if (has_post_thumbnail($product_id)) echo ' has-post-thumbnail';
 												if ($product->is_purchasable()) echo ' purchasable';
 												echo ' product-type-' . $product->get_type();
 												echo '">';
@@ -120,7 +155,7 @@ do_action( 'woocommerce_before_main_content' );
 												// Header del producto
 												echo '<div class="product-loop-header product-item__header">';
 												echo '<span class="loop-product-categories">';
-												echo wc_get_product_category_list( $product->get_id(), ', ', '<a href="%s" rel="tag">', '</a>' );
+												echo wc_get_product_category_list( $product_id, ', ', '<a href="%s" rel="tag">', '</a>' );
 												echo '</span>';
 												echo '<a href="' . esc_url( get_the_permalink() ) . '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link">';
 												echo '<h2 class="woocommerce-loop-product__title">' . get_the_title() . '</h2>';
@@ -133,7 +168,7 @@ do_action( 'woocommerce_before_main_content' );
 												// Body del producto
 												echo '<div class="product-loop-body product-item__body">';
 												echo '<span class="loop-product-categories">';
-												echo wc_get_product_category_list( $product->get_id(), ', ', '<a href="%s" rel="tag">', '</a>' );
+												echo wc_get_product_category_list( $product_id, ', ', '<a href="%s" rel="tag">', '</a>' );
 												echo '</span>';
 												echo '<a href="' . esc_url( get_the_permalink() ) . '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link">';
 												echo '<h2 class="woocommerce-loop-product__title">' . get_the_title() . '</h2>';
