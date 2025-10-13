@@ -169,6 +169,16 @@ section.related.products{
     letter-spacing: 0.5px !important;
 }
 
+/* Icono del botón Add to Cart - Usar Font Awesome */
+.single-product .single_add_to_cart_button.button::before {
+    content: "\f07a" !important; /* Icono de carrito de Font Awesome */
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900 !important;
+    margin-right: 0.5em !important;
+    font-size: 1.2em !important;
+    vertical-align: middle !important;
+}
+
 .single-product .single_add_to_cart_button:hover {
     background: var(--primary-dark) !important;
     transform: translateY(-2px) !important;
