@@ -6,7 +6,7 @@
 /* Variables del proyecto */
 :root {
     --primary-color: var(--bs-ec-primary, #ccc634);
-    --primary-dark: var(--bs-ec-primary-d, rgb(231.05, 195.5738188976, 0));
+    --primary-dark:  #b9b527;
     --secondary-color: var(--bs-secondary, #6c757d);
     --success-color: var(--bs-success, #198754);
     --danger-color: var(--bs-danger, #dc3545);

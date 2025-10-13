@@ -245,12 +245,12 @@ class KEE_Kintaelectric07_Recently_Added_Widget extends KEE_Base_Widget {
         
         $carousel_options = [
             'items' => $settings['items_desktop'],
-            'nav' => $show_nav,
+            //'nav' => $show_nav,
             'slideSpeed' => 300,
             'dots' => $show_dots,
             'rtl' => is_rtl(),
             'paginationSpeed' => 400,
-            'navText' => ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+            //'navText' => ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
             'margin' => $settings['margin_between_items'],
             'touchDrag' => true,
             'autoplay' => $autoplay,
