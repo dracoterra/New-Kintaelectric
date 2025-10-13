@@ -238,7 +238,7 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
                             <?php foreach ($settings['slides'] as $slide) : ?>
                                 <div class="js-slide bg-img-hero-center">
                                     <div class="row min-height-420 py-7 py-md-0">
-                                        <div class="offset-xl-3 col-xl-4 col-6 mt-md-8">
+                                        <div class="offset-xl-3 col-xl-4 col-md-6 col-12 mt-md-8">
                                             <?php
                                             $title_typography = isset($settings['title_typography']) ? $settings['title_typography'] : array();
                                             $inline_styles = 'color: #000;';
@@ -280,7 +280,7 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
                                                 <?php echo esc_html($slide['button_text']); ?>
                                             </a>
                                         </div>
-                                        <div class="col-xl-5 col-6 d-flex align-items-center" data-scs-animation-in="zoomIn" data-scs-animation-delay="500">
+                                        <div class="col-xl-5 col-md-6 col-6 d-none d-md-flex align-items-center" data-scs-animation-in="zoomIn" data-scs-animation-delay="500">
                                             <img class="img-fluid" src="<?php echo esc_url($slide['slide_image']['url']); ?>" alt="Image Description">
                                         </div>
                                     </div>
@@ -335,7 +335,7 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
                             <# _.each(settings.slides, function(slide) { #>
                                 <div class="js-slide bg-img-hero-center">
                                     <div class="row min-height-420 py-7 py-md-0">
-                                        <div class="offset-xl-3 col-xl-4 col-6 mt-md-8">
+                                        <div class="offset-xl-3 col-xl-4 col-md-6 col-12 mt-md-8">
                                             <h1 class="slider-title font-weight-light" data-scs-animation-in="fadeInUp" 
                                                  style="color: #000; 
                                                         <# if (settings.title_typography && settings.title_typography.font_size && settings.title_typography.font_size.size) { #>
@@ -370,7 +370,7 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
                                                 {{{ slide.button_text }}}
                                             </a>
                                         </div>
-                                        <div class="col-xl-5 col-6 d-flex align-items-center" data-scs-animation-in="zoomIn" data-scs-animation-delay="500">
+                                        <div class="col-xl-5 col-md-6 col-6 d-none d-md-flex align-items-center" data-scs-animation-in="zoomIn" data-scs-animation-delay="500">
                                             <img class="img-fluid" src="{{{ slide.slide_image.url }}}" alt="Image Description">
                                         </div>
                                     </div>
