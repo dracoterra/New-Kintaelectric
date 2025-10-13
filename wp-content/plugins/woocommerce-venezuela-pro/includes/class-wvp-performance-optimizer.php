@@ -282,6 +282,11 @@ class WVP_Performance_Optimizer {
      * Optimizar consultas de productos
      */
     public function optimize_product_queries($query) {
+        // No optimizar en el admin para evitar problemas con variaciones
+        if (is_admin()) {
+            return $query;
+        }
+        
         // Limitar campos seleccionados
         $query->set('fields', 'ids');
         
@@ -327,6 +332,11 @@ class WVP_Performance_Optimizer {
      * Limitar consultas de metadatos
      */
     public function limit_meta_queries($query) {
+        // No limitar metadatos en el admin para evitar problemas con variaciones
+        if (is_admin()) {
+            return $query;
+        }
+        
         // Limitar metadatos a los necesarios
         $query['meta_query'] = array(
             'relation' => 'AND',
@@ -412,6 +422,11 @@ class WVP_Performance_Optimizer {
      * Caché de consultas de WooCommerce
      */
     public function cache_woocommerce_queries($query) {
+        // No aplicar caché agresivo en el admin para evitar problemas con variaciones
+        if (is_admin()) {
+            return;
+        }
+        
         $query->set('cache_results', true);
         $query->set('update_post_meta_cache', false);
         $query->set('update_post_term_cache', false);
