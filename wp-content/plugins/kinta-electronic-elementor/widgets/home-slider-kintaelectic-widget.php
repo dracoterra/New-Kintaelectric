@@ -188,6 +188,39 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
         );
 
         $this->end_controls_section();
+
+        // Sección de Estilos del Título
+        $this->start_controls_section(
+            'section_title_style',
+            [
+                'label' => esc_html__('Estilos del Título', 'kinta-electric-elementor'),
+                'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+            ]
+        );
+
+        $this->add_group_control(
+            \Elementor\Group_Control_Typography::get_type(),
+            [
+                'name' => 'title_typography',
+                'label' => esc_html__('Tipografía del Título', 'kinta-electric-elementor'),
+                'selector' => '{{WRAPPER}} .slider-title',
+                'fields_options' => [
+                    'font_size' => [
+                        'default' => [
+                            'unit' => 'px',
+                            'size' => 64,
+                        ],
+                        'responsive' => true,
+                    ],
+                    'font_weight' => [
+                        'default' => '300',
+                        'responsive' => true,
+                    ],
+                ],
+            ]
+        );
+
+        $this->end_controls_section();
     }
 
     /**
@@ -206,18 +239,38 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
                                 <div class="js-slide bg-img-hero-center">
                                     <div class="row min-height-420 py-7 py-md-0">
                                         <div class="offset-xl-3 col-xl-4 col-6 mt-md-8">
-                                            <h1 class="font-size-64 text-lh-57 font-weight-light" data-scs-animation-in="fadeInUp" style="color: #000;">
+                                            <?php
+                                            $title_typography = isset($settings['title_typography']) ? $settings['title_typography'] : array();
+                                            $inline_styles = 'color: #000;';
+                                            
+                                            // Desktop styles only
+                                            if (!empty($title_typography['font_size']['size'])) {
+                                                $unit = isset($title_typography['font_size']['unit']) ? $title_typography['font_size']['unit'] : 'px';
+                                                $inline_styles .= ' font-size: ' . $title_typography['font_size']['size'] . $unit . ' !important;';
+                                            }
+                                            
+                                            if (!empty($title_typography['font_weight'])) {
+                                                $inline_styles .= ' font-weight: ' . $title_typography['font_weight'] . ' !important;';
+                                            }
+                                            ?>
+                                            <h1 class="slider-title font-weight-light" data-scs-animation-in="fadeInUp" style="<?php echo esc_attr($inline_styles); ?>">
                                                 <?php echo esc_html($slide['title']); ?>
                                             </h1>
                                             <h6 class="font-size-15 font-weight-bold mb-3" data-scs-animation-in="fadeInUp" data-scs-animation-delay="200" style="color: #000;">
                                                 <?php echo esc_html($slide['subtitle']); ?>
                                             </h6>
+                                            <?php if (!empty($slide['price_from']) || !empty($slide['price_cents'])) : ?>
                                             <div class="mb-4" data-scs-animation-in="fadeInUp" data-scs-animation-delay="300">
+                                                <?php if (!empty($slide['price_from']) || !empty($slide['price_cents'])) : ?>
                                                 <span class="font-size-13" style="color: #000;">FROM</span>
+                                                <?php endif; ?>
                                                 <div class="font-size-50 font-weight-bold text-lh-45" style="color: #000;">
+                                                    <?php if (!empty($slide['price_from']) || !empty($slide['price_cents'])) : ?>
                                                     <sup class="">$</sup><?php echo esc_html($slide['price_from']); ?><sup class=""><?php echo esc_html($slide['price_cents']); ?></sup>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
+                                            <?php endif; ?>
                                             <a href="<?php echo esc_url($slide['button_url']['url']); ?>" 
                                                class="btn btn-primary transition-3d-hover rounded-lg font-weight-normal py-2 px-md-7 px-3 font-size-16" style="color: #000;" 
                                                data-scs-animation-in="fadeInUp" 
@@ -239,6 +292,32 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
             </div>
         </div>
         <!-- End Slider Section -->
+        
+        <style>
+            <?php
+            $title_typography = isset($settings['title_typography']) ? $settings['title_typography'] : array();
+            
+            // Tablet styles
+            if (!empty($title_typography['font_size_tablet']['size'])) {
+                $unit = isset($title_typography['font_size_tablet']['unit']) ? $title_typography['font_size_tablet']['unit'] : 'px';
+                echo '@media (max-width: 1024px) { .elementor-element-' . $this->get_id() . ' .slider-title { font-size: ' . $title_typography['font_size_tablet']['size'] . $unit . ' !important; } }';
+            }
+            
+            if (!empty($title_typography['font_weight_tablet'])) {
+                echo '@media (max-width: 1024px) { .elementor-element-' . $this->get_id() . ' .slider-title { font-weight: ' . $title_typography['font_weight_tablet'] . ' !important; } }';
+            }
+            
+            // Mobile styles
+            if (!empty($title_typography['font_size_mobile']['size'])) {
+                $unit = isset($title_typography['font_size_mobile']['unit']) ? $title_typography['font_size_mobile']['unit'] : 'px';
+                echo '@media (max-width: 767px) { .elementor-element-' . $this->get_id() . ' .slider-title { font-size: ' . $title_typography['font_size_mobile']['size'] . $unit . ' !important; } }';
+            }
+            
+            if (!empty($title_typography['font_weight_mobile'])) {
+                echo '@media (max-width: 767px) { .elementor-element-' . $this->get_id() . ' .slider-title { font-weight: ' . $title_typography['font_weight_mobile'] . ' !important; } }';
+            }
+            ?>
+        </style>
         <?php
     }
 
@@ -257,18 +336,31 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
                                 <div class="js-slide bg-img-hero-center">
                                     <div class="row min-height-420 py-7 py-md-0">
                                         <div class="offset-xl-3 col-xl-4 col-6 mt-md-8">
-                                            <h1 class="font-size-64 text-lh-57 font-weight-light" data-scs-animation-in="fadeInUp">
+                                            <h1 class="slider-title font-weight-light" data-scs-animation-in="fadeInUp" 
+                                                 style="color: #000; 
+                                                        <# if (settings.title_typography && settings.title_typography.font_size && settings.title_typography.font_size.size) { #>
+                                                        font-size: {{{ settings.title_typography.font_size.size }}}{{{ settings.title_typography.font_size.unit }}} !important;
+                                                        <# } #>
+                                                        <# if (settings.title_typography && settings.title_typography.font_weight) { #>
+                                                        font-weight: {{{ settings.title_typography.font_weight }}} !important;
+                                                        <# } #>">
                                                 {{{ slide.title }}}
                                             </h1>
                                             <h6 class="font-size-15 font-weight-bold mb-3" data-scs-animation-in="fadeInUp" data-scs-animation-delay="200">
                                                 {{{ slide.subtitle }}}
                                             </h6>
+                                            <# if (slide.price_from || slide.price_cents) { #>
                                             <div class="mb-4" data-scs-animation-in="fadeInUp" data-scs-animation-delay="300">
+                                                <# if (slide.price_from || slide.price_cents) { #>
                                                 <span class="font-size-13">FROM</span>
+                                                <# } #>
                                                 <div class="font-size-50 font-weight-bold text-lh-45">
+                                                    <# if (slide.price_from || slide.price_cents) { #>
                                                     <sup class="">$</sup>{{{ slide.price_from }}}<sup class="">{{{ slide.price_cents }}}</sup>
+                                                    <# } #>
                                                 </div>
                                             </div>
+                                            <# } #>
                                             <a href="{{{ slide.button_url.url }}}" 
                                                class="btn btn-primary transition-3d-hover rounded-lg font-weight-normal py-2 px-md-7 px-3 font-size-16" 
                                                data-scs-animation-in="fadeInUp" 
