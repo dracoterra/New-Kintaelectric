@@ -14595,7 +14595,7 @@ textarea.input-text {
 }
 
 .handheld-footer .handheld-widget-menu ul a {
-    color: #0062bd
+    color: #ccc634
 }
 
 .handheld-footer .footer-social-icons {
@@ -14690,7 +14690,7 @@ textarea.input-text {
 }
 
 .handheld-footer.v2 .handheld-widget-menu .menu a {
-    color: #0062bd
+    color: #ccc634
 }
 
 .handheld-footer.light .handheld-footer-bar {
@@ -21184,7 +21184,7 @@ section header .action-text:after {
 }
 
 .brand-with-category .categories ul a {
-    color: #0062bd
+    color: #ccc634
 }
 
 .brand-with-category .categories .h6,
@@ -21197,7 +21197,7 @@ section header .action-text:after {
     height: 40px;
     top: -20px;
     box-shadow: .5px .866px 8px 0 rgba(51, 51, 51, .12);
-    color: #0062bd
+    color: #ccc634
 }
 
 @font-face {
@@ -23835,7 +23835,7 @@ section.section-posts-carousel .likes a:before {
 }
 
 .product_list_widget .product-title {
-    color: #0062bd;
+    color: #ccc634;
     font-weight: 700;
     font-size: 1em;
     display: block;
@@ -23843,7 +23843,7 @@ section.section-posts-carousel .likes a:before {
 }
 
 .product_list_widget a {
-    color: #0062bd;
+    color: #ccc634;
     font-weight: 700
 }
 
@@ -27930,7 +27930,7 @@ section.product-categories-menu-list {
 }
 
 .product-categories-menu-list .category a {
-    color: #0062bd
+    color: #ccc634
 }
 
 .product-categories-menu-list .category .h4,
@@ -28972,7 +28972,7 @@ ul.products[data-view=list-view-small]>li.product .hover-area {
     font-size: .857em;
     line-height: 1.167em;
     height: 2.334em;
-    color: #0062bd
+    color: #ccc634
 }
 
 @media (min-width:992px) {
@@ -30764,7 +30764,7 @@ p.available-on-backorder {
 }
 
 .product_list_widget .product-title {
-    color: #0062bd;
+    color: #ccc634;
     font-weight: 700;
     font-size: 1em;
     display: block;
@@ -30772,7 +30772,7 @@ p.available-on-backorder {
 }
 
 .product_list_widget a {
-    color: #0062bd;
+    color: #ccc634;
     font-weight: 700
 }
 
@@ -32588,7 +32588,7 @@ body.electro-dark .customer-login-form input:-webkit-autofill:focus {
     font-size: 1.071em;
     line-height: 1.286em;
     font-weight: 700;
-    color: #0062bd
+    color: #ccc634
 }
 
 .table-compare tbody tr th {
@@ -33654,12 +33654,12 @@ div.quantity>label {
 .accessories .accessory-checkbox {
     font-size: 1em;
     line-height: 1.286em;
-    color: #0062bd;
+    color: #ccc634;
     margin-bottom: .857em
 }
 
 .accessories .accessory-checkbox .product-title {
-    border-bottom: 1px solid #0062bd
+    border-bottom: 1px solid #ccc634
 }
 
 .accessories .accessory-checkbox:first-child {
@@ -47725,7 +47725,7 @@ ul.dokan-seller-wrap li.dokan-single-seller .dokan-store-caption .h3 a,
 ul.dokan-seller-wrap li.dokan-single-seller .dokan-store-caption h3 a,
 ul.dokan-seller-wrap li.dokan-single-seller .dokan-store-caption h3 a:focus,
 ul.dokan-seller-wrap li.dokan-single-seller .dokan-store-caption h3 a:hover {
-    color: #0062bd
+    color: #ccc634
 }
 
 .dokan-single-store .dokan-store-tabs ul {
@@ -48646,7 +48646,7 @@ body input[type=submit].dokan-btn {
     font-weight: 700;
     height: 2.572em;
     overflow: hidden;
-    color: #0062bd
+    color: #ccc634
 }
 
 .dokan-product-listing .dokan-product-listing-area table.product-listing-table .electro-price {
@@ -48670,7 +48670,7 @@ body input[type=submit].dokan-btn {
 .dokan-report-wrap #dokan_tabs_container table tbody tr th a,
 .dokan-report-wrap #dokan_tabs_container table tbody tr th a:focus,
 .dokan-report-wrap #dokan_tabs_container table tbody tr th a:hover {
-    color: #0062bd
+    color: #ccc634
 }
 
 .dokan-coupon-content .code a,
@@ -51018,4 +51018,8 @@ body.electro-dark .header-logo-placeholder {
 
 svg#yith-wcwl-icon-heart-outline{
     width: 20px !important;
+}
+
+.owl-item.active{
+    padding-right: 3px !important;
 }

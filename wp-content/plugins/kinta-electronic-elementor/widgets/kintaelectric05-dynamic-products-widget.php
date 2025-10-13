@@ -443,6 +443,9 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
             background: var(--bs-ec-primary, #ccc634);
             color: #fff;
         }
+        .owl-nav.disabled {
+            display: none !important;
+        }
         </style>
         <script>
         jQuery(document).ready(function($) {
@@ -456,7 +459,7 @@ class KEE_Kintaelectric05_Dynamic_Products_Widget extends KEE_Base_Widget
                     dots: true,
                     rtl: false,
                     paginationSpeed: 400,
-                    navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
+                    //navText: ['<i class="fa fa-angle-left"></i>', '<i class="fa fa-angle-right"></i>'],
                     margin: 0,
                     touchDrag: true,
                     autoplay: false,
