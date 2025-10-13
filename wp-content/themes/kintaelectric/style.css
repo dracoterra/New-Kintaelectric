@@ -3889,14 +3889,14 @@ input[type=submit]:disabled {
 
 .btn-primary:hover {
     color: #000;
-    background-color: rgb(254.15, 221, 38.25);
+    background-color: #ccc634;
     border-color: rgb(254.1, 219, 25.5)
 }
 
 .btn-check:focus+.btn-primary,
 .btn-primary:focus {
     color: #000;
-    background-color: rgb(254.15, 221, 38.25);
+    background-color: #ccc634;
     border-color: rgb(254.1, 219, 25.5);
     box-shadow: 0 0 0 rgba(255, 255, 255, 0), 0 0 0 0 rgba(215.9, 182.75, 0, .5)
 }
@@ -3935,14 +3935,14 @@ input[type=submit]:disabled {
 
 .btn-ec-primary:hover {
     color: #000;
-    background-color: rgb(254.15, 221, 38.25);
+    background-color: #ccc634;
     border-color: rgb(254.1, 219, 25.5)
 }
 
 .btn-check:focus+.btn-ec-primary,
 .btn-ec-primary:focus {
     color: #000;
-    background-color: rgb(254.15, 221, 38.25);
+    background-color: #ccc634;
     border-color: rgb(254.1, 219, 25.5);
     box-shadow: 0 0 0 rgba(255, 255, 255, 0), 0 0 0 0 rgba(215.9, 182.75, 0, .5)
 }
@@ -4165,14 +4165,14 @@ input[type=submit]:disabled {
 
 .btn-warning:hover {
     color: #000;
-    background-color: rgb(254.15, 221, 38.25);
+    background-color: #ccc634;
     border-color: rgb(254.1, 219, 25.5)
 }
 
 .btn-check:focus+.btn-warning,
 .btn-warning:focus {
     color: #000;
-    background-color: rgb(254.15, 221, 38.25);
+    background-color: #ccc634;
     border-color: rgb(254.1, 219, 25.5);
     box-shadow: 0 0 0 rgba(255, 255, 255, 0), 0 0 0 0 rgba(215.9, 182.75, 0, .5)
 }
