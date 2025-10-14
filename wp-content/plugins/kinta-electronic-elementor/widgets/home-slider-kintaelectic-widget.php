@@ -262,7 +262,7 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
                                             <?php if (!empty($slide['price_from']) || !empty($slide['price_cents'])) : ?>
                                             <div class="mb-4" data-scs-animation-in="fadeInUp" data-scs-animation-delay="300">
                                                 <?php if (!empty($slide['price_from']) || !empty($slide['price_cents'])) : ?>
-                                                <span class="font-size-13" style="color: #000;">FROM</span>
+                                                <span class="font-size-13" style="color: #000;">desde</span>
                                                 <?php endif; ?>
                                                 <div class="font-size-50 font-weight-bold text-lh-45" style="color: #000;">
                                                     <?php if (!empty($slide['price_from']) || !empty($slide['price_cents'])) : ?>
@@ -352,7 +352,7 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
                                             <# if (slide.price_from || slide.price_cents) { #>
                                             <div class="mb-4" data-scs-animation-in="fadeInUp" data-scs-animation-delay="300">
                                                 <# if (slide.price_from || slide.price_cents) { #>
-                                                <span class="font-size-13">FROM</span>
+                                                <span class="font-size-13">desde</span>
                                                 <# } #>
                                                 <div class="font-size-50 font-weight-bold text-lh-45">
                                                     <# if (slide.price_from || slide.price_cents) { #>
