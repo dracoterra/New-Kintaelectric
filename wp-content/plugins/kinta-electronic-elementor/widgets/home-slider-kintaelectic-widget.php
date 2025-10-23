@@ -262,9 +262,9 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
                                             <?php if (!empty($slide['price_from']) || !empty($slide['price_cents'])) : ?>
                                             <div class="mb-4" data-scs-animation-in="fadeInUp" data-scs-animation-delay="300">
                                                 <?php if (!empty($slide['price_from']) || !empty($slide['price_cents'])) : ?>
-                                                <span class="font-size-13" style="color: #000;">desde</span>
+                                                <span class="font-size-13" style="color: #000;">DESDE</span>
                                                 <?php endif; ?>
-                                                <div class="font-size-50 font-weight-bold text-lh-45" style="color: #000;">
+                                                <div class="font-size-50 font-weight-bold text-lh-45" style="color: #000; padding-top: 7px;">
                                                     <?php if (!empty($slide['price_from']) || !empty($slide['price_cents'])) : ?>
                                                     <sup class="">$</sup><?php echo esc_html($slide['price_from']); ?><sup class=""><?php echo esc_html($slide['price_cents']); ?></sup>
                                                     <?php endif; ?>
@@ -352,7 +352,7 @@ class KEE_Home_Slider_Kintaelectic_Widget extends KEE_Base_Widget {
                                             <# if (slide.price_from || slide.price_cents) { #>
                                             <div class="mb-4" data-scs-animation-in="fadeInUp" data-scs-animation-delay="300">
                                                 <# if (slide.price_from || slide.price_cents) { #>
-                                                <span class="font-size-13">desde</span>
+                                                <span class="font-size-13">DESDE</span>
                                                 <# } #>
                                                 <div class="font-size-50 font-weight-bold text-lh-45">
                                                     <# if (slide.price_from || slide.price_cents) { #>
