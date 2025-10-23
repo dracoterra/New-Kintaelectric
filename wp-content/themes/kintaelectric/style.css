@@ -13770,7 +13770,24 @@ body.page-template-template-page-sidebar-left .content-area {
 @media (max-width:767.98px) {
     .site-content .sidebar {
         left: -280px;
-        width: 280px
+        width: 280px;
+        display: none !important;
+    }
+    
+    /* Regla específica para sidebar de productos en móvil */
+    #sidebar.sidebar {
+        display: none !important;
+    }
+    
+    /* Ajustar el contenido principal para ocupar todo el ancho cuando el sidebar está oculto */
+    .site-content-inner.row {
+        flex-direction: column;
+    }
+    
+    .site-content-inner .content-area {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        max-width: 100% !important;
     }
 }
 
@@ -17612,7 +17629,7 @@ body.electro-dark footer.site-footer .site-dark-logo+.footer-logo {
 
 .header-v1.stuck .category-icons-carousel-v2>div>.row:first-child,
 .header-v1.stuck .container>.row:first-child {
-    margin-bottom: .714em
+    margin-bottom: 0em
 }
 
 .header-v1.stuck .electro-navigation {
@@ -24810,7 +24827,7 @@ section.section-posts-carousel .likes a:before {
 
 @media (max-width:767.98px) {
     .admin-bar:not(.woocommerce-store-notice-dismissed) .handheld-stick-this.stuck {
-        top: 136px
+        top: 46px
     }
 }
 
