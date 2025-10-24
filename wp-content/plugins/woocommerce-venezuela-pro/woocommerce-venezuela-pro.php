@@ -275,6 +275,26 @@ class WooCommerce_Venezuela_Pro {
         // Cargar configuraciones de visualización
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-display-settings.php';
         
+        // Cargar manejador de errores
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-error-handler.php';
+        
+        // Cargar limpiador de debug log
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-debug-log-cleaner.php';
+        
+        // Cargar generador de CSS dinámico
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-dynamic-css-generator.php';
+        
+        // Cargar sistema CSS básico y funcional
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-basic-css.php';
+        
+        // Cargar optimizador de rendimiento
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-performance-optimizer.php';
+        
+        // Cargar archivo de prueba (solo en admin)
+        if (is_admin()) {
+            require_once WVP_PLUGIN_PATH . 'includes/class-wvp-simple-css-test.php';
+        }
+        
         // Cargar reportes fiscales
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-fiscal-reports.php';
         
@@ -331,7 +351,12 @@ class WooCommerce_Venezuela_Pro {
             
             // Inicializar optimizador de rendimiento
             if (class_exists('WVP_Performance_Optimizer')) {
-                new WVP_Performance_Optimizer();
+                WVP_Performance_Optimizer::get_instance();
+            }
+            
+            // Inicializar manejador de errores
+            if (class_exists('WVP_Error_Handler')) {
+                WVP_Error_Handler::get_instance();
             }
             
             // Inicializar caché avanzado

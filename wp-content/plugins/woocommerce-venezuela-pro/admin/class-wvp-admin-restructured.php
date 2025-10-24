@@ -1996,6 +1996,27 @@ class WVP_Admin_Restructured {
     }
     
     /**
+     * Obtener configuraciones de apariencia
+     */
+    private function get_appearance_settings() {
+        return array(
+            'display_style' => get_option('wvp_display_style', 'minimal'),
+            'primary_color' => get_option('wvp_primary_color', '#007cba'),
+            'secondary_color' => get_option('wvp_secondary_color', '#005a87'),
+            'success_color' => get_option('wvp_success_color', '#28a745'),
+            'warning_color' => get_option('wvp_warning_color', '#ffc107'),
+            'font_family' => get_option('wvp_font_family', 'system'),
+            'font_size' => get_option('wvp_font_size', 'medium'),
+            'font_weight' => get_option('wvp_font_weight', '400'),
+            'text_transform' => get_option('wvp_text_transform', 'none'),
+            'padding' => get_option('wvp_padding', 'medium'),
+            'margin' => get_option('wvp_margin', 'medium'),
+            'border_radius' => get_option('wvp_border_radius', 'medium'),
+            'shadow' => get_option('wvp_shadow', 'small')
+        );
+    }
+    
+    /**
      * Mostrar contenido de apariencia
      */
     private function display_appearance_content() {
@@ -2009,12 +2030,24 @@ class WVP_Admin_Restructured {
             'futuristic' => 'Futurista',
             'advanced-minimal' => 'Minimalista Avanzado'
         );
+        
+        // Obtener configuraciones de control de visualización
+        $display_settings = get_option('wvp_display_settings', WVP_Display_Settings::get_default_settings());
+        
+        // Obtener configuraciones de apariencia actuales
+        $appearance_settings = $this->get_appearance_settings();
         ?>
         <div class="wvp-admin-content">
             <h2><?php _e('Control de Apariencia', 'wvp'); ?></h2>
-            <p><?php _e('Personaliza la visualización de precios y conversiones en tu tienda.', 'wvp'); ?></p>
+            <p><?php _e('Personaliza la visualización de precios y conversiones en tu tienda. Los cambios se aplicarán según las configuraciones de Control de Visualización.', 'wvp'); ?></p>
             
-            <form method="post" action="options.php">
+            <!-- Información de conexión con Control de Visualización -->
+            <div class="notice notice-info inline">
+                <p><strong><?php _e('ℹ️ Información Importante:', 'wvp'); ?></strong> <?php _e('Esta sección controla CÓMO se ven los elementos. Para controlar DÓNDE aparecen, ve a', 'wvp'); ?> 
+                <a href="<?php echo admin_url('admin.php?page=wvp-display-control'); ?>" class="button button-small"><?php _e('Control de Visualización', 'wvp'); ?></a></p>
+            </div>
+            
+            <form method="post" action="options.php" id="wvp-appearance-form">
                 <?php settings_fields('wvp_appearance_settings'); ?>
                 
                 <table class="form-table">
@@ -2277,21 +2310,60 @@ class WVP_Admin_Restructured {
                     <tr>
                         <th scope="row"><?php _e('Vista Previa', 'wvp'); ?></th>
                         <td>
-                            <div id="wvp-style-preview" class="wvp-preview-container">
-                                <div class="wvp-product-price-container wvp-<?php echo esc_attr($current_style); ?>" 
-                                     id="wvp-preview-container">
-                                    <div class="wvp-price-display">
-                                        <span class="wvp-price-usd" style="display: block;">$15.00</span>
-                                        <span class="wvp-price-ves" style="display: none;">Bs. 2.365,93</span>
+                            <div class="wvp-preview-section">
+                                <h4><?php _e('Configuraciones de Control de Visualización:', 'wvp'); ?></h4>
+                                <div class="wvp-display-status">
+                                    <?php
+                                    $contexts = array(
+                                        'single_product' => 'Página de Producto',
+                                        'shop_loop' => 'Lista de Productos',
+                                        'cart' => 'Carrito',
+                                        'checkout' => 'Checkout',
+                                        'widget' => 'Widgets',
+                                        'footer' => 'Footer'
+                                    );
+                                    
+                                    foreach ($contexts as $context => $label) {
+                                        $conversion_enabled = isset($display_settings['currency_conversion'][$context]) ? $display_settings['currency_conversion'][$context] : false;
+                                        $switcher_enabled = isset($display_settings['currency_switcher'][$context]) ? $display_settings['currency_switcher'][$context] : false;
+                                        $bcv_enabled = isset($display_settings['bcv_rate'][$context]) ? $display_settings['bcv_rate'][$context] : false;
+                                        
+                                        echo '<div class="wvp-context-status">';
+                                        echo '<strong>' . esc_html($label) . ':</strong> ';
+                                        echo '<span class="status-badge ' . ($conversion_enabled ? 'enabled' : 'disabled') . '">Conversión</span> ';
+                                        echo '<span class="status-badge ' . ($switcher_enabled ? 'enabled' : 'disabled') . '">Selector</span> ';
+                                        echo '<span class="status-badge ' . ($bcv_enabled ? 'enabled' : 'disabled') . '">Tasa BCV</span>';
+                                        echo '</div>';
+                                    }
+                                    ?>
+                                </div>
+                                
+                                <h4><?php _e('Vista Previa del Estilo:', 'wvp'); ?></h4>
+                                <div id="wvp-style-preview" class="wvp-preview-container">
+                                    <div class="wvp-product-price-container wvp-<?php echo esc_attr($current_style); ?>" 
+                                         id="wvp-preview-container">
+                                        <div class="wvp-price-display">
+                                            <span class="wvp-price-usd" style="display: block;">$15.00</span>
+                                            <span class="wvp-price-ves" style="display: none;">Bs. 2.365,93</span>
+                                        </div>
+                                        <div class="wvp-currency-switcher" data-price-usd="15.00" data-price-ves="2365.93">
+                                            <button class="wvp-currency-option active" data-currency="usd">USD</button>
+                                            <button class="wvp-currency-option" data-currency="ves">VES</button>
+                                        </div>
+                                        <div class="wvp-price-conversion">
+                                            <span class="wvp-ves-reference">Equivale a Bs. 2.365,93</span>
+                                        </div>
+                                        <div class="wvp-rate-info">Tasa BCV: 157,73</div>
                                     </div>
-                                    <div class="wvp-currency-switcher" data-price-usd="15.00" data-price-ves="2365.93">
-                                        <button class="wvp-currency-option active" data-currency="usd">USD</button>
-                                        <button class="wvp-currency-option" data-currency="ves">VES</button>
-                                    </div>
-                                    <div class="wvp-price-conversion">
-                                        <span class="wvp-ves-reference">Equivale a Bs. 2.365,93</span>
-                                    </div>
-                                    <div class="wvp-rate-info">Tasa BCV: 157,73</div>
+                                </div>
+                                
+                                <div class="wvp-preview-actions">
+                                    <button type="button" id="wvp-test-switcher" class="button button-secondary">
+                                        <?php _e('Probar Selector de Moneda', 'wvp'); ?>
+                                    </button>
+                                    <button type="button" id="wvp-reset-preview" class="button button-secondary">
+                                        <?php _e('Resetear Vista Previa', 'wvp'); ?>
+                                    </button>
                                 </div>
                             </div>
                         </td>
@@ -2331,6 +2403,10 @@ class WVP_Admin_Restructured {
             
             <script>
             jQuery(document).ready(function($) {
+                // Variables globales para la vista previa
+                var currentPreviewCurrency = 'USD';
+                var previewSettings = <?php echo json_encode($appearance_settings); ?>;
+                
                 // Cambio de estilo
                 $('#wvp_display_style').on('change', function() {
                     var style = $(this).val();
@@ -2341,6 +2417,171 @@ class WVP_Admin_Restructured {
                     
                     // Añadir nueva clase de estilo
                     $preview.addClass('wvp-' + style);
+                    
+                    // Aplicar estilos dinámicos
+                    applyDynamicStyles();
+                });
+                
+                // Aplicar estilos dinámicos basados en configuraciones
+                function applyDynamicStyles() {
+                    var $preview = $('#wvp-preview-container');
+                    
+                    // Aplicar colores
+                    $preview.css({
+                        '--wvp-primary-color': $('#wvp_primary_color').val(),
+                        '--wvp-secondary-color': $('#wvp_secondary_color').val(),
+                        '--wvp-success-color': $('#wvp_success_color').val(),
+                        '--wvp-warning-color': $('#wvp_warning_color').val()
+                    });
+                    
+                    // Aplicar fuentes
+                    var fontFamily = $('#wvp_font_family').val();
+                    var fontSize = $('#wvp_font_size').val();
+                    var fontWeight = $('#wvp_font_weight').val();
+                    var textTransform = $('#wvp_text_transform').val();
+                    
+                    var fontSizes = {
+                        'small': '12px',
+                        'medium': '14px',
+                        'large': '16px',
+                        'xlarge': '18px',
+                        'xxlarge': '20px'
+                    };
+                    
+                    var fontFamilies = {
+                        'system': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                        'arial': 'Arial, sans-serif',
+                        'helvetica': 'Helvetica, Arial, sans-serif',
+                        'georgia': 'Georgia, serif',
+                        'times': '"Times New Roman", Times, serif',
+                        'verdana': 'Verdana, sans-serif',
+                        'tahoma': 'Tahoma, sans-serif',
+                        'trebuchet': '"Trebuchet MS", sans-serif',
+                        'courier': '"Courier New", monospace',
+                        'monospace': 'monospace'
+                    };
+                    
+                    $preview.find('.wvp-price-usd, .wvp-price-ves').css({
+                        'font-family': fontFamilies[fontFamily] || fontFamilies['system'],
+                        'font-size': fontSizes[fontSize] || fontSizes['medium'],
+                        'font-weight': fontWeight,
+                        'text-transform': textTransform
+                    });
+                    
+                    // Aplicar espaciado
+                    var padding = $('#wvp_padding').val();
+                    var margin = $('#wvp_margin').val();
+                    var borderRadius = $('#wvp_border_radius').val();
+                    var shadow = $('#wvp_shadow').val();
+                    
+                    var paddings = {
+                        'none': '0px',
+                        'small': '5px',
+                        'medium': '10px',
+                        'large': '15px',
+                        'xlarge': '20px'
+                    };
+                    
+                    var margins = {
+                        'none': '0px',
+                        'small': '5px',
+                        'medium': '10px',
+                        'large': '15px',
+                        'xlarge': '20px'
+                    };
+                    
+                    var borderRadiuses = {
+                        'none': '0px',
+                        'small': '3px',
+                        'medium': '6px',
+                        'large': '12px',
+                        'xlarge': '20px',
+                        'round': '50px'
+                    };
+                    
+                    var shadows = {
+                        'none': 'none',
+                        'small': '0 2px 4px rgba(0,0,0,0.1)',
+                        'medium': '0 4px 8px rgba(0,0,0,0.15)',
+                        'large': '0 8px 16px rgba(0,0,0,0.2)',
+                        'glow': '0 0 10px rgba(0,115,170,0.3)'
+                    };
+                    
+                    $preview.find('.wvp-price-conversion').css({
+                        'padding': paddings[padding] || paddings['medium'],
+                        'margin': margins[margin] || margins['medium'],
+                        'border-radius': borderRadiuses[borderRadius] || borderRadiuses['medium'],
+                        'box-shadow': shadows[shadow] || shadows['small']
+                    });
+                }
+                
+                // Aplicar estilos cuando cambian los controles
+                $('#wvp_primary_color, #wvp_secondary_color, #wvp_success_color, #wvp_warning_color').on('change', applyDynamicStyles);
+                $('#wvp_font_family, #wvp_font_size, #wvp_font_weight, #wvp_text_transform').on('change', applyDynamicStyles);
+                $('#wvp_padding, #wvp_margin, #wvp_border_radius, #wvp_shadow').on('change', applyDynamicStyles);
+                
+                // Aplicar estilos iniciales
+                applyDynamicStyles();
+                
+                // Funcionalidad de prueba del selector de moneda
+                $('#wvp-test-switcher').on('click', function() {
+                    var $preview = $('#wvp-preview-container');
+                    var $usdPrice = $preview.find('.wvp-price-usd');
+                    var $vesPrice = $preview.find('.wvp-price-ves');
+                    var $conversion = $preview.find('.wvp-price-conversion');
+                    var $rateInfo = $preview.find('.wvp-rate-info');
+                    var $usdBtn = $preview.find('[data-currency="usd"]');
+                    var $vesBtn = $preview.find('[data-currency="ves"]');
+                    
+                    if (currentPreviewCurrency === 'USD') {
+                        // Cambiar a VES
+                        $usdPrice.fadeOut(200, function() {
+                            $vesPrice.fadeIn(200);
+                        });
+                        $conversion.fadeOut(200);
+                        $rateInfo.fadeOut(200);
+                        $usdBtn.removeClass('active');
+                        $vesBtn.addClass('active');
+                        currentPreviewCurrency = 'VES';
+                        $(this).text('<?php _e('Cambiar a USD', 'wvp'); ?>');
+                    } else {
+                        // Cambiar a USD
+                        $vesPrice.fadeOut(200, function() {
+                            $usdPrice.fadeIn(200);
+                        });
+                        $conversion.fadeIn(200);
+                        $rateInfo.fadeIn(200);
+                        $vesBtn.removeClass('active');
+                        $usdBtn.addClass('active');
+                        currentPreviewCurrency = 'USD';
+                        $(this).text('<?php _e('Cambiar a VES', 'wvp'); ?>');
+                    }
+                });
+                
+                // Resetear vista previa
+                $('#wvp-reset-preview').on('click', function() {
+                    var $preview = $('#wvp-preview-container');
+                    var $usdPrice = $preview.find('.wvp-price-usd');
+                    var $vesPrice = $preview.find('.wvp-price-ves');
+                    var $conversion = $preview.find('.wvp-price-conversion');
+                    var $rateInfo = $preview.find('.wvp-rate-info');
+                    var $usdBtn = $preview.find('[data-currency="usd"]');
+                    var $vesBtn = $preview.find('[data-currency="ves"]');
+                    
+                    // Resetear a USD
+                    $usdPrice.show();
+                    $vesPrice.hide();
+                    $conversion.show();
+                    $rateInfo.show();
+                    $usdBtn.addClass('active');
+                    $vesBtn.removeClass('active');
+                    currentPreviewCurrency = 'USD';
+                    
+                    // Resetear botón de prueba
+                    $('#wvp-test-switcher').text('<?php _e('Cambiar a VES', 'wvp'); ?>');
+                    
+                    // Reaplicar estilos
+                    applyDynamicStyles();
                 });
                 
                 // Temas de color predefinidos
@@ -2826,6 +3067,174 @@ class WVP_Admin_Restructured {
                     border-collapse: separate;
                     border-spacing: 15px;
                 }
+                
+                .wvp-preview-section {
+                    background: #f9f9f9;
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin: 20px 0;
+                }
+                
+                .wvp-display-status {
+                    background: #fff;
+                    border: 1px solid #e1e1e1;
+                    border-radius: 6px;
+                    padding: 15px;
+                    margin: 15px 0;
+                }
+                
+                .wvp-context-status {
+                    margin: 8px 0;
+                    padding: 8px;
+                    background: #f8f9fa;
+                    border-radius: 4px;
+                    border-left: 4px solid #007cba;
+                }
+                
+                .status-badge {
+                    display: inline-block;
+                    padding: 2px 8px;
+                    border-radius: 12px;
+                    font-size: 11px;
+                    font-weight: 600;
+                    margin-right: 5px;
+                }
+                
+                .status-badge.enabled {
+                    background: #d4edda;
+                    color: #155724;
+                    border: 1px solid #c3e6cb;
+                }
+                
+                .status-badge.disabled {
+                    background: #f8d7da;
+                    color: #721c24;
+                    border: 1px solid #f5c6cb;
+                }
+                
+                .wvp-preview-container {
+                    background: #fff;
+                    border: 2px dashed #007cba;
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin: 15px 0;
+                    text-align: center;
+                }
+                
+                .wvp-preview-actions {
+                    margin-top: 15px;
+                    text-align: center;
+                }
+                
+                .wvp-preview-actions .button {
+                    margin: 0 5px;
+                }
+                
+                .wvp-theme-btn {
+                    display: inline-block;
+                    margin: 5px;
+                    padding: 10px;
+                    border: 2px solid #ddd;
+                    border-radius: 6px;
+                    background: #fff;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    text-align: center;
+                    min-width: 120px;
+                }
+                
+                .wvp-theme-btn:hover {
+                    border-color: #007cba;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                }
+                
+                .wvp-theme-btn.active {
+                    border-color: #007cba;
+                    background: #007cba;
+                    color: #fff;
+                }
+                
+                .wvp-theme-preview {
+                    width: 100%;
+                    height: 30px;
+                    border-radius: 4px;
+                    margin-bottom: 8px;
+                }
+                
+                .wvp-font-settings,
+                .wvp-spacing-settings {
+                    border-collapse: separate;
+                    border-spacing: 15px;
+                }
+                
+                .wvp-font-settings td,
+                .wvp-spacing-settings td {
+                    vertical-align: top;
+                }
+                
+                .wvp-font-settings label,
+                .wvp-spacing-settings label {
+                    display: block;
+                    margin-bottom: 5px;
+                    font-weight: 600;
+                }
+                
+                .wvp-font-settings select,
+                .wvp-spacing-settings select {
+                    width: 100%;
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                }
+                
+                /* Estilos para la vista previa en tiempo real */
+                #wvp-preview-container {
+                    position: relative;
+                    transition: all 0.3s ease;
+                }
+                
+                #wvp-preview-container .wvp-price-usd,
+                #wvp-preview-container .wvp-price-ves {
+                    transition: all 0.3s ease;
+                }
+                
+                #wvp-preview-container .wvp-currency-switcher {
+                    margin: 15px 0;
+                }
+                
+                #wvp-preview-container .wvp-currency-switcher button {
+                    transition: all 0.3s ease;
+                }
+                
+                #wvp-preview-container .wvp-price-conversion {
+                    transition: all 0.3s ease;
+                }
+                
+                #wvp-preview-container .wvp-rate-info {
+                    transition: all 0.3s ease;
+                }
+                
+                /* Responsive para vista previa */
+                @media (max-width: 768px) {
+                    .wvp-preview-section {
+                        padding: 15px;
+                    }
+                    
+                    .wvp-preview-container {
+                        padding: 15px;
+                    }
+                    
+                    .wvp-theme-btn {
+                        min-width: 100px;
+                        margin: 3px;
+                    }
+                    
+                    .wvp-context-status {
+                        font-size: 13px;
+                    }
+                }
                 .wvp-color-settings td {
                     vertical-align: top;
                 }
@@ -2915,6 +3324,28 @@ class WVP_Admin_Restructured {
                     font-weight: 500;
                 }
             ');
+            
+            // Cargar CSS dinámico para apariencia
+            wp_enqueue_style(
+                'wvp-appearance-dynamic',
+                WVP_PLUGIN_URL . 'assets/css/wvp-appearance-dynamic.css',
+                array(),
+                WVP_VERSION
+            );
+            
+            // Cargar JS dinámico para apariencia
+            wp_enqueue_script(
+                'wvp-appearance-dynamic',
+                WVP_PLUGIN_URL . 'assets/js/wvp-appearance-dynamic.js',
+                array('jquery'),
+                WVP_VERSION,
+                true
+            );
+            
+            wp_localize_script('wvp-appearance-dynamic', 'wvp_appearance_dynamic', array(
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('wvp_appearance_dynamic_nonce')
+            ));
         }
         
         // Deshabilitar AJAX temporalmente para evitar errores 400

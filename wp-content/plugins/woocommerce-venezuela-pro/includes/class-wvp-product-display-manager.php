@@ -51,8 +51,6 @@ class WVP_Product_Display_Manager {
      * Constructor de la clase
      */
     public function __construct() {
-        // Log para verificar que se está inicializando
-        
         // Obtener instancia del plugin de forma segura
         if (class_exists('WooCommerce_Venezuela_Pro')) {
             $this->plugin = WooCommerce_Venezuela_Pro::get_instance();
@@ -60,13 +58,26 @@ class WVP_Product_Display_Manager {
             $this->plugin = null;
         }
         
-        // Obtener configuración
-        $this->current_style = 'minimal'; // Forzar estilo minimal
+        // Obtener configuración de apariencia dinámica
+        $this->current_style = get_option('wvp_display_style', 'minimal');
         $this->theme_compatibility = $this->detect_theme();
         
         // Inicializar hooks
         $this->init_hooks();
         
+        // Inicializar generador de CSS dinámico
+        $this->init_dynamic_css();
+    }
+    
+    /**
+     * Inicializar CSS dinámico
+     */
+    private function init_dynamic_css() {
+        // Asegurar que el generador de CSS dinámico esté disponible
+        if (class_exists('WVP_Dynamic_CSS_Generator')) {
+            // El generador se inicializa automáticamente
+            // Solo necesitamos asegurar que se cargue
+        }
     }
     
     /**

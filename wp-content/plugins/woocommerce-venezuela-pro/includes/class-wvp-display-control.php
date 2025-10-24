@@ -19,6 +19,9 @@ class WVP_Display_Control {
     public function __construct() {
         add_action('init', array($this, 'init_hooks'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
+        
+        // Asegurar que el CSS dinámico se aplique a los shortcodes
+        add_action('wp_head', array($this, 'ensure_dynamic_css'));
     }
     
     /**
@@ -33,6 +36,26 @@ class WVP_Display_Control {
         add_filter('wvp_show_currency_conversion', array($this, 'should_show_conversion'), 10, 2);
         add_filter('wvp_show_bcv_rate', array($this, 'should_show_bcv_rate'), 10, 2);
         add_filter('wvp_show_currency_switcher', array($this, 'should_show_switcher'), 10, 2);
+    }
+    
+    /**
+     * Asegurar que el CSS dinámico se aplique
+     */
+    public function ensure_dynamic_css() {
+        // Solo en frontend
+        if (is_admin()) {
+            return;
+        }
+        
+        // Asegurar que el generador de CSS dinámico esté disponible
+        if (class_exists('WVP_Dynamic_CSS_Generator')) {
+            $generator = WVP_Dynamic_CSS_Generator::get_instance();
+            $css = $generator->get_generated_css();
+            
+            if ($css) {
+                echo '<style id="wvp-dynamic-css-inline">' . $css . '</style>';
+            }
+        }
     }
     
     /**
@@ -82,7 +105,8 @@ class WVP_Display_Control {
         }
         
         $output = '';
-        $css_class = 'wvp-bcv-rate wvp-bcv-' . $atts['style'];
+        $current_style = get_option('wvp_display_style', 'minimal');
+        $css_class = 'wvp-bcv-rate wvp-bcv-' . $atts['style'] . ' wvp-' . $current_style;
         
         switch ($atts['format']) {
             case 'simple':
@@ -122,7 +146,8 @@ class WVP_Display_Control {
             return '<div class="wvp-currency-error">Tasa BCV no disponible</div>';
         }
         
-        $output = '<div class="wvp-currency-switcher wvp-style-' . $atts['style'] . ' wvp-size-' . $atts['size'] . ' wvp-theme-' . $atts['theme'] . ' wvp-scope-' . $atts['scope'] . '">';
+        $current_style = get_option('wvp_display_style', 'minimal');
+        $output = '<div class="wvp-currency-switcher wvp-style-' . $atts['style'] . ' wvp-size-' . $atts['size'] . ' wvp-theme-' . $atts['theme'] . ' wvp-scope-' . $atts['scope'] . ' wvp-' . $current_style . '">';
         
         switch ($atts['style']) {
             case 'buttons':

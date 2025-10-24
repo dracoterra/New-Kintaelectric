@@ -1,0 +1,253 @@
+/**
+ * Estilos Dinámicos de Apariencia - WooCommerce Venezuela Pro
+ * Se aplican dinámicamente según las configuraciones del usuario
+ * 
+ * @package WooCommerce_Venezuela_Pro
+ * @since 1.0.0
+ */
+
+/* ========================================
+   VARIABLES CSS DINÁMICAS
+   ======================================== */
+:root {
+    --wvp-primary-color: #007cba;
+    --wvp-secondary-color: #005a87;
+    --wvp-success-color: #28a745;
+    --wvp-warning-color: #ffc107;
+    --wvp-dark-color: #333333;
+    --wvp-light-color: #ffffff;
+}
+
+/* ========================================
+   APLICACIÓN DINÁMICA DE ESTILOS
+   ======================================== */
+
+/* Aplicar colores dinámicos a elementos de precio */
+.wvp-product-price-container {
+    --wvp-primary-color: var(--wvp-primary-color, #007cba);
+    --wvp-secondary-color: var(--wvp-secondary-color, #005a87);
+    --wvp-success-color: var(--wvp-success-color, #28a745);
+    --wvp-warning-color: var(--wvp-warning-color, #ffc107);
+}
+
+/* Selector de moneda con colores dinámicos */
+.wvp-currency-switcher button.active,
+.wvp-currency-switcher .wvp-currency-option.active {
+    background-color: var(--wvp-primary-color);
+    border-color: var(--wvp-primary-color);
+    color: var(--wvp-light-color);
+}
+
+.wvp-currency-switcher button:hover,
+.wvp-currency-switcher .wvp-currency-option:hover {
+    border-color: var(--wvp-primary-color);
+    color: var(--wvp-primary-color);
+}
+
+/* Precios con colores dinámicos */
+.wvp-price-usd {
+    color: var(--wvp-dark-color);
+}
+
+.wvp-price-ves {
+    color: var(--wvp-secondary-color);
+}
+
+/* Conversión de precio con colores dinámicos */
+.wvp-price-conversion {
+    background-color: rgba(var(--wvp-primary-color-rgb, 0, 124, 186), 0.1);
+    border-color: var(--wvp-primary-color);
+    color: var(--wvp-secondary-color);
+}
+
+/* Información de tasa con colores dinámicos */
+.wvp-rate-info {
+    color: var(--wvp-secondary-color);
+}
+
+/* ========================================
+   APLICACIÓN DINÁMICA DE FUENTES
+   ======================================== */
+
+/* Fuentes dinámicas para precios */
+.wvp-price-usd,
+.wvp-price-ves {
+    font-family: var(--wvp-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+    font-size: var(--wvp-font-size, 16px);
+    font-weight: var(--wvp-font-weight, 600);
+    text-transform: var(--wvp-text-transform, none);
+}
+
+/* Fuentes dinámicas para selector */
+.wvp-currency-switcher button,
+.wvp-currency-switcher .wvp-currency-option {
+    font-family: var(--wvp-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+    font-weight: var(--wvp-font-weight, 500);
+    text-transform: var(--wvp-text-transform, none);
+}
+
+/* ========================================
+   APLICACIÓN DINÁMICA DE ESPACIADO
+   ======================================== */
+
+/* Espaciado dinámico para conversión */
+.wvp-price-conversion {
+    padding: var(--wvp-padding, 10px);
+    margin: var(--wvp-margin, 10px 0);
+    border-radius: var(--wvp-border-radius, 6px);
+    box-shadow: var(--wvp-shadow, 0 2px 4px rgba(0,0,0,0.1));
+}
+
+/* Espaciado dinámico para contenedor principal */
+.wvp-product-price-container {
+    margin: var(--wvp-margin, 15px 0);
+}
+
+/* ========================================
+   ESTILOS ESPECÍFICOS POR CONTEXTO
+   ======================================== */
+
+/* Página de producto individual */
+.single-product .wvp-product-price-container {
+    margin: var(--wvp-margin-large, 20px 0);
+}
+
+/* Lista de productos */
+.shop .wvp-product-price-container,
+.woocommerce ul.products li.product .wvp-product-price-container {
+    margin: var(--wvp-margin-small, 10px 0);
+}
+
+/* Carrito */
+.woocommerce-cart .wvp-product-price-container {
+    margin: var(--wvp-margin-small, 8px 0);
+}
+
+/* Checkout */
+.woocommerce-checkout .wvp-product-price-container {
+    margin: var(--wvp-margin-small, 8px 0);
+}
+
+/* Widgets */
+.widget .wvp-product-price-container {
+    margin: var(--wvp-margin-small, 10px 0);
+}
+
+/* Footer */
+.footer .wvp-product-price-container {
+    margin: var(--wvp-margin-small, 10px 0);
+}
+
+/* ========================================
+   ANIMACIONES DINÁMICAS
+   ======================================== */
+
+/* Transiciones suaves para cambios de moneda */
+.wvp-price-usd,
+.wvp-price-ves {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.wvp-price-conversion,
+.wvp-rate-info {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Efectos hover dinámicos */
+.wvp-currency-switcher button:hover,
+.wvp-currency-switcher .wvp-currency-option:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(var(--wvp-primary-color-rgb, 0, 124, 186), 0.2);
+}
+
+/* ========================================
+   RESPONSIVE DINÁMICO
+   ======================================== */
+
+@media (max-width: 768px) {
+    .wvp-product-price-container {
+        margin: var(--wvp-margin-mobile, 10px 0);
+    }
+    
+    .wvp-price-usd,
+    .wvp-price-ves {
+        font-size: var(--wvp-font-size-mobile, 14px);
+    }
+    
+    .wvp-price-conversion {
+        padding: var(--wvp-padding-mobile, 8px);
+        font-size: var(--wvp-font-size-small, 12px);
+    }
+}
+
+@media (max-width: 480px) {
+    .wvp-product-price-container {
+        margin: var(--wvp-margin-mobile-small, 8px 0);
+    }
+    
+    .wvp-price-usd,
+    .wvp-price-ves {
+        font-size: var(--wvp-font-size-mobile-small, 13px);
+    }
+}
+
+/* ========================================
+   MODO OSCURO DINÁMICO
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --wvp-dark-color: #ffffff;
+        --wvp-light-color: #333333;
+    }
+    
+    .wvp-price-conversion {
+        background-color: rgba(var(--wvp-primary-color-rgb, 0, 124, 186), 0.2);
+        border-color: var(--wvp-primary-color);
+        color: var(--wvp-light-color);
+    }
+    
+    .wvp-currency-switcher button,
+    .wvp-currency-switcher .wvp-currency-option {
+        background-color: #3c3c3c;
+        border-color: #555;
+        color: #ccc;
+    }
+    
+    .wvp-currency-switcher button:hover,
+    .wvp-currency-switcher .wvp-currency-option:hover {
+        background-color: #4c4c4c;
+        border-color: var(--wvp-primary-color);
+        color: var(--wvp-primary-color);
+    }
+}
+
+/* ========================================
+   UTILIDADES DINÁMICAS
+   ======================================== */
+
+/* Clase para aplicar estilos dinámicos */
+.wvp-dynamic-styles {
+    /* Los estilos se aplican via JavaScript */
+}
+
+/* Clase para elementos que deben respetar configuraciones de control */
+.wvp-context-aware {
+    /* Los elementos se muestran/ocultan según configuraciones de control */
+}
+
+/* Clase para elementos de vista previa */
+.wvp-preview-element {
+    /* Estilos específicos para elementos de vista previa */
+    position: relative;
+}
+
+.wvp-preview-element::before {
+    content: "Vista Previa";
+    position: absolute;
+    top: -20px;
+    left: 0;
+    font-size: 10px;
+    color: #666;
+    font-style: italic;
+}
