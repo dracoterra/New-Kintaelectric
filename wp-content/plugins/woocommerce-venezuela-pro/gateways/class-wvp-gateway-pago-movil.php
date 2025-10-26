@@ -19,7 +19,6 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
     public $ci;
     public $phone;
     public $bank;
-    public $apply_igtf;
     public $min_amount;
     public $max_amount;
     
@@ -44,7 +43,6 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         $this->ci = $this->get_option("ci");
         $this->phone = $this->get_option("phone");
         $this->bank = $this->get_option("bank");
-        $this->apply_igtf = $this->get_option("apply_igtf");
         $this->min_amount = $this->get_option("min_amount");
         $this->max_amount = $this->get_option("max_amount");
         
@@ -127,13 +125,6 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                 ),
                 "desc_tip" => true
             ),
-            "apply_igtf" => array(
-                "title" => __("Aplicar IGTF", "wvp"),
-                "type" => "checkbox",
-                "label" => __("Aplicar IGTF a esta pasarela", "wvp"),
-                "default" => "no",
-                "description" => __("IGTF solo se aplica a pagos en efectivo (billetes). Las transferencias digitales como Pago Móvil NO aplican IGTF.", "wvp")
-            ),
             "min_amount" => array(
                 "title" => __("Monto Mínimo (USD)", "wvp"),
                 "type" => "price",
@@ -152,6 +143,46 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
     }
     
     /**
+     * Obtener nombre del banco desde su código
+     * 
+     * @param string $bank_code Código del banco
+     * @return string Nombre del banco
+     */
+    private function get_bank_name($bank_code) {
+        $banks = array(
+            "0102" => "Banco de Venezuela",
+            "0104" => "Venezolano de Crédito",
+            "0105" => "Mercantil",
+            "0108" => "Provincial",
+            "0114" => "Bancaribe",
+            "0115" => "Exterior",
+            "0116" => "Occidental de Descuento",
+            "0128" => "Banco Caroní",
+            "0134" => "Banesco",
+            "0137" => "Sofitasa",
+            "0138" => "Banco Plaza",
+            "0146" => "Banco de Venezuela",
+            "0151" => "100% Banco",
+            "0156" => "100% Banco",
+            "0157" => "Del Sur",
+            "0163" => "Banco del Tesoro",
+            "0166" => "Banco Agrícola de Venezuela",
+            "0168" => "Bancrecer",
+            "0169" => "Mi Banco",
+            "0171" => "Banco Activo",
+            "0172" => "Bancamiga",
+            "0173" => "Banco Internacional de Desarrollo",
+            "0174" => "Banplus",
+            "0175" => "Bicentenario del Pueblo",
+            "0176" => "Banco Espirito Santo",
+            "0177" => "Banco de la Fuerza Armada Nacional Bolivariana",
+            "0190" => "Citibank"
+        );
+        
+        return isset($banks[$bank_code]) ? $banks[$bank_code] : $bank_code;
+    }
+    
+    /**
      * Campos de pago
      */
     public function payment_fields() {
@@ -159,26 +190,62 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             echo wpautop(wptexturize($this->description));
         }
         
-        // Obtener total en bolívares
+        // Obtener total en bolívares con manejo de errores
         $rate = WVP_BCV_Integrator::get_rate();
         $cart_total = WC()->cart->get_total("raw");
-        $ves_total = WVP_BCV_Integrator::convert_to_ves($cart_total, $rate);
+        $ves_total = null;
+        $show_rate_error = false;
         
+        // Intentar obtener la tasa con fallback
+        if ($rate !== null && $rate > 0) {
+            $ves_total = WVP_BCV_Integrator::convert_to_ves($cart_total, $rate);
+        }
+        
+        // Si no hay tasa disponible, intentar fallback
+        if ($ves_total === null) {
+            // Intentar obtener tasa de respaldo desde opciones
+            $fallback_rate = get_option('wvp_bcv_rate', null);
+            if ($fallback_rate !== null && $fallback_rate > 0) {
+                $rate = $fallback_rate;
+                $ves_total = WVP_BCV_Integrator::convert_to_ves($cart_total, $rate);
+                $show_rate_error = true;
+            }
+        }
+        
+        // Mostrar información de pago
         if ($rate !== null && $ves_total !== null) {
             $formatted_ves = WVP_BCV_Integrator::format_ves_price($ves_total);
             echo '<div class="wvp-pago-movil-total">
                 <p><strong>' . __("Total a pagar:", "wvp") . '</strong> ' . $formatted_ves . '</p>
-                <p><strong>' . __("Tasa BCV:", "wvp") . '</strong> ' . number_format($rate, 2, ",", ".") . ' Bs./USD</p>
+                <p><strong>' . __("Tasa BCV:", "wvp") . '</strong> ' . number_format($rate, 2, ",", ".") . ' Bs./USD</p>';
+            
+            if ($show_rate_error) {
+                echo '<p style="color: orange;"><em>' . __("Nota: Estamos usando una tasa de respaldo. Contacte con el administrador para actualizar la tasa del BCV.", "wvp") . '</em></p>';
+            }
+            
+            echo '</div>';
+        } else {
+            // No hay tasa disponible
+            echo '<div class="wvp-pago-movil-error" style="border: 1px solid #f0ad4e; padding: 10px; margin: 10px 0; background: #fcf8e3; border-radius: 4px;">
+                <p><strong>' . __("Importante:", "wvp") . '</strong></p>
+                <p>' . __("No podemos calcular el monto en bolívares en este momento. El total aproximado es:", "wvp") . ' ' . wc_price($cart_total) . ' USD</p>
+                <p>' . __("Le enviaremos los datos de pago completos después de realizar el pedido.", "wvp") . '</p>
             </div>';
         }
         
         // Mostrar datos bancarios
         if (!empty($this->ci) && !empty($this->phone) && !empty($this->bank)) {
-            echo '<div class="wvp-pago-movil-details">
-                <h4>' . __("Datos para Pago Móvil:", "wvp") . '</h4>
+            $bank_name = $this->get_bank_name($this->bank);
+            echo '<div class="wvp-pago-movil-details" style="border: 2px solid #5cb85c; padding: 15px; margin: 15px 0; background: #f9f9f9; border-radius: 5px;">
+                <h4 style="margin-top: 0; color: #5cb85c;">' . __("Datos para Pago Móvil:", "wvp") . '</h4>
                 <p><strong>' . __("Cédula:", "wvp") . '</strong> ' . esc_html($this->ci) . '</p>
                 <p><strong>' . __("Teléfono:", "wvp") . '</strong> ' . esc_html($this->phone) . '</p>
-                <p><strong>' . __("Banco:", "wvp") . '</strong> ' . esc_html($this->get_option("bank")) . '</p>
+                <p><strong>' . __("Banco:", "wvp") . '</strong> ' . esc_html($bank_name) . '</p>
+                <p style="color: #d9534f; font-weight: bold;">' . __("IMPORTANTE: Guarde el número de confirmación después de realizar el pago.", "wvp") . '</p>
+            </div>';
+        } else {
+            echo '<div class="wvp-pago-movil-warning" style="border: 1px solid #f0ad4e; padding: 10px; margin: 10px 0; background: #fcf8e3; border-radius: 4px;">
+                <p>' . __("Los datos bancarios no están configurados. Contacte con el administrador.", "wvp") . '</p>
             </div>';
         }
         
@@ -188,7 +255,8 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         
         echo '<div class="form-row form-row-wide">
             <label>' . __("Número de Confirmación", "wvp") . ' <span class="required">*</span></label>
-            <input id="' . esc_attr($this->id) . '-confirmation" name="' . esc_attr($this->id) . '-confirmation" type="text" autocomplete="off" />
+            <input id="' . esc_attr($this->id) . '-confirmation" name="' . esc_attr($this->id) . '-confirmation" type="text" autocomplete="off" placeholder="' . __("Ejemplo: ABC123456", "wvp") . '" required="required" maxlength="20" pattern="[A-Za-z0-9\-]{6,20}" title="' . __("Mínimo 6 caracteres alfanuméricos", "wvp") . '" />
+            <small style="display: block; margin-top: 5px; color: #666;">' . __("Ingrese el número de confirmación que recibió después de realizar el pago móvil (6-20 caracteres alfanuméricos)", "wvp") . '</small>
         </div>';
         
         do_action("woocommerce_credit_card_form_end", $this->id);
@@ -247,8 +315,15 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         // 4. Sanitizar y validar datos
         $confirmation = WVP_Security_Validator::sanitize_input($_POST[$this->id . '-confirmation'] ?? '');
         
+        // Verificar que no esté vacío
+        if (empty($confirmation)) {
+            wc_add_notice(__("Debe ingresar el número de confirmación del pago móvil.", "wvp"), "error");
+            return false;
+        }
+        
+        // Validar formato
         if (!WVP_Security_Validator::validate_confirmation($confirmation)) {
-            wc_add_notice(__("Número de confirmación inválido. Debe contener entre 6-20 caracteres alfanuméricos.", "wvp"), "error");
+            wc_add_notice(__("Número de confirmación inválido. Debe tener entre 6-20 caracteres alfanuméricos (letras y/o números). Ejemplo: ABC123456 o 0123456789", "wvp"), "error");
             return false;
         }
         

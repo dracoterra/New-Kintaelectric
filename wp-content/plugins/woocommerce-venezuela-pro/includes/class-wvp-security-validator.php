@@ -71,8 +71,33 @@ class WVP_Security_Validator {
             return false;
         }
         
-        // Permitir solo caracteres alfanuméricos y guiones, 6-20 caracteres
-        return preg_match('/^[A-Z0-9\-]{6,20}$/', strtoupper($confirmation));
+        // Limpiar y convertir a mayúsculas
+        $confirmation = strtoupper(trim($confirmation));
+        
+        // Verificar longitud
+        $length = strlen($confirmation);
+        if ($length < 6 || $length > 20) {
+            return false;
+        }
+        
+        // Verificar que contenga al menos una letra y un número (patrón seguro)
+        // Permitir: letras, números, guiones
+        if (!preg_match('/^[A-Z0-9\-]{6,20}$/', $confirmation)) {
+            return false;
+        }
+        
+        // Verificar que no sea solo guiones o solo números
+        if (preg_match('/^[\-\s]+$/', $confirmation)) {
+            return false;
+        }
+        
+        // Verificar que tenga contenido alfanumérico
+        if (preg_match('/^[0-9]+$/', $confirmation) && $length < 8) {
+            // Si es solo números, debe tener al menos 8 dígitos para ser válido
+            return $length >= 8;
+        }
+        
+        return true;
     }
     
     /**
