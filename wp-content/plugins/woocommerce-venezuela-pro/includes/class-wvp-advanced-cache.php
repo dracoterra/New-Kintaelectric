@@ -334,7 +334,29 @@ class WVP_Advanced_Cache {
         
         // Limpiar transientes expirados
         $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wvp_%' AND option_value < " . time());
-        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wvp_%' AND option_name NOT IN (SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wvp_%')");
+        
+        // Obtener lista de timeouts activos para excluirlos
+        $timeout_options = $wpdb->get_col("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wvp_%'");
+        
+        if (!empty($timeout_options)) {
+            // Extraer nombres de transients correspondientes (removiendo '_timeout')
+            $transient_names = array_map(function($name) {
+                return str_replace('_timeout_', '_', $name);
+            }, $timeout_options);
+            
+            // Crear placeholders para prepared statement
+            $placeholders = implode(',', array_fill(0, count($transient_names), '%s'));
+            
+            // Eliminar transients que no tienen timeouts activos
+            $query = $wpdb->prepare(
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wvp_%' AND option_name NOT IN ($placeholders)",
+                $transient_names
+            );
+            $wpdb->query($query);
+        } else {
+            // Si no hay timeouts activos, eliminar todos los transients
+            $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wvp_%'");
+        }
         
         // Limpiar caché de base de datos
         $this->cleanup_database_cache();
@@ -351,11 +373,45 @@ class WVP_Advanced_Cache {
         
         // Limpiar caché de WooCommerce
         $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wc_%' AND option_value < " . time());
-        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wc_%' AND option_name NOT IN (SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wc_%')");
+        
+        // Obtener timeouts activos de WooCommerce
+        $wc_timeout_options = $wpdb->get_col("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wc_%'");
+        
+        if (!empty($wc_timeout_options)) {
+            $wc_transient_names = array_map(function($name) {
+                return str_replace('_timeout_', '_', $name);
+            }, $wc_timeout_options);
+            
+            $placeholders = implode(',', array_fill(0, count($wc_transient_names), '%s'));
+            $query = $wpdb->prepare(
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wc_%' AND option_name NOT IN ($placeholders)",
+                $wc_transient_names
+            );
+            $wpdb->query($query);
+        } else {
+            $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wc_%'");
+        }
         
         // Limpiar caché de consultas
         $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wp_query_%' AND option_value < " . time());
-        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wp_query_%' AND option_name NOT IN (SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wp_query_%')");
+        
+        // Obtener timeouts activos de consultas
+        $query_timeout_options = $wpdb->get_col("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE '_transient_timeout_wp_query_%'");
+        
+        if (!empty($query_timeout_options)) {
+            $query_transient_names = array_map(function($name) {
+                return str_replace('_timeout_', '_', $name);
+            }, $query_timeout_options);
+            
+            $placeholders = implode(',', array_fill(0, count($query_transient_names), '%s'));
+            $query = $wpdb->prepare(
+                "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wp_query_%' AND option_name NOT IN ($placeholders)",
+                $query_transient_names
+            );
+            $wpdb->query($query);
+        } else {
+            $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_wp_query_%'");
+        }
     }
     
     /**

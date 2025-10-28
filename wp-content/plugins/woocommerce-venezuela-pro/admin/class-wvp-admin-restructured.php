@@ -3478,7 +3478,12 @@ class WVP_Admin_Restructured {
                                     <?php 
                                     if (class_exists('WVP_BCV_Integrator')) {
                                         $rate = WVP_BCV_Integrator::get_rate();
-                                        echo $rate ? number_format($rate, 2) . ' Bs.' : 'N/A';
+                                        // Validar que rate sea un número válido y no null
+                                        if (!empty($rate) && is_numeric($rate) && $rate > 0) {
+                                            echo number_format((float)$rate, 2) . ' Bs.';
+                                        } else {
+                                            echo 'N/A';
+                                        }
                                     } else {
                                         echo 'N/A';
                                     }
