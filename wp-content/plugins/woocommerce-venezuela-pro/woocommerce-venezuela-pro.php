@@ -71,8 +71,10 @@ class WooCommerce_Venezuela_Pro {
      * Constructor privado (Singleton)
      */
     private function __construct() {
-        // Hooks de activación y desactivación
+        // Hooks de activación
         register_activation_hook(__FILE__, array($this, 'activate_plugin'));
+        
+        // Hook de desactivación - SIN acciones automáticas que puedan causar problemas
         register_deactivation_hook(__FILE__, array($this, 'deactivate_plugin'));
         
         // Inicializar el plugin cuando WordPress esté listo
@@ -253,12 +255,8 @@ class WooCommerce_Venezuela_Pro {
         // Métodos de envío
         require_once WVP_PLUGIN_PATH . 'shipping/class-wvp-shipping-local-delivery.php';
         
-        // Pasarelas de pago
-        require_once WVP_PLUGIN_PATH . 'gateways/class-wvp-gateway-zelle.php';
+        // Pasarelas de pago - Solo Pago Móvil
         require_once WVP_PLUGIN_PATH . 'gateways/class-wvp-gateway-pago-movil-completo.php';
-        require_once WVP_PLUGIN_PATH . 'gateways/class-wvp-gateway-efectivo.php';
-        require_once WVP_PLUGIN_PATH . 'gateways/class-wvp-gateway-efectivo-bolivares.php';
-        require_once WVP_PLUGIN_PATH . 'gateways/class-wvp-gateway-cashea.php';
         
         // Notificaciones WhatsApp
         require_once WVP_PLUGIN_PATH . 'admin/class-wvp-whatsapp-notifications.php';
@@ -466,11 +464,8 @@ class WooCommerce_Venezuela_Pro {
      * @return array Pasarelas modificadas
      */
     public function add_payment_gateways($gateways) {
-        $gateways[] = 'WVP_Gateway_Zelle';
+        // Solo registrar Pago Móvil
         $gateways[] = 'WVP_Gateway_Pago_Movil';
-        $gateways[] = 'WVP_Gateway_Efectivo';
-        $gateways[] = 'WVP_Gateway_Efectivo_Bolivares';
-        $gateways[] = 'WVP_Gateway_Cashea';
         
         return $gateways;
     }
@@ -627,13 +622,30 @@ class WooCommerce_Venezuela_Pro {
     
     /**
      * Desactivar el plugin
+     * 
+     * Esta función solo ejecuta limpieza cuando el plugin se desactiva explícitamente.
+     * No se ejecuta cuando solo se están guardando settings de gateways individuales.
      */
     public function deactivate_plugin() {
-        // Limpiar caché de rewrite rules
-        flush_rewrite_rules();
+        // Verificar que estamos en una desactivación real del plugin
+        // No en un guardado de settings de gateway
+        $is_plugin_deactivation = false;
         
-        // Log de desactivación
-        error_log('WooCommerce Venezuela Pro: Plugin desactivado');
+        if (isset($_REQUEST['action'])) {
+            $action = sanitize_text_field($_REQUEST['action']);
+            $is_plugin_deactivation = ($action === 'deactivate');
+        }
+        
+        if (isset($_REQUEST['plugin'])) {
+            $plugin = sanitize_text_field($_REQUEST['plugin']);
+            $is_plugin_deactivation = $is_plugin_deactivation || (strpos($plugin, 'woocommerce-venezuela-pro') !== false);
+        }
+        
+        // Solo ejecutar limpieza si realmente estamos desactivando el plugin
+        if ($is_plugin_deactivation) {
+            // Limpiar caché de rewrite rules
+            flush_rewrite_rules();
+        }
     }
 }
 
