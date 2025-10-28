@@ -3524,18 +3524,6 @@ class WVP_Admin_Restructured {
                         
                         <div class="wvp-report-item">
                             <div class="wvp-report-info">
-                                <h4>📊 Reporte Fiscal</h4>
-                                <p>Análisis financiero detallado con conversiones de moneda y tasas.</p>
-                            </div>
-                            <div class="wvp-report-actions">
-                                <a href="<?php echo admin_url('admin.php?page=wvp-fiscal-reports'); ?>" class="button button-secondary">
-                                    Ver Reporte Fiscal
-                                </a>
-                            </div>
-                        </div>
-                        
-                        <div class="wvp-report-item">
-                            <div class="wvp-report-info">
                                 <h4>💹 Análisis de Tasas BCV</h4>
                                 <p>Histórico de tasas de cambio y análisis de variaciones.</p>
                             </div>

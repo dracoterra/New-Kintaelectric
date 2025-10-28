@@ -53,7 +53,6 @@ class WooCommerce_Venezuela_Pro {
     public $checkout;
     public $dual_breakdown;
     public $hybrid_invoicing;
-    public $fiscal_reports;
     public $electronic_invoice;
     public $seniat_reports;
     public $order_meta;
@@ -288,9 +287,6 @@ class WooCommerce_Venezuela_Pro {
         // Cargar optimizador de rendimiento
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-performance-optimizer.php';
         
-        // Cargar reportes fiscales
-        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-fiscal-reports.php';
-        
         // Cargar facturación híbrida
         require_once WVP_PLUGIN_PATH . 'frontend/class-wvp-hybrid-invoicing.php';
         
@@ -384,11 +380,6 @@ class WooCommerce_Venezuela_Pro {
             // Inicializar facturación híbrida si está disponible
             if (class_exists('WVP_Hybrid_Invoicing')) {
                 $this->hybrid_invoicing = new WVP_Hybrid_Invoicing();
-            }
-            
-            // Inicializar reportes fiscales
-            if (class_exists('WVP_Fiscal_Reports')) {
-                $this->fiscal_reports = new WVP_Fiscal_Reports();
             }
             
             // Inicializar facturación electrónica
