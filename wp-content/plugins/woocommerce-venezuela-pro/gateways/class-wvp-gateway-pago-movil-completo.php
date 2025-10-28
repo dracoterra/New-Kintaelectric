@@ -51,7 +51,9 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         add_action("admin_footer", array($this, "admin_custom_fields"));
         add_filter("woocommerce_settings_api_sanitized_fields_" . $this->id, array($this, "sanitize_accounts_field"));
         add_action('woocommerce_thankyou_' . $this->id, array($this, 'thankyou_page'), 10, 1);
-        add_action('wp', array($this, 'process_confirmation_form'));
+        add_action('wp_loaded', array($this, 'process_confirmation_form'));
+        add_action('woocommerce_thankyou', array($this, 'display_payment_info_simple'), 5, 1);
+        add_filter('the_content', array($this, 'inject_payment_info_on_thankyou_page'));
         
         // Enqueue media scripts
         add_action('admin_enqueue_scripts', array($this, 'enqueue_media_scripts'));
@@ -87,6 +89,9 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                 
                 // Actualizar la opción
                 update_option($option_key, $current_settings);
+                
+                // Invalidar cache de cuentas
+                delete_transient('wvp_accounts_' . $this->id);
             }
         }
     }
@@ -133,10 +138,24 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
     }
     
     private function load_accounts() {
+        // DEBUG: Log de inicio
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP Pago Móvil: load_accounts() iniciado');
+        }
+        
+        // LIMPIAR CACHE AL CARGAR
+        $cache_key = 'wvp_accounts_' . $this->id;
+        delete_transient($cache_key);
+        
         $this->accounts = array();
         
         // Intentar cargar desde la opción del gateway
         $accounts_data = $this->get_option("pago_movil_accounts", '');
+        
+        // DEBUG
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP Pago Móvil: accounts_data type: ' . gettype($accounts_data) . ', value: ' . (is_string($accounts_data) ? substr($accounts_data, 0, 100) : ''));
+        }
         
         // Si es string JSON, decodificar
         if (is_string($accounts_data) && !empty($accounts_data)) {
@@ -157,22 +176,98 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             }
         }
         
-        // Cargar cuentas
+        // DEBUG
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP Pago Móvil: accounts_data después de decode - type: ' . gettype($accounts_data) . ', is_array: ' . (is_array($accounts_data) ? 'yes' : 'no') . ', count: ' . (is_array($accounts_data) ? count($accounts_data) : 0));
+        }
+        
+        // Cargar y validar cuentas
         if (is_array($accounts_data)) {
             foreach ($accounts_data as $key => $account) {
-                if (is_array($account) && !empty($account['name']) && !empty($account['bank']) && !empty($account['phone']) && !empty($account['ci'])) {
+                if (!is_array($account)) {
+                    continue;
+                }
+                
+                // DEBUG
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('WVP Pago Móvil: Procesando cuenta ' . $key . ' - bank: ' . (isset($account['bank']) ? $account['bank'] : 'no definido'));
+                }
+                
+                // Aceptar cuenta si tiene al menos 'bank' definido
+                if (isset($account['bank'])) {
+                    // Crear un ID único basado en el índice del array (no usar 0)
+                    $account_id = is_numeric($key) ? ($key + 1) : $key;
+                    
                     $this->accounts[] = array(
-                        'id' => $key,
-                        'name' => sanitize_text_field($account['name']),
-                        'ci' => sanitize_text_field($account['ci']),
+                        'id' => $account_id,
+                        'name' => !empty($account['name']) ? sanitize_text_field($account['name']) : '',
+                        'ci' => !empty($account['ci']) ? sanitize_text_field($account['ci']) : '',
                         'bank' => sanitize_text_field($account['bank']),
                         'bank_name' => $this->get_bank_name($account['bank']),
-                        'phone' => sanitize_text_field($account['phone']),
+                        'phone' => !empty($account['phone']) ? $this->format_venezuelan_phone($account['phone']) : '',
                         'qr_image' => isset($account['qr_image']) ? esc_url($account['qr_image']) : ''
                     );
+                    
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log('WVP Pago Móvil: Cuenta agregada - ID: ' . $account_id . ', key: ' . $key . ', bank: ' . $account['bank']);
+                    }
                 }
             }
         }
+        
+        // DEBUG final
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP Pago Móvil: load_accounts() completado - Total cuentas cargadas: ' . count($this->accounts));
+        }
+        
+        // No guardar en cache - cargar siempre fresco
+    }
+    
+    /**
+     * Verificar si los datos de una cuenta son válidos
+     * 
+     * @param array $account Datos de la cuenta
+     * @return bool True si es válido
+     */
+    private function is_valid_account_data($account) {
+        if (!is_array($account)) {
+            return false;
+        }
+        
+        // Verificar campos obligatorios
+        if (empty($account['name']) || empty($account['bank']) || empty($account['phone']) || empty($account['ci'])) {
+            return false;
+        }
+        
+        // Validar formato de CI/RIF
+        if (!$this->validate_venezuelan_id($account['ci'])) {
+            return false;
+        }
+        
+        // Validar formato de teléfono
+        if (!$this->validate_venezuelan_phone($account['phone'])) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Formatear teléfono móvil venezolano
+     * 
+     * @param string $phone Teléfono a formatear
+     * @return string Teléfono formateado
+     */
+    private function format_venezuelan_phone($phone) {
+        // Limpiar caracteres no numéricos
+        $clean = preg_replace('/[^0-9]/', '', $phone);
+        
+        // Formatear como 04XXYYYYYYY
+        if (strlen($clean) >= 10) {
+            return $clean;
+        }
+        
+        return $phone;
     }
     
     private function get_banks_list() {
@@ -221,6 +316,180 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         return null;
     }
     
+    /**
+     * Validar formato de CI/RIF venezolano
+     * 
+     * @param string $ci Cédula/RIF a validar
+     * @return bool True si es válido
+     */
+    private function validate_venezuelan_id($ci) {
+        if (empty($ci)) {
+            return false;
+        }
+        
+        // Formato: V12345678, J-41234567-8, E-41234567-8, G-41234567-8, P-41234567-8
+        $pattern = '/^(V|J-|E-|G-|P-)(\d{1,9})(-)?(\d{1})?$/i';
+        return preg_match($pattern, trim($ci)) !== false;
+    }
+    
+    /**
+     * Validar formato de teléfono móvil venezolano
+     * 
+     * @param string $phone Teléfono a validar
+     * @return bool True si es válido
+     */
+    private function validate_venezuelan_phone($phone) {
+        if (empty($phone)) {
+            return false;
+        }
+        
+        // Limpiar caracteres no numéricos
+        $clean = preg_replace('/[^0-9]/', '', $phone);
+        
+        // Formato venezolano: 04XXYYYYYYY o 04XXYYYYYYYY (10-11 dígitos)
+        // Debe empezar con 04 o 042, 041, 042, 043, 044
+        return preg_match('/^0[1-4]\d{8,9}$/', $clean) !== false;
+    }
+    
+    /**
+     * Formatear CI/RIF venezolano
+     * 
+     * @param string $ci Cédula/RIF a formatear
+     * @return string CI/RIF formateado
+     */
+    private function format_venezuelan_id($ci) {
+        // Limpiar entrada
+        $ci = trim(str_replace('-', '', str_replace(' ', '', $ci)));
+        
+        // Detecta tipo y formatea
+        if (preg_match('/^(V|v)(\d+)$/', $ci, $matches)) {
+            return 'V' . $matches[2];
+        }
+        
+        if (preg_match('/^(J|E|G|P|j|e|g|p)(\d+)$/', $ci, $matches)) {
+            return strtoupper($matches[1]) . '-' . $matches[2];
+        }
+        
+        return $ci;
+    }
+    
+    /**
+     * Obtener tasa BCV con sistema de fallback
+     * 
+     * @return float|null Tasa de cambio
+     */
+    private function get_rate_with_fallback() {
+        // 1. Intentar obtener tasa actual de BCV
+        $rate = WVP_BCV_Integrator::get_rate();
+        
+        // 2. Si no hay tasa, intentar última tasa conocida
+        if ($rate === null || $rate <= 0) {
+            $rate = get_option('wvp_bcv_last_rate', null);
+        }
+        
+        // 3. Si todavía no hay, usar tasa de emergencia configurada
+        if ($rate === null || $rate <= 0) {
+            $rate = get_option('wvp_bcv_emergency_rate', null);
+        }
+        
+        // 4. Registrar si estamos usando fallback
+        if ($rate !== null && $rate > 0) {
+            $current_bcv_rate = WVP_BCV_Integrator::get_rate();
+            if ($current_bcv_rate === null) {
+                error_log('WVP Pago Móvil: Usando tasa de fallback: ' . $rate);
+            }
+        }
+        
+        return $rate;
+    }
+    
+    /**
+     * Verificar rate limiting para confirmaciones
+     * 
+     * @param int $order_id ID del pedido
+     * @return bool True si está dentro del límite
+     */
+    private function check_rate_limit($order_id) {
+        $transient_key = 'wvp_payment_confirmation_' . $order_id;
+        $attempts = get_transient($transient_key);
+        
+        if ($attempts === false) {
+            set_transient($transient_key, 1, 300); // 5 minutos
+            return true;
+        }
+        
+        if ($attempts >= 5) {
+            wc_add_notice(
+                __('Demasiados intentos de confirmación. Por favor espere 5 minutos.', 'wvp'),
+                'error'
+            );
+            return false;
+        }
+        
+        set_transient($transient_key, $attempts + 1, 300);
+        return true;
+    }
+    
+    /**
+     * Validar código de confirmación según banco
+     * 
+     * @param string $confirmation Código de confirmación
+     * @param string $bank_code Código del banco
+     * @return bool True si es válido
+     */
+    private function validate_confirmation_by_bank($confirmation, $bank_code) {
+        if (empty($confirmation)) {
+            return false;
+        }
+        
+        // Banco de Venezuela usa 10 dígitos
+        if ($bank_code === '0102' || $bank_code === '0146') {
+            return preg_match('/^\d{10}$/', $confirmation);
+        }
+        
+        // Banesco usa 8 caracteres alfanuméricos
+        if ($bank_code === '0134') {
+            return preg_match('/^[A-Z0-9]{8}$/i', $confirmation);
+        }
+        
+        // Mercantil usa 12 caracteres
+        if ($bank_code === '0105') {
+            return preg_match('/^[A-Z0-9]{12}$/i', $confirmation);
+        }
+        
+        // Por defecto, usar validación genérica
+        return $this->validate_confirmation_generic($confirmation);
+    }
+    
+    /**
+     * Validación genérica de código de confirmación
+     * 
+     * @param string $confirmation Código de confirmación
+     * @return bool True si es válido
+     */
+    private function validate_confirmation_generic($confirmation) {
+        if (empty($confirmation)) {
+            return false;
+        }
+        
+        $confirmation = trim($confirmation);
+        
+        // Pago Móvil usa códigos de 8-12 caracteres alfanuméricos
+        $pattern = '/^[A-Z0-9]{8,12}$/i';
+        
+        if (!preg_match($pattern, $confirmation)) {
+            return false;
+        }
+        
+        // No permitir códigos obviamente inválidos
+        $invalid_codes = array('00000000', '12345678', 'TEST1234', 'ABCDEFGH');
+        if (in_array(strtoupper($confirmation), $invalid_codes)) {
+            return false;
+        }
+        
+        return true;
+    }
+    
     public function get_title() {
         $title = parent::get_title();
         if (empty($title)) {
@@ -253,46 +522,73 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
     
     public function payment_fields() {
         
+        // DEBUG
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP Pago Móvil: payment_fields() llamado');
+            error_log('WVP Pago Móvil: accounts count: ' . (is_array($this->accounts) ? count($this->accounts) : 0));
+        }
+        
         // Descripción simple
         if ($this->description) {
             echo wpautop(wptexturize($this->description));
         }
         
-        // Mensaje si no hay cuentas
-        if (empty($this->accounts)) {
+        // DEBUG: Ver cuántas cuentas hay
+        $accounts_count = is_array($this->accounts) ? count($this->accounts) : 0;
+        
+        // DEBUG TEMPORAL - Ver qué hay en $this->accounts
+        if ($accounts_count === 0) {
             echo '<div style="border: 1px solid #f0ad4e; padding: 15px; margin: 15px 0; background: #fcf8e3; border-radius: 4px;">
-                <p>No hay cuentas de Pago Móvil configuradas. Contacte con el administrador.</p>
-            </div>';
+                <p><strong>⚠️ No hay cuentas de Pago Móvil configuradas.</strong></p>
+                <p>Por favor, agrega al menos una cuenta bancaria en la configuración de Pago Móvil.</p>
+                <p style="font-size: 12px; color: #666;">Debug: Se encontraron ' . $accounts_count . ' cuentas. Tipo de dato: ' . gettype($this->accounts) . '</p>';
+            
+            // Intentar cargar cuentas directamente
+            $accounts_data = $this->get_option("pago_movil_accounts", '');
+            if (!empty($accounts_data)) {
+                if (is_string($accounts_data)) {
+                    $decoded = json_decode($accounts_data, true);
+                    echo '<p style="font-size: 12px; color: #666;">Cuentas en option (string): ' . (is_array($decoded) ? count($decoded) : 0) . '</p>';
+                } else {
+                    echo '<p style="font-size: 12px; color: #666;">Cuentas en option (tipo): ' . gettype($accounts_data) . '</p>';
+                }
+            } else {
+                echo '<p style="font-size: 12px; color: #666;">No hay cuentas en la opción pago_movil_accounts.</p>';
+            }
+            
+            echo '</div>';
             return;
         }
         
-        // Obtener total en bolívares
-        $rate = WVP_BCV_Integrator::get_rate();
+        // Obtener total en bolívares con sistema de fallback mejorado
+        $rate = $this->get_rate_with_fallback();
         $cart_total = WC()->cart->get_total("raw");
         $ves_total = null;
         
         if ($rate !== null && $rate > 0) {
-            $ves_total = WVP_BCV_Integrator::convert_to_ves($cart_total, $rate);
-        } else {
-            $fallback_rate = get_option('wvp_bcv_rate', null);
-            if ($fallback_rate !== null && $fallback_rate > 0) {
-                $rate = $fallback_rate;
                 $ves_total = WVP_BCV_Integrator::convert_to_ves($cart_total, $rate);
-            }
         }
         
         if ($rate !== null && $ves_total !== null) {
             echo '<div class="wvp-pago-movil-total" style="background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 15px 0;">
                 <p><strong>' . __("Total a pagar:", "wvp") . '</strong> ' . WVP_BCV_Integrator::format_ves_price($ves_total) . '</p>
-                <p><strong>' . __("Tasa BCV:", "wvp") . '</strong> ' . number_format($rate, 2, ",", ".") . ' Bs./USD</p>
-            </div>';
+                <p><strong>' . __("Tasa BCV:", "wvp") . '</strong> ' . number_format($rate, 2, ",", ".") . ' Bs./USD</p>';
+            
+            // Advertir si estamos usando tasa de fallback
+            $current_bcv_rate = WVP_BCV_Integrator::get_rate();
+            if ($current_bcv_rate === null) {
+                echo '<p style="color: #856404; font-size: 12px; margin-top: 5px;">⚠️ ' . __("Usando tasa de respaldo", "wvp") . '</p>';
+            }
+            
+            echo '</div>';
         } else {
             echo '<div class="wvp-pago-movil-error" style="border: 1px solid #f0ad4e; padding: 10px; margin: 10px 0; background: #fcf8e3; border-radius: 4px;">
                 <p><strong>' . __("Importante:", "wvp") . '</strong> ' . wc_price($cart_total) . ' USD</p>
+                <p style="font-size: 12px; margin-top: 5px;">⚠️ ' . __("Tasa BCV no disponible temporalmente", "wvp") . '</p>
             </div>';
         }
         
-        // Seleccionar cuenta con radio buttons
+        // Seleccionar cuenta con radio buttons (SOLO LISTA DE BANCOS)
         echo '<div class="wvp-pago-movil-accounts" style="margin: 20px 0;">
             <label style="display: block; margin-bottom: 10px; font-weight: bold; font-size: 16px;">' . __("Selecciona tu banco:", "wvp") . '</label>';
         
@@ -309,67 +605,15 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         }
         
         echo '</div>';
-        
-        // Contenedor para mostrar datos bancarios seleccionados
-        echo '<div id="wvp_pago_movil_account_details" style="display: none; border: 2px solid #5cb85c; padding: 20px; margin: 20px 0; background: #f9f9f9; border-radius: 5px;">
-            <h4 style="margin-top: 0; color: #5cb85c;">' . __("Datos para Pago Móvil:", "wvp") . '</h4>
-            <p id="wvp_account_ci"><strong>' . __("Cédula/RIF:", "wvp") . '</strong> <span class="ci-info"></span></p>
-            <p id="wvp_account_name"><strong>' . __("Cuenta:", "wvp") . '</strong> <span class="account-name-info"></span></p>
-            <p id="wvp_bank_name"><strong>' . __("Banco:", "wvp") . '</strong> <span class="bank-info"></span></p>
-            <p id="wvp_account_phone"><strong>' . __("Teléfono:", "wvp") . '</strong> <span class="phone-info"></span></p>
-        </div>';
-        
-        // Campo de confirmación
-        echo '<fieldset id="wc-' . esc_attr($this->id) . '-cc-form" class="wc-credit-card-form wc-payment-form" style="background:transparent; display: none;">';
-        
-        do_action("woocommerce_credit_card_form_start", $this->id);
-        
-        echo '<div class="form-row form-row-wide">
-            <label>' . __("Número de Confirmación", "wvp") . ' <span class="required">*</span></label>
-            <input id="' . esc_attr($this->id) . '-confirmation" name="' . esc_attr($this->id) . '-confirmation" type="text" autocomplete="off" placeholder="' . __("Ejemplo: ABC123456", "wvp") . '" maxlength="20" />
-            <small style="display: block; margin-top: 5px; color: #666;">' . __("Ingrese el número de confirmación del pago móvil", "wvp") . '</small>
-        </div>';
-        
         echo '<input type="hidden" id="wvp_pago_movil_selected_account_id" name="wvp_pago_movil_selected_account_id" value="">';
         
-        do_action("woocommerce_credit_card_form_end", $this->id);
-        
-        echo '<div class="clear"></div></fieldset>';
-        
-        // JavaScript
-        $accounts_json = array();
-        foreach ($this->accounts as $account) {
-            $accounts_json[$account['id']] = array(
-                'ci' => $account['ci'],
-                'name' => $account['name'],
-                'bank_name' => $account['bank_name'],
-                'phone' => $account['phone'],
-                'qr_image' => $account['qr_image']
-            );
-        }
-        
+        // JavaScript simplificado - solo para guardar el banco seleccionado
         echo '<script type="text/javascript">
         jQuery(document).ready(function($) {
-            var accounts = ' . json_encode($accounts_json) . ';
-            var gatewayId = "' . esc_js($this->id) . '";
-            
+            // Guardar banco seleccionado
             $(".wvp-account-option").on("change", "input[type=radio]", function() {
                 var accountId = $(this).val();
-                var account = accounts[accountId];
-                
-                if (account) {
-                    $(".ci-info").text(account.ci);
-                    $(".account-name-info").text(account.name);
-                    $(".bank-info").text(account.bank_name);
-                    $(".phone-info").text(account.phone);
-                    
-                    $("#wvp_pago_movil_account_details").show();
                     $("#wvp_pago_movil_selected_account_id").val(accountId);
-                    
-                    // Hacer el campo de confirmación obligatorio
-                    $("#" + gatewayId + "-confirmation").prop("required", true);
-                    $("#wc-" + gatewayId + "-cc-form").show();
-                }
             });
             
             // Destacar opción seleccionada
@@ -382,30 +626,8 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
     }
     
     public function validate_fields() {
-        $confirmation = WVP_Security_Validator::sanitize_input($_POST[$this->id . '-confirmation'] ?? '');
-        
-        if (empty($confirmation)) {
-            wc_add_notice(__("Debe ingresar el número de confirmación del pago móvil.", "wvp"), "error");
-            return false;
-        }
-        
-        if (!WVP_Security_Validator::validate_confirmation($confirmation)) {
-            wc_add_notice(__("Número de confirmación inválido.", "wvp"), "error");
-            return false;
-        }
-        
-        $selected_account_id = $_POST['wvp_pago_movil_selected_account_id'] ?? '';
-        if (empty($selected_account_id)) {
-            wc_add_notice(__("Debe seleccionar un banco.", "wvp"), "error");
-            return false;
-        }
-        
-        $selected_account = $this->get_account($selected_account_id);
-        if (!$selected_account) {
-            wc_add_notice(__("Banco seleccionado no es válido.", "wvp"), "error");
-            return false;
-        }
-        
+        // En Blocks checkout, validate_fields() puede no ejecutarse
+        // La validación se hará en process_payment()
         return true;
     }
     
@@ -413,16 +635,54 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         try {
             $order = wc_get_order($order_id);
             
-            $confirmation = WVP_Security_Validator::sanitize_input($_POST[$this->id . '-confirmation'] ?? '');
-            $selected_account_id = $_POST['wvp_pago_movil_selected_account_id'] ?? '';
+            // Obtener banco seleccionado - intentar desde cualquier fuente
+            $selected_account_id = '';
+            
+            // DEBUG
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP process_payment: $_POST keys: ' . print_r(array_keys($_POST), true));
+            }
+            
+            // Para Blocks checkout
+            if (isset($_POST['wvp_pago_movil_selected_account_id_blocks']) && !empty($_POST['wvp_pago_movil_selected_account_id_blocks'])) {
+                $selected_account_id = $_POST['wvp_pago_movil_selected_account_id_blocks'];
+            }
+            
+            // Para checkout clásico
+            if (empty($selected_account_id) && isset($_POST['wvp_pago_movil_selected_account_id']) && !empty($_POST['wvp_pago_movil_selected_account_id'])) {
+                $selected_account_id = $_POST['wvp_pago_movil_selected_account_id'];
+            }
+            
+            // Si no hay banco seleccionado, usar el primero por defecto (temporal para debugging)
+            if (empty($selected_account_id) && !empty($this->accounts)) {
+                // Usar el primer elemento del array
+                $first_account = reset($this->accounts);
+                $selected_account_id = $first_account['id'];
+                
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('WVP process_payment: Usando primera cuenta por defecto - ID: ' . $selected_account_id);
+                    error_log('WVP process_payment: Datos de la cuenta: ' . print_r($first_account, true));
+                }
+            }
+            
+            if (empty($selected_account_id)) {
+                throw new Exception("Banco seleccionado no válido");
+            }
+            
             $selected_account = $this->get_account($selected_account_id);
             
             if (!$selected_account) {
-                throw new Exception("Cuenta seleccionada no válida");
+                throw new Exception("Banco seleccionado no válido");
             }
             
-            $order->update_meta_data("_payment_confirmation", $confirmation);
-            $order->update_meta_data("_payment_method_title", $this->title);
+            // Guardar datos del banco en el pedido
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP process_payment: Guardando datos del banco seleccionado');
+                error_log('WVP process_payment: selected_account = ' . print_r($selected_account, true));
+            }
+            
+            // No usar _payment_method_title ya que es un campo interno de WooCommerce
+            // $order->update_meta_data("_payment_method_title", $this->title);
             $order->update_meta_data("_payment_type", "pago_movil");
             $order->update_meta_data("_selected_account_id", $selected_account_id);
             $order->update_meta_data("_selected_account_name", $selected_account['name']);
@@ -435,30 +695,70 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                 $order->update_meta_data("_selected_account_qr_image", $selected_account['qr_image']);
             }
             
-            $rate = WVP_BCV_Integrator::get_rate();
-            if ($rate !== null) {
+            // Guardar tasa BCV
+            $rate = $this->get_rate_with_fallback();
+            if ($rate !== null && $rate > 0) {
                 $order->update_meta_data("_bcv_rate_at_purchase", $rate);
             }
             
-            $order->update_status("on-hold", __("Pago pendiente de verificación.", "wvp"));
+            // Crear pedido en estado on-hold (sin código de confirmación todavía)
+            $order->update_status("on-hold", __("Esperando confirmación de pago móvil.", "wvp"));
+            
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP process_payment: Guardando pedido...');
+            }
+            
             $order->save();
             
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP process_payment: Pedido guardado exitosamente');
+            }
+            
+            // Vaciar carrito
             WC()->cart->empty_cart();
+            
+            // Redirigir a página de confirmación de pago
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP process_payment: Redirigiendo a página de confirmación');
+            }
             
             return array(
                 "result" => "success",
-                "redirect" => wc_get_endpoint_url('order-received', $order_id, wc_get_checkout_url()) . '?payment_method=' . $this->id
+                "redirect" => wc_get_endpoint_url('order-received', $order_id, wc_get_checkout_url()) . '?payment_method=' . $this->id . '&confirm_payment=1'
             );
             
         } catch (Exception $e) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP process_payment: ERROR - ' . $e->getMessage());
+                error_log('WVP process_payment: Stack trace - ' . $e->getTraceAsString());
+            }
+            
             wc_add_notice(__("Error al procesar el pago.", "wvp"), "error");
             return array("result" => "fail", "redirect" => "");
         }
     }
     
     public function thankyou_page($order_id) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP thankyou_page: Llamado con order_id: ' . $order_id);
+        }
+        
         $order = wc_get_order($order_id);
-        if (!$order || $order->get_payment_method() !== $this->id) return;
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP thankyou_page: Order encontrado: ' . ($order ? 'yes' : 'no'));
+            if ($order) {
+                error_log('WVP thankyou_page: Payment method: ' . $order->get_payment_method());
+                error_log('WVP thankyou_page: Gateway ID: ' . $this->id);
+            }
+        }
+        
+        if (!$order || $order->get_payment_method() !== $this->id) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP thankyou_page: No se muestra contenido - order o payment method no coincide');
+            }
+            return;
+        }
         
         $account_name = $order->get_meta('_selected_account_name');
         $account_ci = $order->get_meta('_selected_account_ci');
@@ -468,7 +768,18 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         $confirmation_code = $order->get_meta('_payment_confirmation');
         $bcv_rate = $order->get_meta('_bcv_rate_at_purchase');
         
-        if (!$account_bank || !$account_phone) return;
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP thankyou_page: account_bank = ' . $account_bank);
+            error_log('WVP thankyou_page: account_phone = ' . $account_phone);
+            error_log('WVP thankyou_page: account_name = ' . $account_name);
+        }
+        
+        if (!$account_bank || !$account_phone) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP thankyou_page: No se muestra contenido - account_bank o account_phone vacíos');
+            }
+            return;
+        }
         
         $total_usd = $order->get_total();
         $total_ves = null;
@@ -477,45 +788,314 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             $total_ves = $total_usd * floatval($bcv_rate);
         }
         
-        echo '<div class="wvp-pago-movil-thankyou" style="background: #fff; border: 2px solid #5cb85c; padding: 30px; margin: 30px 0; border-radius: 10px;">';
-        echo '<h2 style="color: #5cb85c; border-bottom: 2px solid #5cb85c; padding-bottom: 15px;">📱 ' . __("Realiza el Pago Móvil", "wvp") . '</h2>';
+        // Verificar si ya tiene código de confirmación
+        $has_confirmation = !empty($confirmation_code);
         
-        echo '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin: 30px 0;">';
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP thankyou_page: Renderizando contenido HTML');
+        }
         
-        // Datos bancarios
-        echo '<div style="background: #f9f9f9; padding: 25px; border-radius: 8px;">
-            <h3 style="color: #333; margin-top: 0;">🏦 ' . __("Datos para Pago Móvil", "wvp") . '</h3>
-            <div style="background: #fff; border: 2px solid #5cb85c; padding: 20px; border-radius: 5px;">
-                <p style="font-size: 16px; margin: 10px 0;"><strong>' . __("Cédula/RIF:", "wvp") . '</strong><br><span style="color: #5cb85c;">' . esc_html($account_ci) . '</span></p>
-                <p style="font-size: 16px; margin: 10px 0;"><strong>' . __("Cuenta:", "wvp") . '</strong><br><span style="color: #5cb85c;">' . esc_html($account_name) . '</span></p>
-                <p style="font-size: 16px; margin: 10px 0;"><strong>' . __("Banco:", "wvp") . '</strong><br><span style="color: #5cb85c;">' . esc_html($account_bank) . '</span></p>
-                <p style="font-size: 16px; margin: 10px 0;"><strong>' . __("Teléfono:", "wvp") . '</strong><br><span style="color: #5cb85c; font-family: monospace; font-size: 18px;">' . esc_html($account_phone) . '</span></p>
+        ?>
+        <style>
+            .wvp-payment-container {
+                max-width: 1200px;
+                margin: 40px auto;
+                padding: 20px;
+            }
+            .wvp-payment-header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 40px;
+                border-radius: 10px;
+                margin-bottom: 30px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            .wvp-payment-header h2 {
+                color: white;
+                margin: 0 0 10px 0;
+                font-size: 32px;
+            }
+            .wvp-payment-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+                margin-bottom: 30px;
+            }
+            @media (max-width: 768px) {
+                .wvp-payment-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            .wvp-payment-card {
+                background: #fff;
+                border-radius: 10px;
+                padding: 30px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                border: 2px solid #e0e0e0;
+            }
+            .wvp-payment-card h3 {
+                color: #333;
+                margin-top: 0;
+                border-bottom: 2px solid #667eea;
+                padding-bottom: 15px;
+            }
+            .wvp-info-box {
+                background: #f8f9fa;
+                border: 2px solid #667eea;
+                padding: 20px;
+                border-radius: 8px;
+                margin-top: 20px;
+            }
+            .wvp-info-box p {
+                margin: 10px 0;
+                font-size: 16px;
+            }
+            .wvp-info-box strong {
+                color: #667eea;
+                display: block;
+                margin-bottom: 5px;
+            }
+            .wvp-total-box {
+                background: #fff3cd;
+                border: 2px solid #ffc107;
+                padding: 30px;
+                border-radius: 8px;
+                text-align: center;
+            }
+            .wvp-total-box .amount {
+                font-size: 36px;
+                font-weight: bold;
+                color: #856404;
+                margin: 10px 0;
+            }
+            .wvp-qr-container {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 10px;
+                text-align: center;
+                min-height: 300px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .wvp-qr-container img {
+                max-width: 300px;
+                max-height: 300px;
+                border: 3px solid #667eea;
+                padding: 10px;
+                background: white;
+                border-radius: 10px;
+            }
+            .wvp-form-section {
+                background: #f8f9fa;
+                padding: 30px;
+                border-radius: 10px;
+                margin-top: 30px;
+            }
+            .wvp-form-group {
+                margin-bottom: 20px;
+            }
+            .wvp-form-group label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: bold;
+                color: #333;
+            }
+            .wvp-form-group input,
+            .wvp-form-group select {
+                width: 100%;
+                padding: 12px;
+                border: 2px solid #ddd;
+                border-radius: 5px;
+                font-size: 16px;
+            }
+            .wvp-form-group input:focus,
+            .wvp-form-group select:focus {
+                border-color: #667eea;
+                outline: none;
+            }
+            .wvp-btn-primary {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 15px 40px;
+                border: none;
+                border-radius: 5px;
+                font-size: 18px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            .wvp-btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            }
+            .wvp-btn-secondary {
+                background: #6c757d;
+                color: white;
+                padding: 15px 40px;
+                border: none;
+                border-radius: 5px;
+                font-size: 18px;
+                cursor: pointer;
+            }
+            .wvp-instructions {
+                background: #e7f3ff;
+                border-left: 4px solid #2196F3;
+                padding: 20px;
+                margin: 20px 0;
+                border-radius: 5px;
+            }
+            .wvp-alert {
+                background: #fff3cd;
+                border: 1px solid #ffc107;
+                padding: 15px;
+                border-radius: 5px;
+                margin: 20px 0;
+            }
+            .wvp-success-box {
+                background: #d4edda;
+                border: 2px solid #28a745;
+                padding: 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+        </style>
+        
+        <div class="wvp-payment-container">
+            <div class="wvp-payment-header">
+                <h2>📱 <?php _e('Realiza tu Pago Móvil', 'wvp'); ?></h2>
+                <p style="margin: 0; font-size: 16px;"><?php _e('Orden #', 'wvp'); ?><?php echo esc_html($order->get_order_number()); ?></p>
             </div>
-        </div>';
-        
-        // QR y Monto
-        echo '<div style="background: #f9f9f9; padding: 25px; border-radius: 8px;">
-            <h3 style="color: #333; margin-top: 0;">💰 ' . __("Monto a Pagar", "wvp") . '</h3>';
-        
-        if ($bcv_rate && $total_ves) {
-            echo '<div style="background: #fff; border: 2px solid #f0ad4e; padding: 20px; border-radius: 5px; text-align: center; margin-bottom: 20px;">
-                <p style="font-size: 24px; margin: 10px 0; color: #856404;">' . number_format($total_ves, 2, ',', '.') . ' Bs.</p>
-                <p style="font-size: 14px; color: #666;">' . wc_price($total_usd) . '</p>
-            </div>';
-        }
-        
-        echo '<div style="background: #fff; padding: 20px; border-radius: 5px; text-align: center;">
-            <p style="margin-bottom: 10px; font-weight: bold;">📱 ' . __("Escanea para pagar:", "wvp") . '</p>
-            <div id="wvp-qr-code" style="min-height: 200px; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 5px;">';
-        
-        if (!empty($account_qr_image)) {
-            echo '<img src="' . esc_url($account_qr_image) . '" alt="QR Code" style="max-width: 250px; max-height: 250px; border: 2px solid #5cb85c; padding: 10px; background: #fff; border-radius: 10px;">';
-        } else {
-            echo '<p style="color: #999;">' . __("QR no disponible", "wvp") . '</p>';
-        }
-        
-        echo '</div></div></div></div>';
-        echo '</div>';
+            
+            <?php if ($has_confirmation): ?>
+                <!-- Ya tiene código de confirmación - mostrar éxito -->
+                <div class="wvp-success-box">
+                    <h3 style="color: #28a745; margin-top: 0;">✅ <?php _e('Pago Confirmado', 'wvp'); ?></h3>
+                    <p><strong><?php _e('Código de Confirmación:', 'wvp'); ?></strong> <?php echo esc_html($confirmation_code); ?></p>
+                    <p><?php _e('Tu pago ha sido recibido y está pendiente de verificación.', 'wvp'); ?></p>
+                </div>
+            <?php else: ?>
+                <!-- Formulario de confirmación -->
+                <div class="wvp-payment-grid">
+                    <!-- Datos bancarios -->
+                    <div class="wvp-payment-card">
+                        <h3>🏦 <?php _e('Datos para Pago Móvil', 'wvp'); ?></h3>
+                        
+                        <div class="wvp-info-box">
+                            <p>
+                                <strong><?php _e('Documento de Identificación:', 'wvp'); ?></strong>
+                                <span style="color: #667eea; font-size: 18px; font-weight: bold;"><?php echo esc_html($account_ci); ?></span>
+                                <?php if (strpos($account_ci, 'J') === 0): ?>
+                                    <span style="color: #666; font-size: 14px;">(RIF Jurídico)</span>
+                                <?php endif; ?>
+                            </p>
+                            <p>
+                                <strong><?php _e('Cuenta:', 'wvp'); ?></strong>
+                                <span style="color: #667eea; font-size: 18px;"><?php echo esc_html($account_name); ?></span>
+                            </p>
+                            <p>
+                                <strong><?php _e('Banco:', 'wvp'); ?></strong>
+                                <span style="color: #667eea; font-size: 18px;"><?php echo esc_html($account_bank); ?></span>
+                            </p>
+                            <p>
+                                <strong><?php _e('Teléfono:', 'wvp'); ?></strong>
+                                <span style="color: #667eea; font-size: 22px; font-family: monospace; font-weight: bold;"><?php echo esc_html($account_phone); ?></span>
+                            </p>
+                        </div>
+                        
+                        <?php if ($bcv_rate && $total_ves): ?>
+                            <div class="wvp-total-box">
+                                <p style="margin: 0;"><strong><?php _e('Monto a Pagar:', 'wvp'); ?></strong></p>
+                                <div class="amount"><?php echo number_format($total_ves, 2, ',', '.'); ?> Bs.</div>
+                                <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;"><?php echo wc_price($total_usd); ?></p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <!-- QR Code y Monto -->
+                    <div class="wvp-payment-card">
+                        <h3>📱 <?php _e('Escanea para Pagar', 'wvp'); ?></h3>
+                        
+                        <div class="wvp-qr-container">
+                            <?php if (!empty($account_qr_image)): ?>
+                                <img src="<?php echo esc_url($account_qr_image); ?>" alt="QR Code" />
+                            <?php else: ?>
+                                <p style="color: #999;"><?php _e('QR no disponible', 'wvp'); ?></p>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div class="wvp-instructions">
+                            <h4 style="margin-top: 0; color: #2196F3;">📝 <?php _e('Instrucciones:', 'wvp'); ?></h4>
+                            <ol style="margin: 10px 0; padding-left: 20px;">
+                                <li><?php _e('Abre la app de tu banco', 'wvp'); ?></li>
+                                <li><?php _e('Selecciona "Pago Móvil" o "Pago de Servicios"', 'wvp'); ?></li>
+                                <li><?php _e('Escanea el código QR o ingresa los datos manualmente', 'wvp'); ?></li>
+                                <li><?php _e('Confirma y guarda el número de referencia', 'wvp'); ?></li>
+                                <li><?php _e('Completa el formulario abajo', 'wvp'); ?></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Formulario de Confirmación -->
+                <div class="wvp-form-section">
+                    <h3 style="margin-top: 0;">✅ <?php _e('Completa tu Pago', 'wvp'); ?></h3>
+                    <div class="wvp-alert">
+                        <p style="margin: 0;"><strong>⚠️ <?php _e('Importante:', 'wvp'); ?></strong> <?php _e('Ingresa el código de referencia que recibiste después de realizar el pago móvil.', 'wvp'); ?></p>
+                    </div>
+                    
+                    <form method="post" action="" id="wvp-confirm-payment-form">
+                        <?php wp_nonce_field('wvp_confirm_payment', 'wvp_payment_nonce'); ?>
+                        <input type="hidden" name="action" value="wvp_confirm_payment">
+                        <input type="hidden" name="order_id" value="<?php echo esc_attr($order_id); ?>">
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="wvp-form-group">
+                                <label><?php _e('Banco Emisor *', 'wvp'); ?></label>
+                                <select name="wvp_payment_from_bank" required>
+                                    <option value=""><?php _e('Selecciona tu banco', 'wvp'); ?></option>
+                                    <?php foreach ($this->get_banks_list() as $code => $name): ?>
+                                        <option value="<?php echo esc_attr($code); ?>"><?php echo esc_html($name); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            
+                            <div class="wvp-form-group">
+                                <label><?php _e('Teléfono Emisor *', 'wvp'); ?></label>
+                                <div style="display: flex;">
+                                    <div style="padding: 12px; background: #f8f9fa; border: 2px solid #ddd; border-right: none; border-radius: 5px 0 0 5px; display: flex; align-items: center;">
+                                        <span style="margin-right: 5px;">🇻🇪 +58</span>
+                                    </div>
+                                    <input type="text" name="wvp_payment_from_phone" placeholder="04141234567" maxlength="11" style="border-radius: 0 5px 5px 0;" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="wvp-form-group">
+                                <label><?php _e('Fecha del Pago *', 'wvp'); ?></label>
+                                <input type="date" name="wvp_payment_date" value="<?php echo date('Y-m-d'); ?>" required>
+                            </div>
+                            
+                            <div class="wvp-form-group">
+                                <label><?php _e('Número de Referencia (Últimos 6 dígitos) *', 'wvp'); ?></label>
+                                <input type="text" name="wvp_payment_reference" placeholder="123456" maxlength="12" required>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 15px; margin-top: 30px;">
+                            <button type="submit" class="wvp-btn-primary">
+                                ✅ <?php _e('Completar Orden', 'wvp'); ?>
+                            </button>
+                            <a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" class="wvp-btn-secondary" style="text-decoration: none; display: inline-block;">
+                                <?php _e('Cancelar', 'wvp'); ?>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            <?php endif; ?>
+        </div>
+        <?php
     }
     
     public function process_confirmation_form() {
@@ -523,40 +1103,89 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             return;
         }
         
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP process_confirmation_form: POST recibido');
+        }
+        
         if (!wp_verify_nonce($_POST['wvp_payment_nonce'], 'wvp_confirm_payment')) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP process_confirmation_form: Error de nonce');
+            }
             wc_add_notice(__('Error de seguridad.', 'wvp'), 'error');
-            return;
+            wp_safe_redirect(wc_get_endpoint_url('order-received', absint($_POST['order_id']), wc_get_checkout_url()));
+            exit;
         }
         
         $order_id = intval($_POST['order_id']);
         $order = wc_get_order($order_id);
         
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP process_confirmation_form: Order ID: ' . $order_id);
+            error_log('WVP process_confirmation_form: Order encontrado: ' . ($order ? 'yes' : 'no'));
+        }
+        
         if (!$order) {
             wc_add_notice(__('Pedido no encontrado.', 'wvp'), 'error');
-            return;
+            wp_safe_redirect(wc_get_checkout_url());
+            exit;
         }
         
-        $payment_from_bank = sanitize_text_field($_POST['wvp_payment_from_bank']);
-        $payment_from_phone = sanitize_text_field($_POST['wvp_payment_from_phone']);
-        $payment_date = sanitize_text_field($_POST['wvp_payment_date']);
-        $payment_reference = sanitize_text_field($_POST['wvp_payment_reference']);
+        $payment_from_bank = sanitize_text_field($_POST['wvp_payment_from_bank'] ?? '');
+        $payment_from_phone = sanitize_text_field($_POST['wvp_payment_from_phone'] ?? '');
+        $payment_date = sanitize_text_field($_POST['wvp_payment_date'] ?? '');
+        $payment_reference = sanitize_text_field($_POST['wvp_payment_reference'] ?? '');
         
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP process_confirmation_form: Datos - banco: ' . $payment_from_bank . ', tel: ' . $payment_from_phone . ', fecha: ' . $payment_date . ', ref: ' . $payment_reference);
+        }
+        
+        // Validar campos requeridos
         if (empty($payment_from_bank) || empty($payment_from_phone) || empty($payment_date) || empty($payment_reference)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP process_confirmation_form: Campos requeridos faltantes');
+            }
             wc_add_notice(__('Todos los campos son requeridos.', 'wvp'), 'error');
-            return;
+            wp_safe_redirect(wc_get_endpoint_url('order-received', $order_id, wc_get_checkout_url()));
+            exit;
         }
         
+        // Validar formato de referencia (menos estricto)
+        if (strlen($payment_reference) < 6) {
+            wc_add_notice(__('El número de referencia debe tener al menos 6 dígitos.', 'wvp'), 'error');
+            wp_safe_redirect(wc_get_endpoint_url('order-received', $order_id, wc_get_checkout_url()));
+            exit;
+        }
+        
+        // Guardar datos de confirmación
+        $order->update_meta_data('_payment_confirmation', $payment_reference);
         $order->update_meta_data('_payment_from_bank', $payment_from_bank);
         $order->update_meta_data('_payment_from_bank_name', $this->get_bank_name($payment_from_bank));
         $order->update_meta_data('_payment_from_phone', $payment_from_phone);
         $order->update_meta_data('_payment_date', $payment_date);
         $order->update_meta_data('_payment_reference', $payment_reference);
         
-        $order->update_status('on-hold', __('Cliente confirmó el pago móvil.', 'wvp'));
+        // Actualizar estado del pedido
+        $order->update_status('on-hold', __('Cliente confirmó el pago móvil - pendiente de verificación.', 'wvp'));
+        
+        // Agregar nota al pedido
+        $order->add_order_note(sprintf(
+            __('Cliente confirmó pago móvil. Referencia: %s | Banco: %s | Teléfono: %s | Fecha: %s', 'wvp'),
+            $payment_reference,
+            $this->get_bank_name($payment_from_bank),
+            $payment_from_phone,
+            $payment_date
+        ), false, true);
+        
         $order->save();
         
-        wc_add_notice(__('¡Confirmación enviada!', 'wvp'), 'success');
-        wp_safe_redirect(wc_get_page_permalink('myaccount'));
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP process_confirmation_form: Confirmación guardada exitosamente');
+        }
+        
+        wc_add_notice(__('¡Confirmación enviada exitosamente! Tu pedido está siendo procesado.', 'wvp'), 'success');
+        
+        // Redirigir de vuelta a la página de agradecimiento
+        wp_safe_redirect(wc_get_endpoint_url('order-received', $order_id, wc_get_checkout_url()));
         exit;
     }
     
@@ -838,5 +1467,329 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         <input type="hidden" id="pago_movil_accounts" name="pago_movil_accounts" value="<?php echo esc_attr(json_encode($accounts)); ?>">
         <?php
     }
+    
+    public function display_payment_info($order) {
+        if (!$order || $order->get_payment_method() !== $this->id) {
+            return;
+        }
+        
+        $account_name = $order->get_meta('_selected_account_name');
+        $account_ci = $order->get_meta('_selected_account_ci');
+        $account_bank = $order->get_meta('_selected_account_bank_name');
+        $account_phone = $order->get_meta('_selected_account_phone');
+        $account_qr_image = $order->get_meta('_selected_account_qr_image');
+        $confirmation_code = $order->get_meta('_payment_confirmation');
+        $bcv_rate = $order->get_meta('_bcv_rate_at_purchase');
+        
+        if (!$account_bank || !$account_phone) {
+            return;
+        }
+        
+        $total_usd = $order->get_total();
+        $total_ves = null;
+        
+        if ($bcv_rate) {
+            $total_ves = $total_usd * floatval($bcv_rate);
+        }
+        
+        // Verificar si ya tiene código de confirmación
+        $has_confirmation = !empty($confirmation_code);
+        
+        ?>
+        <style>
+            .wvp-payment-container { max-width: 1200px; margin: 40px auto; padding: 20px; }
+            .wvp-payment-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .wvp-payment-header h2 { color: white; margin: 0 0 10px 0; font-size: 32px; }
+            .wvp-payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+            @media (max-width: 768px) { .wvp-payment-grid { grid-template-columns: 1fr; } }
+            .wvp-payment-card { background: #fff; border-radius: 10px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 2px solid #e0e0e0; }
+            .wvp-payment-card h3 { color: #333; margin-top: 0; border-bottom: 2px solid #667eea; padding-bottom: 15px; }
+            .wvp-info-box { background: #f8f9fa; border: 2px solid #667eea; padding: 20px; border-radius: 8px; margin-top: 20px; }
+            .wvp-info-box p { margin: 10px 0; font-size: 16px; }
+            .wvp-info-box strong { color: #667eea; display: block; margin-bottom: 5px; }
+            .wvp-total-box { background: #fff3cd; border: 2px solid #ffc107; padding: 30px; border-radius: 8px; text-align: center; }
+            .wvp-total-box .amount { font-size: 36px; font-weight: bold; color: #856404; margin: 10px 0; }
+            .wvp-qr-container { background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center; min-height: 300px; display: flex; align-items: center; justify-content: center; }
+            .wvp-qr-container img { max-width: 300px; max-height: 300px; border: 3px solid #667eea; padding: 10px; background: white; border-radius: 10px; }
+            .wvp-form-section { background: #f8f9fa; padding: 30px; border-radius: 10px; margin-top: 30px; }
+            .wvp-form-group { margin-bottom: 20px; }
+            .wvp-form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+            .wvp-form-group input, .wvp-form-group select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; }
+            .wvp-form-group input:focus, .wvp-form-group select:focus { border-color: #667eea; outline: none; }
+            .wvp-btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; border: none; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; }
+            .wvp-alert { background: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+            .wvp-success-box { background: #d4edda; border: 2px solid #28a745; padding: 30px; border-radius: 10px; text-align: center; }
+            .wvp-instructions { background: #e7f3ff; padding: 20px; border-radius: 8px; margin-top: 20px; }
+            .wvp-instructions ol { margin: 10px 0; padding-left: 20px; }
+            .wvp-instructions h4 { margin-top: 0; color: #2196F3; }
+        </style>
+        <div class="wvp-payment-container">
+            <div class="wvp-payment-header">
+                <h2>📱 <?php _e('Realiza tu Pago Móvil', 'wvp'); ?></h2>
+                <p style="margin: 0; font-size: 16px;"><?php _e('Orden #', 'wvp'); ?><?php echo esc_html($order->get_order_number()); ?></p>
+            </div>
+            
+            <?php if ($has_confirmation): ?>
+                <div class="wvp-success-box">
+                    <h3 style="color: #28a745; margin-top: 0;">✅ <?php _e('Pago Confirmado', 'wvp'); ?></h3>
+                    <p><strong><?php _e('Código de Confirmación:', 'wvp'); ?></strong> <?php echo esc_html($confirmation_code); ?></p>
+                    <p><?php _e('Tu pago ha sido recibido y está pendiente de verificación.', 'wvp'); ?></p>
+                </div>
+            <?php else: ?>
+                <div class="wvp-payment-grid">
+                    <div class="wvp-payment-card">
+                        <h3>🏦 <?php _e('Datos para Pago Móvil', 'wvp'); ?></h3>
+                        <div class="wvp-info-box">
+                            <p><strong><?php _e('Documento:', 'wvp'); ?></strong> <span style="color: #667eea; font-weight: bold;"><?php echo esc_html($account_ci); ?></span></p>
+                            <p><strong><?php _e('Cuenta:', 'wvp'); ?></strong> <span style="color: #667eea;"><?php echo esc_html($account_name); ?></span></p>
+                            <p><strong><?php _e('Banco:', 'wvp'); ?></strong> <span style="color: #667eea;"><?php echo esc_html($account_bank); ?></span></p>
+                            <p><strong><?php _e('Teléfono:', 'wvp'); ?></strong> <span style="color: #667eea; font-weight: bold;"><?php echo esc_html($account_phone); ?></span></p>
+                        </div>
+                        <?php if ($bcv_rate && $total_ves): ?>
+                            <div class="wvp-total-box">
+                                <p style="margin: 0;"><strong><?php _e('Monto a Pagar:', 'wvp'); ?></strong></p>
+                                <div class="amount"><?php echo number_format($total_ves, 2, ',', '.'); ?> Bs.</div>
+                                <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;"><?php echo wc_price($total_usd); ?></p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="wvp-payment-card">
+                        <h3>📱 <?php _e('Escanea para Pagar', 'wvp'); ?></h3>
+                        <div class="wvp-qr-container">
+                            <?php if (!empty($account_qr_image)): ?>
+                                <img src="<?php echo esc_url($account_qr_image); ?>" alt="QR Code" />
+                            <?php else: ?>
+                                <p style="color: #999;"><?php _e('QR no disponible', 'wvp'); ?></p>
+                            <?php endif; ?>
+                        </div>
+                        <div class="wvp-instructions">
+                            <h4>📝 <?php _e('Instrucciones:', 'wvp'); ?></h4>
+                            <ol>
+                                <li><?php _e('Abre la app de tu banco', 'wvp'); ?></li>
+                                <li><?php _e('Selecciona "Pago Móvil"', 'wvp'); ?></li>
+                                <li><?php _e('Escanea el código QR', 'wvp'); ?></li>
+                                <li><?php _e('Confirma y guarda el número de referencia', 'wvp'); ?></li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="wvp-form-section">
+                    <h3>✅ <?php _e('Completa tu Pago', 'wvp'); ?></h3>
+                    <div class="wvp-alert">
+                        <p style="margin: 0;"><strong>⚠️ <?php _e('Importante:', 'wvp'); ?></strong> <?php _e('Ingresa el código de referencia después de pagar.', 'wvp'); ?></p>
+                    </div>
+                    <form method="post" action="" id="wvp-confirm-payment-form">
+                        <?php wp_nonce_field('wvp_confirm_payment', 'wvp_payment_nonce'); ?>
+                        <input type="hidden" name="action" value="wvp_confirm_payment">
+                        <input type="hidden" name="order_id" value="<?php echo esc_attr($order->get_id()); ?>">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="wvp-form-group">
+                                <label><?php _e('Banco Emisor *', 'wvp'); ?></label>
+                                <select name="wvp_payment_from_bank" required>
+                                    <option value=""><?php _e('Selecciona', 'wvp'); ?></option>
+                                    <?php foreach ($this->get_banks_list() as $code => $name): ?>
+                                        <option value="<?php echo esc_attr($code); ?>"><?php echo esc_html($name); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="wvp-form-group">
+                                <label><?php _e('Teléfono Emisor *', 'wvp'); ?></label>
+                                <input type="text" name="wvp_payment_from_phone" placeholder="04141234567" required>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="wvp-form-group">
+                                <label><?php _e('Fecha del Pago *', 'wvp'); ?></label>
+                                <input type="date" name="wvp_payment_date" value="<?php echo date('Y-m-d'); ?>" required>
+                            </div>
+                            <div class="wvp-form-group">
+                                <label><?php _e('Número de Referencia *', 'wvp'); ?></label>
+                                <input type="text" name="wvp_payment_reference" placeholder="123456" required>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; margin-top: 30px;">
+                            <button type="submit" class="wvp-btn-primary">✅ <?php _e('Completar Orden', 'wvp'); ?></button>
+                        </div>
+                    </form>
+                </div>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+    
+    public function display_payment_info_simple($order_id) {
+        if (!is_numeric($order_id)) {
+            return;
+        }
+        
+        $order = wc_get_order($order_id);
+        if (!$order || $order->get_payment_method() !== $this->id) {
+            return;
+        }
+        
+        $account_name = $order->get_meta('_selected_account_name');
+        $account_ci = $order->get_meta('_selected_account_ci');
+        $account_bank = $order->get_meta('_selected_account_bank_name');
+        $account_phone = $order->get_meta('_selected_account_phone');
+        $account_qr_image = $order->get_meta('_selected_account_qr_image');
+        $confirmation_code = $order->get_meta('_payment_confirmation');
+        $bcv_rate = $order->get_meta('_bcv_rate_at_purchase');
+        
+        if (!$account_bank || !$account_phone) {
+            return;
+        }
+        
+        $total_usd = $order->get_total();
+        $total_ves = null;
+        
+        if ($bcv_rate) {
+            $total_ves = $total_usd * floatval($bcv_rate);
+        }
+        
+        $has_confirmation = !empty($confirmation_code);
+        
+        ?>
+        <div class="wvp-payment-container">
+            <div class="wvp-payment-header">
+                <h2>📱 Realiza tu Pago Móvil</h2>
+                <p style="margin: 0; font-size: 16px;">Orden #<?php echo esc_html($order->get_order_number()); ?></p>
+            </div>
+            
+            <?php if ($has_confirmation): ?>
+                <div class="wvp-success-box">
+                    <h3 style="color: #28a745; margin-top: 0;">✅ Pago Confirmado</h3>
+                    <p><strong>Código de Confirmación:</strong> <?php echo esc_html($confirmation_code); ?></p>
+                    <p>Tu pago ha sido recibido y está pendiente de verificación.</p>
+                </div>
+            <?php else: ?>
+                <div class="wvp-payment-grid">
+                    <div class="wvp-payment-card">
+                        <h3>🏦 Datos para Pago Móvil</h3>
+                        <div class="wvp-info-box">
+                            <p><strong>Documento:</strong> <span style="color: #667eea; font-weight: bold;"><?php echo esc_html($account_ci); ?></span></p>
+                            <p><strong>Cuenta:</strong> <span style="color: #667eea;"><?php echo esc_html($account_name); ?></span></p>
+                            <p><strong>Banco:</strong> <span style="color: #667eea;"><?php echo esc_html($account_bank); ?></span></p>
+                            <p><strong>Teléfono:</strong> <span style="color: #667eea; font-weight: bold;"><?php echo esc_html($account_phone); ?></span></p>
+                        </div>
+                        <?php if ($bcv_rate && $total_ves): ?>
+                            <div class="wvp-total-box">
+                                <p style="margin: 0;"><strong>Monto a Pagar:</strong></p>
+                                <div class="amount"><?php echo number_format($total_ves, 2, ',', '.'); ?> Bs.</div>
+                                <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;"><?php echo wc_price($total_usd); ?></p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="wvp-payment-card">
+                        <h3>📱 Escanea para Pagar</h3>
+                        <div class="wvp-qr-container">
+                            <?php if (!empty($account_qr_image)): ?>
+                                <img src="<?php echo esc_url($account_qr_image); ?>" alt="QR Code" />
+                            <?php else: ?>
+                                <p style="color: #999;">QR no disponible</p>
+                            <?php endif; ?>
+                        </div>
+                        <div class="wvp-instructions">
+                            <h4>📝 Instrucciones:</h4>
+                            <ol>
+                                <li>Abre la app de tu banco</li>
+                                <li>Selecciona "Pago Móvil"</li>
+                                <li>Escanea el código QR</li>
+                                <li>Confirma y guarda el número de referencia</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="wvp-form-section">
+                    <h3>✅ Completa tu Pago</h3>
+                    <div class="wvp-alert">
+                        <p style="margin: 0;"><strong>⚠️ Importante:</strong> Ingresa el código de referencia después de pagar.</p>
+                    </div>
+                    <form method="post" action="" id="wvp-confirm-payment-form">
+                        <?php wp_nonce_field('wvp_confirm_payment', 'wvp_payment_nonce'); ?>
+                        <input type="hidden" name="action" value="wvp_confirm_payment">
+                        <input type="hidden" name="order_id" value="<?php echo esc_attr($order->get_id()); ?>">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="wvp-form-group">
+                                <label>Banco Emisor *</label>
+                                <select name="wvp_payment_from_bank" required>
+                                    <option value="">Selecciona</option>
+                                    <?php foreach ($this->get_banks_list() as $code => $name): ?>
+                                        <option value="<?php echo esc_attr($code); ?>"><?php echo esc_html($name); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="wvp-form-group">
+                                <label>Teléfono Emisor *</label>
+                                <input type="text" name="wvp_payment_from_phone" placeholder="04141234567" required>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="wvp-form-group">
+                                <label>Fecha del Pago *</label>
+                                <input type="date" name="wvp_payment_date" value="<?php echo date('Y-m-d'); ?>" required>
+                            </div>
+                            <div class="wvp-form-group">
+                                <label>Número de Referencia *</label>
+                                <input type="text" name="wvp_payment_reference" placeholder="123456" required>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 15px; margin-top: 30px;">
+                            <button type="submit" class="wvp-btn-primary">✅ Completar Orden</button>
+                        </div>
+                    </form>
+                </div>
+            <?php endif; ?>
+        </div>
+        
+        <style>
+            .wvp-payment-container { max-width: 1200px; margin: 40px auto; padding: 20px; }
+            .wvp-payment-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .wvp-payment-header h2 { color: white; margin: 0 0 10px 0; font-size: 32px; }
+            .wvp-payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+            @media (max-width: 768px) { .wvp-payment-grid { grid-template-columns: 1fr; } }
+            .wvp-payment-card { background: #fff; border-radius: 10px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 2px solid #e0e0e0; }
+            .wvp-payment-card h3 { color: #333; margin-top: 0; border-bottom: 2px solid #667eea; padding-bottom: 15px; }
+            .wvp-info-box { background: #f8f9fa; border: 2px solid #667eea; padding: 20px; border-radius: 8px; margin-top: 20px; }
+            .wvp-info-box p { margin: 10px 0; font-size: 16px; }
+            .wvp-info-box strong { color: #667eea; display: block; margin-bottom: 5px; }
+            .wvp-total-box { background: #fff3cd; border: 2px solid #ffc107; padding: 30px; border-radius: 8px; text-align: center; }
+            .wvp-total-box .amount { font-size: 36px; font-weight: bold; color: #856404; margin: 10px 0; }
+            .wvp-qr-container { background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center; min-height: 300px; display: flex; align-items: center; justify-content: center; }
+            .wvp-qr-container img { max-width: 300px; max-height: 300px; border: 3px solid #667eea; padding: 10px; background: white; border-radius: 10px; }
+            .wvp-form-section { background: #f8f9fa; padding: 30px; border-radius: 10px; margin-top: 30px; }
+            .wvp-form-group { margin-bottom: 20px; }
+            .wvp-form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+            .wvp-form-group input, .wvp-form-group select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; }
+            .wvp-form-group input:focus, .wvp-form-group select:focus { border-color: #667eea; outline: none; }
+            .wvp-btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; border: none; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; }
+            .wvp-alert { background: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+            .wvp-success-box { background: #d4edda; border: 2px solid #28a745; padding: 30px; border-radius: 10px; text-align: center; }
+            .wvp-instructions { background: #e7f3ff; padding: 20px; border-radius: 8px; margin-top: 20px; }
+            .wvp-instructions ol { margin: 10px 0; padding-left: 20px; }
+            .wvp-instructions h4 { margin-top: 0; color: #2196F3; }
+        </style>
+        <?php
+    }
+    
+    public function inject_payment_info_on_thankyou_page($content) {
+        if (!is_order_received_page()) {
+            return $content;
+        }
+        
+        $order_id = absint(get_query_var('order-received'));
+        if (!$order_id) {
+            return $content;
+        }
+        
+        $order = wc_get_order($order_id);
+        if (!$order || $order->get_payment_method() !== $this->id) {
+            return $content;
+        }
+        
+        ob_start();
+        $this->display_payment_info_simple($order_id);
+        $payment_content = ob_get_clean();
+        
+        return $content . $payment_content;
+    }
 }
-
