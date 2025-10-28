@@ -747,49 +747,33 @@ class WVP_Admin_Restructured {
     private function display_payment_gateways_content() {
         ?>
         <div class="wvp-payment-gateways">
-            <h2><?php _e('Configuración de Pasarelas de Pago', 'wvp'); ?></h2>
-            <p><?php _e('Configura las pasarelas de pago venezolanas desde WooCommerce → Pagos.', 'wvp'); ?></p>
+            <h2><?php _e('Configuración de Pago Móvil', 'wvp'); ?></h2>
+            <p><?php _e('Configura tu método de pago Pago Móvil desde WooCommerce → Pagos.', 'wvp'); ?></p>
             
             <div class="wvp-gateway-cards">
-                <div class="wvp-gateway-card">
-                    <h3><?php _e('Zelle', 'wvp'); ?></h3>
-                    <p><?php _e('Transferencia digital internacional', 'wvp'); ?></p>
-                    <a href="<?php echo admin_url('admin.php?page=wc-settings&tab=checkout&section=wvp_zelle'); ?>" class="button">
-                        <?php _e('Configurar', 'wvp'); ?>
-                    </a>
-                </div>
-                
-                <div class="wvp-gateway-card">
+                <div class="wvp-gateway-card" style="max-width: 600px; margin: 0 auto;">
                     <h3><?php _e('Pago Móvil', 'wvp'); ?></h3>
-                    <p><?php _e('Transferencia digital nacional', 'wvp'); ?></p>
-                    <a href="<?php echo admin_url('admin.php?page=wc-settings&tab=checkout&section=wvp_pago_movil'); ?>" class="button">
-                        <?php _e('Configurar', 'wvp'); ?>
+                    <p><?php _e('Transferencia digital nacional venezolana a través de múltiples bancos', 'wvp'); ?></p>
+                    <ul style="text-align: left; margin: 20px 0;">
+                        <li><?php _e('✅ Acepta múltiples cuentas bancarias', 'wvp'); ?></li>
+                        <li><?php _e('✅ Configuración fácil con Cédula/Teléfono', 'wvp'); ?></li>
+                        <li><?php _e('✅ Código QR para pagos rápidos', 'wvp'); ?></li>
+                        <li><?php _e('✅ Confirmación de pago integrada', 'wvp'); ?></li>
+                    </ul>
+                    <a href="<?php echo admin_url('admin.php?page=wc-settings&tab=checkout&section=wvp_pago_movil'); ?>" class="button button-primary button-large" style="font-size: 16px; padding: 10px 30px; margin-top: 20px;">
+                        <?php _e('⚙️ Configurar Pago Móvil', 'wvp'); ?>
                     </a>
                 </div>
-                
-                <div class="wvp-gateway-card">
-                    <h3><?php _e('Cashea', 'wvp'); ?></h3>
-                    <p><?php _e('Compra ahora, paga después', 'wvp'); ?></p>
-                    <a href="<?php echo admin_url('admin.php?page=wc-settings&tab=checkout&section=wvp_cashea'); ?>" class="button">
-                        <?php _e('Configurar', 'wvp'); ?>
+            </div>
+            
+            <div class="wvp-info-box" style="background: #f0f8ff; border-left: 4px solid #0073aa; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                <p style="margin: 0;">
+                    <strong><?php _e('💡 Tip:', 'wvp'); ?></strong>
+                    <?php _e('También puedes gestionar todas las pasarelas desde ', 'wvp'); ?>
+                    <a href="<?php echo admin_url('admin.php?page=wc-settings&tab=checkout'); ?>" target="_blank">
+                        <?php _e('WooCommerce → Configuración → Pagos', 'wvp'); ?>
                     </a>
-                </div>
-                
-                <div class="wvp-gateway-card">
-                    <h3><?php _e('Efectivo USD', 'wvp'); ?></h3>
-                    <p><?php _e('Pago en efectivo con IGTF', 'wvp'); ?></p>
-                    <a href="<?php echo admin_url('admin.php?page=wc-settings&tab=checkout&section=wvp_efectivo'); ?>" class="button">
-                        <?php _e('Configurar', 'wvp'); ?>
-                    </a>
-                </div>
-                
-                <div class="wvp-gateway-card">
-                    <h3><?php _e('Efectivo Bolívares', 'wvp'); ?></h3>
-                    <p><?php _e('Pago en efectivo en bolívares', 'wvp'); ?></p>
-                    <a href="<?php echo admin_url('admin.php?page=wc-settings&tab=checkout&section=wvp_efectivo_bolivares'); ?>" class="button">
-                        <?php _e('Configurar', 'wvp'); ?>
-                    </a>
-                </div>
+                </p>
             </div>
         </div>
         <?php

@@ -254,7 +254,7 @@ class WooCommerce_Venezuela_Pro {
         // Métodos de envío
         require_once WVP_PLUGIN_PATH . 'shipping/class-wvp-shipping-local-delivery.php';
         
-        // Pasarelas de pago - Solo Pago Móvil
+        // Pasarela de pago - Pago Móvil venezolano
         require_once WVP_PLUGIN_PATH . 'gateways/class-wvp-gateway-pago-movil-completo.php';
         
         // Notificaciones WhatsApp
@@ -450,7 +450,7 @@ class WooCommerce_Venezuela_Pro {
      * @return array Pasarelas modificadas
      */
     public function add_payment_gateways($gateways) {
-        // Solo registrar Pago Móvil
+        // Solo registrar Pago Móvil como método de pago venezolano
         $gateways[] = 'WVP_Gateway_Pago_Movil';
         
         return $gateways;
