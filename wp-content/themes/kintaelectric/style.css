@@ -51044,6 +51044,10 @@ table.shop_table.cart.wishlist_table.wishlist_view.traditional.responsive th.pro
     font-size: .9rem !important;
     text-transform: uppercase !important;
     text-align: center !important;
+    
+}
+table.shop_table td.product-name a{
+    text-decoration: none !important;
 }
 
 li.share-button svg {
