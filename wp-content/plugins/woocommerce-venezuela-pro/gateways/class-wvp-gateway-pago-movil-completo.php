@@ -66,6 +66,21 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         
         // Enqueue media scripts
         add_action('admin_enqueue_scripts', array($this, 'enqueue_media_scripts'));
+        
+        // Enqueue CSS para pago móvil en frontend
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_pago_movil_styles'));
+    }
+    
+    /**
+     * Registrar estilos CSS para pago móvil
+     */
+    public function enqueue_pago_movil_styles() {
+        wp_enqueue_style(
+            'wvp-pago-movil-style',
+            WVP_PLUGIN_URL . 'assets/css/pago-movil.css',
+            array(),
+            WVP_VERSION
+        );
     }
     
     public function save_accounts_manually() {
@@ -1805,15 +1820,11 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             ?>
             <div class="wvp-payment-container">
                 <div class="wvp-success-box">
-                    <h3 style="color: #28a745; margin-top: 0;">✅ Pago Confirmado</h3>
+                    <h3>Pago Confirmado</h3>
                     <p><strong>Código de Confirmación:</strong> <?php echo esc_html($confirmation_code); ?></p>
                     <p>Tu pago ha sido recibido y está pendiente de verificación.</p>
                 </div>
             </div>
-            <style>
-                .wvp-payment-container { max-width: 1200px; margin: 40px auto; padding: 20px; }
-                .wvp-success-box { background: #d4edda; border: 2px solid #28a745; padding: 30px; border-radius: 10px; text-align: center; }
-            </style>
             <?php
             return;
         }
@@ -1852,45 +1863,45 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         ?>
         <div class="wvp-payment-container">
             <div class="wvp-payment-header">
-                <h2>📱 Realiza tu Pago Móvil</h2>
-                <p style="margin: 0; font-size: 16px;">Orden #<?php echo esc_html($order->get_order_number()); ?></p>
+                <h2>Realiza tu Pago Móvil</h2>
+                <p>Orden #<?php echo esc_html($order->get_order_number()); ?></p>
             </div>
             
             <?php if ($has_confirmation): ?>
                 <div class="wvp-success-box">
-                    <h3 style="color: #28a745; margin-top: 0;">✅ Pago Confirmado</h3>
+                    <h3>Pago Confirmado</h3>
                     <p><strong>Código de Confirmación:</strong> <?php echo esc_html($confirmation_code); ?></p>
                     <p>Tu pago ha sido recibido y está pendiente de verificación.</p>
                 </div>
             <?php else: ?>
                 <div class="wvp-payment-grid">
                     <div class="wvp-payment-card">
-                        <h3>🏦 Datos para Pago Móvil</h3>
+                        <h3>Datos para Pago Móvil</h3>
                         <div class="wvp-info-box">
-                            <p><strong>Documento:</strong> <span style="color: #667eea; font-weight: bold;"><?php echo esc_html($account_ci); ?></span></p>
-                            <p><strong>Cuenta:</strong> <span style="color: #667eea;"><?php echo esc_html($account_name); ?></span></p>
-                            <p><strong>Banco:</strong> <span style="color: #667eea;"><?php echo esc_html($account_bank); ?></span></p>
-                            <p><strong>Teléfono:</strong> <span style="color: #667eea; font-weight: bold;"><?php echo esc_html($account_phone); ?></span></p>
+                            <p><strong>Documento:</strong> <?php echo esc_html($account_ci); ?></p>
+                            <p><strong>Cuenta:</strong> <?php echo esc_html($account_name); ?></p>
+                            <p><strong>Banco:</strong> <?php echo esc_html($account_bank); ?></p>
+                            <p><strong>Teléfono:</strong> <?php echo esc_html($account_phone); ?></p>
                         </div>
                         <?php if ($bcv_rate && $total_ves): ?>
                             <div class="wvp-total-box">
-                                <p style="margin: 0;"><strong>Monto a Pagar:</strong></p>
+                                <p><strong>Monto a Pagar:</strong></p>
                                 <div class="amount"><?php echo number_format($total_ves, 2, ',', '.'); ?> Bs.</div>
-                                <p style="margin: 10px 0 0 0; color: #666; font-size: 14px;"><?php echo wc_price($total_usd); ?></p>
+                                <p><?php echo wc_price($total_usd); ?></p>
                             </div>
                         <?php endif; ?>
                     </div>
                     <div class="wvp-payment-card">
-                        <h3>📱 Escanea para Pagar</h3>
+                        <h3>Escanea para Pagar</h3>
                         <div class="wvp-qr-container">
                             <?php if (!empty($account_qr_image)): ?>
                                 <img src="<?php echo esc_url($account_qr_image); ?>" alt="QR Code" />
                             <?php else: ?>
-                                <p style="color: #999;">QR no disponible</p>
+                                <p>QR no disponible</p>
                             <?php endif; ?>
                         </div>
                         <div class="wvp-instructions">
-                            <h4>📝 Instrucciones:</h4>
+                            <h4>Instrucciones:</h4>
                             <ol>
                                 <li>Abre la app de tu banco</li>
                                 <li>Selecciona "Pago Móvil"</li>
@@ -1901,15 +1912,15 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                     </div>
                 </div>
                 <div class="wvp-form-section">
-                    <h3>✅ Completa tu Pago</h3>
+                    <h3>Completa tu Pago</h3>
                     <div class="wvp-alert">
-                        <p style="margin: 0;"><strong>⚠️ Importante:</strong> Ingresa el código de referencia después de pagar.</p>
+                        <p><strong>Importante:</strong> Ingresa el código de referencia después de pagar.</p>
                     </div>
                     <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" id="wvp-confirm-payment-form">
                         <input type="hidden" name="wvp_payment_nonce" value="<?php echo wp_create_nonce('wvp_confirm_payment_' . $order_id); ?>">
                         <input type="hidden" name="wvp_confirm_action" value="confirm_payment">
                         <input type="hidden" name="order_id" value="<?php echo esc_attr($order->get_id()); ?>">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="wvp-form-grid">
                             <div class="wvp-form-group">
                                 <label>Banco Emisor *</label>
                                 <select name="wvp_payment_from_bank" required>
@@ -1924,7 +1935,7 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                                 <input type="text" name="wvp_payment_from_phone" placeholder="04141234567" required>
                             </div>
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="wvp-form-grid">
                             <div class="wvp-form-group">
                                 <label>Fecha del Pago *</label>
                                 <input type="date" name="wvp_payment_date" value="<?php echo date('Y-m-d'); ?>" required>
@@ -1934,42 +1945,13 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                                 <input type="text" name="wvp_payment_reference" placeholder="123456" required>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 15px; margin-top: 30px;">
-                            <button type="submit" class="wvp-btn-primary" id="wvp-submit-confirmation">✅ Completar Orden</button>
+                        <div class="wvp-form-actions">
+                            <button type="submit" class="wvp-btn-primary" id="wvp-submit-confirmation">Completar Orden</button>
                         </div>
                     </form>
-                    
                 </div>
             <?php endif; ?>
         </div>
-        
-        <style>
-            .wvp-payment-container { max-width: 1200px; margin: 40px auto; padding: 20px; }
-            .wvp-payment-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-            .wvp-payment-header h2 { color: white; margin: 0 0 10px 0; font-size: 32px; }
-            .wvp-payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
-            @media (max-width: 768px) { .wvp-payment-grid { grid-template-columns: 1fr; } }
-            .wvp-payment-card { background: #fff; border-radius: 10px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border: 2px solid #e0e0e0; }
-            .wvp-payment-card h3 { color: #333; margin-top: 0; border-bottom: 2px solid #667eea; padding-bottom: 15px; }
-            .wvp-info-box { background: #f8f9fa; border: 2px solid #667eea; padding: 20px; border-radius: 8px; margin-top: 20px; }
-            .wvp-info-box p { margin: 10px 0; font-size: 16px; }
-            .wvp-info-box strong { color: #667eea; display: block; margin-bottom: 5px; }
-            .wvp-total-box { background: #fff3cd; border: 2px solid #ffc107; padding: 30px; border-radius: 8px; text-align: center; }
-            .wvp-total-box .amount { font-size: 36px; font-weight: bold; color: #856404; margin: 10px 0; }
-            .wvp-qr-container { background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center; min-height: 300px; display: flex; align-items: center; justify-content: center; }
-            .wvp-qr-container img { max-width: 300px; max-height: 300px; border: 3px solid #667eea; padding: 10px; background: white; border-radius: 10px; }
-            .wvp-form-section { background: #f8f9fa; padding: 30px; border-radius: 10px; margin-top: 30px; }
-            .wvp-form-group { margin-bottom: 20px; }
-            .wvp-form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
-            .wvp-form-group input, .wvp-form-group select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; }
-            .wvp-form-group input:focus, .wvp-form-group select:focus { border-color: #667eea; outline: none; }
-            .wvp-btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; border: none; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; }
-            .wvp-alert { background: #fff3cd; border: 2px solid #ffc107; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-            .wvp-success-box { background: #d4edda; border: 2px solid #28a745; padding: 30px; border-radius: 10px; text-align: center; }
-            .wvp-instructions { background: #e7f3ff; padding: 20px; border-radius: 8px; margin-top: 20px; }
-            .wvp-instructions ol { margin: 10px 0; padding-left: 20px; }
-            .wvp-instructions h4 { margin-top: 0; color: #2196F3; }
-        </style>
         <?php
     }
     

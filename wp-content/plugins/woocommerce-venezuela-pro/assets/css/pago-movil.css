@@ -1,0 +1,435 @@
+/**
+ * Estilos limpios para Pago Móvil - WooCommerce Venezuela Pro
+ * Tema minimalista estilo WooCommerce con color único #ccc634
+ */
+
+/* Container principal */
+.wvp-payment-container {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+/* Header limpio */
+.wvp-payment-header {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    padding: 30px;
+    margin-bottom: 30px;
+    border-radius: 3px;
+}
+
+.wvp-payment-header h2 {
+    color: #1e1e1e;
+    margin: 0 0 5px 0;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.wvp-payment-header p {
+    margin: 0;
+    font-size: 14px;
+    color: #787c82;
+}
+
+/* Grid responsive */
+.wvp-payment-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+    .wvp-payment-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Tarjetas limpias */
+.wvp-payment-card {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    padding: 24px;
+    border-radius: 3px;
+}
+
+.wvp-payment-card h3 {
+    color: #1e1e1e;
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #ccc634;
+}
+
+/* Info box minimalista */
+.wvp-info-box {
+    background: #f8f9fa;
+    border: 1px solid #e5e5e5;
+    padding: 16px;
+    border-radius: 3px;
+    margin-top: 15px;
+}
+
+.wvp-info-box p {
+    margin: 8px 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.wvp-info-box strong {
+    color: #1e1e1e;
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.wvp-info-box span {
+    color: #1e1e1e;
+}
+
+/* Total box minimalista */
+.wvp-total-box {
+    background: #f8f9fa;
+    border: 1px solid #ccc634;
+    padding: 20px;
+    border-radius: 3px;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.wvp-total-box p {
+    margin: 0;
+    font-size: 14px;
+    color: #1e1e1e;
+}
+
+.wvp-total-box .amount {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1e1e1e;
+    margin: 10px 0;
+}
+
+/* QR Container limpio */
+.wvp-qr-container {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 3px;
+    text-align: center;
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wvp-qr-container img {
+    max-width: 250px;
+    max-height: 250px;
+    border: 1px solid #e5e5e5;
+    padding: 10px;
+    background: white;
+    border-radius: 3px;
+}
+
+/* Instrucciones limpias */
+.wvp-instructions {
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 3px;
+    margin-top: 15px;
+    border: 1px solid #e5e5e5;
+}
+
+.wvp-instructions ol {
+    margin: 10px 0;
+    padding-left: 20px;
+    color: #1e1e1e;
+}
+
+.wvp-instructions h4 {
+    margin: 0 0 10px 0;
+    color: #1e1e1e;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Form section minimalista */
+.wvp-form-section {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    padding: 24px;
+    border-radius: 3px;
+    margin-top: 30px;
+}
+
+.wvp-form-section h3 {
+    color: #1e1e1e;
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #ccc634;
+}
+
+/* Form groups */
+.wvp-form-group {
+    margin-bottom: 16px;
+}
+
+.wvp-form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #1e1e1e;
+    font-size: 14px;
+}
+
+.wvp-form-group input,
+.wvp-form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #8c8f94;
+    border-radius: 3px;
+    font-size: 14px;
+    color: #1e1e1e;
+    background: #fff;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.wvp-form-group input:focus,
+.wvp-form-group select:focus {
+    border-color: #ccc634;
+    outline: none;
+    box-shadow: 0 0 0 1px #ccc634;
+}
+
+.wvp-form-group input::placeholder {
+    color: #8c8f94;
+}
+
+/* Botones WooCommerce style */
+.wvp-btn-primary {
+    background: #ccc634;
+    color: #fff;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 3px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.wvp-btn-primary:hover {
+    background: #b5b430;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.wvp-btn-primary:active {
+    background: #9fa02c;
+    box-shadow: none;
+}
+
+/* Alert minimalista */
+.wvp-alert {
+    background: #fff8e1;
+    border: 1px solid #ccc634;
+    padding: 12px 16px;
+    border-radius: 3px;
+    margin-bottom: 20px;
+}
+
+.wvp-alert p {
+    margin: 0;
+    font-size: 14px;
+    color: #1e1e1e;
+}
+
+/* Success box minimalista */
+.wvp-success-box {
+    background: #f0f8f0;
+    border: 1px solid #ccc634;
+    padding: 24px;
+    border-radius: 3px;
+    text-align: center;
+}
+
+.wvp-success-box h3 {
+    color: #1e1e1e;
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.wvp-success-box p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #1e1e1e;
+}
+
+/* Grid dentro de formularios */
+.wvp-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 16px;
+}
+
+.wvp-form-actions {
+    margin-top: 24px;
+}
+
+@media (max-width: 768px) {
+    .wvp-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Responsive mejorado */
+@media (max-width: 768px) {
+    .wvp-payment-container {
+        padding: 15px;
+    }
+    
+    .wvp-payment-header {
+        padding: 20px;
+    }
+    
+    .wvp-payment-header h2 {
+        font-size: 24px;
+    }
+    
+    .wvp-payment-card {
+        padding: 16px;
+    }
+    
+    .wvp-form-section {
+        padding: 16px;
+    }
+    
+    .wvp-total-box .amount {
+        font-size: 24px;
+    }
+}
+
+/* Estados deshabilitados */
+.wvp-btn-primary:disabled {
+    background: #c3c4c7;
+    color: #8c8f94;
+    cursor: not-allowed;
+}
+
+/* Mejora de accesibilidad */
+.wvp-btn-primary:focus {
+    outline: 2px solid #ccc634;
+    outline-offset: 2px;
+}
+
+/* =====================================
+   MODO OSCURO (.electro-dark)
+   ===================================== */
+
+.electro-dark .wvp-payment-container,
+.electro-dark .wvp-payment-header,
+.electro-dark .wvp-payment-card,
+.electro-dark .wvp-success-box,
+.electro-dark .wvp-form-section {
+    background: #1e1e1e;
+}
+
+.electro-dark .wvp-payment-header {
+    border-color: #333;
+}
+
+.electro-dark .wvp-payment-header h2 {
+    color: #fff;
+}
+
+.electro-dark .wvp-payment-header p {
+    color: #b8b8b8;
+}
+
+.electro-dark .wvp-payment-card {
+    border-color: #333;
+}
+
+.electro-dark .wvp-payment-card h3 {
+    color: #fff;
+}
+
+.electro-dark .wvp-info-box,
+.electro-dark .wvp-total-box,
+.electro-dark .wvp-qr-container,
+.electro-dark .wvp-instructions,
+.electro-dark .wvp-alert {
+    background: #2a2a2a;
+    border-color: #444;
+}
+
+.electro-dark .wvp-info-box p,
+.electro-dark .wvp-info-box strong,
+.electro-dark .wvp-total-box p,
+.electro-dark .wvp-total-box .amount,
+.electro-dark .wvp-instructions ol,
+.electro-dark .wvp-instructions h4 {
+    color: #fff;
+}
+
+.electro-dark .wvp-form-section h3 {
+    color: #fff;
+}
+
+.electro-dark .wvp-form-group label {
+    color: #fff;
+}
+
+.electro-dark .wvp-form-group input,
+.electro-dark .wvp-form-group select {
+    background: #2a2a2a;
+    border-color: #444;
+    color: #fff;
+}
+
+.electro-dark .wvp-form-group input::placeholder {
+    color: #888;
+}
+
+.electro-dark .wvp-form-group input:focus,
+.electro-dark .wvp-form-group select:focus {
+    border-color: #ccc634;
+    background: #333;
+}
+
+.electro-dark .wvp-qr-container img {
+    border-color: #444;
+}
+
+.electro-dark .wvp-success-box {
+    background: #1e3a1e;
+    border-color: #4a7c4a;
+}
+
+.electro-dark .wvp-success-box h3,
+.electro-dark .wvp-success-box p {
+    color: #fff;
+}
+
+.electro-dark .wvp-alert {
+    background: #3a3a2a;
+    border-color: #686838;
+}
+
+.electro-dark .wvp-alert p {
+    color: #fff;
+}
+
+.electro-dark .wvp-btn-primary:hover {
+    background: #b5b430;
+}
+
+.electro-dark .wvp-btn-primary:active {
+    background: #9fa02c;
+}
+
