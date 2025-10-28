@@ -466,31 +466,12 @@ class WooCommerce_Venezuela_Pro {
      * @return array Pasarelas modificadas
      */
     public function add_payment_gateways($gateways) {
-        $gateway_strings = array();
-        foreach ($gateways as $gateway) {
-            if (is_object($gateway)) {
-                $gateway_strings[] = get_class($gateway);
-            } else {
-                $gateway_strings[] = $gateway;
-            }
-        }
-        error_log('WVP: add_payment_gateways() called. Current gateways: ' . implode(', ', $gateway_strings));
-        
         $gateways[] = 'WVP_Gateway_Zelle';
         $gateways[] = 'WVP_Gateway_Pago_Movil';
         $gateways[] = 'WVP_Gateway_Efectivo';
         $gateways[] = 'WVP_Gateway_Efectivo_Bolivares';
         $gateways[] = 'WVP_Gateway_Cashea';
         
-        $gateway_strings_after = array();
-        foreach ($gateways as $gateway) {
-            if (is_object($gateway)) {
-                $gateway_strings_after[] = get_class($gateway);
-            } else {
-                $gateway_strings_after[] = $gateway;
-            }
-        }
-        error_log('WVP: Gateways after adding: ' . implode(', ', $gateway_strings_after));
         return $gateways;
     }
     
@@ -500,8 +481,6 @@ class WooCommerce_Venezuela_Pro {
      * @param object $payment_method_registry Registro de métodos de pago de Blocks
      */
     public function register_blocks_integrations($payment_method_registry) {
-        error_log('WVP: register_blocks_integrations() called');
-        
         // Cargar integración de Pago Móvil para Blocks
         if (file_exists(WVP_PLUGIN_PATH . 'gateways/class-wvp-blocks-integration-pago-movil.php')) {
             require_once WVP_PLUGIN_PATH . 'gateways/class-wvp-blocks-integration-pago-movil.php';
@@ -512,15 +491,13 @@ class WooCommerce_Venezuela_Pro {
                     $asset_api = \Automattic\WooCommerce\Blocks\Package::container()->get(\Automattic\WooCommerce\Blocks\Assets\Api::class);
                     $integration = new WVP_Blocks_Integration_Pago_Movil($asset_api);
                     $payment_method_registry->register($integration);
-                    error_log('WVP: Successfully registered Blocks integration for Pago Móvil');
                 } catch (Exception $e) {
-                    error_log('WVP ERROR registering Blocks integration: ' . $e->getMessage());
+                    // Error silencioso en producción
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log('WVP ERROR registering Blocks integration: ' . $e->getMessage());
+                    }
                 }
-            } else {
-                error_log('WVP WARNING: Classes not found. WVP_Blocks_Integration_Pago_Movil exists: ' . class_exists('WVP_Blocks_Integration_Pago_Movil') . ', Package exists: ' . class_exists('Automattic\WooCommerce\Blocks\Package'));
             }
-        } else {
-            error_log('WVP ERROR: Integration file not found at ' . WVP_PLUGIN_PATH . 'gateways/class-wvp-blocks-integration-pago-movil.php');
         }
     }
     

@@ -18,15 +18,11 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
     public $max_amount;
     
     public function __construct() {
-        error_log('WVP_Gateway_Pago_Movil: Constructor called');
-        
         $this->id = "wvp_pago_movil";
         $this->icon = "";
         $this->has_fields = true;
         $this->method_title = "Pago Móvil";
         $this->method_description = "Acepta pagos mediante Pago Móvil. Agrega múltiples cuentas bancarias.";
-        
-        error_log('WVP_Gateway_Pago_Movil: Constructor - ID=' . $this->id . ', class=' . get_class($this));
         
         $this->init_form_fields();
         $this->init_settings();
@@ -37,9 +33,8 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         $saved_title = $this->get_option("title", "");
         $this->title = !empty($saved_title) ? $saved_title : "Pago Móvil";
         
-        // FORZAR título si está vacío para debug
+        // FORZAR título si está vacío
         if (empty($this->title)) {
-            error_log('WVP_Gateway_Pago_Movil: WARNING - title is EMPTY, forcing to "Pago Móvil"');
             $this->title = "Pago Móvil";
         }
         
@@ -48,11 +43,7 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         $this->min_amount = $this->get_option("min_amount");
         $this->max_amount = $this->get_option("max_amount");
         
-        error_log('WVP_Gateway_Pago_Movil: Settings loaded - enabled=' . var_export($this->enabled, true) . ', title=' . $this->title . ', saved_title=' . $saved_title);
-        
         $this->load_accounts();
-        
-        error_log('WVP_Gateway_Pago_Movil: Constructor completed - accounts=' . count($this->accounts) . ', ID=' . $this->id . ', method_title=' . $this->method_title . ', title=' . $this->title);
         
         // Hooks
         add_action("woocommerce_update_options_payment_gateways_" . $this->id, array($this, "process_admin_options"));
@@ -64,9 +55,6 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         
         // Enqueue media scripts
         add_action('admin_enqueue_scripts', array($this, 'enqueue_media_scripts'));
-        
-        // Debug: Log available gateways filter
-        add_filter('woocommerce_available_payment_gateways', array($this, 'debug_available_gateways'), 9999);
     }
     
     public function save_accounts_manually() {
@@ -75,18 +63,13 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             return;
         }
         
-        error_log('WVP Pago Movil: save_accounts_manually called');
-        error_log('WVP Pago Movil: POST keys: ' . implode(', ', array_keys($_POST)));
-        
         if (isset($_POST['pago_movil_accounts'])) {
             $accounts_json = stripslashes($_POST['pago_movil_accounts']);
-            error_log('WVP Pago Movil: Received JSON (first 500 chars): ' . substr($accounts_json, 0, 500));
             
             // Intentar decodificar
             $accounts_data = json_decode($accounts_json, true);
             
             if (json_last_error() !== JSON_ERROR_NONE) {
-                error_log('WVP Pago Movil: JSON decode error: ' . json_last_error_msg() . ' - Raw: ' . substr($accounts_json, 0, 200));
                 return;
             }
             
@@ -104,13 +87,7 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                 
                 // Actualizar la opción
                 update_option($option_key, $current_settings);
-                
-                error_log('WVP Pago Movil: Accounts saved successfully. Count: ' . count($accounts_data) . ' - Option key: ' . $option_key);
-            } else {
-                error_log('WVP Pago Movil: Invalid data structure');
             }
-        } else {
-            error_log('WVP Pago Movil: pago_movil_accounts not in POST');
         }
     }
     
@@ -249,57 +226,32 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         if (empty($title)) {
             $title = 'Pago Móvil';
         }
-        error_log('WVP Pago Movil: get_title() called, returning: ' . $title);
         return $title;
     }
     
     public function is_available() {
-        error_log('WVP Pago Movil: is_available() called');
-        error_log('WVP Pago Movil: enabled = ' . var_export($this->enabled, true));
-        error_log('WVP Pago Movil: accounts count = ' . count($this->accounts));
-        error_log('WVP Pago Movil: WC()->cart exists = ' . var_export(WC()->cart !== null, true));
-        error_log('WVP Pago Movil: WC()->cart->is_empty() = ' . var_export(WC()->cart && WC()->cart->is_empty(), true));
-        error_log('WVP Pago Movil: WC()->cart->needs_payment() = ' . var_export(WC()->cart && WC()->cart->needs_payment(), true));
-        
-        if (!$this->enabled) {
-            error_log('WVP Pago Movil: Not available - not enabled');
+        if (!$this->enabled || empty($this->accounts)) {
             return false;
         }
         
-        if (empty($this->accounts)) {
-            error_log('WVP Pago Movil: Not available - no accounts configured');
-            return false;
-        }
-        
-        if (!WC()->cart || WC()->cart->is_empty()) {
-            error_log('WVP Pago Movil: Not available - cart is empty');
-            return false;
-        }
-        
-        if (!WC()->cart->needs_payment()) {
-            error_log('WVP Pago Movil: Not available - cart does not need payment');
+        if (!WC()->cart || WC()->cart->is_empty() || !WC()->cart->needs_payment()) {
             return false;
         }
         
         $cart_total = floatval(WC()->cart->get_total('raw'));
-        error_log('WVP Pago Movil: cart_total = ' . $cart_total);
         
         if ($this->min_amount && $cart_total < floatval($this->min_amount)) {
-            error_log('WVP Pago Movil: Not available - cart total below minimum');
             return false;
         }
         
         if ($this->max_amount && $cart_total > floatval($this->max_amount)) {
-            error_log('WVP Pago Movil: Not available - cart total above maximum');
             return false;
         }
         
-        error_log('WVP Pago Movil: Available!');
         return true;
     }
     
     public function payment_fields() {
-        error_log('WVP Pago Movil: payment_fields() called');
         
         // Descripción simple
         if ($this->description) {
@@ -611,22 +563,6 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
     public function sanitize_accounts_field($settings) {
         // Remover del filtro de sanitización ya que lo manejamos manualmente
         return $settings;
-    }
-    
-    public function debug_available_gateways($available_gateways) {
-        error_log('WVP Pago Movil: woocommerce_available_payment_gateways filter called. Available gateways: ' . implode(', ', array_keys($available_gateways)));
-        
-        if (isset($available_gateways[$this->id])) {
-            $gateway = $available_gateways[$this->id];
-            error_log('WVP Pago Movil: Gateway IS in available gateways');
-            error_log('WVP Pago Movil: Gateway title check - $gateway->title = ' . $gateway->title);
-            error_log('WVP Pago Movil: Gateway title check - empty($gateway->title) = ' . var_export(empty($gateway->title), true));
-            error_log('WVP Pago Movil: Gateway enabled = ' . var_export($gateway->enabled, true));
-        } else {
-            error_log('WVP Pago Movil: Gateway NOT in available gateways!');
-        }
-        
-        return $available_gateways;
     }
     
     private function is_options_screen() {
