@@ -50,10 +50,19 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         add_action("woocommerce_update_options_payment_gateways_" . $this->id, array($this, "save_accounts_manually"), 20);
         add_action("admin_footer", array($this, "admin_custom_fields"));
         add_filter("woocommerce_settings_api_sanitized_fields_" . $this->id, array($this, "sanitize_accounts_field"));
-        add_action('woocommerce_thankyou_' . $this->id, array($this, 'thankyou_page'), 10, 1);
-        add_action('wp_loaded', array($this, 'process_confirmation_form'));
-        add_action('woocommerce_thankyou', array($this, 'display_payment_info_simple'), 5, 1);
-        add_filter('the_content', array($this, 'inject_payment_info_on_thankyou_page'));
+        
+        // Hooks para mostrar información en la página de agradecimiento
+        // Usar múltiples hooks para asegurar que se muestre
+        add_action('woocommerce_thankyou', array($this, 'display_payment_info_in_thankyou'), 10, 1);
+        add_action('woocommerce_order_details_after_order_table', array($this, 'display_payment_info_in_thankyou'), 5, 1);
+        add_action('woocommerce_order_details_before_order_table', array($this, 'display_payment_info_in_thankyou'), 5, 1);
+        
+        // Filtro para inyectar en el contenido si es página de agradecimiento
+        add_filter('the_content', array($this, 'maybe_inject_payment_info'), 99, 1);
+        
+        // AJAX para procesar confirmación
+        add_action('wp_ajax_wvp_confirm_payment', array($this, 'ajax_process_confirmation'));
+        add_action('wp_ajax_nopriv_wvp_confirm_payment', array($this, 'ajax_process_confirmation'));
         
         // Enqueue media scripts
         add_action('admin_enqueue_scripts', array($this, 'enqueue_media_scripts'));
@@ -702,16 +711,19 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             }
             
             // Crear pedido en estado on-hold (sin código de confirmación todavía)
+            // on-hold = pendiente de confirmación del cliente
             $order->update_status("on-hold", __("Esperando confirmación de pago móvil.", "wvp"));
             
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('WVP process_payment: Guardando pedido...');
+                error_log('WVP process_payment: order_id = ' . $order_id);
             }
             
+            // IMPORTANTE: Guardar el pedido ANTES de vaciar el carrito
             $order->save();
             
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP process_payment: Pedido guardado exitosamente');
+                error_log('WVP process_payment: Pedido guardado con estado on-hold, order_id: ' . $order_id);
             }
             
             // Vaciar carrito
@@ -724,7 +736,7 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             
             return array(
                 "result" => "success",
-                "redirect" => wc_get_endpoint_url('order-received', $order_id, wc_get_checkout_url()) . '?payment_method=' . $this->id . '&confirm_payment=1'
+                "redirect" => wc_get_endpoint_url('order-received', $order_id, wc_get_checkout_url())
             );
             
         } catch (Exception $e) {
@@ -736,6 +748,88 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             wc_add_notice(__("Error al procesar el pago.", "wvp"), "error");
             return array("result" => "fail", "redirect" => "");
         }
+    }
+    
+    /**
+     * Método robusto para inyectar contenido en la página de agradecimiento
+     */
+    public function maybe_inject_payment_info($content) {
+        // Solo en páginas de agradecimiento
+        if (!is_order_received_page()) {
+            return $content;
+        }
+        
+        // Obtener order_id de diferentes formas
+        $order_id = false;
+        
+        // Método 1: De la URL
+        $order_received = get_query_var('order-received');
+        if ($order_received) {
+            $order_id = $order_received;
+        }
+        
+        // Método 2: De $_GET
+        if (!$order_id && isset($_GET['order'])) {
+            $order_id = absint($_GET['order']);
+        }
+        
+        if (!$order_id) {
+            return $content;
+        }
+        
+        // Verificar que el pedido sea de Pago Móvil
+        $order = wc_get_order($order_id);
+        if (!$order || $order->get_payment_method() !== $this->id) {
+            return $content;
+        }
+        
+        // Capturar output
+        ob_start();
+        $this->display_payment_info_simple($order_id);
+        $payment_info = ob_get_clean();
+        
+        // Inyectar DESPUÉS del mensaje de agradecimiento de WooCommerce
+        return $content . $payment_info;
+    }
+    
+    /**
+     * Mostrar información de pago en la página de agradecimiento
+     */
+    public function display_payment_info_in_thankyou($order_id) {
+        // DEBUG
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP display_payment_info_in_thankyou: Llamado con order_id: ' . $order_id);
+        }
+        
+        if (!is_numeric($order_id)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP display_payment_info_in_thankyou: order_id no es numérico');
+            }
+            return;
+        }
+        
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP display_payment_info_in_thankyou: Order no encontrado');
+            }
+            return;
+        }
+        
+        $payment_method = $order->get_payment_method();
+        if ($payment_method !== $this->id) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP display_payment_info_in_thankyou: payment_method=' . $payment_method . ' vs gateway_id=' . $this->id);
+            }
+            return;
+        }
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP display_payment_info_in_thankyou: Llamando display_payment_info_simple');
+        }
+        
+        // Llamar al método de display
+        $this->display_payment_info_simple($order_id);
     }
     
     public function thankyou_page($order_id) {
@@ -1084,7 +1178,7 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                         </div>
                         
                         <div style="display: flex; gap: 15px; margin-top: 30px;">
-                            <button type="submit" class="wvp-btn-primary">
+                            <button type="submit" class="wvp-btn-primary" id="wvp-submit-confirmation">
                                 ✅ <?php _e('Completar Orden', 'wvp'); ?>
                             </button>
                             <a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" class="wvp-btn-secondary" style="text-decoration: none; display: inline-block;">
@@ -1092,6 +1186,50 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                             </a>
                         </div>
                     </form>
+                    
+                    <script type="text/javascript">
+                    jQuery(document).ready(function($) {
+                        $('#wvp-confirm-payment-form').on('submit', function(e) {
+                            e.preventDefault();
+                            
+                            console.log('WVP: Formulario enviado');
+                            
+                            var $button = $('#wvp-submit-confirmation');
+                            
+                            $button.prop('disabled', true).text('Procesando...');
+                            
+                            var formData = new FormData(this);
+                            formData.append('action', 'wvp_confirm_payment');
+                            
+                            console.log('WVP: Enviando AJAX...');
+                            
+                            $.ajax({
+                                url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                                type: 'POST',
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                success: function(response) {
+                                    console.log('WVP: Respuesta recibida', response);
+                                    if (response.success) {
+                                        alert(response.data.message);
+                                        window.location.reload();
+        } else {
+                                        alert(response.data.message || 'Error al procesar la confirmación.');
+                                        $button.prop('disabled', false).html('✅ Completar Orden');
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    console.log('WVP: Error AJAX', error);
+                                    alert('Error de conexión. Por favor, intenta nuevamente.');
+                                    $button.prop('disabled', false).html('✅ Completar Orden');
+                                }
+                            });
+                            
+                            return false;
+                        });
+                    });
+                    </script>
                 </div>
             <?php endif; ?>
         </div>
@@ -1099,12 +1237,16 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
     }
     
     public function process_confirmation_form() {
-        if (!isset($_POST['action']) || $_POST['action'] !== 'wvp_confirm_payment') {
-            return;
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP process_confirmation_form: Llamado');
+            error_log('WVP process_confirmation_form: $_POST keys: ' . print_r(array_keys($_POST), true));
         }
         
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP process_confirmation_form: POST recibido');
+        if (!isset($_POST['order_id'])) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP process_confirmation_form: order_id no encontrado');
+            }
+            return;
         }
         
         if (!wp_verify_nonce($_POST['wvp_payment_nonce'], 'wvp_confirm_payment')) {
@@ -1618,12 +1760,61 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
     }
     
     public function display_payment_info_simple($order_id) {
+        // DEBUG AL INICIO
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP display_payment_info_simple: INICIANDO con order_id: ' . $order_id);
+        }
+        
         if (!is_numeric($order_id)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP display_payment_info_simple: order_id no es numérico');
+            }
             return;
         }
         
         $order = wc_get_order($order_id);
-        if (!$order || $order->get_payment_method() !== $this->id) {
+        if (!$order) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP display_payment_info_simple: Order no encontrado');
+            }
+            return;
+        }
+        
+        $payment_method = $order->get_payment_method();
+        if ($payment_method !== $this->id) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP display_payment_info_simple: payment_method=' . $payment_method . ' vs gateway_id=' . $this->id);
+            }
+            return;
+        }
+        
+        // Procesar confirmación de pago si se envió el formulario
+        if (isset($_POST['wvp_confirm_action']) && $_POST['wvp_confirm_action'] === 'confirm_payment' && isset($_POST['order_id']) && $_POST['order_id'] == $order_id) {
+            $this->process_payment_confirmation_simple($order_id);
+        }
+        
+        // DEBUG
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP display_payment_info_simple: Validaciones pasadas, mostrando contenido');
+        }
+        
+        // Si el pedido ya fue confirmado (estado processing o completed), NO mostrar el formulario
+        $confirmation_code = $order->get_meta('_payment_confirmation');
+        if (!empty($confirmation_code)) {
+            // Mostrar mensaje de éxito en lugar de formulario
+            ?>
+            <div class="wvp-payment-container">
+                <div class="wvp-success-box">
+                    <h3 style="color: #28a745; margin-top: 0;">✅ Pago Confirmado</h3>
+                    <p><strong>Código de Confirmación:</strong> <?php echo esc_html($confirmation_code); ?></p>
+                    <p>Tu pago ha sido recibido y está pendiente de verificación.</p>
+                </div>
+            </div>
+            <style>
+                .wvp-payment-container { max-width: 1200px; margin: 40px auto; padding: 20px; }
+                .wvp-success-box { background: #d4edda; border: 2px solid #28a745; padding: 30px; border-radius: 10px; text-align: center; }
+            </style>
+            <?php
             return;
         }
         
@@ -1635,7 +1826,17 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         $confirmation_code = $order->get_meta('_payment_confirmation');
         $bcv_rate = $order->get_meta('_bcv_rate_at_purchase');
         
+        // DEBUG
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP display_payment_info_simple: account_bank = ' . $account_bank);
+            error_log('WVP display_payment_info_simple: account_phone = ' . $account_phone);
+            error_log('WVP display_payment_info_simple: account_name = ' . $account_name);
+        }
+        
         if (!$account_bank || !$account_phone) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP display_payment_info_simple: No se muestra contenido - faltan account_bank o account_phone');
+            }
             return;
         }
         
@@ -1704,9 +1905,9 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                     <div class="wvp-alert">
                         <p style="margin: 0;"><strong>⚠️ Importante:</strong> Ingresa el código de referencia después de pagar.</p>
                     </div>
-                    <form method="post" action="" id="wvp-confirm-payment-form">
-                        <?php wp_nonce_field('wvp_confirm_payment', 'wvp_payment_nonce'); ?>
-                        <input type="hidden" name="action" value="wvp_confirm_payment">
+                    <form method="post" action="<?php echo esc_url($_SERVER['REQUEST_URI']); ?>" id="wvp-confirm-payment-form">
+                        <input type="hidden" name="wvp_payment_nonce" value="<?php echo wp_create_nonce('wvp_confirm_payment_' . $order_id); ?>">
+                        <input type="hidden" name="wvp_confirm_action" value="confirm_payment">
                         <input type="hidden" name="order_id" value="<?php echo esc_attr($order->get_id()); ?>">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                             <div class="wvp-form-group">
@@ -1734,9 +1935,10 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                             </div>
                         </div>
                         <div style="display: flex; gap: 15px; margin-top: 30px;">
-                            <button type="submit" class="wvp-btn-primary">✅ Completar Orden</button>
+                            <button type="submit" class="wvp-btn-primary" id="wvp-submit-confirmation">✅ Completar Orden</button>
                         </div>
                     </form>
+                    
                 </div>
             <?php endif; ?>
         </div>
@@ -1791,5 +1993,165 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         $payment_content = ob_get_clean();
         
         return $content . $payment_content;
+    }
+    
+    /**
+     * Procesa el formulario de confirmación de pago (método simple con POST)
+     */
+    public function process_payment_confirmation_simple($order_id) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP process_payment_confirmation_simple: Iniciando procesamiento para order: ' . $order_id);
+            error_log('WVP process_payment_confirmation_simple: $_POST completo: ' . print_r($_POST, true));
+        }
+        
+        // Verificar nonce
+        if (!isset($_POST['wvp_payment_nonce']) || !wp_verify_nonce($_POST['wvp_payment_nonce'], 'wvp_confirm_payment_' . $order_id)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP process_payment_confirmation_simple: Nonce inválido');
+            }
+            return;
+        }
+        
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            return;
+        }
+        
+        // Obtener datos del formulario
+        $payment_from_bank = sanitize_text_field($_POST['wvp_payment_from_bank'] ?? '');
+        $payment_from_phone = sanitize_text_field($_POST['wvp_payment_from_phone'] ?? '');
+        $payment_date = sanitize_text_field($_POST['wvp_payment_date'] ?? '');
+        $payment_reference = sanitize_text_field($_POST['wvp_payment_reference'] ?? '');
+        
+        // Validar campos
+        if (empty($payment_from_bank) || empty($payment_from_phone) || empty($payment_date) || empty($payment_reference)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP process_payment_confirmation_simple: Campos incompletos');
+            }
+            return;
+        }
+        
+        // Guardar datos de confirmación
+        $order->update_meta_data('_payment_confirmation', $payment_reference);
+        $order->update_meta_data('_payment_from_bank', $payment_from_bank);
+        $order->update_meta_data('_payment_from_bank_name', $this->get_bank_name($payment_from_bank));
+        $order->update_meta_data('_payment_from_phone', $payment_from_phone);
+        $order->update_meta_data('_payment_date', $payment_date);
+        $order->update_meta_data('_payment_reference', $payment_reference);
+        
+        // Cambiar estado del pedido
+        $order->update_status('processing', __('Pago confirmado por cliente', 'wvp'));
+        
+        // Enviar email de notificación al administrador
+        WC()->mailer()->emails['WC_Email_New_Order']->trigger($order_id);
+        
+        // Guardar orden
+        $order->save();
+        
+        // Agregar nota
+        $order->add_order_note(sprintf(
+            __('Pago confirmado - Banco: %s, Teléfono: %s, Fecha: %s, Referencia: %s', 'wvp'),
+            $this->get_bank_name($payment_from_bank),
+            $payment_from_phone,
+            $payment_date,
+            $payment_reference
+        ));
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP process_payment_confirmation_simple: Confirmación guardada exitosamente');
+        }
+        
+        // Redirigir después del procesamiento para evitar resubmit
+        wp_safe_redirect($_SERVER['REQUEST_URI']);
+        exit;
+    }
+    
+    /**
+     * Procesa el formulario de confirmación mediante AJAX
+     */
+    public function ajax_process_confirmation() {
+        // DEBUG detallado
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('WVP ajax_process_confirmation: Llamado');
+            error_log('WVP ajax_process_confirmation: $_POST completo: ' . print_r($_POST, true));
+        }
+        
+        // Verificar nonce
+        if (!isset($_POST['wvp_payment_nonce'])) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP ajax_process_confirmation: No hay nonce en $_POST');
+            }
+            wp_send_json_error(array('message' => __('No se proporcionó nonce de seguridad.', 'wvp')));
+            return;
+        }
+        
+        if (!wp_verify_nonce($_POST['wvp_payment_nonce'], 'wvp_confirm_payment')) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('WVP ajax_process_confirmation: Nonce inválido');
+                error_log('WVP ajax_process_confirmation: Nonce recibido: ' . $_POST['wvp_payment_nonce']);
+            }
+            wp_send_json_error(array('message' => __('Error de seguridad - nonce inválido.', 'wvp')));
+            return;
+        }
+        
+        if (!isset($_POST['order_id'])) {
+            wp_send_json_error(array('message' => __('Pedido no encontrado.', 'wvp')));
+            return;
+        }
+        
+        $order_id = intval($_POST['order_id']);
+        $order = wc_get_order($order_id);
+        
+        if (!$order) {
+            wp_send_json_error(array('message' => __('Pedido no encontrado.', 'wvp')));
+            return;
+        }
+        
+        if ($order->get_payment_method() !== $this->id) {
+            wp_send_json_error(array('message' => __('Método de pago incorrecto.', 'wvp')));
+            return;
+        }
+        
+        // Obtener datos del formulario
+        $payment_from_bank = sanitize_text_field($_POST['wvp_payment_from_bank'] ?? '');
+        $payment_from_phone = sanitize_text_field($_POST['wvp_payment_from_phone'] ?? '');
+        $payment_date = sanitize_text_field($_POST['wvp_payment_date'] ?? '');
+        $payment_reference = sanitize_text_field($_POST['wvp_payment_reference'] ?? '');
+        
+        // Validar campos requeridos
+        if (empty($payment_from_bank) || empty($payment_from_phone) || empty($payment_date) || empty($payment_reference)) {
+            wp_send_json_error(array('message' => __('Todos los campos son requeridos.', 'wvp')));
+            return;
+        }
+        
+        // Guardar datos de confirmación
+        $order->update_meta_data('_payment_confirmation', $payment_reference);
+        $order->update_meta_data('_payment_from_bank', $payment_from_bank);
+        $order->update_meta_data('_payment_from_bank_name', $this->get_bank_name($payment_from_bank));
+        $order->update_meta_data('_payment_from_phone', $payment_from_phone);
+        $order->update_meta_data('_payment_date', $payment_date);
+        $order->update_meta_data('_payment_reference', $payment_reference);
+        
+        // Actualizar estado del pedido a "processing" y enviar correo
+        // Esto es cuando realmente se procesa el pago
+        $order->update_status('processing', __('Cliente confirmó el pago móvil. Pedido en proceso.', 'wvp'));
+        
+        // Enviar correo de nueva orden
+        WC()->mailer()->emails['WC_Email_New_Order']->trigger($order->get_id());
+        
+        // Agregar nota al pedido
+        $order->add_order_note(sprintf(
+            __('Cliente confirmó pago móvil. Referencia: %s. Banco: %s. Teléfono: %s. Fecha: %s', 'wvp'),
+            $payment_reference,
+            $this->get_bank_name($payment_from_bank),
+            $payment_from_phone,
+            $payment_date
+        ), false, true);
+        
+        $order->save();
+        
+        wp_send_json_success(array(
+            'message' => __('¡Confirmación enviada exitosamente! Tu pedido está siendo procesado.', 'wvp')
+        ));
     }
 }
