@@ -162,24 +162,19 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
     }
     
     private function load_accounts() {
-        // DEBUG: Log de inicio
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP Pago Móvil: load_accounts() iniciado');
-        }
-        
-        // LIMPIAR CACHE AL CARGAR
+        // Usar cache con timeout de 1 hora
         $cache_key = 'wvp_accounts_' . $this->id;
-        delete_transient($cache_key);
+        $cached_accounts = get_transient($cache_key);
+        
+        if ($cached_accounts !== false) {
+            $this->accounts = $cached_accounts;
+            return;
+        }
         
         $this->accounts = array();
         
         // Intentar cargar desde la opción del gateway
         $accounts_data = $this->get_option("pago_movil_accounts", '');
-        
-        // DEBUG
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP Pago Móvil: accounts_data type: ' . gettype($accounts_data) . ', value: ' . (is_string($accounts_data) ? substr($accounts_data, 0, 100) : ''));
-        }
         
         // Si es string JSON, decodificar
         if (is_string($accounts_data) && !empty($accounts_data)) {
@@ -200,21 +195,11 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             }
         }
         
-        // DEBUG
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP Pago Móvil: accounts_data después de decode - type: ' . gettype($accounts_data) . ', is_array: ' . (is_array($accounts_data) ? 'yes' : 'no') . ', count: ' . (is_array($accounts_data) ? count($accounts_data) : 0));
-        }
-        
         // Cargar y validar cuentas
         if (is_array($accounts_data)) {
             foreach ($accounts_data as $key => $account) {
                 if (!is_array($account)) {
                     continue;
-                }
-                
-                // DEBUG
-                if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log('WVP Pago Móvil: Procesando cuenta ' . $key . ' - bank: ' . (isset($account['bank']) ? $account['bank'] : 'no definido'));
                 }
                 
                 // Aceptar cuenta si tiene al menos 'bank' definido
@@ -231,20 +216,12 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                         'phone' => !empty($account['phone']) ? $this->format_venezuelan_phone($account['phone']) : '',
                         'qr_image' => isset($account['qr_image']) ? esc_url($account['qr_image']) : ''
                     );
-                    
-                    if (defined('WP_DEBUG') && WP_DEBUG) {
-                        error_log('WVP Pago Móvil: Cuenta agregada - ID: ' . $account_id . ', key: ' . $key . ', bank: ' . $account['bank']);
-                    }
                 }
             }
         }
         
-        // DEBUG final
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP Pago Móvil: load_accounts() completado - Total cuentas cargadas: ' . count($this->accounts));
-        }
-        
-        // No guardar en cache - cargar siempre fresco
+        // Guardar en cache por 1 hora
+        set_transient($cache_key, $this->accounts, HOUR_IN_SECONDS);
     }
     
     /**
@@ -546,12 +523,6 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
     
     public function payment_fields() {
         
-        // DEBUG
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP Pago Móvil: payment_fields() llamado');
-            error_log('WVP Pago Móvil: accounts count: ' . (is_array($this->accounts) ? count($this->accounts) : 0));
-        }
-        
         // Descripción simple
         if ($this->description) {
             echo wpautop(wptexturize($this->description));
@@ -662,11 +633,6 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             // Obtener banco seleccionado - intentar desde cualquier fuente
             $selected_account_id = '';
             
-            // DEBUG
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP process_payment: $_POST keys: ' . print_r(array_keys($_POST), true));
-            }
-            
             // Para Blocks checkout
             if (isset($_POST['wvp_pago_movil_selected_account_id_blocks']) && !empty($_POST['wvp_pago_movil_selected_account_id_blocks'])) {
                 $selected_account_id = $_POST['wvp_pago_movil_selected_account_id_blocks'];
@@ -677,16 +643,10 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                 $selected_account_id = $_POST['wvp_pago_movil_selected_account_id'];
             }
             
-            // Si no hay banco seleccionado, usar el primero por defecto (temporal para debugging)
+            // Si no hay banco seleccionado, usar el primero por defecto
             if (empty($selected_account_id) && !empty($this->accounts)) {
-                // Usar el primer elemento del array
                 $first_account = reset($this->accounts);
                 $selected_account_id = $first_account['id'];
-                
-                if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log('WVP process_payment: Usando primera cuenta por defecto - ID: ' . $selected_account_id);
-                    error_log('WVP process_payment: Datos de la cuenta: ' . print_r($first_account, true));
-                }
             }
             
             if (empty($selected_account_id)) {
@@ -700,13 +660,6 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             }
             
             // Guardar datos del banco en el pedido
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP process_payment: Guardando datos del banco seleccionado');
-                error_log('WVP process_payment: selected_account = ' . print_r($selected_account, true));
-            }
-            
-            // No usar _payment_method_title ya que es un campo interno de WooCommerce
-            // $order->update_meta_data("_payment_method_title", $this->title);
             $order->update_meta_data("_payment_type", "pago_movil");
             $order->update_meta_data("_selected_account_id", $selected_account_id);
             $order->update_meta_data("_selected_account_name", $selected_account['name']);
@@ -726,40 +679,21 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             }
             
             // Crear pedido en estado on-hold (sin código de confirmación todavía)
-            // on-hold = pendiente de confirmación del cliente
             $order->update_status("on-hold", __("Esperando confirmación de pago móvil.", "wvp"));
-            
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP process_payment: Guardando pedido...');
-                error_log('WVP process_payment: order_id = ' . $order_id);
-            }
             
             // IMPORTANTE: Guardar el pedido ANTES de vaciar el carrito
             $order->save();
-            
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP process_payment: Pedido guardado con estado on-hold, order_id: ' . $order_id);
-            }
             
             // Vaciar carrito
             WC()->cart->empty_cart();
             
             // Redirigir a página de confirmación de pago
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP process_payment: Redirigiendo a página de confirmación');
-            }
-            
             return array(
                 "result" => "success",
                 "redirect" => wc_get_endpoint_url('order-received', $order_id, wc_get_checkout_url())
             );
             
         } catch (Exception $e) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP process_payment: ERROR - ' . $e->getMessage());
-                error_log('WVP process_payment: Stack trace - ' . $e->getTraceAsString());
-            }
-            
             wc_add_notice(__("Error al procesar el pago.", "wvp"), "error");
             return array("result" => "fail", "redirect" => "");
         }
@@ -811,36 +745,18 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
      * Mostrar información de pago en la página de agradecimiento
      */
     public function display_payment_info_in_thankyou($order_id) {
-        // DEBUG
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP display_payment_info_in_thankyou: Llamado con order_id: ' . $order_id);
-        }
-        
         if (!is_numeric($order_id)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP display_payment_info_in_thankyou: order_id no es numérico');
-            }
             return;
         }
         
         $order = wc_get_order($order_id);
         if (!$order) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP display_payment_info_in_thankyou: Order no encontrado');
-            }
             return;
         }
         
         $payment_method = $order->get_payment_method();
         if ($payment_method !== $this->id) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP display_payment_info_in_thankyou: payment_method=' . $payment_method . ' vs gateway_id=' . $this->id);
-            }
             return;
-        }
-        
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP display_payment_info_in_thankyou: Llamando display_payment_info_simple');
         }
         
         // Llamar al método de display
@@ -1775,42 +1691,23 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
     }
     
     public function display_payment_info_simple($order_id) {
-        // DEBUG AL INICIO
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP display_payment_info_simple: INICIANDO con order_id: ' . $order_id);
-        }
-        
         if (!is_numeric($order_id)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP display_payment_info_simple: order_id no es numérico');
-            }
             return;
         }
         
         $order = wc_get_order($order_id);
         if (!$order) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP display_payment_info_simple: Order no encontrado');
-            }
             return;
         }
         
         $payment_method = $order->get_payment_method();
         if ($payment_method !== $this->id) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP display_payment_info_simple: payment_method=' . $payment_method . ' vs gateway_id=' . $this->id);
-            }
             return;
         }
         
         // Procesar confirmación de pago si se envió el formulario
         if (isset($_POST['wvp_confirm_action']) && $_POST['wvp_confirm_action'] === 'confirm_payment' && isset($_POST['order_id']) && $_POST['order_id'] == $order_id) {
             $this->process_payment_confirmation_simple($order_id);
-        }
-        
-        // DEBUG
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP display_payment_info_simple: Validaciones pasadas, mostrando contenido');
         }
         
         // Si el pedido ya fue confirmado (estado processing o completed), NO mostrar el formulario
@@ -1837,17 +1734,7 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         $confirmation_code = $order->get_meta('_payment_confirmation');
         $bcv_rate = $order->get_meta('_bcv_rate_at_purchase');
         
-        // DEBUG
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP display_payment_info_simple: account_bank = ' . $account_bank);
-            error_log('WVP display_payment_info_simple: account_phone = ' . $account_phone);
-            error_log('WVP display_payment_info_simple: account_name = ' . $account_name);
-        }
-        
         if (!$account_bank || !$account_phone) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP display_payment_info_simple: No se muestra contenido - faltan account_bank o account_phone');
-            }
             return;
         }
         
@@ -1981,16 +1868,8 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
      * Procesa el formulario de confirmación de pago (método simple con POST)
      */
     public function process_payment_confirmation_simple($order_id) {
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP process_payment_confirmation_simple: Iniciando procesamiento para order: ' . $order_id);
-            error_log('WVP process_payment_confirmation_simple: $_POST completo: ' . print_r($_POST, true));
-        }
-        
         // Verificar nonce
         if (!isset($_POST['wvp_payment_nonce']) || !wp_verify_nonce($_POST['wvp_payment_nonce'], 'wvp_confirm_payment_' . $order_id)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP process_payment_confirmation_simple: Nonce inválido');
-            }
             return;
         }
         
@@ -2007,9 +1886,6 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         
         // Validar campos
         if (empty($payment_from_bank) || empty($payment_from_phone) || empty($payment_date) || empty($payment_reference)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('WVP process_payment_confirmation_simple: Campos incompletos');
-            }
             return;
         }
         
@@ -2038,10 +1914,6 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             $payment_date,
             $payment_reference
         ));
-        
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('WVP process_payment_confirmation_simple: Confirmación guardada exitosamente');
-        }
         
         // Redirigir después del procesamiento para evitar resubmit
         wp_safe_redirect($_SERVER['REQUEST_URI']);
