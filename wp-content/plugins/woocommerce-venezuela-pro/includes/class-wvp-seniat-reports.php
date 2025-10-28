@@ -183,8 +183,12 @@ class WVP_SENIAT_Reports {
                 <div class="wvp-analysis-grid">
                     <div class="wvp-analysis-item">
                         <h4><?php _e('Rentabilidad', 'wvp'); ?></h4>
-                        <p><strong><?php _e('Margen de IVA:', 'wvp'); ?></strong> <?php echo number_format(($report_data['total_iva_usd'] / $report_data['total_sales_usd']) * 100, 2); ?>%</p>
-                        <p><strong><?php _e('Margen de IGTF:', 'wvp'); ?></strong> <?php echo number_format(($report_data['total_igtf_usd'] / $report_data['total_sales_usd']) * 100, 2); ?>%</p>
+                        <?php 
+                        $iva_margin = $report_data['total_sales_usd'] > 0 ? ($report_data['total_iva_usd'] / $report_data['total_sales_usd']) * 100 : 0;
+                        $igtf_margin = $report_data['total_sales_usd'] > 0 ? ($report_data['total_igtf_usd'] / $report_data['total_sales_usd']) * 100 : 0;
+                        ?>
+                        <p><strong><?php _e('Margen de IVA:', 'wvp'); ?></strong> <?php echo number_format($iva_margin, 2); ?>%</p>
+                        <p><strong><?php _e('Margen de IGTF:', 'wvp'); ?></strong> <?php echo number_format($igtf_margin, 2); ?>%</p>
                         <p><strong><?php _e('Total Impuestos:', 'wvp'); ?></strong> <?php echo wc_price($report_data['total_iva_usd'] + $report_data['total_igtf_usd']); ?></p>
                     </div>
                     
@@ -655,7 +659,7 @@ class WVP_SENIAT_Reports {
         // Calcular análisis adicionales
         $total_transactions = count($processed_transactions);
         $average_ticket_usd = $total_transactions > 0 ? $total_sales_usd / $total_transactions : 0;
-        $average_ticket_ves = $total_sales_ves / $total_transactions;
+        $average_ticket_ves = $total_transactions > 0 ? $total_sales_ves / $total_transactions : 0;
         $average_rate = count($rates) > 0 ? array_sum($rates) / count($rates) : 0;
         $min_rate = count($rates) > 0 ? min($rates) : 0;
         $max_rate = count($rates) > 0 ? max($rates) : 0;

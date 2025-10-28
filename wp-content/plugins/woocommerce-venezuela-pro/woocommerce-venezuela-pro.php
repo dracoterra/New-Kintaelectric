@@ -288,11 +288,6 @@ class WooCommerce_Venezuela_Pro {
         // Cargar optimizador de rendimiento
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-performance-optimizer.php';
         
-        // Cargar archivo de prueba (solo en admin)
-        if (is_admin()) {
-            require_once WVP_PLUGIN_PATH . 'includes/class-wvp-simple-css-test.php';
-        }
-        
         // Cargar reportes fiscales
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-fiscal-reports.php';
         
