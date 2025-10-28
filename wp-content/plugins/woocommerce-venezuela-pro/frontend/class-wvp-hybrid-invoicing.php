@@ -173,7 +173,7 @@ class WVP_Hybrid_Invoicing {
     public function modify_invoice_content($order) {
         // Esta función se ejecutará cuando se genere una factura PDF
         // La implementación específica dependerá del plugin de facturas utilizado
-        error_log('WVP: Modificando factura PDF para pedido #' . $order->get_id());
+        // Placeholder para futuras implementaciones
     }
     
     /**
@@ -206,8 +206,53 @@ class WVP_Hybrid_Invoicing {
         
         echo '<div class="wvp-hybrid-invoicing-note" style="background-color: #f8f9fa; border-left: 4px solid #0073aa; padding: 15px; margin: 20px 0; font-size: 14px; color: #333;">';
         echo '<strong>' . __("Nota Importante:", "wvp") . '</strong><br>';
-        echo $note;
+        echo esc_html($note);
         echo '</div>';
+    }
+    
+    /**
+     * Añadir nota aclaratoria en el admin
+     * 
+     * @param int $order_id ID del pedido
+     */
+    public function add_hybrid_invoicing_admin_note($order_id) {
+        $order = wc_get_order($order_id);
+        
+        if (!$order) {
+            return;
+        }
+        
+        // Obtener la tasa histórica del pedido
+        $historical_rate = $order->get_meta('_bcv_rate_at_purchase');
+        
+        if (!$historical_rate || $historical_rate <= 0) {
+            return; // No hay tasa histórica
+        }
+        
+        // Obtener el total original en USD
+        $original_total = $order->get_total();
+        
+        // Obtener la fecha del pedido
+        $order_date = $order->get_date_created();
+        $formatted_date = $order_date ? $order_date->date_i18n('d/m/Y') : date('d/m/Y');
+        
+        // Crear la nota aclaratoria
+        $note = sprintf(
+            __("Transacción procesada en Dólares (USD). Monto total pagado: $%s. Tasa de cambio aplicada BCV del día %s: 1 USD = %s Bs.", "wvp"),
+            number_format($original_total, 2),
+            $formatted_date,
+            number_format($historical_rate, 2, ',', '.')
+        );
+        
+        echo '<tr>';
+        echo '<td scope="row" colspan="3">&nbsp;</td>';
+        echo '<td class="total">';
+        echo '<div style="background-color: #f8f9fa; border-left: 4px solid #0073aa; padding: 10px; font-size: 12px; color: #666;">';
+        echo '<strong>' . esc_html__("Nota Importante:", "wvp") . '</strong><br>';
+        echo esc_html($note);
+        echo '</div>';
+        echo '</td>';
+        echo '</tr>';
     }
     
     /**
