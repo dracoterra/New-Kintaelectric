@@ -29422,8 +29422,7 @@ ul.products>li.product.product-card:nth-last-child(2) {
     font-weight: 700
 }
 
-.ec-tabs>li.active a::before,
-.wc-tabs>li.active a::before {
+.ec-tabs>li.active a::before {
     content: " ";
     height: 4px;
     width: 10px;
@@ -29435,8 +29434,7 @@ ul.products>li.product.product-card:nth-last-child(2) {
     transform: translateX(-50%)
 }
 
-.ec-tabs>li.active a::after,
-.wc-tabs>li.active a::after {
+.ec-tabs>li.active a::after {
     content: " ";
     border-bottom: 2px solid transparent;
     display: block;
@@ -30741,7 +30739,7 @@ dl.variation dd p {
 
 .in-stock span,
 p.in-stock {
-    color: #198754
+    color: var(--bs-primary);
 }
 
 .out-of-stock span,
@@ -47557,7 +47555,6 @@ ul.products[data-view=list-view]>li.product .product-item__footer .add-to-cart-w
 .single-product .woocommerce-tabs~div.products>h2::after,
 .track-order .h2::after,
 .track-order h2::after,
-.wc-tabs>li.active a::after,
 .widget.widget_tag_cloud .tagcloud a:focus,
 .widget.widget_tag_cloud .tagcloud a:hover,
 .widget_electro_products_carousel_widget .section-products-carousel .owl-nav .owl-next:hover,
@@ -51039,4 +51036,16 @@ svg#yith-wcwl-icon-heart-outline{
 
 .owl-item.active{
     padding-right: 3px !important;
+}
+
+/* WooCommerce wisth*/
+table.shop_table.cart.wishlist_table.wishlist_view.traditional.responsive span.nobr,
+table.shop_table.cart.wishlist_table.wishlist_view.traditional.responsive th.product-name, table.shop_table td.product-name {
+    font-size: .9rem !important;
+    text-transform: uppercase !important;
+    text-align: center !important;
+}
+
+li.share-button svg {
+    color: #fff !important;
 }
