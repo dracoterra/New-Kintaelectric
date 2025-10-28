@@ -630,17 +630,27 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         try {
             $order = wc_get_order($order_id);
             
+            if (!$order) {
+                throw new Exception("Pedido inválido");
+            }
+            
+            // Verificar que el usuario tiene permisos para esta orden
+            $user_id = get_current_user_id();
+            if ($user_id > 0 && $order->get_user_id() !== $user_id) {
+                throw new Exception("No tienes permisos para este pedido");
+            }
+            
             // Obtener banco seleccionado - intentar desde cualquier fuente
             $selected_account_id = '';
             
-            // Para Blocks checkout
+            // Para Blocks checkout - SANITIZAR INPUT
             if (isset($_POST['wvp_pago_movil_selected_account_id_blocks']) && !empty($_POST['wvp_pago_movil_selected_account_id_blocks'])) {
-                $selected_account_id = $_POST['wvp_pago_movil_selected_account_id_blocks'];
+                $selected_account_id = sanitize_text_field($_POST['wvp_pago_movil_selected_account_id_blocks']);
             }
             
-            // Para checkout clásico
+            // Para checkout clásico - SANITIZAR INPUT
             if (empty($selected_account_id) && isset($_POST['wvp_pago_movil_selected_account_id']) && !empty($_POST['wvp_pago_movil_selected_account_id'])) {
-                $selected_account_id = $_POST['wvp_pago_movil_selected_account_id'];
+                $selected_account_id = sanitize_text_field($_POST['wvp_pago_movil_selected_account_id']);
             }
             
             // Si no hay banco seleccionado, usar el primero por defecto
@@ -649,27 +659,30 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
                 $selected_account_id = $first_account['id'];
             }
             
+            // Validar que el account_id sea seguro
+            $selected_account_id = absint($selected_account_id);
+            
             if (empty($selected_account_id)) {
                 throw new Exception("Banco seleccionado no válido");
             }
             
             $selected_account = $this->get_account($selected_account_id);
             
-            if (!$selected_account) {
+            if (!$selected_account || !is_array($selected_account)) {
                 throw new Exception("Banco seleccionado no válido");
             }
             
-            // Guardar datos del banco en el pedido
-            $order->update_meta_data("_payment_type", "pago_movil");
-            $order->update_meta_data("_selected_account_id", $selected_account_id);
-            $order->update_meta_data("_selected_account_name", $selected_account['name']);
-            $order->update_meta_data("_selected_account_ci", $selected_account['ci']);
-            $order->update_meta_data("_selected_account_bank", $selected_account['bank']);
-            $order->update_meta_data("_selected_account_bank_name", $selected_account['bank_name']);
-            $order->update_meta_data("_selected_account_phone", $selected_account['phone']);
+            // Guardar datos del banco en el pedido - SANITIZAR TODO
+            $order->update_meta_data("_payment_type", sanitize_text_field("pago_movil"));
+            $order->update_meta_data("_selected_account_id", absint($selected_account_id));
+            $order->update_meta_data("_selected_account_name", sanitize_text_field($selected_account['name'] ?? ''));
+            $order->update_meta_data("_selected_account_ci", sanitize_text_field($selected_account['ci'] ?? ''));
+            $order->update_meta_data("_selected_account_bank", sanitize_text_field($selected_account['bank'] ?? ''));
+            $order->update_meta_data("_selected_account_bank_name", sanitize_text_field($selected_account['bank_name'] ?? ''));
+            $order->update_meta_data("_selected_account_phone", sanitize_text_field($selected_account['phone'] ?? ''));
             
             if (!empty($selected_account['qr_image'])) {
-                $order->update_meta_data("_selected_account_qr_image", $selected_account['qr_image']);
+                $order->update_meta_data("_selected_account_qr_image", esc_url_raw($selected_account['qr_image']));
             }
             
             // Guardar tasa BCV
@@ -1868,6 +1881,12 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
      * Procesa el formulario de confirmación de pago (método simple con POST)
      */
     public function process_payment_confirmation_simple($order_id) {
+        // Verificar que order_id es numérico y válido
+        $order_id = absint($order_id);
+        if ($order_id <= 0) {
+            return;
+        }
+        
         // Verificar nonce
         if (!isset($_POST['wvp_payment_nonce']) || !wp_verify_nonce($_POST['wvp_payment_nonce'], 'wvp_confirm_payment_' . $order_id)) {
             return;
@@ -1878,14 +1897,38 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
             return;
         }
         
-        // Obtener datos del formulario
+        // Verificar que la orden pertenece al usuario o es guest checkout
+        $user_id = get_current_user_id();
+        if ($user_id > 0) {
+            $order_user_id = $order->get_user_id();
+            if ($order_user_id > 0 && $order_user_id !== $user_id) {
+                return;
+            }
+        }
+        
+        // Obtener datos del formulario - SANITIZAR
         $payment_from_bank = sanitize_text_field($_POST['wvp_payment_from_bank'] ?? '');
         $payment_from_phone = sanitize_text_field($_POST['wvp_payment_from_phone'] ?? '');
         $payment_date = sanitize_text_field($_POST['wvp_payment_date'] ?? '');
         $payment_reference = sanitize_text_field($_POST['wvp_payment_reference'] ?? '');
         
-        // Validar campos
+        // Validar campos requeridos
         if (empty($payment_from_bank) || empty($payment_from_phone) || empty($payment_date) || empty($payment_reference)) {
+            return;
+        }
+        
+        // Validación adicional: formato de referencia (solo números)
+        if (!preg_match('/^[0-9]{6,20}$/', $payment_reference)) {
+            return;
+        }
+        
+        // Validación adicional: formato de teléfono venezolano
+        if (!preg_match('/^(0[0-9]{2,3}[0-9]{7})$/', $payment_from_phone)) {
+            return;
+        }
+        
+        // Validación adicional: formato de fecha
+        if (!preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/', $payment_date)) {
             return;
         }
         
@@ -1906,17 +1949,18 @@ class WVP_Gateway_Pago_Movil extends WC_Payment_Gateway {
         // Guardar orden
         $order->save();
         
-        // Agregar nota
+        // Agregar nota - ESCAPAR DATOS
         $order->add_order_note(sprintf(
             __('Pago confirmado - Banco: %s, Teléfono: %s, Fecha: %s, Referencia: %s', 'wvp'),
-            $this->get_bank_name($payment_from_bank),
-            $payment_from_phone,
-            $payment_date,
-            $payment_reference
+            esc_html($this->get_bank_name($payment_from_bank)),
+            esc_html($payment_from_phone),
+            esc_html($payment_date),
+            esc_html($payment_reference)
         ));
         
         // Redirigir después del procesamiento para evitar resubmit
-        wp_safe_redirect($_SERVER['REQUEST_URI']);
+        $redirect_url = isset($_SERVER['REQUEST_URI']) ? esc_url_raw($_SERVER['REQUEST_URI']) : wc_get_checkout_url();
+        wp_safe_redirect($redirect_url);
         exit;
     }
     
