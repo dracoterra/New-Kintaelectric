@@ -14776,7 +14776,7 @@ textarea.input-text {
     display: inline-block;
     font-size: 1.429em;
     margin-right: 25px;
-    line-height: 2.429em;
+    line-height: auto;
     margin-bottom: 0
 }
 

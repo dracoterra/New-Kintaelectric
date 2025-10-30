@@ -88,13 +88,19 @@ class KintaElectric_Newsletter_Widget extends WP_Widget {
 		<div class="footer-newsletter">
 			<div class="container">
 				<div class="footer-newsletter-inner row">
-					<div class="newsletter-content col-lg-7">
-						<h5 class="newsletter-title"><?php echo esc_html( $title ); ?></h5>
-						<span class="newsletter-marketing-text">
-							<?php echo esc_html( $marketing_text ); ?> <strong><?php echo esc_html( $coupon_text ); ?></strong>
-						</span>
+					<div class="newsletter-content col-lg-8 d-flex align-items-center">
+						<div class="row justify-center align-items-center w-100">
+							<div class="col-lg-6">
+								<h5 class="newsletter-title"><?php echo esc_html( $title ); ?></h5>
+							</div>
+							<div class="col-lg-6">
+								<span class="newsletter-marketing-text">
+									<?php echo esc_html( $marketing_text ); ?> <strong><?php echo esc_html( $coupon_text ); ?></strong>
+								</span>
+							</div>
+						</div>
 					</div>
-					<div class="newsletter-form col-lg-5 align-self-center">
+					<div class="newsletter-form col-lg-4 align-self-center">
 						<?php if ( ! empty( $form_shortcode ) ) : ?>
 							<!-- Contact Form 7 Shortcode -->
 							<div class="wpforms-container wpforms-container-full ec-newsletter-form">
