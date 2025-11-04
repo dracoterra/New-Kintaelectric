@@ -654,3 +654,70 @@ body[class*="electro-dark"] form.cart {
     background: #212121 !important;
     background-color: #212121 !important;
 }
+
+/* Tabla de lista de deseos - Modo oscuro */
+body.electro-dark table.wishlist_table,
+body.electro-dark .wishlist_table,
+body.electro-dark table.shop_table.wishlist_table,
+body.electro-dark table.wishlist_table thead th,
+body.electro-dark .wishlist_table thead th,
+body.electro-dark table.wishlist_table tbody td,
+body.electro-dark .wishlist_table tbody td,
+body.electro-dark table.wishlist_table tbody tr,
+body.electro-dark .wishlist_table tbody tr,
+body[class*="electro-dark"] table.wishlist_table,
+body[class*="electro-dark"] .wishlist_table,
+body[class*="electro-dark"] table.shop_table.wishlist_table {
+    background: #212121 !important;
+    background-color: #212121 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+body.electro-dark table.wishlist_table thead th,
+body.electro-dark .wishlist_table thead th,
+body[class*="electro-dark"] table.wishlist_table thead th,
+body[class*="electro-dark"] .wishlist_table thead th {
+    background: #2a2a2a !important;
+    background-color: #2a2a2a !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+body.electro-dark table.wishlist_table tbody td,
+body.electro-dark .wishlist_table tbody td,
+body.electro-dark table.wishlist_table tbody tr td,
+body.electro-dark .wishlist_table tbody tr td,
+body[class*="electro-dark"] table.wishlist_table tbody td,
+body[class*="electro-dark"] .wishlist_table tbody td {
+    background: #212121 !important;
+    background-color: #212121 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+body.electro-dark table.wishlist_table tbody tr:nth-child(even) td,
+body.electro-dark .wishlist_table tbody tr:nth-child(even) td,
+body[class*="electro-dark"] table.wishlist_table tbody tr:nth-child(even) td,
+body[class*="electro-dark"] .wishlist_table tbody tr:nth-child(even) td {
+    background: #1a1a1a !important;
+    background-color: #1a1a1a !important;
+}
+
+body.electro-dark table.wishlist_table a,
+body.electro-dark .wishlist_table a,
+body.electro-dark table.wishlist_table .product-name a,
+body.electro-dark .wishlist_table .product-name a,
+body[class*="electro-dark"] table.wishlist_table a,
+body[class*="electro-dark"] .wishlist_table a {
+    color: #ffffff !important;
+}
+
+body.electro-dark table.wishlist_table .price,
+body.electro-dark .wishlist_table .price,
+body.electro-dark table.wishlist_table .amount,
+body.electro-dark .wishlist_table .amount,
+body[class*="electro-dark"] table.wishlist_table .price,
+body[class*="electro-dark"] .wishlist_table .price {
+    color: #ffffff !important;
+}

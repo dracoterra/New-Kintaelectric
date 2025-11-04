@@ -772,19 +772,75 @@ function kintaelectric_add_dynamic_css() {
     echo '<style type="text/css" id="kintaelectric-dynamic-css">' . $dynamic_css . '</style>';
     
     // CSS adicional para modo oscuro en WooCommerce
-    if ( class_exists( 'WooCommerce' ) && is_product() ) {
-        $dark_mode_css = '
-        /* Formulario del carrito - Modo oscuro (CSS inline para máxima prioridad) */
-        body.electro-dark .single-product form.cart,
-        body.electro-dark .woocommerce .single-product form.cart,
-        body.electro-dark .woocommerce-page .single-product form.cart,
-        body[class*="electro-dark"] .single-product form.cart,
-        body[class*="electro-dark"] .woocommerce .single-product form.cart,
-        body[class*="electro-dark"] form.cart {
-            background: #212121 !important;
-            background-color: #212121 !important;
-        }';
-        echo '<style type="text/css" id="kintaelectric-dark-mode-woocommerce">' . $dark_mode_css . '</style>';
+    if ( class_exists( 'WooCommerce' ) ) {
+        $dark_mode_css = '';
+        
+        // CSS para página de producto
+        if ( is_product() ) {
+            $dark_mode_css .= '
+            /* Formulario del carrito - Modo oscuro (CSS inline para máxima prioridad) */
+            body.electro-dark .single-product form.cart,
+            body.electro-dark .woocommerce .single-product form.cart,
+            body.electro-dark .woocommerce-page .single-product form.cart,
+            body[class*="electro-dark"] .single-product form.cart,
+            body[class*="electro-dark"] .woocommerce .single-product form.cart,
+            body[class*="electro-dark"] form.cart {
+                background: #212121 !important;
+                background-color: #212121 !important;
+            }';
+        }
+        
+        // CSS para página de wishlist
+        if ( function_exists( 'yith_wcwl_is_wishlist_page' ) && yith_wcwl_is_wishlist_page() ) {
+            $dark_mode_css .= '
+            /* Tabla de lista de deseos - Modo oscuro */
+            body.electro-dark table.wishlist_table,
+            body.electro-dark .wishlist_table,
+            body.electro-dark table.shop_table.wishlist_table,
+            body[class*="electro-dark"] table.wishlist_table,
+            body[class*="electro-dark"] .wishlist_table {
+                background: #212121 !important;
+                background-color: #212121 !important;
+                color: #ffffff !important;
+                border-color: #333333 !important;
+            }
+            body.electro-dark table.wishlist_table thead th,
+            body.electro-dark .wishlist_table thead th,
+            body[class*="electro-dark"] table.wishlist_table thead th {
+                background: #2a2a2a !important;
+                background-color: #2a2a2a !important;
+                color: #ffffff !important;
+                border-color: #333333 !important;
+            }
+            body.electro-dark table.wishlist_table tbody td,
+            body.electro-dark .wishlist_table tbody td,
+            body[class*="electro-dark"] table.wishlist_table tbody td {
+                background: #212121 !important;
+                background-color: #212121 !important;
+                color: #ffffff !important;
+                border-color: #333333 !important;
+            }
+            body.electro-dark table.wishlist_table tbody tr:nth-child(even) td,
+            body[class*="electro-dark"] table.wishlist_table tbody tr:nth-child(even) td {
+                background: #1a1a1a !important;
+                background-color: #1a1a1a !important;
+            }
+            body.electro-dark table.wishlist_table a,
+            body.electro-dark .wishlist_table a,
+            body.electro-dark table.wishlist_table .product-name a,
+            body[class*="electro-dark"] table.wishlist_table a {
+                color: #ffffff !important;
+            }
+            body.electro-dark table.wishlist_table .price,
+            body.electro-dark .wishlist_table .price,
+            body[class*="electro-dark"] table.wishlist_table .price {
+                color: #ffffff !important;
+            }';
+        }
+        
+        if ( !empty( $dark_mode_css ) ) {
+            echo '<style type="text/css" id="kintaelectric-dark-mode-woocommerce">' . $dark_mode_css . '</style>';
+        }
     }
 }
 add_action( 'wp_head', 'kintaelectric_add_dynamic_css', 999 );
