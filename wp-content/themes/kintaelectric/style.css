@@ -13779,6 +13779,19 @@ body.page-template-template-page-sidebar-left .content-area {
         display: none !important;
     }
     
+    /* Ocultar sidebar de shop en móvil */
+    body.woocommerce-shop .site-content .sidebar,
+    body.woocommerce-shop #sidebar.sidebar,
+    body.post-type-archive-product .site-content .sidebar,
+    body.post-type-archive-product #sidebar.sidebar,
+    .woocommerce-shop .site-content .sidebar,
+    .woocommerce-shop #sidebar.sidebar {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        left: -9999px !important;
+    }
+    
     /* Ajustar el contenido principal para ocupar todo el ancho cuando el sidebar está oculto */
     .site-content-inner.row {
         flex-direction: column;
@@ -13789,12 +13802,43 @@ body.page-template-template-page-sidebar-left .content-area {
         flex: 1 1 100% !important;
         max-width: 100% !important;
     }
+    
+    /* Ajustar contenido principal de shop para ocupar todo el ancho en móvil */
+    body.woocommerce-shop .site-content-inner .content-area,
+    body.post-type-archive-product .site-content-inner .content-area,
+    .woocommerce-shop .site-content-inner .content-area {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        max-width: 100% !important;
+    }
 }
 
 @media (min-width:768px) and (max-width:1199.98px) {
     .site-content .sidebar {
         left: -350px;
         width: 350px
+    }
+    
+    /* Ocultar sidebar de shop en tablet */
+    body.woocommerce-shop .site-content .sidebar,
+    body.woocommerce-shop #sidebar.sidebar,
+    body.post-type-archive-product .site-content .sidebar,
+    body.post-type-archive-product #sidebar.sidebar,
+    .woocommerce-shop .site-content .sidebar,
+    .woocommerce-shop #sidebar.sidebar {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        left: -9999px !important;
+    }
+    
+    /* Ajustar contenido principal para ocupar todo el ancho cuando el sidebar está oculto */
+    body.woocommerce-shop .site-content-inner .content-area,
+    body.post-type-archive-product .site-content-inner .content-area,
+    .woocommerce-shop .site-content-inner .content-area {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        max-width: 100% !important;
     }
 }
 
