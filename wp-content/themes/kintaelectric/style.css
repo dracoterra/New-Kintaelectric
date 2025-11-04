@@ -15005,7 +15005,7 @@ textarea.input-text {
 }
 
 .social-icons-color .fa-twitter-square {
-    color: #1da1f2
+    color: #ccc634
 }
 
 .social-icons-color .fa-whatsapp {
@@ -15078,7 +15078,7 @@ textarea.input-text {
 
     .footer-social-icons .social-icons .fa-twitter:focus,
     .footer-social-icons .social-icons .fa-twitter:hover {
-        color: #1da1f2
+        color: #ccc634
     }
 
     .footer-social-icons .social-icons .fa-whatsapp:focus,
@@ -25020,16 +25020,16 @@ body.electro-dark input[type=url]:focus,
 body.electro-dark textarea:active,
 body.electro-dark textarea:focus {
     background-color: var(--bs-ec-dark);
-    border-color: #1da1f2
+    border-color: #ccc634
 }
 
 body.electro-dark .accessories .accessory-checkbox,
 body.electro-dark .table-compare .product-title {
-    color: #1da1f2
+    color: #ccc634
 }
 
 body.electro-dark .accessories .accessory-checkbox .product-title {
-    border-color: #1da1f2
+    border-color: #ccc634
 }
 
 body.electro-dark .dokan-btn:not(:hover),
@@ -25167,7 +25167,7 @@ body.electro-dark table.cart .coupon .input-text:not(:focus) {
 
 body.electro-dark .select2-container--default .select2-results__option--highlighted[aria-selected],
 body.electro-dark .select2-container--default .select2-results__option--highlighted[data-selected] {
-    background-color: #1da1f2
+    background-color: #ccc634
 }
 
 body.electro-dark .categories-list-bg .border-bottom {
@@ -26228,7 +26228,7 @@ body.electro-dark table>:not(caption)>*>* {
 }
 
 .electro-dark .product .price {
-    color: #1da1f2 !important
+    color: #ccc634 !important
 }
 
 .electro-dark .product .hover-area {
@@ -26416,7 +26416,7 @@ body.electro-dark table>:not(caption)>*>* {
 }
 
 .electro-dark .product_list_widget .electro-price {
-    color: #1da1f2
+    color: #ccc634
 }
 
 .electro-dark .product_list_widget .electro-price ins {

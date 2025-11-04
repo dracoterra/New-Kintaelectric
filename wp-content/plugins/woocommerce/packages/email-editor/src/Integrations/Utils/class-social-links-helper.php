@@ -95,7 +95,7 @@ class Social_Links_Helper {
 			'tiktok'        => '#000',
 			'tumblr'        => '#011835',
 			'twitch'        => '#6440a4',
-			'twitter'       => '#1da1f2',
+			'twitter'       => '#ccc634',
 			'vimeo'         => '#1eb7ea',
 			'vk'            => '#4680c2',
 			'whatsapp'      => '#25d366',
