@@ -151,6 +151,10 @@ body.electro-dark form.cart,
 }
 
 
+.electro-dark span.wvp-price-usd {
+    color: #fff !important;
+}
+
 /* Cantidad */
 .single-product .quantity {
     display: inline-block !important;
