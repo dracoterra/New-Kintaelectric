@@ -119,7 +119,7 @@ function kintaelectric_enqueue_electro_assets() {
     
     // WooCommerce Custom Styles
     if ( class_exists( 'WooCommerce' ) ) {
-        wp_enqueue_style( 'kintaelectric-woocommerce-custom', kintaelectric_ASSETS_URL . 'css/hello-commerce-woocommerce.css', array( 'electro-style' ), '1.0.0' );
+        wp_enqueue_style( 'kintaelectric-woocommerce-custom', kintaelectric_ASSETS_URL . 'css/hello-commerce-woocommerce.css', array( 'electro-style' ), '1.0.1' );
     }
     
     // HideMaxListItems Script for Filters
@@ -770,8 +770,24 @@ function kintaelectric_generate_dynamic_css() {
 function kintaelectric_add_dynamic_css() {
     $dynamic_css = kintaelectric_generate_dynamic_css();
     echo '<style type="text/css" id="kintaelectric-dynamic-css">' . $dynamic_css . '</style>';
+    
+    // CSS adicional para modo oscuro en WooCommerce
+    if ( class_exists( 'WooCommerce' ) && is_product() ) {
+        $dark_mode_css = '
+        /* Formulario del carrito - Modo oscuro (CSS inline para máxima prioridad) */
+        body.electro-dark .single-product form.cart,
+        body.electro-dark .woocommerce .single-product form.cart,
+        body.electro-dark .woocommerce-page .single-product form.cart,
+        body[class*="electro-dark"] .single-product form.cart,
+        body[class*="electro-dark"] .woocommerce .single-product form.cart,
+        body[class*="electro-dark"] form.cart {
+            background: #212121 !important;
+            background-color: #212121 !important;
+        }';
+        echo '<style type="text/css" id="kintaelectric-dark-mode-woocommerce">' . $dark_mode_css . '</style>';
+    }
 }
-add_action( 'wp_head', 'kintaelectric_add_dynamic_css' );
+add_action( 'wp_head', 'kintaelectric_add_dynamic_css', 999 );
 
 
 /**

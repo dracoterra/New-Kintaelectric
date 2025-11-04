@@ -137,6 +137,20 @@ section.related.products{
     border: 1px solid var(--border-color) !important;
 }
 
+/* Formulario del carrito - Modo oscuro */
+body.electro-dark .single-product form.cart,
+body.electro-dark .woocommerce .single-product form.cart,
+body.electro-dark .woocommerce-page .single-product form.cart,
+.electro-dark .single-product form.cart,
+.electro-dark .woocommerce .single-product form.cart,
+.electro-dark .woocommerce-page .single-product form.cart,
+body.electro-dark form.cart,
+.electro-dark form.cart {
+    background: #212121 !important;
+    background-color: #212121 !important;
+}
+
+
 /* Cantidad */
 .single-product .quantity {
     display: inline-block !important;
@@ -622,3 +636,21 @@ section.related.products{
     }
 }
 
+/* Formulario del carrito - Modo oscuro (Regla final con máxima especificidad) */
+body.electro-dark .single-product form.cart,
+body.electro-dark .woocommerce .single-product form.cart,
+body.electro-dark .woocommerce-page .single-product form.cart,
+.electro-dark .single-product form.cart,
+.electro-dark .woocommerce .single-product form.cart,
+.electro-dark .woocommerce-page .single-product form.cart,
+body.electro-dark form.cart,
+.electro-dark form.cart,
+body.electro-dark .single-product .summary form.cart,
+.electro-dark .single-product .summary form.cart,
+body.electro-dark .woocommerce .single-product .summary form.cart,
+body[class*="electro-dark"] .single-product form.cart,
+body[class*="electro-dark"] .woocommerce .single-product form.cart,
+body[class*="electro-dark"] form.cart {
+    background: #212121 !important;
+    background-color: #212121 !important;
+}
