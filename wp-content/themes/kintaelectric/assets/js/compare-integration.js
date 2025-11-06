@@ -33,4 +33,13 @@ jQuery(document).ready(function($) {
     $(document.body).on('added_to_compare removed_from_compare', function() {
         setTimeout(updateCompareCounter, 100);
     });
+    
+    // NO modificar el scroll - DataTables lo maneja automáticamente
+    // Solo asegurar que pointer-events esté habilitado si es necesario
+    $(document).on('yith_woocompare_render_table', function() {
+        // Asegurar que los elementos sean interactuables
+        setTimeout(function() {
+            $('.dataTables_scrollBody').css('pointer-events', 'auto');
+        }, 100);
+    });
 });

@@ -1,0 +1,339 @@
+/**
+ * Estilos de modo oscuro para YITH WooCommerce Compare
+ * Se aplica cuando el body tiene la clase 'electro-dark'
+ */
+
+/* Contenedor principal del popup de comparación - Modo oscuro */
+body.electro-dark .yith-woocompare-popup-container,
+body[class*="electro-dark"] .yith-woocompare-popup-container {
+    background: #1a1a1a !important;
+    background-color: #1a1a1a !important;
+}
+
+/* Wrapper de la tabla de comparación */
+body.electro-dark .yith-woocompare-table-wrapper,
+body.electro-dark .yith-woocompare-table-scroll-wrapper,
+body[class*="electro-dark"] .yith-woocompare-table-wrapper,
+body[class*="electro-dark"] .yith-woocompare-table-scroll-wrapper {
+    background: #1a1a1a !important;
+    background-color: #1a1a1a !important;
+    /* NO modificar overflow aquí - dejar que el plugin maneje el scroll */
+}
+
+/* Contenedor principal de la tabla */
+body.electro-dark #yith-woocompare,
+body[class*="electro-dark"] #yith-woocompare {
+    background: #1a1a1a !important;
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+}
+
+/* Tabla de comparación */
+body.electro-dark .compare-list,
+body.electro-dark #yith-woocompare-table,
+body.electro-dark table.compare-list,
+body[class*="electro-dark"] .compare-list,
+body[class*="electro-dark"] #yith-woocompare-table,
+body[class*="electro-dark"] table.compare-list {
+    background: #212121 !important;
+    background-color: #212121 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+/* Encabezados de la tabla */
+body.electro-dark .compare-list thead th,
+body.electro-dark .compare-list thead td,
+body.electro-dark #yith-woocompare-table thead th,
+body.electro-dark #yith-woocompare-table thead td,
+body[class*="electro-dark"] .compare-list thead th,
+body[class*="electro-dark"] .compare-list thead td {
+    background: #2a2a2a !important;
+    background-color: #2a2a2a !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+/* Filas del cuerpo de la tabla */
+body.electro-dark .compare-list tbody tr,
+body.electro-dark #yith-woocompare-table tbody tr,
+body[class*="electro-dark"] .compare-list tbody tr,
+body[class*="electro-dark"] #yith-woocompare-table tbody tr {
+    background: #212121 !important;
+    background-color: #212121 !important;
+    border-color: #333333 !important;
+}
+
+/* Filas pares */
+body.electro-dark .compare-list tbody tr.even,
+body.electro-dark .compare-list tbody tr:nth-child(even),
+body.electro-dark #yith-woocompare-table tbody tr.even,
+body.electro-dark #yith-woocompare-table tbody tr:nth-child(even),
+body[class*="electro-dark"] .compare-list tbody tr.even,
+body[class*="electro-dark"] .compare-list tbody tr:nth-child(even) {
+    background: #1a1a1a !important;
+    background-color: #1a1a1a !important;
+}
+
+/* Filas impares */
+body.electro-dark .compare-list tbody tr.odd,
+body.electro-dark .compare-list tbody tr:nth-child(odd),
+body.electro-dark #yith-woocompare-table tbody tr.odd,
+body[class*="electro-dark"] .compare-list tbody tr.odd {
+    background: #212121 !important;
+    background-color: #212121 !important;
+}
+
+/* Celdas de la tabla */
+body.electro-dark .compare-list tbody th,
+body.electro-dark .compare-list tbody td,
+body.electro-dark #yith-woocompare-table tbody th,
+body.electro-dark #yith-woocompare-table tbody td,
+body[class*="electro-dark"] .compare-list tbody th,
+body[class*="electro-dark"] .compare-list tbody td {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+/* Celdas de productos */
+body.electro-dark .compare-list tbody td.product_69,
+body.electro-dark .compare-list tbody td.product_238,
+body.electro-dark .compare-list tbody td.product_72,
+body.electro-dark .compare-list tbody td.product_65,
+body.electro-dark .compare-list tbody td[class*="product_"],
+body[class*="electro-dark"] .compare-list tbody td[class*="product_"] {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Títulos de productos */
+body.electro-dark .compare-list .product_title,
+body.electro-dark .compare-list h4.product_title,
+body.electro-dark .compare-list .product-anchor,
+body[class*="electro-dark"] .compare-list .product_title,
+body[class*="electro-dark"] .compare-list h4.product_title {
+    color: #ffffff !important;
+}
+
+body.electro-dark .compare-list .product-anchor,
+body.electro-dark .compare-list .product-anchor:hover,
+body[class*="electro-dark"] .compare-list .product-anchor {
+    color: #ffffff !important;
+}
+
+/* Títulos de campos (th) */
+body.electro-dark .compare-list tbody th,
+body.electro-dark .compare-list tbody th.fields,
+body[class*="electro-dark"] .compare-list tbody th {
+    color: #ffffff !important;
+    background: #2a2a2a !important;
+    background-color: #2a2a2a !important;
+}
+
+body.electro-dark .compare-list tbody th h2,
+body[class*="electro-dark"] .compare-list tbody th h2 {
+    color: #ffffff !important;
+}
+
+/* Precios */
+body.electro-dark .compare-list .price,
+body.electro-dark .compare-list .woocommerce-Price-amount,
+body.electro-dark .compare-list .woocommerce-Price-amount .amount,
+body[class*="electro-dark"] .compare-list .price,
+body[class*="electro-dark"] .compare-list .woocommerce-Price-amount {
+    color: #ffffff !important;
+}
+
+body.electro-dark .compare-list .price del,
+body.electro-dark .compare-list .price del .amount,
+body[class*="electro-dark"] .compare-list .price del {
+    color: #999999 !important;
+}
+
+body.electro-dark .compare-list .price ins,
+body.electro-dark .compare-list .price ins .amount,
+body[class*="electro-dark"] .compare-list .price ins {
+    color: #ffffff !important;
+}
+
+/* Botones */
+body.electro-dark .compare-list .button,
+body.electro-dark .compare-list .add_to_cart_button,
+body.electro-dark .compare-list .add_to_cart_wrap .button,
+body[class*="electro-dark"] .compare-list .button,
+body[class*="electro-dark"] .compare-list .add_to_cart_button {
+    background: #333333 !important;
+    background-color: #333333 !important;
+    color: #ffffff !important;
+    border-color: #444444 !important;
+}
+
+body.electro-dark .compare-list .button:hover,
+body.electro-dark .compare-list .add_to_cart_button:hover,
+body[class*="electro-dark"] .compare-list .button:hover {
+    background: #444444 !important;
+    background-color: #444444 !important;
+    color: #ffffff !important;
+}
+
+/* Botón de cerrar */
+body.electro-dark .yith-woocompare-popup-close,
+body[class*="electro-dark"] .yith-woocompare-popup-close {
+    color: #ffffff !important;
+    background: transparent !important;
+}
+
+body.electro-dark .yith-woocompare-popup-close:hover,
+body[class*="electro-dark"] .yith-woocompare-popup-close:hover {
+    color: #ffffff !important;
+    background: #333333 !important;
+}
+
+/* Botón de quitar producto */
+body.electro-dark .compare-list .remove,
+body.electro-dark .compare-list .remove a,
+body.electro-dark .compare-list .image-overlay .remove,
+body[class*="electro-dark"] .compare-list .remove,
+body[class*="electro-dark"] .compare-list .remove a {
+    color: #ffffff !important;
+    background: rgba(0, 0, 0, 0.5) !important;
+}
+
+body.electro-dark .compare-list .remove:hover,
+body.electro-dark .compare-list .remove a:hover,
+body[class*="electro-dark"] .compare-list .remove:hover {
+    background: rgba(220, 53, 69, 0.8) !important;
+    color: #ffffff !important;
+}
+
+/* Overlay de imagen */
+body.electro-dark .compare-list .image-overlay,
+body[class*="electro-dark"] .compare-list .image-overlay {
+    background: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Descripción y otros textos */
+body.electro-dark .compare-list .description,
+body.electro-dark .compare-list .description p,
+body.electro-dark .compare-list tbody td p,
+body[class*="electro-dark"] .compare-list .description,
+body[class*="electro-dark"] .compare-list .description p {
+    color: #cccccc !important;
+}
+
+/* SKU, Stock, Rating, etc. */
+body.electro-dark .compare-list .sku,
+body.electro-dark .compare-list .stock,
+body.electro-dark .compare-list .rating,
+body.electro-dark .compare-list .weight,
+body.electro-dark .compare-list .dimensions,
+body.electro-dark .compare-list .availability-label,
+body[class*="electro-dark"] .compare-list .sku,
+body[class*="electro-dark"] .compare-list .stock,
+body[class*="electro-dark"] .compare-list .rating {
+    color: #ffffff !important;
+}
+
+/* Atributos de producto (Color, Size, etc.) */
+body.electro-dark .compare-list .pa_color,
+body.electro-dark .compare-list .pa_size,
+body.electro-dark .compare-list tbody tr[class*="pa_"],
+body[class*="electro-dark"] .compare-list tbody tr[class*="pa_"] {
+    color: #ffffff !important;
+}
+
+/* DataTables wrapper */
+body.electro-dark .dataTables_wrapper,
+body.electro-dark .dataTables_scroll,
+body.electro-dark .dataTables_scrollHead,
+body.electro-dark .dataTables_scrollFoot,
+body[class*="electro-dark"] .dataTables_wrapper {
+    background: #1a1a1a !important;
+    background-color: #1a1a1a !important;
+}
+
+/* DataTables scrollBody - Solo colores, NO modificar overflow */
+body.electro-dark .dataTables_scrollBody,
+body[class*="electro-dark"] .dataTables_scrollBody {
+    background: #1a1a1a !important;
+    background-color: #1a1a1a !important;
+    /* NO modificar overflow - dejar que DataTables lo maneje */
+    pointer-events: auto !important;
+}
+
+/* Scrollbar personalizado para modo oscuro */
+body.electro-dark .dataTables_scrollBody::-webkit-scrollbar,
+body[class*="electro-dark"] .dataTables_scrollBody::-webkit-scrollbar {
+    -webkit-appearance: none !important;
+    height: 8px !important;
+    width: 8px !important;
+}
+
+body.electro-dark .dataTables_scrollBody::-webkit-scrollbar-track,
+body[class*="electro-dark"] .dataTables_scrollBody::-webkit-scrollbar-track {
+    background: #2a2a2a !important;
+    border-radius: 10px !important;
+}
+
+body.electro-dark .dataTables_scrollBody::-webkit-scrollbar-thumb,
+body[class*="electro-dark"] .dataTables_scrollBody::-webkit-scrollbar-thumb {
+    background-color: #555555 !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+}
+
+body.electro-dark .dataTables_scrollBody::-webkit-scrollbar-thumb:hover,
+body[class*="electro-dark"] .dataTables_scrollBody::-webkit-scrollbar-thumb:hover {
+    background-color: #777777 !important;
+}
+
+/* Firefox scrollbar */
+body.electro-dark .dataTables_scrollBody,
+body[class*="electro-dark"] .dataTables_scrollBody {
+    scrollbar-width: thin !important;
+    scrollbar-color: #555555 #2a2a2a !important;
+}
+
+/* Clones de DataTables (para sticky columns) */
+body.electro-dark .DTFC_Cloned,
+body.electro-dark .DTFC_LeftWrapper,
+body.electro-dark .DTFC_RightWrapper,
+body[class*="electro-dark"] .DTFC_Cloned {
+    background: #1a1a1a !important;
+    background-color: #1a1a1a !important;
+    pointer-events: auto !important;
+}
+
+/* NO modificar overflow en contenedores de scroll - solo colores */
+body.electro-dark .yith-woocompare-table-scroll-wrapper .dataTables_scroll,
+body[class*="electro-dark"] .yith-woocompare-table-scroll-wrapper .dataTables_scroll {
+    /* NO modificar overflow - dejar que DataTables lo maneje */
+}
+
+/* Contenedor principal - solo colores */
+body.electro-dark #yith-woocompare-table_wrapper,
+body[class*="electro-dark"] #yith-woocompare-table_wrapper {
+    /* NO modificar overflow - dejar que DataTables lo maneje */
+}
+
+/* Filler cells */
+body.electro-dark .compare-list .filler,
+body.electro-dark .compare-list td.filler,
+body[class*="electro-dark"] .compare-list .filler {
+    background: #1a1a1a !important;
+    background-color: #1a1a1a !important;
+}
+
+/* Enlaces generales */
+body.electro-dark .compare-list a,
+body[class*="electro-dark"] .compare-list a {
+    color: #ffffff !important;
+}
+
+body.electro-dark .compare-list a:hover,
+body[class*="electro-dark"] .compare-list a:hover {
+    color: #cccccc !important;
+}
+

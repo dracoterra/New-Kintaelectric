@@ -96,6 +96,7 @@ function kintaelectric_enqueue_electro_assets() {
     // Compare integration (simple version)
     if ( class_exists( 'YITH_Woocompare' ) ) {
         wp_enqueue_script( 'kintaelectric-compare-integration', kintaelectric_ASSETS_URL . 'js/compare-integration.js', array( 'jquery' ), '1.0.0', true );
+        wp_enqueue_style( 'kintaelectric-compare-dark-mode', kintaelectric_ASSETS_URL . 'css/yith-compare-dark-mode.css', array(), '1.0.0' );
     }
     
     // Native cart updates
@@ -837,6 +838,9 @@ function kintaelectric_add_dynamic_css() {
                 color: #ffffff !important;
             }';
         }
+        
+        // Los estilos de comparación ahora están en un archivo CSS separado
+        // Ver: assets/css/yith-compare-dark-mode.css
         
         if ( !empty( $dark_mode_css ) ) {
             echo '<style type="text/css" id="kintaelectric-dark-mode-woocommerce">' . $dark_mode_css . '</style>';
