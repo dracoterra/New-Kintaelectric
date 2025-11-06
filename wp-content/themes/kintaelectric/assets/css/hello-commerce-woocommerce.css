@@ -132,7 +132,7 @@ section.related.products{
 .single-product form.cart {
     margin-bottom: 30px !important;
     padding: 20px !important;
-    background: var(--background-light) !important;
+    background: #fbfbfb !important;
     border-radius: 8px !important;
     border: 1px solid var(--border-color) !important;
 }
@@ -728,6 +728,79 @@ body.electro-dark .wishlist_table .amount,
 body[class*="electro-dark"] table.wishlist_table .price,
 body[class*="electro-dark"] .wishlist_table .price {
     color: #ffffff !important;
+}
+
+/* Tabla de información adicional - Modo oscuro */
+body.electro-dark .woocommerce-Tabs-panel--additional_information,
+body.electro-dark .woocommerce-Tabs-panel.woocommerce-Tabs-panel--additional_information,
+body[class*="electro-dark"] .woocommerce-Tabs-panel--additional_information,
+body[class*="electro-dark"] .woocommerce-Tabs-panel.woocommerce-Tabs-panel--additional_information {
+    background: transparent !important;
+    color: #ffffff !important;
+}
+
+body.electro-dark .woocommerce-Tabs-panel--additional_information h2,
+body.electro-dark .woocommerce-Tabs-panel.woocommerce-Tabs-panel--additional_information h2,
+body[class*="electro-dark"] .woocommerce-Tabs-panel--additional_information h2,
+body[class*="electro-dark"] .woocommerce-Tabs-panel.woocommerce-Tabs-panel--additional_information h2 {
+    color: #ffffff !important;
+}
+
+body.electro-dark .woocommerce-product-attributes.shop_attributes,
+body.electro-dark table.woocommerce-product-attributes.shop_attributes,
+body[class*="electro-dark"] .woocommerce-product-attributes.shop_attributes,
+body[class*="electro-dark"] table.woocommerce-product-attributes.shop_attributes {
+    background: transparent !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+body.electro-dark .woocommerce-product-attributes-item,
+body.electro-dark .woocommerce-product-attributes.shop_attributes tr.woocommerce-product-attributes-item,
+body[class*="electro-dark"] .woocommerce-product-attributes-item,
+body[class*="electro-dark"] .woocommerce-product-attributes.shop_attributes tr.woocommerce-product-attributes-item {
+    background: transparent !important;
+    border-color: #333333 !important;
+}
+
+body.electro-dark .woocommerce-product-attributes-item__label,
+body.electro-dark .woocommerce-product-attributes.shop_attributes th.woocommerce-product-attributes-item__label,
+body[class*="electro-dark"] .woocommerce-product-attributes-item__label,
+body[class*="electro-dark"] .woocommerce-product-attributes.shop_attributes th.woocommerce-product-attributes-item__label {
+    background: #2a2a2a !important;
+    background-color: #2a2a2a !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+body.electro-dark .woocommerce-product-attributes-item__value,
+body.electro-dark .woocommerce-product-attributes.shop_attributes td.woocommerce-product-attributes-item__value,
+body[class*="electro-dark"] .woocommerce-product-attributes-item__value,
+body[class*="electro-dark"] .woocommerce-product-attributes.shop_attributes td.woocommerce-product-attributes-item__value {
+    background: transparent !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+}
+
+body.electro-dark .woocommerce-product-attributes-item__value p,
+body.electro-dark .woocommerce-product-attributes.shop_attributes td.woocommerce-product-attributes-item__value p,
+body[class*="electro-dark"] .woocommerce-product-attributes-item__value p,
+body[class*="electro-dark"] .woocommerce-product-attributes.shop_attributes td.woocommerce-product-attributes-item__value p {
+    color: #ffffff !important;
+}
+
+body.electro-dark .woocommerce-product-attributes-item__value a,
+body.electro-dark .woocommerce-product-attributes.shop_attributes td.woocommerce-product-attributes-item__value a,
+body[class*="electro-dark"] .woocommerce-product-attributes-item__value a,
+body[class*="electro-dark"] .woocommerce-product-attributes.shop_attributes td.woocommerce-product-attributes-item__value a {
+    color: #ffffff !important;
+}
+
+body.electro-dark .woocommerce-product-attributes-item__value a:hover,
+body.electro-dark .woocommerce-product-attributes.shop_attributes td.woocommerce-product-attributes-item__value a:hover,
+body[class*="electro-dark"] .woocommerce-product-attributes-item__value a:hover,
+body[class*="electro-dark"] .woocommerce-product-attributes.shop_attributes td.woocommerce-product-attributes-item__value a:hover {
+    color: #cccccc !important;
 }
 
 
