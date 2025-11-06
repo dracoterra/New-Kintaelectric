@@ -46051,14 +46051,14 @@ div.wpforms-container-full.ec-newsletter-form .wpforms-form input[type=submit]:h
 width: auto !important;
 }
 
-.woocommerce.product.compare-button::before {
+/*.woocommerce.product.compare-button::before {
     font: normal normal normal 14px/1 font-electro;
     margin-right: 2px;
     content: "\64";
     vertical-align: middle;
     display: inline-block;
     font-size: 16px
-}
+}*/
 
 .add-to-compare-link.added::before {
     content: "\f00c";
