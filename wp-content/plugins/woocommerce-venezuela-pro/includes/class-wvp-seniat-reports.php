@@ -774,13 +774,22 @@ class WVP_SENIAT_Reports {
         
         // Encontrar mejor y peor día
         $best_day = array('date' => 'N/A', 'amount' => 0);
-        $worst_day = array('date' => 'N/A', 'amount' => PHP_FLOAT_MAX);
-        foreach ($daily_data as $day => $data) {
-            if ($data['total_usd'] > $best_day['amount']) {
-                $best_day = array('date' => date('d/m/Y', strtotime($day)), 'amount' => $data['total_usd']);
+        $worst_day = array('date' => 'N/A', 'amount' => 0);
+        
+        // Solo calcular si hay datos diarios
+        if (!empty($daily_data)) {
+            $worst_day = array('date' => 'N/A', 'amount' => PHP_FLOAT_MAX);
+            foreach ($daily_data as $day => $data) {
+                if ($data['total_usd'] > $best_day['amount']) {
+                    $best_day = array('date' => date('d/m/Y', strtotime($day)), 'amount' => $data['total_usd']);
+                }
+                if ($data['total_usd'] < $worst_day['amount']) {
+                    $worst_day = array('date' => date('d/m/Y', strtotime($day)), 'amount' => $data['total_usd']);
+                }
             }
-            if ($data['total_usd'] < $worst_day['amount']) {
-                $worst_day = array('date' => date('d/m/Y', strtotime($day)), 'amount' => $data['total_usd']);
+            // Si worst_day aún tiene PHP_FLOAT_MAX, significa que no se encontró ningún día (no debería pasar, pero por seguridad)
+            if ($worst_day['amount'] == PHP_FLOAT_MAX) {
+                $worst_day = array('date' => 'N/A', 'amount' => 0);
             }
         }
         
