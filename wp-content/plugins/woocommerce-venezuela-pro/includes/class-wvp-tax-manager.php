@@ -360,23 +360,80 @@ class WVP_Tax_Manager {
         
         // Intentar obtener del meta guardado primero
         $iva_total = $order->get_meta('_wvp_iva_total');
-        if ($iva_total !== '' && $iva_total !== null) {
+        if ($iva_total !== '' && $iva_total !== null && floatval($iva_total) > 0) {
             return floatval($iva_total);
         }
         
-        // Calcular desde los impuestos de WooCommerce
-        // Sumar todos los impuestos que no sean IGTF
+        // Si no está guardado pero hay impuestos en la orden, calcular y guardar
+        // Esto ayuda con órdenes antiguas que no tienen el meta guardado
+        
+        // Método 1: Usar get_tax_totals() (más preciso, agrupa por tasa)
         $tax_totals = $order->get_tax_totals();
         $iva_total = 0;
         
-        foreach ($tax_totals as $tax) {
-            // Excluir IGTF (IGTF se maneja como fee, no como tax)
-            if (stripos($tax->label, 'IGTF') === false) {
-                $iva_total += floatval($tax->amount);
+        if (!empty($tax_totals)) {
+            foreach ($tax_totals as $tax) {
+                // Excluir IGTF (IGTF se maneja como fee, no como tax)
+                if (stripos($tax->label, 'IGTF') === false) {
+                    $iva_total += floatval($tax->amount);
+                }
             }
         }
         
-        return $iva_total;
+        // Método 2: Si no hay tax_totals, usar get_total_tax() (total de todos los impuestos)
+        if ($iva_total == 0) {
+            $total_tax = floatval($order->get_total_tax());
+            if ($total_tax > 0) {
+                // Verificar si hay IGTF en fees para restarlo
+                $igtf_in_fees = 0;
+                foreach ($order->get_fees() as $fee) {
+                    if (stripos($fee->get_name(), 'IGTF') !== false) {
+                        $igtf_in_fees += floatval($fee->get_total());
+                    }
+                }
+                // El total_tax incluye impuestos de items y shipping, pero no fees
+                // Así que solo usamos total_tax como IVA
+                $iva_total = $total_tax;
+            }
+        }
+        
+        // Método 3: Calcular desde los items directamente
+        if ($iva_total == 0) {
+            $iva_from_items = 0;
+            foreach ($order->get_items() as $item) {
+                if (method_exists($item, 'get_subtotal_tax')) {
+                    $iva_from_items += floatval($item->get_subtotal_tax());
+                }
+            }
+            // Agregar shipping tax
+            $shipping_tax = floatval($order->get_shipping_tax());
+            $iva_total = $iva_from_items + $shipping_tax;
+        }
+        
+        // Método 4: Calcular desde tax items directamente
+        if ($iva_total == 0) {
+            foreach ($order->get_items('tax') as $tax_item) {
+                if (method_exists($tax_item, 'get_tax_total')) {
+                    $tax_label = $tax_item->get_label();
+                    // Excluir IGTF
+                    if (stripos($tax_label, 'IGTF') === false) {
+                        $iva_total += floatval($tax_item->get_tax_total());
+                        // También incluir shipping tax de este impuesto
+                        if (method_exists($tax_item, 'get_shipping_tax_total')) {
+                            $iva_total += floatval($tax_item->get_shipping_tax_total());
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Si calculamos IVA y no estaba guardado, guardarlo para futuras consultas
+        if ($iva_total > 0 && ($order->get_meta('_wvp_iva_total') === '' || $order->get_meta('_wvp_iva_total') === null)) {
+            $order->update_meta_data('_wvp_iva_total', $iva_total);
+            $order->save();
+        }
+        
+        return round($iva_total, 2);
     }
     
     /**

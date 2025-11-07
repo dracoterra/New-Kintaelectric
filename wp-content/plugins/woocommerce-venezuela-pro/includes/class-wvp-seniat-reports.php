@@ -612,6 +612,11 @@ class WVP_SENIAT_Reports {
                 $tax_manager = new WVP_Tax_Manager();
                 $iva_usd = $tax_manager->get_iva_from_order($order);
                 $igtf_usd = $tax_manager->get_igtf_from_order($order);
+                
+                // Debug: Log si IVA es 0 pero debería haber impuestos
+                if ($iva_usd == 0 && $order->get_total_tax() > 0) {
+                    error_log("WVP DEBUG: Orden #{$order->get_id()} - IVA=0 pero total_tax={$order->get_total_tax()}");
+                }
             } else {
                 // Fallback: obtener desde meta
                 $iva_usd = floatval($order->get_meta('_wvp_iva_total'));
@@ -619,11 +624,29 @@ class WVP_SENIAT_Reports {
                 
                 // Si no hay en meta, calcular desde WooCommerce
                 if ($iva_usd == 0) {
+                    // Intentar múltiples métodos
                     $tax_totals = $order->get_tax_totals();
-                    foreach ($tax_totals as $tax) {
-                        if (stripos($tax->label, 'IGTF') === false) {
-                            $iva_usd += floatval($tax->amount);
+                    if (!empty($tax_totals)) {
+                        foreach ($tax_totals as $tax) {
+                            if (stripos($tax->label, 'IGTF') === false) {
+                                $iva_usd += floatval($tax->amount);
+                            }
                         }
+                    }
+                    
+                    // Si aún es 0, usar get_total_tax()
+                    if ($iva_usd == 0) {
+                        $iva_usd = floatval($order->get_total_tax());
+                    }
+                    
+                    // Si aún es 0, calcular desde items
+                    if ($iva_usd == 0) {
+                        foreach ($order->get_items() as $item) {
+                            if (method_exists($item, 'get_subtotal_tax')) {
+                                $iva_usd += floatval($item->get_subtotal_tax());
+                            }
+                        }
+                        $iva_usd += floatval($order->get_shipping_tax());
                     }
                 }
                 
