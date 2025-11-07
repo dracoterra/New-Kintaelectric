@@ -51,6 +51,7 @@ class WVP_Checkout {
         
         // Hook específico para WooCommerce Blocks
         add_action("woocommerce_store_api_checkout_update_order_meta", array($this, "save_cedula_rif_field_blocks"), 10, 1);
+        add_action("woocommerce_store_api_checkout_update_order_from_request", array($this, "save_cedula_rif_from_request"), 10, 2);
         
         // Registrar campo nativo en WooCommerce Blocks
         add_action("woocommerce_blocks_loaded", array($this, "register_cedula_rif_block_field"));
@@ -304,6 +305,7 @@ class WVP_Checkout {
     public function add_cedula_rif_to_checkout_schema($schema) {
         error_log('WVP Debug: Añadiendo campo al schema de checkout');
         
+        // Agregar al schema de billing_address
         if (isset($schema['billing_address']['properties'])) {
             $schema['billing_address']['properties']['cedula_rif'] = array(
                 'type' => 'string',
@@ -311,6 +313,22 @@ class WVP_Checkout {
                 'context' => array('view', 'edit')
             );
         }
+        
+        // También agregar como extensión para mayor compatibilidad
+        if (!isset($schema['extensions'])) {
+            $schema['extensions'] = array();
+        }
+        if (!isset($schema['extensions']['wvp'])) {
+            $schema['extensions']['wvp'] = array();
+        }
+        if (!isset($schema['extensions']['wvp']['properties'])) {
+            $schema['extensions']['wvp']['properties'] = array();
+        }
+        $schema['extensions']['wvp']['properties']['cedula_rif'] = array(
+            'type' => 'string',
+            'description' => __('Cédula o RIF del cliente', 'wvp'),
+            'context' => array('view', 'edit')
+        );
         
         error_log('WVP Debug: Campo añadido al schema de checkout');
         return $schema;
@@ -500,6 +518,54 @@ class WVP_Checkout {
     }
     
     /**
+     * Guardar campo de cédula/RIF desde el request de WooCommerce Blocks
+     * Este método se ejecuta cuando WooCommerce Blocks actualiza la orden desde el request
+     * 
+     * @param WC_Order $order Pedido
+     * @param WP_REST_Request $request Request de la API
+     */
+    public function save_cedula_rif_from_request($order, $request) {
+        error_log('WVP Debug: ===== GUARDAR CÉDULA/RIF FROM REQUEST =====');
+        
+        if (!$request) {
+            error_log('WVP Debug: No hay request disponible');
+            return;
+        }
+        
+        // Obtener datos del request
+        $data = $request->get_json_params();
+        error_log('WVP Debug: Datos del request: ' . print_r($data, true));
+        
+        $cedula_rif = '';
+        
+        // Buscar en diferentes ubicaciones del request
+        if (isset($data['billing_address']['cedula_rif'])) {
+            $cedula_rif = trim($data['billing_address']['cedula_rif']);
+        } elseif (isset($data['billing_address']['billing_cedula_rif'])) {
+            $cedula_rif = trim($data['billing_address']['billing_cedula_rif']);
+        } elseif (isset($data['billing']['cedula_rif'])) {
+            $cedula_rif = trim($data['billing']['cedula_rif']);
+        } elseif (isset($data['billing']['billing_cedula_rif'])) {
+            $cedula_rif = trim($data['billing']['billing_cedula_rif']);
+        } elseif (isset($data['extensions']['wvp']['cedula_rif'])) {
+            $cedula_rif = trim($data['extensions']['wvp']['cedula_rif']);
+        }
+        
+        error_log('WVP Debug: Valor del campo cedula_rif desde request: "' . $cedula_rif . '"');
+        
+        if (!empty($cedula_rif)) {
+            $order->update_meta_data('_billing_cedula_rif', sanitize_text_field($cedula_rif));
+            $order->update_meta_data('_billing_cedula', sanitize_text_field($cedula_rif));
+            $order->save();
+            error_log('WVP Debug: Campo guardado desde request en pedido: ' . $order->get_id());
+        } else {
+            error_log('WVP Debug: Campo vacío en request - no se guardó');
+        }
+        
+        error_log('WVP Debug: ===== FIN GUARDAR CÉDULA/RIF FROM REQUEST =====');
+    }
+    
+    /**
      * Guardar campo de cédula/RIF para WooCommerce Blocks
      * 
      * @param WC_Order $order Pedido
@@ -520,15 +586,19 @@ class WVP_Checkout {
             $cedula_rif = trim($_POST['cedula_rif']);
         }
         
-        // 2. Si no está en $_POST, buscar en el request actual
-        if (empty($cedula_rif)) {
-            $request = \WP_REST_Request::from_url($_SERVER['REQUEST_URI']);
-            if ($request) {
-                $data = $request->get_json_params();
-                if (isset($data['billing']['cedula_rif'])) {
-                    $cedula_rif = trim($data['billing']['cedula_rif']);
-                } elseif (isset($data['billing']['billing_cedula_rif'])) {
-                    $cedula_rif = trim($data['billing']['billing_cedula_rif']);
+        // 2. Si no está en $_POST, intentar obtener del request REST
+        if (empty($cedula_rif) && isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $request_body = file_get_contents('php://input');
+            if (!empty($request_body)) {
+                $data = json_decode($request_body, true);
+                if ($data) {
+                    if (isset($data['billing_address']['cedula_rif'])) {
+                        $cedula_rif = trim($data['billing_address']['cedula_rif']);
+                    } elseif (isset($data['billing']['cedula_rif'])) {
+                        $cedula_rif = trim($data['billing']['cedula_rif']);
+                    } elseif (isset($data['extensions']['wvp']['cedula_rif'])) {
+                        $cedula_rif = trim($data['extensions']['wvp']['cedula_rif']);
+                    }
                 }
             }
         }
@@ -542,6 +612,8 @@ class WVP_Checkout {
         
         if (!empty($cedula_rif)) {
             $order->update_meta_data('_billing_cedula_rif', sanitize_text_field($cedula_rif));
+            $order->update_meta_data('_billing_cedula', sanitize_text_field($cedula_rif));
+            $order->save();
             error_log('WVP Debug: Campo guardado en pedido blocks: ' . $order->get_id());
         } else {
             error_log('WVP Debug: Campo vacío - no se guardó en blocks');
