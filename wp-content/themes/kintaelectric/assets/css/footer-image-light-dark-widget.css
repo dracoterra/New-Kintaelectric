@@ -1,0 +1,47 @@
+/**
+ * Footer Image Light and Dark Widget Styles
+ * 
+ * Styles for the footer image widget that supports light and dark mode
+ * 
+ * @package kintaelectric
+ */
+
+/* Default: Show light image, hide dark image */
+.widget_image_light_dark .footer-image-light {
+    display: block !important;
+}
+
+.widget_image_light_dark .footer-image-dark {
+    display: none !important;
+}
+
+/* Dark mode: Hide light image, show dark image */
+body.electro-dark .widget_image_light_dark .footer-image-light {
+    display: none !important;
+}
+
+body.electro-dark .widget_image_light_dark .footer-image-dark {
+    display: block !important;
+}
+
+/* If image has both classes, show in both modes */
+.widget_image_light_dark .footer-image-both {
+    display: block !important;
+}
+
+body.electro-dark .widget_image_light_dark .footer-image-both {
+    display: block !important;
+}
+
+/* Ensure images are properly contained */
+.widget_image_light_dark .footer-image-link {
+    display: inline-block;
+    line-height: 0;
+}
+
+.widget_image_light_dark .footer-image-link img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+

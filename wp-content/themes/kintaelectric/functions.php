@@ -70,6 +70,9 @@ function kintaelectric_enqueue_electro_assets() {
     // Electro Mode Switcher Widget Styles
     wp_enqueue_style( 'electro-mode-switcher-widget', kintaelectric_ASSETS_URL . 'css/electro-mode-switcher-widget.css', array('electro-style'), '1.0.0' );
     
+    // Footer Image Light and Dark Widget Styles
+    wp_enqueue_style( 'footer-image-light-dark-widget', kintaelectric_ASSETS_URL . 'css/footer-image-light-dark-widget.css', array('electro-style'), '1.0.0' );
+    
     // JavaScript Files - Solo archivos del tema Electro original
     wp_enqueue_script( 'bootstrap-bundle', kintaelectric_ASSETS_URL . 'js/bootstrap.bundle.min.js', array( 'jquery' ), '3.6.2', true );
     wp_enqueue_script( 'jquery-waypoints', kintaelectric_ASSETS_URL . 'js/jquery.waypoints.min.js', array( 'jquery' ), '3.6.2', true );
@@ -1147,6 +1150,7 @@ function kintaelectric_add_to_cart() {
 require_once kintaelectric_PATH . '/includes/widgets/class-newsletter-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-products-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-image-widget.php';
+require_once kintaelectric_PATH . '/includes/widgets/class-image-light-dark-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-footer-call-us-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-footer-address-widget.php';
 require_once kintaelectric_PATH . '/includes/widgets/class-footer-social-icons-widget.php';
@@ -1167,6 +1171,7 @@ function kintaelectric_register_widgets() {
     register_widget( 'KintaElectric_Newsletter_Widget' );
     register_widget( 'KintaElectric_Products_Widget' );
     register_widget( 'KintaElectric_Image_Widget' );
+    register_widget( 'KintaElectric_Image_Light_Dark_Widget' );
     register_widget( 'Footer_Call_Us_Widget' );
     register_widget( 'Footer_Address_Widget' );
     register_widget( 'Footer_Social_Icons_Widget' );
@@ -1344,16 +1349,20 @@ function kintaelectric_get_logo( $context = 'light' ) {
  */
 function kintaelectric_admin_widget_scripts( $hook ) {
     if ( $hook === 'widgets.php' || $hook === 'customize.php' ) {
-        // Enqueue media uploader and jQuery
+        // Enqueue media uploader - this provides wp.media without loading wp-editor
+        // wp_enqueue_media() loads all necessary scripts for media library
         wp_enqueue_media();
         wp_enqueue_script( 'jquery' );
         
         // Enqueue our custom admin widgets script
+        // Note: We only use 'jquery' as dependency because wp_enqueue_media() 
+        // already provides wp.media API without needing media-upload or media-views
+        // which can cause conflicts with the new block-based widget editor (WP 5.8+)
         wp_enqueue_script( 
             'kintaelectric-admin-widgets', 
             kintaelectric_ASSETS_URL . 'js/admin-widgets.js', 
-            array( 'jquery', 'media-upload', 'media-views' ), 
-            '1.0.0', 
+            array( 'jquery' ), 
+            '1.0.1', 
             true 
         );
         
