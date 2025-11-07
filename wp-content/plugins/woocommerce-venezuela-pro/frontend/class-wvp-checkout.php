@@ -67,11 +67,8 @@ class WVP_Checkout {
         add_action("wp_ajax_wvp_update_delivery_zone", array($this, "update_delivery_zone_ajax"));
         add_action("wp_ajax_nopriv_wvp_update_delivery_zone", array($this, "update_delivery_zone_ajax"));
         
-        // Añadir comisión IGTF
-        add_action("woocommerce_cart_calculate_fees", array($this, "add_igtf_fee"));
-        
-        // Mostrar información de IGTF en el checkout
-        add_action("woocommerce_review_order_before_payment", array($this, "display_igtf_info"));
+        // IGTF ahora se maneja completamente por WVP_Tax_Manager
+        // El código duplicado de IGTF ha sido eliminado para evitar conflictos
         
         // DESHABILITADO TEMPORALMENTE - Investigar duplicación de campos
         // add_action("wp_enqueue_scripts", array($this, "enqueue_checkout_scripts"));
@@ -567,17 +564,8 @@ class WVP_Checkout {
             }
         }
         
-        // Guardar monto de IGTF si se aplicó
-        if ($this->should_apply_igtf()) {
-            $cart_total = WC()->cart->get_total("raw");
-            $igtf_rate = $this->get_igtf_rate();
-            $igtf_amount = ($cart_total * $igtf_rate) / 100;
-            
-            if ($igtf_amount > 0) {
-                $order->update_meta_data("_igtf_amount", $igtf_amount);
-                $order->update_meta_data("_igtf_rate", $igtf_rate);
-            }
-        }
+        // IGTF se guarda automáticamente por WVP_Tax_Manager
+        // No es necesario guardarlo aquí
         
         // Guardar tipo de pago
         if ($chosen_payment_method) {
@@ -723,118 +711,7 @@ class WVP_Checkout {
         }
     }
     
-    
-    /**
-     * Añadir comisión IGTF al carrito
-     * 
-     * @param WC_Cart $cart Carrito
-     */
-    public function add_igtf_fee($cart) {
-        // Solo añadir IGTF si hay productos en el carrito
-        if (is_admin() && !defined("DOING_AJAX")) {
-            return;
-        }
-        
-        // Verificar si se debe aplicar IGTF
-        if (!$this->should_apply_igtf()) {
-            return;
-        }
-        
-        // Obtener total del carrito (incluyendo envío e IVA)
-        $cart_total = $cart->get_total("raw");
-        
-        // Calcular IGTF (3%)
-        $igtf_rate = $this->get_igtf_rate();
-        $igtf_amount = ($cart_total * $igtf_rate) / 100;
-        
-        if ($igtf_amount > 0) {
-            $cart->add_fee(
-                sprintf(__("IGTF (%s%%)", "wvp"), $igtf_rate),
-                $igtf_amount,
-                false
-            );
-        }
-    }
-    
-    /**
-     * Verificar si se debe aplicar IGTF
-     * 
-     * @return bool True si se debe aplicar IGTF
-     */
-    private function should_apply_igtf() {
-        // Verificar si el sistema de IGTF está habilitado
-        $igtf_enabled = get_option('wvp_igtf_enabled', 'yes') === 'yes';
-        if (!$igtf_enabled) {
-            error_log('WVP DEBUG: IGTF deshabilitado - wvp_igtf_enabled = ' . get_option('wvp_igtf_enabled', 'not_set'));
-            return false;
-        }
-        
-        // Verificar si se debe mostrar IGTF
-        $show_igtf = get_option('wvp_show_igtf', '1') === '1';
-        if (!$show_igtf) {
-            error_log('WVP DEBUG: IGTF no se debe mostrar - wvp_show_igtf = ' . get_option('wvp_show_igtf', 'not_set'));
-            return false;
-        }
-        
-        // Verificar si hay una pasarela de pago seleccionada que aplique IGTF
-        $chosen_payment_method = WC()->session->get("chosen_payment_method");
-        if (empty($chosen_payment_method)) {
-            return false;
-        }
-        
-        // IGTF solo se aplica a pagos en efectivo con billetes en dólares
-        // NO se aplica a transferencias digitales ni pagos en bolívares
-        return $this->gateway_applies_igtf($chosen_payment_method);
-    }
-    
-    /**
-     * Verificar si una pasarela de pago aplica IGTF
-     * 
-     * @param string $gateway_id ID de la pasarela
-     * @return bool True si la pasarela aplica IGTF
-     */
-    private function gateway_applies_igtf($gateway_id) {
-        // Obtener configuración de la pasarela
-        $gateway_settings = get_option("woocommerce_" . $gateway_id . "_settings", array());
-        
-        // Verificar si la pasarela tiene la opción de IGTF habilitada
-        return isset($gateway_settings["apply_igtf"]) && $gateway_settings["apply_igtf"] === "yes";
-    }
-    
-    /**
-     * Obtener tasa de IGTF
-     * 
-     * @return float Tasa de IGTF
-     */
-    private function get_igtf_rate() {
-        $rate = $this->plugin ? $this->plugin->get_option("igtf_rate") : null;
-        if ($rate === null) {
-            return 3.0; // Tasa por defecto
-        }
-        return floatval($rate);
-    }
-    
-    /**
-     * Mostrar información de IGTF en el checkout
-     */
-    public function display_igtf_info() {
-        if (!$this->should_apply_igtf()) {
-            return;
-        }
-        
-        $igtf_rate = $this->get_igtf_rate();
-        $cart_total = WC()->cart->get_total("raw");
-        $igtf_amount = ($cart_total * $igtf_rate) / 100;
-        
-        if ($igtf_amount > 0) {
-            ?>
-            <div class="wvp-igtf-info">
-                <p><strong><?php _e("IGTF aplicado:", "wvp"); ?></strong> <?php echo wc_price($igtf_amount); ?></p>
-                <p><em><?php _e("IGTF se aplica solo a pagos en efectivo con billetes en dólares.", "wvp"); ?></em></p>
-            </div>
-            <?php
-        }
-    }
+    // Código de IGTF eliminado - ahora se maneja completamente por WVP_Tax_Manager
     
     /**
      * Mostrar información de pago móvil
@@ -896,7 +773,7 @@ class WVP_Checkout {
         wp_localize_script("wvp-checkout", "wvp_checkout", array(
             "ajax_url" => admin_url("admin-ajax.php"),
             "nonce" => wp_create_nonce("wvp_checkout_nonce"),
-            "igtf_rate" => $this->get_igtf_rate(),
+            "igtf_rate" => get_option('wvp_igtf_rate', 3.0),
             "currency_symbol" => get_woocommerce_currency_symbol(),
             "i18n" => array(
                 "igtf_applied" => __("IGTF aplicado", "wvp"),

@@ -49,6 +49,8 @@ class WVP_Admin_Restructured {
         add_action('wp_ajax_wvp_save_tab_settings', array($this, 'save_tab_settings'));
         add_action('wp_ajax_wvp_get_tab_content', array($this, 'get_tab_content'));
         add_action('wp_ajax_wvp_export_fiscal_data', array($this, 'export_fiscal_data_ajax'));
+        add_action('wp_ajax_wvp_setup_iva_rate', array($this, 'setup_iva_rate_ajax'));
+        add_action('wp_ajax_wvp_cleanup_duplicate_rates', array($this, 'cleanup_duplicate_rates_ajax'));
         add_action('admin_init', array($this, 'register_settings'));
     }
     
@@ -965,6 +967,123 @@ class WVP_Admin_Restructured {
                         </td>
                     </tr>
                     <tr>
+                        <th scope="row"><?php _e('Configurar Tasa de IVA', 'wvp'); ?></th>
+                        <td>
+                            <p>
+                                <button type="button" class="button button-primary" id="wvp-setup-iva-rate">
+                                    <span class="dashicons dashicons-admin-settings"></span>
+                                    <?php _e('Configurar Tasa de IVA en WooCommerce', 'wvp'); ?>
+                                </button>
+                                <button type="button" class="button button-secondary" id="wvp-cleanup-duplicate-rates" style="margin-left: 10px;">
+                                    <span class="dashicons dashicons-trash"></span>
+                                    <?php _e('Limpiar Tasas Duplicadas', 'wvp'); ?>
+                                </button>
+                            </p>
+                            <p class="description">
+                                <?php _e('Configura automáticamente la tasa de IVA del 16% en WooCommerce. Si hay tasas duplicadas, usa el botón de limpiar.', 'wvp'); ?>
+                            </p>
+                            <div id="wvp-tax-setup-result" style="margin-top: 10px; padding: 10px; display: none;"></div>
+                        </td>
+                    </tr>
+                    <script type="text/javascript">
+                    jQuery(document).ready(function($) {
+                        var resultDiv = $('#wvp-tax-setup-result');
+                        var ajaxUrl = typeof ajaxurl !== 'undefined' ? ajaxurl : (typeof wvp_admin_ajax !== 'undefined' ? wvp_admin_ajax.ajaxurl : '<?php echo admin_url('admin-ajax.php'); ?>');
+                        var nonce = typeof wvp_admin_ajax !== 'undefined' ? wvp_admin_ajax.nonce : '<?php echo wp_create_nonce('wvp_admin_nonce'); ?>';
+                        
+                        // Configurar tasa de IVA
+                        $('#wvp-setup-iva-rate').on('click', function(e) {
+                            e.preventDefault();
+                            var button = $(this);
+                            var originalText = button.html();
+                            
+                            button.prop('disabled', true).html('<span class="dashicons dashicons-update spin"></span> <?php _e('Configurando...', 'wvp'); ?>');
+                            resultDiv.hide();
+                            
+                            $.ajax({
+                                url: ajaxUrl,
+                                type: 'POST',
+                                data: {
+                                    action: 'wvp_setup_iva_rate',
+                                    nonce: nonce
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        resultDiv.removeClass('notice-error').addClass('notice notice-success is-dismissible')
+                                            .html('<p>' + response.data.message + '</p>').show();
+                                        
+                                        // Recargar página después de 2 segundos para ver cambios
+                                        setTimeout(function() {
+                                            window.location.reload();
+                                        }, 2000);
+                                    } else {
+                                        resultDiv.removeClass('notice-success').addClass('notice notice-error is-dismissible')
+                                            .html('<p>' + (response.data.message || '<?php _e('Error al configurar tasa de IVA', 'wvp'); ?>') + '</p>').show();
+                                    }
+                                    button.prop('disabled', false).html(originalText);
+                                },
+                                error: function() {
+                                    resultDiv.removeClass('notice-success').addClass('notice notice-error is-dismissible')
+                                        .html('<p><?php _e('Error de conexión', 'wvp'); ?></p>').show();
+                                    button.prop('disabled', false).html(originalText);
+                                }
+                            });
+                        });
+                        
+                        // Limpiar tasas duplicadas
+                        $('#wvp-cleanup-duplicate-rates').on('click', function(e) {
+                            e.preventDefault();
+                            if (!confirm('<?php _e('¿Estás seguro de que deseas eliminar las tasas duplicadas?', 'wvp'); ?>')) {
+                                return;
+                            }
+                            
+                            var button = $(this);
+                            var originalText = button.html();
+                            
+                            button.prop('disabled', true).html('<span class="dashicons dashicons-update spin"></span> <?php _e('Limpiando...', 'wvp'); ?>');
+                            resultDiv.hide();
+                            
+                            $.ajax({
+                                url: ajaxUrl,
+                                type: 'POST',
+                                data: {
+                                    action: 'wvp_cleanup_duplicate_rates',
+                                    nonce: nonce
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        resultDiv.removeClass('notice-error').addClass('notice notice-success is-dismissible')
+                                            .html('<p>' + response.data.message + '</p>').show();
+                                        
+                                        // Recargar página después de 2 segundos
+                                        setTimeout(function() {
+                                            window.location.reload();
+                                        }, 2000);
+                                    } else {
+                                        resultDiv.removeClass('notice-success').addClass('notice notice-error is-dismissible')
+                                            .html('<p>' + (response.data.message || '<?php _e('Error al limpiar tasas', 'wvp'); ?>') + '</p>').show();
+                                    }
+                                    button.prop('disabled', false).html(originalText);
+                                },
+                                error: function() {
+                                    resultDiv.removeClass('notice-success').addClass('notice notice-error is-dismissible')
+                                        .html('<p><?php _e('Error de conexión', 'wvp'); ?></p>').show();
+                                    button.prop('disabled', false).html(originalText);
+                                }
+                            });
+                        });
+                    });
+                    </script>
+                    <style>
+                    .dashicons-update.spin {
+                        animation: spin 1s linear infinite;
+                    }
+                    @keyframes spin {
+                        from { transform: rotate(0deg); }
+                        to { transform: rotate(360deg); }
+                    }
+                    </style>
+                    <tr>
                         <th scope="row"><?php _e('Aplicar IVA', 'wvp'); ?></th>
                         <td>
                             <label>
@@ -1168,6 +1287,64 @@ class WVP_Admin_Restructured {
         }
         
         $this->export_fiscal_data();
+    }
+    
+    /**
+     * Configurar tasa de IVA vía AJAX
+     */
+    public function setup_iva_rate_ajax() {
+        // Verificar permisos
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(array('message' => __('Sin permisos', 'wvp')));
+        }
+        
+        // Verificar nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'wvp_admin_nonce')) {
+            wp_send_json_error(array('message' => __('Nonce inválido', 'wvp')));
+        }
+        
+        // Configurar tasa de IVA
+        if (class_exists('WVP_Tax_Manager')) {
+            $tax_manager = new WVP_Tax_Manager();
+            $result = $tax_manager->setup_woocommerce_tax_rates();
+            
+            if ($result['success']) {
+                wp_send_json_success($result);
+            } else {
+                wp_send_json_error($result);
+            }
+        } else {
+            wp_send_json_error(array('message' => __('WVP_Tax_Manager no está disponible', 'wvp')));
+        }
+    }
+    
+    /**
+     * Limpiar tasas duplicadas vía AJAX
+     */
+    public function cleanup_duplicate_rates_ajax() {
+        // Verificar permisos
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error(array('message' => __('Sin permisos', 'wvp')));
+        }
+        
+        // Verificar nonce
+        if (!wp_verify_nonce($_POST['nonce'], 'wvp_admin_nonce')) {
+            wp_send_json_error(array('message' => __('Nonce inválido', 'wvp')));
+        }
+        
+        // Limpiar tasas duplicadas
+        if (class_exists('WVP_Tax_Manager')) {
+            $tax_manager = new WVP_Tax_Manager();
+            $result = $tax_manager->cleanup_duplicate_tax_rates();
+            
+            if ($result['success']) {
+                wp_send_json_success($result);
+            } else {
+                wp_send_json_error($result);
+            }
+        } else {
+            wp_send_json_error(array('message' => __('WVP_Tax_Manager no está disponible', 'wvp')));
+        }
     }
     
     /**
@@ -3043,6 +3220,13 @@ class WVP_Admin_Restructured {
             array(),
             WVP_VERSION
         );
+        
+        // Asegurar que jQuery y ajaxurl estén disponibles
+        wp_enqueue_script('jquery');
+        wp_localize_script('jquery', 'wvp_admin_ajax', array(
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('wvp_admin_nonce')
+        ));
         
         // CSS adicional para panel de apariencia
         if (isset($_GET['page']) && $_GET['page'] === 'wvp-appearance') {

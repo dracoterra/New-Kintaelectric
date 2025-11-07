@@ -159,7 +159,7 @@ class WooCommerce_Venezuela_Pro {
         $this->init_components();
         
         // Inicializar administración reestructurada
-        if (is_admin()) {
+        if (is_admin() && class_exists('WVP_Admin_Restructured')) {
             new WVP_Admin_Restructured();
         }
         
@@ -218,6 +218,7 @@ class WooCommerce_Venezuela_Pro {
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-rate-limiter.php';
         
         // Clases de lógica de negocio
+        require_once WVP_PLUGIN_PATH . 'includes/class-wvp-tax-manager.php';
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-igtf-manager.php';
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-business-validator.php';
         require_once WVP_PLUGIN_PATH . 'includes/class-wvp-price-calculator.php';
@@ -323,10 +324,14 @@ class WooCommerce_Venezuela_Pro {
             // Inicializar integrador BCV
             $this->bcv_integrator = new WVP_BCV_Integrator();
             
-            // Inicializar gestor de IGTF
-            if (class_exists('WVP_IGTF_Manager')) {
-                new WVP_IGTF_Manager();
+            // Inicializar gestor de impuestos (IVA e IGTF)
+            // Este es el sistema principal que usa WooCommerce nativo
+            if (class_exists('WVP_Tax_Manager')) {
+                new WVP_Tax_Manager();
             }
+            
+            // WVP_IGTF_Manager está deshabilitado - WVP_Tax_Manager maneja todo
+            // Se mantiene el archivo para compatibilidad pero no se inicializa
             
             // Inicializar validador de negocio
             if (class_exists('WVP_Business_Validator')) {

@@ -226,6 +226,7 @@ class WVP_SENIAT_Reports {
                                 <th><?php _e('N° Control', 'wvp'); ?></th>
                                 <th><?php _e('Cliente', 'wvp'); ?></th>
                                 <th><?php _e('RIF/Cédula', 'wvp'); ?></th>
+                                <th><?php _e('Productos', 'wvp'); ?></th>
                                 <th><?php _e('Subtotal USD', 'wvp'); ?></th>
                                 <th><?php _e('IVA USD', 'wvp'); ?></th>
                                 <th><?php _e('IGTF USD', 'wvp'); ?></th>
@@ -241,6 +242,24 @@ class WVP_SENIAT_Reports {
                                 <td><?php echo esc_html($transaction['control_number']); ?></td>
                                 <td><?php echo esc_html($transaction['customer_name']); ?></td>
                                 <td><?php echo esc_html($transaction['customer_id']); ?></td>
+                                <td>
+                                    <?php if (!empty($transaction['items'])): ?>
+                                        <details>
+                                            <summary><?php echo count($transaction['items']); ?> <?php _e('producto(s)', 'wvp'); ?></summary>
+                                            <ul style="margin: 5px 0; padding-left: 20px; text-align: left;">
+                                                <?php foreach ($transaction['items'] as $item): ?>
+                                                    <li>
+                                                        <?php echo esc_html($item['name']); ?> 
+                                                        (<?php echo $item['quantity']; ?>x) - 
+                                                        <?php echo wc_price($item['total']); ?>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        </details>
+                                    <?php else: ?>
+                                        <?php _e('N/A', 'wvp'); ?>
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php echo wc_price($transaction['subtotal_usd']); ?></td>
                                 <td><?php echo wc_price($transaction['iva_usd']); ?></td>
                                 <td><?php echo wc_price($transaction['igtf_usd']); ?></td>
@@ -252,7 +271,7 @@ class WVP_SENIAT_Reports {
                         </tbody>
                         <tfoot>
                             <tr class="wvp-total-row">
-                                <td colspan="4"><strong><?php _e('TOTALES:', 'wvp'); ?></strong></td>
+                                <td colspan="5"><strong><?php _e('TOTALES:', 'wvp'); ?></strong></td>
                                 <td><strong><?php echo wc_price($report_data['total_sales_usd']); ?></strong></td>
                                 <td><strong><?php echo wc_price($report_data['total_iva_usd']); ?></strong></td>
                                 <td><strong><?php echo wc_price($report_data['total_igtf_usd']); ?></strong></td>
@@ -572,14 +591,62 @@ class WVP_SENIAT_Reports {
         $rates = array();
         
         foreach ($transactions as $transaction) {
-            $total_usd = floatval($transaction->total_usd);
+            // Obtener la orden completa para acceder a todos los datos
+            $order = wc_get_order($transaction->order_id);
+            if (!$order) {
+                continue;
+            }
+            
+            // Obtener totales reales de la orden
+            $total_usd = floatval($order->get_total());
+            $subtotal_usd = floatval($order->get_subtotal());
             $exchange_rate = floatval($transaction->exchange_rate) ?: 1;
             $rates[] = $exchange_rate;
             
-            // Calcular impuestos
-            $subtotal_usd = $total_usd / 1.19; // Asumiendo 16% IVA + 3% IGTF
-            $iva_usd = $subtotal_usd * 0.16;
-            $igtf_usd = $subtotal_usd * 0.03;
+            // Obtener IVA e IGTF usando WVP_Tax_Manager si está disponible
+            $iva_usd = 0;
+            $igtf_usd = 0;
+            
+            if (class_exists('WVP_Tax_Manager')) {
+                // Usar métodos del Tax Manager para obtener datos reales
+                $tax_manager = new WVP_Tax_Manager();
+                $iva_usd = $tax_manager->get_iva_from_order($order);
+                $igtf_usd = $tax_manager->get_igtf_from_order($order);
+            } else {
+                // Fallback: obtener desde meta
+                $iva_usd = floatval($order->get_meta('_wvp_iva_total'));
+                $igtf_usd = floatval($order->get_meta('_wvp_igtf_total'));
+                
+                // Si no hay en meta, calcular desde WooCommerce
+                if ($iva_usd == 0) {
+                    $tax_totals = $order->get_tax_totals();
+                    foreach ($tax_totals as $tax) {
+                        if (stripos($tax->label, 'IGTF') === false) {
+                            $iva_usd += floatval($tax->amount);
+                        }
+                    }
+                }
+                
+                if ($igtf_usd == 0) {
+                    foreach ($order->get_fees() as $fee) {
+                        if (stripos($fee->get_name(), 'IGTF') !== false) {
+                            $igtf_usd += floatval($fee->get_total());
+                        }
+                    }
+                }
+            }
+            
+            // Validación final: Si IGTF no está habilitado o el método de pago no aplica, forzar a 0
+            $igtf_enabled = get_option('wvp_igtf_enabled', 'yes');
+            if ($igtf_enabled !== 'yes') {
+                $igtf_usd = 0;
+            } else {
+                $payment_method = $order->get_payment_method();
+                $igtf_payment_methods = get_option('wvp_igtf_payment_methods', array());
+                if (!empty($igtf_payment_methods) && !in_array($payment_method, $igtf_payment_methods)) {
+                    $igtf_usd = 0;
+                }
+            }
             
             $total_ves = $total_usd * $exchange_rate;
             
@@ -591,8 +658,24 @@ class WVP_SENIAT_Reports {
                 update_post_meta($transaction->order_id, '_seniat_control_number', $control_number);
             }
             
+            // Obtener productos de la orden
+            $order_items = array();
+            foreach ($order->get_items() as $item_id => $item) {
+                $product = $item->get_product();
+                $order_items[] = array(
+                    'name' => $item->get_name(),
+                    'quantity' => $item->get_quantity(),
+                    'subtotal' => floatval($item->get_subtotal()),
+                    'total' => floatval($item->get_total()),
+                    'tax' => floatval($item->get_subtotal_tax()),
+                    'product_id' => $item->get_product_id(),
+                    'variation_id' => $item->get_variation_id()
+                );
+            }
+            
             $processed_transaction = array(
                 'date' => $transaction->order_date,
+                'order_id' => $transaction->order_id,
                 'control_number' => $control_number,
                 'customer_name' => $this->get_customer_name($transaction),
                 'customer_id' => $this->get_customer_id($transaction),
@@ -601,7 +684,8 @@ class WVP_SENIAT_Reports {
                 'igtf_usd' => $igtf_usd,
                 'total_usd' => $total_usd,
                 'total_ves' => $total_ves,
-                'exchange_rate' => $exchange_rate
+                'exchange_rate' => $exchange_rate,
+                'items' => $order_items
             );
             
             $processed_transactions[] = $processed_transaction;
@@ -766,6 +850,8 @@ class WVP_SENIAT_Reports {
             'N° Control',
             'Cliente',
             'RIF/Cédula',
+            'Productos',
+            'Cantidad Total',
             'Subtotal USD',
             'IVA USD',
             'IGTF USD',
@@ -776,11 +862,24 @@ class WVP_SENIAT_Reports {
         
         // Datos
         foreach ($report_data['transactions'] as $transaction) {
+            $productos_lista = '';
+            $cantidad_total = 0;
+            if (!empty($transaction['items'])) {
+                $productos_nombres = array();
+                foreach ($transaction['items'] as $item) {
+                    $productos_nombres[] = $item['name'] . ' (' . $item['quantity'] . ')';
+                    $cantidad_total += $item['quantity'];
+                }
+                $productos_lista = implode('; ', $productos_nombres);
+            }
+            
             fputcsv($output, array(
                 date('d/m/Y', strtotime($transaction['date'])),
                 $transaction['control_number'],
                 $transaction['customer_name'],
                 $transaction['customer_id'],
+                $productos_lista,
+                $cantidad_total,
                 number_format($transaction['subtotal_usd'], 2, '.', ''),
                 number_format($transaction['iva_usd'], 2, '.', ''),
                 number_format($transaction['igtf_usd'], 2, '.', ''),
@@ -814,6 +913,8 @@ class WVP_SENIAT_Reports {
         echo '<th>N° Control</th>';
         echo '<th>Cliente</th>';
         echo '<th>RIF/Cédula</th>';
+        echo '<th>Productos</th>';
+        echo '<th>Cantidad Total</th>';
         echo '<th>Subtotal USD</th>';
         echo '<th>IVA USD</th>';
         echo '<th>IGTF USD</th>';
@@ -824,11 +925,24 @@ class WVP_SENIAT_Reports {
         
         // Datos
         foreach ($report_data['transactions'] as $transaction) {
+            $productos_lista = '';
+            $cantidad_total = 0;
+            if (!empty($transaction['items'])) {
+                $productos_nombres = array();
+                foreach ($transaction['items'] as $item) {
+                    $productos_nombres[] = $item['name'] . ' (' . $item['quantity'] . ')';
+                    $cantidad_total += $item['quantity'];
+                }
+                $productos_lista = implode('; ', $productos_nombres);
+            }
+            
             echo '<tr>';
             echo '<td>' . date('d/m/Y', strtotime($transaction['date'])) . '</td>';
             echo '<td>' . $transaction['control_number'] . '</td>';
             echo '<td>' . $transaction['customer_name'] . '</td>';
             echo '<td>' . $transaction['customer_id'] . '</td>';
+            echo '<td>' . htmlspecialchars($productos_lista) . '</td>';
+            echo '<td>' . $cantidad_total . '</td>';
             echo '<td>' . number_format($transaction['subtotal_usd'], 2, '.', '') . '</td>';
             echo '<td>' . number_format($transaction['iva_usd'], 2, '.', '') . '</td>';
             echo '<td>' . number_format($transaction['igtf_usd'], 2, '.', '') . '</td>';
